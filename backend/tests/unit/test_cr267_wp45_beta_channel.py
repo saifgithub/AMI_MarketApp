@@ -53,6 +53,12 @@ _BETA_ENV = {
     "AMI_BETA_IOS_BUNDLE_ID": _CO_IOS,
     "AMI_BETA_ANDROID_APPLICATION_ID": _CO_ANDROID,
     "AMI_BETA_GOOGLE_OAUTH_WEB_CLIENT_ID": "company-client.apps.example.invalid",
+    "AMI_BETA_APPLE_TEAM_ID": "ABCDE12345",
+    "AMI_BETA_APP_STORE_API_KEY_ID": "ZZ99YY88XX",
+    "AMI_BETA_APP_STORE_API_ISSUER": "00000000-1111-2222-3333-444444444444",
+    "AMI_BETA_ONESIGNAL_APP_ID": "11111111-2222-3333-4444-555555555555",
+    "AMI_BETA_ANDROID_KEYSTORE_PROPERTIES": "/nonexistent/company/keystore.properties",
+    "AMI_BETA_PLAY_SERVICE_ACCOUNT_JSON": "/nonexistent/company/play.json",
     "SENTRY_DSN": _DSN,
 }
 
@@ -243,17 +249,12 @@ def test_beta_refuses_without_company_ids_and_names_wp49(company_ids, script, en
 
 
 @pytest.mark.parametrize("script", _SCRIPTS)
-def test_the_real_repo_still_refuses_every_beta_build(real_ids, script):
-    """The project files in this checkout still carry the personal IDs, so with
-    the env supplied and everything else in order, Beta must still refuse."""
-    env = {
-        **_BETA_ENV,
-        "AMI_BETA_IOS_BUNDLE_ID": "co.example.amibeta",
-        "AMI_BETA_ANDROID_APPLICATION_ID": "co.example.amibeta",
-    }
-    r = _run(real_ids, script, *_beta_args(script), env=env)
-    assert r.returncode == 1
-    assert "project declares" in r.stderr
+def test_the_real_project_files_do_not_block_a_fully_configured_beta(real_ids, script):
+    """WP-49 prep: the project files keep the personal (Alpha) IDs; the Beta
+    build applies the company IDs itself at build time, so a fully configured
+    Beta dry-run passes against the unchanged personal project files."""
+    r = _run(real_ids, script, *_beta_args(script), env=_BETA_ENV)
+    assert r.returncode == 0, r.stderr
 
 
 @pytest.mark.parametrize(
@@ -266,18 +267,8 @@ def test_the_real_repo_still_refuses_every_beta_build(real_ids, script):
 def test_beta_refuses_the_personal_account_id(real_ids, script, env_name, personal):
     r = _run(real_ids, script, *_beta_args(script), env={**_BETA_ENV, env_name: personal})
     assert r.returncode == 1
-    assert "personal-account ID" in r.stderr
-
-
-def test_beta_refuses_when_env_and_project_disagree(company_ids):
-    r = _run(
-        company_ids,
-        "build_testflight.sh",
-        *_beta_args("build_testflight.sh"),
-        env={**_BETA_ENV, "AMI_BETA_IOS_BUNDLE_ID": "co.example.other"},
-    )
-    assert r.returncode == 1
-    assert "project declares" in r.stderr
+    assert "PERSONAL-account" in r.stderr
+    assert f"{env_name}={personal}" in r.stderr
 
 
 def test_beta_android_refuses_without_the_company_google_client(company_ids):
@@ -320,3 +311,282 @@ def test_every_script_still_parses(script):
         text=True,
     )
     assert r.returncode == 0, r.stderr
+
+
+# ── WP-49 prep: company-account values come from a gitignored env file ─────
+
+_PERSONAL_BY_KEY = {
+    "AMI_BETA_APPLE_TEAM_ID": "S7RBWM4879",
+    "AMI_BETA_APP_STORE_API_KEY_ID": "44VJ5WADL2",
+    "AMI_BETA_APP_STORE_API_ISSUER": "289e6201-8fc9-44a3-abde-59e8e278527c",
+    "AMI_BETA_ONESIGNAL_APP_ID": "3c2020b6-d8b0-493f-b0e3-5d6ede868d7b",
+    "AMI_BETA_GOOGLE_OAUTH_WEB_CLIENT_ID": (
+        "153141744056-03d6sabmvita0a2civs6e0ngjoac54v7.apps.googleusercontent.com"
+    ),
+}
+
+_IOS_KEYS = (
+    "AMI_BETA_IOS_BUNDLE_ID",
+    "AMI_BETA_APPLE_TEAM_ID",
+    "AMI_BETA_APP_STORE_API_KEY_ID",
+    "AMI_BETA_APP_STORE_API_ISSUER",
+    "AMI_BETA_ONESIGNAL_APP_ID",
+)
+_ANDROID_KEYS = (
+    "AMI_BETA_ANDROID_APPLICATION_ID",
+    "AMI_BETA_ANDROID_KEYSTORE_PROPERTIES",
+    "AMI_BETA_GOOGLE_OAUTH_WEB_CLIENT_ID",
+    "AMI_BETA_ONESIGNAL_APP_ID",
+)
+
+
+def test_beta_names_every_missing_key_in_one_refusal(real_ids):
+    r = _run(
+        real_ids, "build_testflight.sh", *_beta_args("x"), env={"SENTRY_DSN": _DSN}
+    )
+    assert r.returncode == 1
+    for key in _IOS_KEYS:
+        assert key in r.stderr, key
+    assert "beta_accounts.env" in r.stderr
+    r = _run(
+        real_ids, "publish_playstore.sh", *_beta_args("x"), env={"SENTRY_DSN": _DSN}
+    )
+    assert r.returncode == 1
+    for key in (*_ANDROID_KEYS, "AMI_BETA_PLAY_SERVICE_ACCOUNT_JSON"):
+        assert key in r.stderr, key
+
+
+def test_build_playstore_does_not_need_the_service_account(real_ids):
+    env = {k: v for k, v in _BETA_ENV.items() if k != "AMI_BETA_PLAY_SERVICE_ACCOUNT_JSON"}
+    assert _run(real_ids, "build_playstore.sh", *_beta_args("x"), env=env).returncode == 0
+    r = _run(real_ids, "publish_playstore.sh", *_beta_args("x"), env=env)
+    assert r.returncode == 1
+    assert "AMI_BETA_PLAY_SERVICE_ACCOUNT_JSON" in r.stderr
+
+
+@pytest.mark.parametrize("key,personal", sorted(_PERSONAL_BY_KEY.items()))
+def test_beta_refuses_every_personal_account_value(real_ids, key, personal):
+    script = "build_playstore.sh" if key == "AMI_BETA_GOOGLE_OAUTH_WEB_CLIENT_ID" else "build_testflight.sh"
+    r = _run(real_ids, script, *_beta_args(script), env={**_BETA_ENV, key: personal})
+    assert r.returncode == 1
+    assert f"{key}={personal}" in r.stderr
+
+
+def test_beta_refuses_a_malformed_team_id(real_ids):
+    r = _run(
+        real_ids,
+        "build_testflight.sh",
+        *_beta_args("x"),
+        env={**_BETA_ENV, "AMI_BETA_APPLE_TEAM_ID": "short"},
+    )
+    assert r.returncode == 1
+    assert "AMI_BETA_APPLE_TEAM_ID must be 10" in r.stderr
+
+
+def _write_env_file(tree: Path, body: str) -> Path:
+    f = tree / "mobile" / "beta_accounts.env"
+    f.write_text(body)
+    return f
+
+
+def test_beta_reads_the_accounts_env_file(real_ids):
+    body = "# comment\n" + "\n".join(f'{k}="{v}"' for k, v in _BETA_ENV.items()) + "\n"
+    _write_env_file(real_ids, body)
+    r = _run(real_ids, "build_testflight.sh", *_beta_args("x"), env={})
+    assert r.returncode == 0, r.stderr
+    assert "bundle id        : co.example.amibeta" in r.stdout
+    assert "apple team id    : ABCDE12345" in r.stdout
+    assert "abc123secretkey" not in r.stdout
+
+
+def test_exported_env_wins_over_the_file_and_the_file_is_never_executed(real_ids, tmp_path):
+    marker = tmp_path / "executed"
+    body = "AMI_BETA_IOS_BUNDLE_ID=co.example.fromfile\n"
+    body += "\n".join(f"{k}={v}" for k, v in _BETA_ENV.items() if k != "AMI_BETA_IOS_BUNDLE_ID")
+    body += f"\n$(touch {marker})\n`touch {marker}`\n"
+    _write_env_file(real_ids, body)
+    # exported bundle id wins over the file's
+    r = _run(
+        real_ids,
+        "build_testflight.sh",
+        *_beta_args("x"),
+        env={"AMI_BETA_IOS_BUNDLE_ID": "co.example.exported"},
+    )
+    assert r.returncode == 0, r.stderr
+    assert "bundle id        : co.example.exported" in r.stdout
+    assert not marker.exists()
+
+
+def test_empty_values_in_the_template_are_treated_as_missing(real_ids):
+    shutil.copy(_REPO / "mobile" / "beta_accounts.env.example", real_ids / "mobile" / "beta_accounts.env")
+    r = _run(real_ids, "build_testflight.sh", *_beta_args("x"), env={"SENTRY_DSN": _DSN})
+    assert r.returncode == 1
+    for key in _IOS_KEYS:
+        assert key in r.stderr
+
+
+def test_the_template_lists_every_key_the_lib_reads_and_marks_requirements():
+    template = (_REPO / "mobile" / "beta_accounts.env.example").read_text()
+    lib = (_REPO / "scripts" / "lib" / "release_channel.sh").read_text()
+    block = lib.split("AMI_BETA_ACCOUNT_KEYS=(")[1].split(")")[0]
+    for key in block.split():
+        assert f"\n{key}=\n" in template, key
+    assert template.count("[REQUIRED") >= 9
+
+
+def test_the_accounts_file_is_gitignored_and_the_template_is_not():
+    ignore = (_REPO / ".gitignore").read_text().splitlines()
+    assert "mobile/beta_accounts.env" in ignore
+    assert (_REPO / "mobile" / "beta_accounts.env.example").exists()
+
+
+# ── Alpha is unchanged by all of the above ─────────────────────────────────
+
+
+@pytest.mark.parametrize("script", _SCRIPTS)
+def test_alpha_ignores_the_accounts_file_and_beta_env(real_ids, script):
+    clean = _run(real_ids, script, "--dry-run")
+    body = "\n".join(f"{k}={v}" for k, v in _BETA_ENV.items())
+    _write_env_file(real_ids, body)
+    polluted = _run(real_ids, script, "--dry-run", env=_BETA_ENV)
+    assert clean.returncode == polluted.returncode == 0
+    assert clean.stdout == polluted.stdout
+    assert "accounts env" not in polluted.stdout
+
+
+def test_the_committed_project_files_still_carry_the_personal_ids():
+    pbx = (_REPO / "mobile/ios/Runner.xcodeproj/project.pbxproj").read_text()
+    assert "PRODUCT_BUNDLE_IDENTIFIER = ai.agenticmarketintel.amiTrade;" in pbx
+    assert "DEVELOPMENT_TEAM = S7RBWM4879;" in pbx
+    gradle = (_REPO / "mobile/android/app/build.gradle.kts").read_text()
+    assert 'System.getenv("AMI_GRADLE_APPLICATION_ID") ?: "ai.agenticmarketintel.ami_trade"' in gradle
+    assert '?: "${System.getProperty("user.home")}/.android-keys/keystore.properties"' in gradle
+    appfile = (_REPO / "mobile/android/fastlane/Appfile").read_text()
+    assert 'ENV["AMI_PLAY_PACKAGE_NAME"] || "ai.agenticmarketintel.ami_trade"' in appfile
+    export = (_REPO / "mobile/ios/ExportOptions.plist").read_text()
+    assert "<string>S7RBWM4879</string>" in export
+
+
+# ── the Beta wiring functions, run for real against a throwaway tree ───────
+
+
+def _call(tree: Path, snippet: str, env: dict[str, str] | None = None):
+    script = f"""
+set -euo pipefail
+PROJECT_ROOT="{tree}"
+source "{tree}/scripts/lib/release_channel.sh"
+{snippet}
+"""
+    full_env = {"PATH": "/usr/bin:/bin", "HOME": str(tree), "TMPDIR": str(tree)}
+    full_env.update(env or {})
+    return subprocess.run(
+        ["bash", "-c", script], cwd=tree, env=full_env, capture_output=True, text=True, timeout=60
+    )
+
+
+def _pbx(tree: Path) -> Path:
+    return tree / "mobile" / "ios" / "Runner.xcodeproj" / "project.pbxproj"
+
+
+def test_ios_patch_sets_company_ids_then_restores_the_project_byte_for_byte(real_ids):
+    before = _pbx(real_ids).read_text()
+    pbx = '"$PROJECT_ROOT/mobile/ios/Runner.xcodeproj/project.pbxproj"'
+    r = _call(
+        real_ids,
+        "CHANNEL=beta\nami_beta_ios_patch_project\n"
+        f'grep -q "PRODUCT_BUNDLE_IDENTIFIER = co.example.amibeta;" {pbx}\n'
+        f'grep -q "DEVELOPMENT_TEAM = ABCDE12345;" {pbx}\n'
+        f'grep -q "co.example.amibeta.RunnerTests" {pbx}\n'
+        f'! grep -q "S7RBWM4879" {pbx}\n'
+        'echo PATCHED_OK',
+        env={**_BETA_ENV},
+    )
+    assert r.returncode == 0, r.stderr
+    assert "PATCHED_OK" in r.stdout
+    assert "restored the Xcode project" in r.stdout
+    assert _pbx(real_ids).read_text() == before
+
+
+def test_ios_patch_restores_even_when_the_build_dies(real_ids):
+    before = _pbx(real_ids).read_text()
+    r = _call(real_ids, "CHANNEL=beta\nami_beta_ios_patch_project\nfalse", env={**_BETA_ENV})
+    assert r.returncode != 0
+    assert _pbx(real_ids).read_text() == before
+
+
+def test_ios_patch_refuses_a_project_that_is_not_pristine(real_ids):
+    _pbx(real_ids).write_text(_PBX_COMPANY)
+    r = _call(real_ids, "CHANNEL=beta\nami_beta_ios_patch_project", env={**_BETA_ENV})
+    assert r.returncode == 1
+    assert "pristine" in r.stderr
+
+
+def test_ios_patch_is_a_noop_for_alpha(real_ids):
+    before = _pbx(real_ids).read_bytes()
+    r = _call(real_ids, "CHANNEL=alpha\nami_beta_ios_patch_project\nami_beta_ios_prepare")
+    assert r.returncode == 0, r.stderr
+    assert _pbx(real_ids).read_bytes() == before
+    assert not (real_ids / "mobile" / "build" / "ExportOptions.beta.plist").exists()
+
+
+def test_ios_prepare_writes_company_export_options_and_never_inherits_alpha_keys(real_ids):
+    (real_ids / "mobile" / "ios" / "ExportOptions.plist").write_text(
+        (_REPO / "mobile/ios/ExportOptions.plist").read_text()
+    )
+    r = _call(
+        real_ids,
+        "CHANNEL=beta\nAPP_STORE_API_KEY_ID=44VJ5WADL2\nREVENUECAT_IOS_SDK_KEY=appl_alpha\n"
+        "ami_beta_ios_prepare\n"
+        'echo "KEY=$APP_STORE_API_KEY_ID ISSUER=$APP_STORE_API_ISSUER RC=[$REVENUECAT_IOS_SDK_KEY]"',
+        env={**_BETA_ENV},
+    )
+    assert r.returncode == 0, r.stderr
+    assert "KEY=ZZ99YY88XX" in r.stdout
+    assert "ISSUER=00000000-1111-2222-3333-444444444444" in r.stdout
+    assert "RC=[]" in r.stdout
+    plist = (real_ids / "mobile" / "build" / "ExportOptions.beta.plist").read_text()
+    assert "<string>ABCDE12345</string>" in plist
+    assert "S7RBWM4879" not in plist
+
+
+def test_android_prepare_refuses_a_missing_company_keystore(real_ids):
+    r = _call(real_ids, "CHANNEL=beta\nami_beta_android_prepare", env={**_BETA_ENV})
+    assert r.returncode == 1
+    assert "DEBUG signing" in r.stderr
+
+
+def test_android_prepare_exports_company_values_for_beta(real_ids, tmp_path):
+    props = tmp_path / "company.properties"
+    props.write_text("storeFile=/k/company.jks\n")
+    sa = tmp_path / "play.json"
+    sa.write_text("{}")
+    env = {
+        **_BETA_ENV,
+        "AMI_BETA_ANDROID_KEYSTORE_PROPERTIES": str(props),
+        "AMI_BETA_PLAY_SERVICE_ACCOUNT_JSON": str(sa),
+    }
+    r = _call(
+        real_ids,
+        "CHANNEL=beta\nAMI_CHANNEL_NEEDS_PLAY_UPLOAD=1\nami_beta_android_prepare\n"
+        'echo "ID=$AMI_GRADLE_APPLICATION_ID PKG=$AMI_PLAY_PACKAGE_NAME KS=$AMI_GRADLE_KEYSTORE_PROPERTIES SA=$SUPPLY_JSON_KEY"',
+        env=env,
+    )
+    assert r.returncode == 0, r.stderr
+    assert "ID=co.example.amibeta PKG=co.example.amibeta" in r.stdout
+    assert f"KS={props}" in r.stdout
+    assert f"SA={sa}" in r.stdout
+
+
+def test_android_prepare_clears_stray_exports_for_alpha(real_ids):
+    r = _call(
+        real_ids,
+        "CHANNEL=alpha\nami_beta_android_prepare\n"
+        'echo "ID=[${AMI_GRADLE_APPLICATION_ID:-}] PKG=[${AMI_PLAY_PACKAGE_NAME:-}] KS=[${AMI_GRADLE_KEYSTORE_PROPERTIES:-}]"',
+        env={
+            "AMI_GRADLE_APPLICATION_ID": "co.example.stray",
+            "AMI_PLAY_PACKAGE_NAME": "co.example.stray",
+            "AMI_GRADLE_KEYSTORE_PROPERTIES": "/stray",
+        },
+    )
+    assert r.returncode == 0, r.stderr
+    assert "ID=[] PKG=[] KS=[]" in r.stdout

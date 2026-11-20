@@ -39,9 +39,11 @@
 # backend switcher OFF (no Alpha hostname in the binary), sets AMI_BETA=true
 # (CR278, English only) and AMI_ENV=beta. It REFUSES to run unless:
 #   * --no-games is passed (external testers, no hidden features);
-#   * AMI_BETA_IOS_BUNDLE_ID is set to the company bundle ID AND the Xcode
-#     project declares that same ID — WP-49 / gate S7 supplies it, so today
-#     every beta build refuses, on purpose;
+#   * the company-account keys are set (WP-49 / gate S7): bundle ID, Team ID,
+#     ASC API key + issuer, OneSignal app. They are read from the gitignored
+#     mobile/beta_accounts.env (template: mobile/beta_accounts.env.example);
+#     every missing or personal-account value is listed in one refusal. The
+#     Xcode project is patched for the run and restored on exit;
 #   * SENTRY_DSN is set (WP-53's crash-free figure comes from Sentry).
 # Never run --channel beta with the upload step until WP-49 has landed.
 #
@@ -178,6 +180,9 @@ done
 # Beta refusal (or --dry-run) never depends on the ASC key being present.
 ami_channel_setup ios
 ami_channel_dry_run_exit
+# CR267 WP-49 (prep): Beta swaps in the company ASC key, team and RevenueCat key
+# (from mobile/beta_accounts.env); a no-op for alpha.
+ami_beta_ios_prepare
 
 # CR225 — AMI_RELEASE_CHANNEL: the dart-define AdMobConfig gates real ad
 # units on. Derived HERE from the same --internal-only/--production flags
@@ -204,7 +209,7 @@ if [[ ! -f "$key_file" ]]; then
   exit 1
 fi
 
-export_options="${IOS_DIR}/ExportOptions.plist"
+export_options="${BETA_EXPORT_OPTIONS:-${IOS_DIR}/ExportOptions.plist}"
 if [[ ! -f "$export_options" ]]; then
   echo "✗ ExportOptions.plist not found at $export_options"
   exit 1
@@ -560,6 +565,10 @@ rm -rf "${MOBILE_DIR}/build/native_assets" \
        "${MOBILE_DIR}/build/ios/iphoneos" \
        "${MOBILE_DIR}/.dart_tool/hooks_runner" \
        "${MOBILE_DIR}/.dart_tool/flutter_build"
+
+# CR267 WP-49 (prep): Beta only — set the company bundle ID + team in the Xcode
+# project for this run; restored on exit. No-op for alpha.
+ami_beta_ios_patch_project
 
 flutter build ios --release --no-codesign \
   "${CHANNEL_DEFINES[@]}" \

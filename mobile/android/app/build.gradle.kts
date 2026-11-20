@@ -10,8 +10,12 @@ plugins {
 // Upload keystore lives outside the repo at ~/.android-keys/keystore.properties.
 // Falls back to debug signing when the file is absent (dev / CI without secrets).
 // See docs/initial_specs/11_decisions/decision_log.md#d-057 for the keystore setup.
+// CR267 WP-49 (prep): the Beta channel (scripts/lib/release_channel.sh) sets
+// AMI_GRADLE_KEYSTORE_PROPERTIES / AMI_GRADLE_APPLICATION_ID to the company values.
+// Unset (every Alpha build) they fall back to exactly the values used before.
 val keystorePropertiesFile = file(
-    "${System.getProperty("user.home")}/.android-keys/keystore.properties"
+    System.getenv("AMI_GRADLE_KEYSTORE_PROPERTIES")
+        ?: "${System.getProperty("user.home")}/.android-keys/keystore.properties"
 )
 val keystoreProperties = Properties().apply {
     if (keystorePropertiesFile.exists()) {
@@ -35,7 +39,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "ai.agenticmarketintel.ami_trade"
+        applicationId = System.getenv("AMI_GRADLE_APPLICATION_ID") ?: "ai.agenticmarketintel.ami_trade"
         minSdk = 28
         // Play raises its target-API floor every year and enforces it on 31 August;
         // API 36 became mandatory 2026-08-31. Pinned rather than tracking

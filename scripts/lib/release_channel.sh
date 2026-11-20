@@ -34,6 +34,7 @@
 #                                 so the Alpha hostname is not in the binary.
 #   AMI_BETA=true                 CR278: English-only build
 #   AMI_ENV=beta                  Sentry environment tag
+#   ONESIGNAL_APP_ID=<beta app>   WP-49: the Beta OneSignal app (APNs key is team-bound)
 #   SENTRY_DSN=<dsn>              required: WP-53's crash-free figure is Sentry
 #                                 release health, so a Beta build with no DSN
 #                                 would measure nothing and say nothing.
@@ -42,12 +43,55 @@
 # (BackendUrls.lockedMode), so a Beta build's URL rides in the `_PROD` slot.
 # That is a naming quirk of the existing mode plumbing, not a Prod backend.
 
+# CR267 WP-49 (prep): every company-account value comes from a gitignored env
+# file, never from a default baked into a script. mobile/beta_accounts.env.example
+# lists every key. A key already exported in the environment wins over the file
+# (so tests and one-off overrides work). The file is PARSED, not sourced: only
+# KEY=VALUE lines for the known keys below are read; nothing in it is executed.
+# Alpha never reads this file and never sees these variables.
+AMI_BETA_ACCOUNTS_ENV="${AMI_BETA_ACCOUNTS_ENV:-${PROJECT_ROOT}/mobile/beta_accounts.env}"
+
 AMI_BETA_API_URL_DEFAULT="https://api-beta.agenticmarketintel.ai"
 
 # The founder's personal-account identifiers, as shipped today. A Beta build
-# may not carry either (CR267 WP-49 / gate S7).
+# may not carry any of them (CR267 WP-49 / gate S7): each is a copy-paste away
+# from shipping a "company" build that is really wired to the personal account.
 AMI_PERSONAL_IOS_BUNDLE_ID="ai.agenticmarketintel.amiTrade"
 AMI_PERSONAL_ANDROID_APPLICATION_ID="ai.agenticmarketintel.ami_trade"
+AMI_PERSONAL_APPLE_TEAM_ID="S7RBWM4879"
+AMI_PERSONAL_ASC_KEY_ID="44VJ5WADL2"
+AMI_PERSONAL_ASC_ISSUER="289e6201-8fc9-44a3-abde-59e8e278527c"
+AMI_PERSONAL_ONESIGNAL_APP_ID="3c2020b6-d8b0-493f-b0e3-5d6ede868d7b"
+AMI_PERSONAL_GOOGLE_WEB_CLIENT_ID="153141744056-03d6sabmvita0a2civs6e0ngjoac54v7.apps.googleusercontent.com"
+AMI_PERSONAL_KEYSTORE_PROPERTIES="${HOME}/.android-keys/keystore.properties"
+AMI_PERSONAL_PLAY_SERVICE_ACCOUNT="${HOME}/.android-keys/play-service-account.json"
+
+# Keys the env file may set. Anything else in the file is ignored.
+AMI_BETA_ACCOUNT_KEYS=(
+  AMI_BETA_IOS_BUNDLE_ID AMI_BETA_APPLE_TEAM_ID
+  AMI_BETA_APP_STORE_API_KEY_ID AMI_BETA_APP_STORE_API_ISSUER
+  AMI_BETA_ANDROID_APPLICATION_ID AMI_BETA_ANDROID_KEYSTORE_PROPERTIES
+  AMI_BETA_PLAY_SERVICE_ACCOUNT_JSON AMI_BETA_GOOGLE_OAUTH_WEB_CLIENT_ID
+  AMI_BETA_ONESIGNAL_APP_ID AMI_BETA_REVENUECAT_IOS_SDK_KEY
+  AMI_BETA_REVENUECAT_ANDROID_SDK_KEY AMI_API_URL_BETA SENTRY_DSN
+)
+
+_ami_beta_load_accounts_env() {
+  [[ -f "$AMI_BETA_ACCOUNTS_ENV" ]] || return 0
+  local line key val k
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    [[ "$line" =~ ^[[:space:]]*([A-Z0-9_]+)=(.*)$ ]] || continue
+    key="${BASH_REMATCH[1]}"
+    val="${BASH_REMATCH[2]}"
+    val="${val%"${val##*[![:space:]]}"}"
+    if [[ "$val" == \"*\" || "$val" == \'*\' ]]; then val="${val:1:${#val}-2}"; fi
+    for k in "${AMI_BETA_ACCOUNT_KEYS[@]}"; do
+      if [[ "$k" == "$key" && -z "${!key:-}" && -n "$val" ]]; then
+        export "$key=$val"
+      fi
+    done
+  done < "$AMI_BETA_ACCOUNTS_ENV"
+}
 
 CHANNEL="${CHANNEL:-alpha}"
 DRY_RUN=0
@@ -69,52 +113,188 @@ _ami_declared_ios_ids() {
     | grep -v '\.RunnerTests$' | sort -u
 }
 
-_ami_declared_android_id() {
-  local gradle="${PROJECT_ROOT}/mobile/android/app/build.gradle.kts"
-  [[ -f "$gradle" ]] || return 0
-  grep -E '^[[:space:]]*applicationId[[:space:]]*=' "$gradle" \
-    | head -1 | sed -E 's/.*"([^"]+)".*/\1/'
+# One-line description per key, used in the refusal message.
+_ami_beta_key_desc() {
+  case "$1" in
+    AMI_BETA_IOS_BUNDLE_ID) echo "company iOS bundle ID" ;;
+    AMI_BETA_APPLE_TEAM_ID) echo "company Apple Developer Team ID (10 chars)" ;;
+    AMI_BETA_APP_STORE_API_KEY_ID) echo "company App Store Connect API key ID (10 chars)" ;;
+    AMI_BETA_APP_STORE_API_ISSUER) echo "company App Store Connect issuer UUID" ;;
+    AMI_BETA_ANDROID_APPLICATION_ID) echo "company Play package name / applicationId" ;;
+    AMI_BETA_ANDROID_KEYSTORE_PROPERTIES) echo "path to the company upload keystore.properties" ;;
+    AMI_BETA_PLAY_SERVICE_ACCOUNT_JSON) echo "path to the company Play service-account JSON" ;;
+    AMI_BETA_GOOGLE_OAUTH_WEB_CLIENT_ID) echo "company Google OAuth Web client ID" ;;
+    AMI_BETA_ONESIGNAL_APP_ID) echo "the Beta OneSignal app ID (APNs key is team-bound)" ;;
+    *) echo "" ;;
+  esac
 }
 
+_ami_chk_personal() { # $1 key, $2 personal value; appends to $personal in caller
+  local v="${!1:-}"
+  if [[ -n "$v" && "$v" == "$2" ]]; then
+    personal+=("$1=$v")
+  fi
+  return 0
+}
+
+# Refuses ONCE, naming every missing or personal-account key, so the founder
+# fixes the env file in one pass rather than one refusal at a time.
 _ami_beta_require_company_ids() {
-  local platform="$1" env_name declared personal
+  local platform="$1" k missing=() personal=() bad=() keys=()
   if [[ "$platform" == "ios" ]]; then
-    env_name="AMI_BETA_IOS_BUNDLE_ID"
-    personal="$AMI_PERSONAL_IOS_BUNDLE_ID"
+    keys=(AMI_BETA_IOS_BUNDLE_ID AMI_BETA_APPLE_TEAM_ID AMI_BETA_APP_STORE_API_KEY_ID
+          AMI_BETA_APP_STORE_API_ISSUER AMI_BETA_ONESIGNAL_APP_ID)
   else
-    env_name="AMI_BETA_ANDROID_APPLICATION_ID"
-    personal="$AMI_PERSONAL_ANDROID_APPLICATION_ID"
-  fi
-  local given="${!env_name:-}"
-
-  if [[ -z "$given" ]]; then
-    _ami_channel_die "✗ --channel beta refused: ${env_name} is not set.
-  A Beta build must be signed under the COMPANY store accounts, and the final
-  company bundle / application IDs do not exist yet — they come from WP-49
-  (company-account migration, gate S7; docs/forward_planning/CR258_company_account_migration/).
-  Until then no Beta build can be made, on purpose: the only identifiers in the
-  project are the founder's personal ones (${personal}), and a Beta build
-  under those would have to be re-issued under new IDs.
-  When WP-49 lands: change the IDs in the project files, then export
-      ${env_name}=<the new id>
-  (it must equal what the project declares; this script checks)."
+    keys=(AMI_BETA_ANDROID_APPLICATION_ID AMI_BETA_ANDROID_KEYSTORE_PROPERTIES
+          AMI_BETA_GOOGLE_OAUTH_WEB_CLIENT_ID AMI_BETA_ONESIGNAL_APP_ID)
+    if [[ "${AMI_CHANNEL_NEEDS_PLAY_UPLOAD:-0}" -eq 1 ]]; then
+      keys+=(AMI_BETA_PLAY_SERVICE_ACCOUNT_JSON)
+    fi
   fi
 
-  if [[ "$given" == "$personal" ]]; then
-    _ami_channel_die "✗ --channel beta refused: ${env_name} is the personal-account ID (${personal}).
-  A Beta build under the personal accounts is exactly what WP-49 / gate S7 exists to prevent."
+  for k in "${keys[@]}"; do
+    [[ -n "${!k:-}" ]] || missing+=("$k")
+  done
+
+  _ami_chk_personal AMI_BETA_IOS_BUNDLE_ID "$AMI_PERSONAL_IOS_BUNDLE_ID"
+  _ami_chk_personal AMI_BETA_ANDROID_APPLICATION_ID "$AMI_PERSONAL_ANDROID_APPLICATION_ID"
+  _ami_chk_personal AMI_BETA_APPLE_TEAM_ID "$AMI_PERSONAL_APPLE_TEAM_ID"
+  _ami_chk_personal AMI_BETA_APP_STORE_API_KEY_ID "$AMI_PERSONAL_ASC_KEY_ID"
+  _ami_chk_personal AMI_BETA_APP_STORE_API_ISSUER "$AMI_PERSONAL_ASC_ISSUER"
+  _ami_chk_personal AMI_BETA_ONESIGNAL_APP_ID "$AMI_PERSONAL_ONESIGNAL_APP_ID"
+  _ami_chk_personal AMI_BETA_GOOGLE_OAUTH_WEB_CLIENT_ID "$AMI_PERSONAL_GOOGLE_WEB_CLIENT_ID"
+  _ami_chk_personal AMI_BETA_ANDROID_KEYSTORE_PROPERTIES "$AMI_PERSONAL_KEYSTORE_PROPERTIES"
+  _ami_chk_personal AMI_BETA_PLAY_SERVICE_ACCOUNT_JSON "$AMI_PERSONAL_PLAY_SERVICE_ACCOUNT"
+
+  if [[ -n "${AMI_BETA_APPLE_TEAM_ID:-}" && ! "$AMI_BETA_APPLE_TEAM_ID" =~ ^[A-Z0-9]{10}$ ]]; then
+    bad+=("AMI_BETA_APPLE_TEAM_ID must be 10 upper-case letters/digits")
+  fi
+  for k in AMI_BETA_IOS_BUNDLE_ID AMI_BETA_ANDROID_APPLICATION_ID; do
+    if [[ -n "${!k:-}" && ! "${!k}" =~ ^[A-Za-z][A-Za-z0-9_-]*(\.[A-Za-z][A-Za-z0-9_-]*)+$ ]]; then
+      bad+=("${k} is not a valid reverse-DNS id (${!k})")
+    fi
+  done
+
+  if (( ${#missing[@]} + ${#personal[@]} + ${#bad[@]} == 0 )); then
+    return 0
   fi
 
-  if [[ "$platform" == "ios" ]]; then
-    declared="$(_ami_declared_ios_ids)"
-  else
-    declared="$(_ami_declared_android_id)"
+  {
+    echo "✗ --channel beta refused: the company-account configuration is incomplete."
+    echo "  A Beta build must be signed and wired under the COMPANY store accounts"
+    echo "  (CR267 WP-49 / gate S7; docs/forward_planning/CR258_company_account_migration/)."
+    echo "  Fill ${AMI_BETA_ACCOUNTS_ENV} (template: mobile/beta_accounts.env.example)"
+    echo "  or export the keys. Alpha builds are unaffected."
+    if (( ${#missing[@]} )); then
+      echo "  Missing:"
+      for k in "${missing[@]}"; do echo "    - ${k}: $(_ami_beta_key_desc "$k")"; done
+    fi
+    if (( ${#personal[@]} )); then
+      echo "  Set to the founder's PERSONAL-account value (a Beta build under it is what WP-49 prevents):"
+      for k in "${personal[@]}"; do echo "    - ${k}"; done
+    fi
+    if (( ${#bad[@]} )); then
+      echo "  Malformed:"
+      for k in "${bad[@]}"; do echo "    - ${k}"; done
+    fi
+  } >&2
+  exit 1
+}
+
+# ── Beta account wiring (CR267 WP-49 prep) ──────────────────────────────────
+# Called by the scripts AFTER --dry-run exits, so dry-run never touches a file
+# or needs a credential. They change what the BETA build is signed/wired with;
+# for alpha they do nothing beyond clearing the Gradle/fastlane variables they own.
+
+_AMI_BETA_PBX_BACKUP=""
+
+_ami_beta_restore_project() {
+  local pbx="${PROJECT_ROOT}/mobile/ios/Runner.xcodeproj/project.pbxproj"
+  if [[ -n "$_AMI_BETA_PBX_BACKUP" && -f "$_AMI_BETA_PBX_BACKUP" ]]; then
+    cp "$_AMI_BETA_PBX_BACKUP" "$pbx"
+    rm -f "$_AMI_BETA_PBX_BACKUP"
+    _AMI_BETA_PBX_BACKUP=""
+    echo "▶ restored the Xcode project to the personal (Alpha) settings"
   fi
-  if [[ "$declared" != "$given" ]]; then
-    _ami_channel_die "✗ --channel beta refused: ${env_name}=${given} but the project declares:
-$(printf '%s\n' "${declared:-<none found>}" | sed 's/^/      /')
-  The project files decide what is signed, not the environment. Finish the
-  WP-49 identifier change in the project (and signing) first, then re-run."
+}
+
+# iOS: credentials, export options, RevenueCat key. Sets BETA_EXPORT_OPTIONS for
+# the script to use instead of ios/ExportOptions.plist.
+ami_beta_ios_prepare() {
+  [[ "$CHANNEL" == "beta" ]] || return 0
+  APP_STORE_API_KEY_ID="$AMI_BETA_APP_STORE_API_KEY_ID"
+  APP_STORE_API_ISSUER="$AMI_BETA_APP_STORE_API_ISSUER"
+  # Never inherit Alpha's RevenueCat key: it belongs to the personal app and
+  # bundle ID. Empty makes the script's own "no key" gate demand --no-billing.
+  REVENUECAT_IOS_SDK_KEY="${AMI_BETA_REVENUECAT_IOS_SDK_KEY:-}"
+
+  local src="${PROJECT_ROOT}/mobile/ios/ExportOptions.plist"
+  local out="${PROJECT_ROOT}/mobile/build/ExportOptions.beta.plist"
+  [[ -f "$src" ]] || _ami_channel_die "✗ ${src} not found"
+  mkdir -p "$(dirname "$out")"
+  sed "s|<string>${AMI_PERSONAL_APPLE_TEAM_ID}</string>|<string>${AMI_BETA_APPLE_TEAM_ID}</string>|" \
+    "$src" > "$out"
+  if ! grep -q "<string>${AMI_BETA_APPLE_TEAM_ID}</string>" "$out" \
+     || grep -q "$AMI_PERSONAL_APPLE_TEAM_ID" "$out"; then
+    _ami_channel_die "✗ could not set the company teamID in the Beta export options (ExportOptions.plist no longer carries ${AMI_PERSONAL_APPLE_TEAM_ID}?)"
+  fi
+  BETA_EXPORT_OPTIONS="$out"
+}
+
+# iOS: the Xcode project, not the environment, decides the bundle ID and team.
+# Patch the Runner target (and RunnerTests' id suffix) for the duration of the
+# build and restore on any exit. Alpha never calls the patch, so the committed
+# project file stays byte-identical for it.
+ami_beta_ios_patch_project() {
+  [[ "$CHANNEL" == "beta" ]] || return 0
+  local pbx="${PROJECT_ROOT}/mobile/ios/Runner.xcodeproj/project.pbxproj"
+  [[ -f "$pbx" ]] || _ami_channel_die "✗ ${pbx} not found"
+  if ! grep -q "PRODUCT_BUNDLE_IDENTIFIER = ${AMI_PERSONAL_IOS_BUNDLE_ID};" "$pbx" \
+     || ! grep -q "DEVELOPMENT_TEAM = ${AMI_PERSONAL_APPLE_TEAM_ID};" "$pbx"; then
+    _ami_channel_die "✗ the Xcode project is not in its pristine personal-account state (a previous Beta build died mid-run?).
+  Restore it with: git checkout -- mobile/ios/Runner.xcodeproj/project.pbxproj"
+  fi
+  _AMI_BETA_PBX_BACKUP="$(mktemp "${TMPDIR:-/tmp}/ami_pbx_backup.XXXXXX")"
+  cp "$pbx" "$_AMI_BETA_PBX_BACKUP"
+  trap _ami_beta_restore_project EXIT
+  sed -i.betabak \
+    -e "s|PRODUCT_BUNDLE_IDENTIFIER = ${AMI_PERSONAL_IOS_BUNDLE_ID};|PRODUCT_BUNDLE_IDENTIFIER = ${AMI_BETA_IOS_BUNDLE_ID};|" \
+    -e "s|PRODUCT_BUNDLE_IDENTIFIER = ${AMI_PERSONAL_IOS_BUNDLE_ID}\.RunnerTests;|PRODUCT_BUNDLE_IDENTIFIER = ${AMI_BETA_IOS_BUNDLE_ID}.RunnerTests;|" \
+    -e "s|DEVELOPMENT_TEAM = ${AMI_PERSONAL_APPLE_TEAM_ID};|DEVELOPMENT_TEAM = ${AMI_BETA_APPLE_TEAM_ID};|" \
+    "$pbx"
+  rm -f "${pbx}.betabak"
+  local declared
+  declared="$(_ami_declared_ios_ids)"
+  if [[ "$declared" != "$AMI_BETA_IOS_BUNDLE_ID" ]] \
+     || grep -q "$AMI_PERSONAL_APPLE_TEAM_ID" "$pbx"; then
+    _ami_beta_restore_project
+    _ami_channel_die "✗ patching the Xcode project for Beta did not produce ${AMI_BETA_IOS_BUNDLE_ID} / ${AMI_BETA_APPLE_TEAM_ID} (found: ${declared:-none})"
+  fi
+  echo "▶ Xcode project patched for this Beta build: ${AMI_BETA_IOS_BUNDLE_ID}, team ${AMI_BETA_APPLE_TEAM_ID} (restored on exit)"
+}
+
+# Android: Gradle reads AMI_GRADLE_APPLICATION_ID / AMI_GRADLE_KEYSTORE_PROPERTIES
+# and fastlane reads AMI_PLAY_PACKAGE_NAME; unset, they fall back to the personal
+# values, which is exactly Alpha's behaviour. This function owns those three
+# variables: it clears them for alpha (a stray export in the shell cannot
+# re-point an Alpha build) and sets them for beta.
+ami_beta_android_prepare() {
+  unset AMI_GRADLE_APPLICATION_ID AMI_GRADLE_KEYSTORE_PROPERTIES AMI_PLAY_PACKAGE_NAME
+  [[ "$CHANNEL" == "beta" ]] || return 0
+
+  local props="$AMI_BETA_ANDROID_KEYSTORE_PROPERTIES"
+  if [[ ! -f "$props" ]] || ! grep -q '^storeFile=' "$props"; then
+    _ami_channel_die "✗ --channel beta refused: AMI_BETA_ANDROID_KEYSTORE_PROPERTIES (${props}) is missing or has no storeFile=.
+  Gradle would fall back to DEBUG signing and Play would reject the AAB; the Beta
+  upload key must be the company one. Create it first (see the WP-49 prep doc)."
+  fi
+  export AMI_GRADLE_APPLICATION_ID="$AMI_BETA_ANDROID_APPLICATION_ID"
+  export AMI_GRADLE_KEYSTORE_PROPERTIES="$props"
+  export AMI_PLAY_PACKAGE_NAME="$AMI_BETA_ANDROID_APPLICATION_ID"
+  BETA_KEYSTORE_PROPS="$props"
+  REVENUECAT_ANDROID_SDK_KEY="${AMI_BETA_REVENUECAT_ANDROID_SDK_KEY:-}"
+  if [[ "${AMI_CHANNEL_NEEDS_PLAY_UPLOAD:-0}" -eq 1 ]]; then
+    export SUPPLY_JSON_KEY="$AMI_BETA_PLAY_SERVICE_ACCOUNT_JSON"
   fi
 }
 
@@ -136,6 +316,7 @@ ami_channel_setup() {
     return 0
   fi
 
+  _ami_beta_load_accounts_env
   : "${AMI_API_URL_BETA:=${AMI_BETA_API_URL_DEFAULT}}"
   : "${SENTRY_DSN:=}"
 
@@ -146,13 +327,6 @@ ami_channel_setup() {
   fi
 
   _ami_beta_require_company_ids "$platform"
-
-  if [[ "$platform" == "android" && -z "${AMI_BETA_GOOGLE_OAUTH_WEB_CLIENT_ID:-}" ]]; then
-    _ami_channel_die "✗ --channel beta refused: AMI_BETA_GOOGLE_OAUTH_WEB_CLIENT_ID is not set.
-  Google Sign-In audiences move to the company project in WP-49; the personal
-  project's client ID baked as the Alpha default would sign testers in against
-  the wrong audience. Export the company Web client ID."
-  fi
 
   if [[ -z "$SENTRY_DSN" ]]; then
     _ami_channel_die "✗ --channel beta refused: SENTRY_DSN is empty.
@@ -173,6 +347,7 @@ ami_channel_setup() {
     "--dart-define=AMI_API_URL_PROD=${AMI_API_URL_BETA}"
     "--dart-define=AMI_BETA=true"
     "--dart-define=AMI_ENV=beta"
+    "--dart-define=ONESIGNAL_APP_ID=${AMI_BETA_ONESIGNAL_APP_ID}"
   )
   if [[ "$platform" == "ios" ]]; then
     # build_testflight.sh bakes no SENTRY_DSN on alpha; the Android script
@@ -199,8 +374,10 @@ _ami_channel_report() {
   done
   if [[ "$CHANNEL" == "beta" ]]; then
     echo "  SENTRY_DSN       : <set>"
+    echo "  accounts env     : ${AMI_BETA_ACCOUNTS_ENV}"
     if [[ "$platform" == "ios" ]]; then
       echo "  bundle id        : ${AMI_BETA_IOS_BUNDLE_ID}"
+      echo "  apple team id    : ${AMI_BETA_APPLE_TEAM_ID}"
     else
       echo "  application id   : ${AMI_BETA_ANDROID_APPLICATION_ID}"
     fi

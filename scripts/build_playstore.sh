@@ -36,10 +36,12 @@
 # backend switcher OFF (no Alpha hostname in the binary), sets AMI_BETA=true
 # (CR278, English only) and AMI_ENV=beta. It REFUSES to run unless:
 #   * --no-games is passed (external testers, no hidden features);
-#   * AMI_BETA_ANDROID_APPLICATION_ID is set to the company application ID AND
-#     android/app/build.gradle.kts declares that same ID — WP-49 / gate S7
-#     supplies it, so today every beta build refuses, on purpose;
-#   * AMI_BETA_GOOGLE_OAUTH_WEB_CLIENT_ID is set (company Google project, WP-49);
+#   * the company-account keys are set (WP-49 / gate S7): application ID,
+#     upload keystore properties, Google Web client, OneSignal app. They are read
+#     from the gitignored mobile/beta_accounts.env (template:
+#     mobile/beta_accounts.env.example); every missing or personal-account
+#     value is listed in one refusal. Gradle gets the company ID at build time;
+#     the committed build.gradle.kts defaults stay the Alpha values;
 #   * SENTRY_DSN is set (WP-53's crash-free figure comes from Sentry). On the
 #     alpha channel SENTRY_DSN stays optional, as before.
 #
@@ -183,6 +185,9 @@ done
 # (or --dry-run) never depends on a keystore or any credential being present.
 ami_channel_setup android
 ami_channel_dry_run_exit
+# CR267 WP-49 (prep): Beta points Gradle at the company applicationId + upload
+# keystore (from mobile/beta_accounts.env); for alpha it only clears them.
+ami_beta_android_prepare
 
 # CR225 — AMI_RELEASE_CHANNEL: the dart-define AdMobConfig gates real ad
 # units on, mirroring build_testflight.sh's derivation exactly. Never set
@@ -198,7 +203,7 @@ else
   AMI_RELEASE_CHANNEL="internal"
 fi
 
-keystore_props="$HOME/.android-keys/keystore.properties"
+keystore_props="${BETA_KEYSTORE_PROPS:-$HOME/.android-keys/keystore.properties}"
 if [[ ! -f "$keystore_props" ]]; then
   echo "⚠ no keystore at $keystore_props — Gradle will fall back to DEBUG signing"
   echo "  That AAB will NOT be accepted by Play Console. Set up the keystore"
