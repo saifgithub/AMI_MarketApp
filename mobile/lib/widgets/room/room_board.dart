@@ -34,6 +34,7 @@ import 'package:ami_trade/models/room_board.dart';
 import 'package:ami_trade/state/street_comparison_provider.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/room/room_consensus_strip.dart';
+import 'package:ami_trade/widgets/room/room_flip_card.dart';
 import 'package:ami_trade/widgets/room/room_street_card.dart';
 import 'package:ami_trade/theme/hex_clipper.dart';
 import 'package:flutter/material.dart';
@@ -140,6 +141,12 @@ class RoomBoard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _HeroTile(data: data),
+        // CR267 WP-25 — a call that differs from the user's previous one says
+        // why, directly under the call it explains. Absent on a non-flip.
+        if (data.flipExplainer != null) ...[
+          const SizedBox(height: AmiSpacing.m),
+          RoomFlipCard(explainer: data.flipExplainer!),
+        ],
         // The override line sits between hero and comb and is never collapsed.
         // Without it the board contradicts itself — the comb shows 8 FOR while
         // the hero says PASS — and a graphic that looks broken takes the

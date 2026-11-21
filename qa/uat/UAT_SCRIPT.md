@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**310 cases** — 200 api, 20 device, 90 manual; 16 blocked.
+**311 cases** — 200 api, 20 device, 91 manual; 16 blocked.
 
 ## Areas
 
@@ -13,7 +13,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 20 cases
 4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 32 cases
 5. [Floor tab & home shell](#floor) — 11 cases
-6. [Convene the Room](#room) — 31 cases
+6. [Convene the Room](#room) — 32 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
 8. [Brief Your Agent](#brief) — 18 cases
 9. [Sim trading & market data](#sim-trading) — 34 cases
@@ -4039,6 +4039,28 @@ _Manual (iPhone checklist) · plans: trader · uses LLM_
 3. After the mandate change the Room runs live (desks speak in turn), the banked line is absent, and the cost line states what that Room cost
 
 > WP-24 (2026-11-20). The line carries identifier ami.room.banked_line for the device rig. The Arabic and Malay strings are English placeholders until translated. API half is UAT-ROOM-030.
+
+#### UAT-ROOM-032 — A flipped verdict shows what changed, on the verdict card and in the Journal
+
+_Manual (iPhone checklist) · plans: trader · uses LLM_
+
+**Preconditions**
+1. A build that includes CR267 WP-25, signed in as a Trader with credits, who already has a finished Room on one ticker (for example MSFT) whose verdict was not APPROVE
+2. The user's mandate is then changed (Brief Your Agent or Mandate) so the next Room is a new run, not the banked one
+
+**Steps**
+1. Convene the Room on that ticker again and wait for the verdict
+2. If the new verdict differs from the previous one, read the card under the verdict heading; if it is the same, repeat after another mandate change until a Room's call differs
+3. Open the Journal, find the new Room entry in the list, then open it
+
+**Expected**
+1. A card under the verdict heading reads "CHANGED FROM <PREVIOUS> TO <NEW>" with the two verdict words, and lists one plain line per input that changed (for example the mandate change)
+2. When the Room ran on identical inputs the card says "Inputs were the same as your last Room on this name. The Room's own debate reached a different call." and never lists a change
+3. When the answers behind the two Rooms are available the card lists "ANSWERS THAT CHANGED" with a short question label and "before → after" per row; when they are not available there is no such section and no apology line
+4. A Room whose call matches the previous one shows no such card
+5. The Journal list entry carries one line "Changed from <PREVIOUS> to <NEW>: ..." and the opened entry shows the same card as the verdict card
+
+> CR267 WP-25 (2026-11-21), mobile half. The card carries identifier ami.room.flip_explainer and the Journal line ami.journal.flip_line. Wire shape is Verdict.flip_explainer (backend/app/schemas/room.py). Arabic and Malay strings are English placeholders until translated.
 
 #### UAT-ROOM-029 — A desk that fails shows a standing-guidance label, not a live call
 

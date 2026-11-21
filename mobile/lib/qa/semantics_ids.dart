@@ -101,6 +101,15 @@ class RoomBankIds {
   static const String bankedLine = 'ami.room.banked_line';
 }
 
+/// CR267 (WP-25) - the "Changed from X to Y" card on a flipped verdict, and its
+/// one-line form on a Journal list tile.
+class RoomFlipIds {
+  const RoomFlipIds._();
+
+  static const String card = 'ami.room.flip_explainer';
+  static const String journalLine = 'ami.journal.flip_line';
+}
+
 /// Modal sheets. These are the DEF075 class — interactive elements that can end
 /// up under the Android system nav bar or the iOS home indicator, which is the
 /// one usability check CR080 was built to catch.

@@ -1902,21 +1902,13 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String shariaVerdictPass(
-    String ticker,
-    String standard,
-    String source,
-    String date,
-  ) {
+      String ticker, String standard, String source, String date) {
     return '$ticker passes the $standard screen ($source, as of $date).';
   }
 
   @override
   String shariaVerdictScreenedOut(
-    String ticker,
-    String standard,
-    String source,
-    String date,
-  ) {
+      String ticker, String standard, String source, String date) {
     return '$ticker is in the S&P 500 but does not pass the $standard screen ($source, as of $date), so this mandate won\'t trade it.';
   }
 
@@ -2757,11 +2749,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String tradeTicketFilled(
-    String side,
-    String qty,
-    String ticker,
-    String price,
-  ) {
+      String side, String qty, String ticker, String price) {
     return 'Dipenuhi: $side $qty $ticker @ \$$price';
   }
 
@@ -2805,11 +2793,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String tradeTicketNoticeRaisesStop(
-    String qty,
-    String ticker,
-    String fromStop,
-    String toStop,
-  ) {
+      String qty, String ticker, String fromStop, String toStop) {
     return 'This raises your stop on all $qty $ticker from \$$fromStop to \$$toStop.';
   }
 
@@ -2868,10 +2852,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String tradeTicketHintRestsStopLimit(
-    String ticker,
-    String trigger,
-    String limit,
-  ) {
+      String ticker, String trigger, String limit) {
     return 'Waits until $ticker reaches \$$trigger, then becomes a limit order at \$$limit.';
   }
 
@@ -2895,11 +2876,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String restingOrderCancelBody(
-    String side,
-    String qty,
-    String ticker,
-    String price,
-  ) {
+      String side, String qty, String ticker, String price) {
     return '$side $qty $ticker at \$$price will stop waiting and will not fill.';
   }
 
@@ -4582,22 +4559,13 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String optionLegLine(
-    String side,
-    String contracts,
-    String right,
-    String strike,
-  ) {
+      String side, String contracts, String right, String strike) {
     return '$side $contracts $right \$$strike';
   }
 
   @override
-  String optionLegLineDated(
-    String side,
-    String contracts,
-    String right,
-    String strike,
-    String expiry,
-  ) {
+  String optionLegLineDated(String side, String contracts, String right,
+      String strike, String expiry) {
     return '$side $contracts $right \$$strike · $expiry';
   }
 
@@ -4677,11 +4645,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String shortClosedBracket(
-    String quantity,
-    String ticker,
-    String price,
-    String bracket,
-  ) {
+      String quantity, String ticker, String price, String bracket) {
     return '$quantity $ticker covered at \$$price — your $bracket was reached.';
   }
 
@@ -5058,13 +5022,8 @@ class AppLocalizationsMs extends AppLocalizations {
   String get optionTicketLegSellWord => 'SELL';
 
   @override
-  String optionTicketLegLine(
-    String action,
-    String contracts,
-    String right,
-    String strike,
-    String expiry,
-  ) {
+  String optionTicketLegLine(String action, String contracts, String right,
+      String strike, String expiry) {
     return '$action $contracts × $right $strike · exp $expiry';
   }
 
@@ -5890,4 +5849,49 @@ class AppLocalizationsMs extends AppLocalizations {
   @override
   String get settingsComplianceLiquidOnlyExplainBody =>
       'Hanya ticker dengan purata volum harian yang mencukupi untuk masuk dan keluar dengan bersih. Menapis saham kap mikro dan nama yang jarang didagangkan di mana pesanan pasaran boleh menggerakkan harga melawan anda.';
+
+  @override
+  String roomFlipHeading(String previous, String current) {
+    return 'CHANGED FROM $previous TO $current';
+  }
+
+  @override
+  String get roomFlipSameInputs =>
+      'Inputs were the same as your last Room on this name. The Room\'s own debate reached a different call.';
+
+  @override
+  String get roomFlipNotCompared =>
+      'The two Rooms\' inputs could not be compared, so what changed is not shown.';
+
+  @override
+  String get roomFlipAnswersHeading => 'ANSWERS THAT CHANGED';
+
+  @override
+  String get roomFlipQBearObjectionAnswered => 'Bear objection answered';
+
+  @override
+  String get roomFlipQCatalystInHorizon => 'Catalyst inside the horizon';
+
+  @override
+  String get roomFlipQTerminalVulnerability => 'Terminal vulnerability';
+
+  @override
+  String get roomFlipQEventRiskWait => 'Event risk: wait';
+
+  @override
+  String get roomFlipQThesisMaterialDirectional =>
+      'Thesis is material and directional';
+
+  @override
+  String get roomFlipQTradeProposed => 'Trade proposed';
+
+  @override
+  String roomFlipJournalLine(String previous, String current, String detail) {
+    return 'Changed from $previous to $current: $detail';
+  }
+
+  @override
+  String roomFlipJournalLineBare(String previous, String current) {
+    return 'Changed from $previous to $current';
+  }
 }

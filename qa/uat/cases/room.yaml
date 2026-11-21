@@ -467,6 +467,26 @@ cases:
       - After the mandate change the Room runs live (desks speak in turn), the banked line is absent, and the cost line states what that Room cost
     notes: WP-24 (2026-11-20). The line carries identifier ami.room.banked_line for the device rig. The Arabic and Malay strings are English placeholders until translated. API half is UAT-ROOM-030.
 
+  - id: UAT-ROOM-032
+    title: A flipped verdict shows what changed, on the verdict card and in the Journal
+    layer: manual
+    plans: [trader]
+    llm: true
+    preconditions:
+      - A build that includes CR267 WP-25, signed in as a Trader with credits, who already has a finished Room on one ticker (for example MSFT) whose verdict was not APPROVE
+      - The user's mandate is then changed (Brief Your Agent or Mandate) so the next Room is a new run, not the banked one
+    steps:
+      - Convene the Room on that ticker again and wait for the verdict
+      - If the new verdict differs from the previous one, read the card under the verdict heading; if it is the same, repeat after another mandate change until a Room's call differs
+      - Open the Journal, find the new Room entry in the list, then open it
+    expected:
+      - 'A card under the verdict heading reads "CHANGED FROM <PREVIOUS> TO <NEW>" with the two verdict words, and lists one plain line per input that changed (for example the mandate change)'
+      - 'When the Room ran on identical inputs the card says "Inputs were the same as your last Room on this name. The Room''s own debate reached a different call." and never lists a change'
+      - 'When the answers behind the two Rooms are available the card lists "ANSWERS THAT CHANGED" with a short question label and "before → after" per row; when they are not available there is no such section and no apology line'
+      - A Room whose call matches the previous one shows no such card
+      - 'The Journal list entry carries one line "Changed from <PREVIOUS> to <NEW>: ..." and the opened entry shows the same card as the verdict card'
+    notes: CR267 WP-25 (2026-11-21), mobile half. The card carries identifier ami.room.flip_explainer and the Journal line ami.journal.flip_line. Wire shape is Verdict.flip_explainer (backend/app/schemas/room.py). Arabic and Malay strings are English placeholders until translated.
+
   - id: UAT-ROOM-029
     title: A desk that fails shows a standing-guidance label, not a live call
     layer: manual

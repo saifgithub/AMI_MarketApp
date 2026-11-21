@@ -43,6 +43,8 @@ class RoomVerdict {
     this.decisionRecord,
     this.nextConveneDelta,
     this.streetComparison,
+    this.previousAction,
+    this.flipExplainer,
   });
 
   /// 'APPROVE' | 'REJECT' | 'MODIFY' | 'PASS' | 'NO_VERDICT'.
@@ -106,6 +108,15 @@ class RoomVerdict {
   /// explicit `unavailable` block instead (see [StreetComparison.isAvailable]).
   final StreetComparison? streetComparison;
 
+  /// CR267 WP-25 — the action of the user's previous finished Room on this
+  /// ticker. `null` on a first convene or a run that predates the field.
+  final String? previousAction;
+
+  /// CR267 WP-25 — why this call differs from [previousAction], built by the
+  /// backend from stored fields. `null` on a non-flip and on any run that
+  /// predates the field: absence, never "nothing changed".
+  final FlipExplainer? flipExplainer;
+
   bool get isApprove => action == 'APPROVE';
 
   /// Whether this verdict is asking the user to consent to an option
@@ -155,8 +166,146 @@ class RoomVerdict {
           ? StreetComparison.fromJson(
               (j['street_comparison'] as Map).cast<String, dynamic>())
           : null,
+      previousAction: j['previous_action'] as String?,
+      flipExplainer: FlipExplainer.tryParse(j['flip_explainer']),
     );
   }
+}
+
+/// CR267 WP-25 — what kind of input differs between two Rooms on a ticker.
+/// A kind this build does not know is [other], never a parse failure.
+enum FlipInputKind {
+  price,
+  news,
+  filings,
+  mandate,
+  portfolio,
+  brief,
+  policy,
+  model,
+  other;
+
+  static FlipInputKind fromWire(Object? raw) {
+    for (final k in FlipInputKind.values) {
+      if (k.name == raw) return k;
+    }
+    return FlipInputKind.other;
+  }
+}
+
+/// One input that differs between the two Rooms; [summary] is a plain-English
+/// line the backend built in code, shown verbatim.
+class FlipChangedInput {
+  const FlipChangedInput({required this.kind, required this.summary});
+
+  factory FlipChangedInput.fromJson(Map<String, dynamic> j) => FlipChangedInput(
+        kind: FlipInputKind.fromWire(j['kind']),
+        summary: j['summary'] as String? ?? '',
+      );
+
+  final FlipInputKind kind;
+  final String summary;
+}
+
+/// One narrow coded-rule question whose answer differs between the two Rooms.
+/// [question] is a stable id (see `flipQuestionLabel`); a side that did not ask
+/// it reads "not asked" in the backend's own words.
+class FlipChangedAnswer {
+  const FlipChangedAnswer({
+    required this.question,
+    required this.before,
+    required this.after,
+  });
+
+  factory FlipChangedAnswer.fromJson(Map<String, dynamic> j) =>
+      FlipChangedAnswer(
+        question: j['question'] as String? ?? '',
+        before: j['before'] as String? ?? '',
+        after: j['after'] as String? ?? '',
+      );
+
+  final String question;
+  final String before;
+  final String after;
+}
+
+/// One desk claim card whose direction or grade differs between the two Rooms.
+class FlipCardChange {
+  const FlipCardChange({
+    required this.desk,
+    required this.item,
+    required this.before,
+    required this.after,
+  });
+
+  factory FlipCardChange.fromJson(Map<String, dynamic> j) => FlipCardChange(
+        desk: j['desk'] as String? ?? '',
+        item: j['item'] as String? ?? '',
+        before: j['before'] as String? ?? '',
+        after: j['after'] as String? ?? '',
+      );
+
+  final String desk;
+  final String item;
+  final String before;
+  final String after;
+}
+
+/// CR267 WP-25 — why a Room's verdict differs from the user's previous one on
+/// the same ticker. Mirrors `backend/app/schemas/room.py::FlipExplainer`.
+///
+/// [inputsCompared] false means the backend could not compare the two Rooms'
+/// inputs, so an empty [changedInputs] is "unknown", never "none". Only
+/// [sameInputsFlip] may say the inputs were unchanged.
+class FlipExplainer {
+  const FlipExplainer({
+    required this.previousRunId,
+    required this.previousAction,
+    required this.newAction,
+    this.changedInputs = const [],
+    this.inputsCompared = true,
+    this.sameInputsFlip = false,
+    this.changedAnswers = const [],
+    this.answersAvailable = false,
+    this.answersUnavailableReason,
+    this.cardsChanges,
+  });
+
+  /// `null` for anything that is not a JSON object, so a malformed block drops
+  /// the section rather than throwing inside build().
+  static FlipExplainer? tryParse(Object? raw) {
+    if (raw is! Map) return null;
+    final j = raw.cast<String, dynamic>();
+    List<T> list<T>(Object? v, T Function(Map<String, dynamic>) f) => [
+          for (final e in (v as List?) ?? const [])
+            if (e is Map) f(e.cast<String, dynamic>()),
+        ];
+    return FlipExplainer(
+      previousRunId: j['previous_run_id'] as String? ?? '',
+      previousAction: j['previous_action'] as String? ?? '',
+      newAction: j['new_action'] as String? ?? '',
+      changedInputs: list(j['changed_inputs'], FlipChangedInput.fromJson),
+      inputsCompared: (j['inputs_compared'] as bool?) ?? true,
+      sameInputsFlip: (j['same_inputs_flip'] as bool?) ?? false,
+      changedAnswers: list(j['changed_answers'], FlipChangedAnswer.fromJson),
+      answersAvailable: (j['answers_available'] as bool?) ?? false,
+      answersUnavailableReason: j['answers_unavailable_reason'] as String?,
+      cardsChanges: j['cards_changes'] is List
+          ? list(j['cards_changes'], FlipCardChange.fromJson)
+          : null,
+    );
+  }
+
+  final String previousRunId;
+  final String previousAction;
+  final String newAction;
+  final List<FlipChangedInput> changedInputs;
+  final bool inputsCompared;
+  final bool sameInputsFlip;
+  final List<FlipChangedAnswer> changedAnswers;
+  final bool answersAvailable;
+  final String? answersUnavailableReason;
+  final List<FlipCardChange>? cardsChanges;
 }
 
 /// CR260 / CR267 WP-21b — the Room's call against the Street's consensus
