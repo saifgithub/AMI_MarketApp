@@ -121,7 +121,7 @@ void showLockedSheet(BuildContext context, WidgetRef ref, Agent agent) {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
-    builder: (_) => Semantics(identifier: ScreenIds.lockedAgentSheet, container: true, explicitChildNodes: true, child: SafeArea(
+    builder: (sheetContext) => Semantics(identifier: ScreenIds.lockedAgentSheet, container: true, explicitChildNodes: true, child: SafeArea(
       child: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(AmiSpacing.l),
@@ -164,7 +164,7 @@ void showLockedSheet(BuildContext context, WidgetRef ref, Agent agent) {
                 for (final lesson in requiredLessons)
                   InkWell(
                     onTap: () {
-                      Navigator.of(context).pop();
+                      Navigator.of(sheetContext).pop();
                       Navigator.of(context).push(MaterialPageRoute<void>(
                         builder: (_) =>
                             LessonReaderScreen(lessonId: lesson.lessonId),
@@ -208,7 +208,7 @@ void showLockedSheet(BuildContext context, WidgetRef ref, Agent agent) {
                     foregroundColor: AmiColors.slate900,
                   ),
                   onPressed: () {
-                    Navigator.of(context).pop();
+                    Navigator.of(sheetContext).pop();
                     ref.read(activeTabProvider.notifier).state = AmiTab.lessons;
                   },
                   child: Text(l.floorLockedGoToLessons),
@@ -237,7 +237,7 @@ void showLockedSheet(BuildContext context, WidgetRef ref, Agent agent) {
                       // unfinished gateway lesson instead of the track list the
                       // user then had to search.
                       onPressed: () {
-                        Navigator.of(context).pop();
+                        Navigator.of(sheetContext).pop();
                         Navigator.of(context).push(MaterialPageRoute<void>(
                           builder: (_) =>
                               LessonReaderScreen(lessonId: next.lessonId),

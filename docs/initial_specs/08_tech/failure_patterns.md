@@ -2463,3 +2463,15 @@ populated, then asserts every value encodes and decodes to itself, and that free
 then thaw gives byte-identical desk prompts for all twelve desks. The codec itself no
 longer needs a registry line for an `app.` dataclass, NamedTuple or Enum; a type
 from outside `app.` (or a dict with non-string keys) still fails that test.
+
+---
+
+## P42 — a dialog or sheet closes itself with the page's context, and the page's Navigator is not the dialog's
+
+**Class:** `showDialog` / `showModalBottomSheet` push onto the ROOT Navigator by default, while every home tab runs its own nested Navigator (`home_shell.dart`, `_TabNavigator`, P36). A builder that closes itself with `Navigator.of(context).pop(...)` using the OUTER widget's `context` therefore pops the tab's page, not the dialog. The dialog stays frozen, its future never completes, and whatever the caller awaits afterwards never runs. The code reads naturally, a review of the closure sees nothing wrong, and a test that mounts the page under a single root Navigator passes.
+
+**Instances.** DEF519 (2026-11-21, device lab AMI-DL-11): Brief "ROLLBACK TO THIS" confirm closed the history page, left the dialog frozen and never sent `POST /v1/brief/rollback`. DEF520 (same day): the sweep of all 46 `show*` call sites found no second live instance; one latent site (`showLockedSheet`, `useRootNavigator: false`, so the outer context happened to resolve to the right Navigator) was moved onto the builder's own context so it does not depend on that.
+
+**Why the first fix was not enough.** DEF519 fixed the one dialog. Nothing stopped the next dialog written the same natural way.
+
+**Enforcing check:** `mobile/test/dialog_pop_context_structural_test.dart` parses every `show*Dialog` / `show*Sheet` / `show*Popup` call under `mobile/lib`, takes the `builder:` closure and fails if a pop inside it (`Navigator.of(x).pop|maybePop|popUntil`, `Navigator.pop(x)`, `x.pop()`) names an identifier that is not the builder's own context parameter or a context parameter of a closure nested inside it. A non-closure builder also fails (cannot be verified). Push calls are not checked. It fails on the pre-DEF519 `brief_history_screen.dart` (proved by reverting it), has scanner self-tests, and asserts it found more than 40 call sites so the pattern cannot go inert.
