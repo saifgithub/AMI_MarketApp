@@ -57,6 +57,7 @@ from app.services.overlay_store import (
 from app.api.dependencies import get_current_user
 from app.api.sse import sse_json, sse_text, with_keepalive
 from app.db.models import User
+from app.services.entitlements import effective_plan_for_user
 from app.services.credit_service import InsufficientCredits, brief_cost, refund, spend
 from app.services.rate_limit import agent_stream_concurrency_limit, brief_message_rate_limit
 
@@ -337,10 +338,11 @@ def brief_history(
 ) -> BriefHistoryResponse:
     if current_user.id != user_id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
-    try:
-        plan_enum = Plan(plan)
-    except ValueError:
-        plan_enum = Plan.TRIAL_TRADER
+    # DEF518: the cap shown here must be the one accept() enforces, which reads
+    # `users.plan` (DEF179). The `plan` query param is kept so old clients that
+    # send it still validate, but it no longer decides anything.
+    del plan
+    plan_enum = effective_plan_for_user(user_id)
     versions = store.list_versions(user_id, agent_id)
     active_v = store.active_version(user_id, agent_id)
     edits = store.edit_count(user_id, agent_id)

@@ -154,11 +154,6 @@ def test_history_starts_empty_and_is_private(seed, api):
 
 
 @pytest.mark.uat("UAT-BRIEF-003")
-@pytest.mark.xfail(strict=True, reason=(
-    "FINDING: GET /v1/brief/history takes the plan from a client query param that defaults to "
-    "'trial_trader', and the app (api_client.dart briefHistory) never sends it - so a Floor Pass "
-    "user's History screen reports edits_remaining=null (unlimited) instead of 3. accept() "
-    "still enforces the cap from users.plan, so the cap holds; the display is wrong."))
 def test_history_edits_remaining_comes_from_the_server_side_plan(seed):
     f = _user(seed, "floor_pass")
     assert history(f, "market_analyst")["edits_remaining"] == FLOOR_CAP
@@ -237,13 +232,6 @@ def test_deprecated_coach_routes_that_still_work_behave_like_brief(seed, api):
 
 
 @pytest.mark.uat("UAT-BRIEF-015")
-@pytest.mark.xfail(strict=True, reason=(
-    "FINDING: the /v1/coach/* shim `await`s the SYNC brief handlers (brief_start, brief_accept, "
-    "brief_reject, brief_rollback, brief_history are plain `def`), so every call that gets past "
-    "validation returns 500 (TypeError: object is not awaitable). Measured on Alpha 2026-10-19: "
-    "POST /v1/coach/start 500, GET /v1/coach/history 500, POST /v1/coach/accept with no pending "
-    "proposal 500. Only the async routes (message, propose) and the early-404/403 paths work. "
-    "Old +17 builds that still call /v1/coach/* cannot start a brief."))
 def test_deprecated_coach_routes_serve_a_normal_brief_flow(seed):
     u = fund(seed, "trader", 10)
     r = brief_start(u, "market_analyst", prefix="/v1/coach")
