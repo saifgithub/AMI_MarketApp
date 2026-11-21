@@ -327,6 +327,15 @@ NUMERIC_PROVENANCE: dict[tuple[str, str], ProvenanceRow] = {
         "verbatim, outcome computed by the written rule; attached only on "
         "Rooms that ran with ROOM_CODED_RULE_ENABLED",
     ),
+    # CR267 WP-25 — the flip explainer. Every number in it (a price pair and its
+    # percent move, news/filing counts) is read off two stored Rooms and
+    # formatted in code; no agent writes any of it.
+    ("verdict", "flip_explainer"): ProvenanceRow(
+        Provenance.COMPUTED,
+        "app.services.flip_explainer.explain_flip — diff of two stored Rooms' "
+        "input parts, fact sheets, mandates and coded answers; attached only "
+        "when the action differs from the previous completed Room",
+    ),
     (
         "verdict", "structure",
     ): ProvenanceRow(

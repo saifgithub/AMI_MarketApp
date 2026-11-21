@@ -108,6 +108,7 @@ from app.services import (
 from app.services.fundamentals import fetch_fundamentals, fetch_live_fundamentals
 from app.services.journal_store import ReferenceUpdateOutcome, get_journal_store
 from app.services.cio_snapshot_codec import decode_profile, encode_profile
+from app.services import flip_explainer
 from app.services import room_bank
 from app.services import room_decision_rule
 from app.services.room_grader_contract import (
@@ -4367,6 +4368,30 @@ def _analyst_view_from_profile(profile: dict[str, Any]) -> AnalystView | None:
 
 
 
+def _stamp_flip_explainer(
+    run: RoomRun, profile: dict[str, Any], claim_summary: dict[str, dict[str, str]] | None,
+) -> None:
+    """CR267 WP-25 — set `claim_summary`, `previous_action` and, on a flip, the
+    explainer on `run.verdict`. Runs after `_stamp_next_convene_basis` (it reads the
+    reference price that stamp sets) and before the verdict is persisted."""
+    verdict = run.verdict
+    if verdict is None:
+        return
+    if claim_summary is not None:
+        verdict = verdict.model_copy(update={"claim_summary": claim_summary})
+    run.verdict = flip_explainer.stamp_flip(
+        verdict=verdict,
+        run_id=run.id,
+        user_id=run.user_id,
+        ticker=run.ticker,
+        finished_at=run.finished_at,
+        mandate_version=run.mandate_version,
+        bank_inputs=run.bank_inputs,
+        sheet=profile,
+        is_decision=lambda v: not is_outage_shaped_verdict(v),
+    )
+
+
 def _stamp_next_convene_basis(
     verdict: "Verdict", profile: dict[str, Any], next_convene_delta: Any,
 ) -> "Verdict":
@@ -7345,6 +7370,7 @@ _PERSIST_WRITTEN_CAP = 5000
 
 def _snapshot_run(run: RoomRun) -> tuple[int, dict[str, Any]]:
     """Plain-value copy of everything `_persist_run` writes, plus its sequence."""
+    flip_explainer.assert_flip_recorded(run.verdict)
     seq = next(_persist_seq)
     return seq, {
         "id": run.id,
@@ -9655,6 +9681,11 @@ class RoomRunner:
                 )
                 if _backup_restarted and _backup_produced_desk_turns(ctx, run):
                     run.verdict = run.verdict.model_copy(update=_backup_used_stamp())
+                _stamp_flip_explainer(
+                    run, profile,
+                    flip_explainer.claim_summary_from_cards(ctx.claim_cards)
+                    if settings.room_cards_envelope_enabled else None,
+                )
             _persist_run(run)
             # DEF432 — Saiful, 2026-09-25: "Refund it." A Room that reaches
             # COMPLETED but whose verdict is the CR219 R51 outage NO_VERDICT
@@ -10233,6 +10264,10 @@ class RoomRunner:
             # retry itself is free) — a fact `refunded`/`verdict` alone
             # cannot distinguish from an ordinary charged completion.
             run.cio_retried = True
+            _stamp_flip_explainer(
+                run, profile,
+                original_verdict.claim_summary if original_verdict is not None else None,
+            )
             _persist_run(run)
             logger.info(
                 "room_cio_retry_succeeded", run_id=str(run_id),

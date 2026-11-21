@@ -196,6 +196,65 @@ class CodedDecisionRecord(BaseModel):
     grader_cost_usd: float | None = None
 
 
+class FlipChangedInput(BaseModel):
+    """CR267 WP-25 — one input that differs between a Room and the user's previous
+    Room on the same ticker, as a plain-English line built in code."""
+
+    kind: Literal[
+        "price", "news", "filings", "mandate", "portfolio", "brief", "policy",
+        "model", "other",
+    ]
+    summary: str
+
+
+class FlipChangedAnswer(BaseModel):
+    """CR267 WP-25 — one narrow coded-rule question whose answer differs between
+    the two Rooms. A side that did not ask the question reads "not asked"."""
+
+    question: str
+    before: str
+    after: str
+
+
+class FlipCardChange(BaseModel):
+    """CR267 WP-25 — one desk claim card whose direction/grade differs between the
+    two Rooms (only built when both Rooms ran with cards)."""
+
+    desk: str
+    item: str
+    before: str
+    after: str
+
+
+class FlipExplainer(BaseModel):
+    """CR267 WP-25 — why this Room's verdict differs from the user's previous one on
+    the same ticker, built from stored fields in code (no agent writes it).
+
+    Present only on a flip: the new action differs from the previous completed
+    action. Riding the verdict JSONB (no migration); None on a non-flip and on every
+    run that predates it (T-BACKFILL).
+
+    `changed_inputs` names what differed (price, news, filings, mandate, ...).
+    `inputs_compared` is False when either Room's input parts were not stored, in
+    which case an empty `changed_inputs` means "unknown", not "none". Empty and
+    compared is `same_inputs_flip`: the debate's own variance, shown rather than
+    hidden. `changed_answers` is empty and `answers_available` False when either
+    Room ran without the coded rule (`answers_unavailable_reason` says why).
+    `cards_changes` is None unless both Rooms ran with cards.
+    """
+
+    previous_run_id: str
+    previous_action: str
+    new_action: str
+    changed_inputs: list[FlipChangedInput] = Field(default_factory=list)
+    inputs_compared: bool = True
+    same_inputs_flip: bool = False
+    changed_answers: list[FlipChangedAnswer] = Field(default_factory=list)
+    answers_available: bool = False
+    answers_unavailable_reason: str | None = None
+    cards_changes: list[FlipCardChange] | None = None
+
+
 class RatingSplit(BaseModel):
     """CR260 — the strong-buy→strong-sell count distribution behind the
     consensus word. Sums to the analyst count; the individual buckets are
@@ -490,6 +549,17 @@ class Verdict(BaseModel):
     # CR267 WP-23 — the coded decision rule's record; see `CodedDecisionRecord`.
     # None on every run that ran with the rule off or predates it.
     coded_decision: CodedDecisionRecord | None = None
+
+    # CR267 WP-25 — the action of the user's previous completed Room on this ticker
+    # (set whenever one exists and this verdict is a real decision), and the
+    # explainer that must accompany any difference from it. `flip_explainer` is
+    # None exactly when `previous_action` is None or equals `action`; a stored
+    # flip without one is refused (`flip_explainer.assert_flip_recorded`).
+    previous_action: str | None = None
+    flip_explainer: FlipExplainer | None = None
+    # CR267 WP-25 — desk -> card item -> "direction/grade", kept so the next Room
+    # can say which claims moved. None on a Room that ran without cards.
+    claim_summary: dict[str, dict[str, str]] | None = None
 
     # CR272 (CR267 WP-14) — True when this Room was restarted on the backup LLM
     # slot after the primary failed (`room_runner.run()`), so the stored run
