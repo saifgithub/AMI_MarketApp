@@ -223,3 +223,20 @@ cases:
       - Send a Brief Your Agent message and wait while the agent thinks for over a minute
     expected:
       - The reply arrives; the stream is not cut by the proxy's idle timeout (the server sends a keepalive comment every 15 s while silent) and the chat never shows a dead frozen state
+
+  - id: UAT-BRIEF-018
+    title: Rolling a brief back to an earlier version closes the confirm dialog, sends the request and makes that version active
+    layer: device
+    status: blocked
+    blocked_on: No Appium executor yet - needs a Trader account holding two accepted briefs for one agent, which costs credits; run by hand on a lab phone until an executor exists
+    plans: [trader]
+    preconditions:
+      - An unlocked agent with at least two saved versions (v1 and v2), v2 active
+    steps:
+      - 'Floor > YOUR FIRM > tap the agent > BRIEF > open the version history'
+      - 'Tap ROLLBACK TO THIS on v1, then tap ROLLBACK in the confirmation dialog'
+    expected:
+      - 'The dialog closes and the history page stays open (it does not pop, and nothing is left frozen on screen)'
+      - 'POST /v1/brief/rollback is sent (visible in the server log) and v1 now carries the ACTIVE badge'
+      - 'If the request fails, a message says so instead of the screen changing silently'
+    notes: 'DEF519 (2026-11-21, build 122): the dialog buttons popped with the history page context, which belongs to the tab navigator while the dialog sits on the root one, so the page closed, the dialog froze and no request was sent. Covered offline by mobile/test/screens/coach/def519_brief_rollback_dialog_test.dart.'
