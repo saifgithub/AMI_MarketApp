@@ -33,8 +33,9 @@ is never served after the user's position changed (Saiful's ruling, 2026-11-20):
   overlay is the same as none). Editing a Brief, or rolling back to different
   text, gives a new Room; rolling back to identical text does not.
 - `universe` (DEF513): the sourced compliance verdicts for this ticker (Sharia,
-  fossil / sin / esg-lite exclusion, liquidity) with each snapshot's as-of date
-  and stale flag. These are global reference data refreshed daily without a
+  fossil / sin / esg-lite exclusion, liquidity) with each snapshot's stale flag
+  (not its as-of date, which advances daily with no change to a verdict: DEF517).
+  These are global reference data refreshed daily without a
   deploy, and they feed both the prompts and the deterministic compliance check.
 - `roster` (DEF513): which analyst desks the plan and tenure withheld.
 - `tier` (DEF513): the model tier `pick_tier` gives the plan for every desk the
@@ -444,7 +445,13 @@ def brief_digest(overlays: dict[str, str | None]) -> str:
 def universe_digest(halal: Any, classification: Any, ticker: str) -> str:
     """Hash of the sourced compliance verdicts the Room reads for `ticker`: the
     Sharia verdict, each exclusion kind, liquidity (status only: the live-price
-    leg is price drift), and each snapshot's as-of date and stale flag."""
+    leg is price drift), and each snapshot's stale flag.
+
+    Not the snapshots' as-of dates (DEF517): they advance with every daily
+    refresh whatever the user did, so keying them re-priced every banked Room
+    once a day even when no verdict for this ticker had moved. A verdict that
+    does move changes its status; a snapshot gone stale changes both its
+    statuses and the flag."""
     from app.schemas.classification import ClassificationKind
 
     def _status(verdict: Any) -> Any:
@@ -453,7 +460,7 @@ def universe_digest(halal: Any, classification: Any, ticker: str) -> str:
     t = ticker.upper().strip()
     return _digest({
         "halal": [
-            _status(halal.resolve(t)), _iso_date(halal.as_of), bool(halal.stale),
+            _status(halal.resolve(t)), bool(halal.stale),
         ],
         "classification": {
             "kinds": {
@@ -461,14 +468,9 @@ def universe_digest(halal: Any, classification: Any, ticker: str) -> str:
                 for kind in ClassificationKind
             },
             "liquidity": _status(classification.resolve_liquidity(t)),
-            "as_of": _iso_date(classification.as_of),
             "stale": bool(classification.stale),
         },
     })
-
-
-def _iso_date(d: Any) -> str | None:
-    return d.isoformat() if d is not None else None
 
 
 def tier_digest(plan: Any) -> str:
