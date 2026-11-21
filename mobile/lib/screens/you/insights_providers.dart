@@ -24,7 +24,7 @@ final insightsProvider = FutureProvider.autoDispose<InsightsData>((ref) async {
   // cannot widen retention. It still must not be guessed: watching the mandate
   // means this re-runs once the real plan lands rather than aggregating over
   // whatever a default returned.
-  final plan = ref.watch(mandateNotifierProvider).mandate?.plan;
+  final plan = ref.watch(mandateNotifierProvider.select((s) => s.mandate?.plan));
   if (plan == null) return const InsightsData(entryCount: 0);
   // Deliberately no try/catch: the raw error propagates and the widget's error
   // branch runs it through `friendlyError`. Wrapping it here in an `Exception`

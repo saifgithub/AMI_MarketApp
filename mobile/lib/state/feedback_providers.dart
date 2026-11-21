@@ -9,6 +9,7 @@ import 'dart:io' show Platform;
 
 import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/services/api/trace_ids.dart';
+import 'package:ami_trade/services/diagnostics/save_timeline.dart';
 import 'package:ami_trade/services/diagnostics/semantics_health.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -92,8 +93,8 @@ class FeedbackNotifier extends StateNotifier<FeedbackState> {
         title: title,
         // DEF466 round 2: a one-line semantics health record rides with the
         // user's own submission (null unless main() installed it).
-        steps: SemanticsHealth.instance
-            .appendTo(steps?.trim().isEmpty ?? true ? null : steps?.trim()),
+        steps: SaveTimeline.appendTo(SemanticsHealth.instance
+            .appendTo(steps?.trim().isEmpty ?? true ? null : steps?.trim())),
         route: route,
         appVersion: appVersion,
         platform: kPlatform,
