@@ -1491,19 +1491,19 @@ class ApiClient {
   /// (M07 §3.5 step 6), which is what makes a `FutureProvider` around a POST
   /// safe here.
   Future<HealthFinding> generateHealthFinding(String userId) async {
+    // DEF253 — the one LLM route in `api/portfolio.py`
+    // (`generate_and_persist_finding(gateway=get_llm_gateway())`). Every
+    // other portfolio call the screen makes is a database or quote read, and
+    // marking this one is what keeps them out of the AMI wording.
+    //
+    // DEF515 — the 30 s default receive timeout is shorter than this route
+    // can legitimately run (12-14 s on a quiet day, 44 s measured on
+    // AMI-DL-9b, with the model allowed up to 180 s). The phone hung up at
+    // 30 s, the server finished anyway and wrote the Finding, and the user
+    // lost both the report and a trial slot. 100 s is Cloudflare's own
+    // edge limit: waiting longer than the edge would is waiting for a 524.
     final r = await _dio.post<Map<String, dynamic>>(
       '/v1/portfolio/health/$userId/finding',
-      // DEF253 — the one LLM route in `api/portfolio.py`
-      // (`generate_and_persist_finding(gateway=get_llm_gateway())`). Every
-      // other portfolio call the screen makes is a database or quote read, and
-      // marking this one is what keeps them out of the AMI wording.
-      //
-      // DEF515 — the 30 s default receive timeout is shorter than this route
-      // can legitimately run (12-14 s on a quiet day, 44 s measured on
-      // AMI-DL-9b, with the model allowed up to 180 s). The phone hung up at
-      // 30 s, the server finished anyway and wrote the Finding, and the user
-      // lost both the report and a trial slot. 100 s is Cloudflare's own
-      // edge limit: waiting longer than the edge would is waiting for a 524.
       options: Options(
         extra: kAmiWaitsOnModel,
         receiveTimeout: kHealthFindingReceiveTimeout,
