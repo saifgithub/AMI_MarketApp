@@ -86,5 +86,18 @@ Pairs where both reps were answered; `not_computable` pairs are dropped. CIO and
 | rule outcome APPROVE vs not (grader) | 16% (24/150) |
 | CIO action APPROVE vs not (same Rooms) | 23% (35/150) |
 
+## Wording test (five phrasings, share of answers that change vs phrasing 0)
+
+Sample: 20 Rooms. Each cell: answers that differ from the base wording.
+
+| question | phrasing 1 | phrasing 2 | phrasing 3 | phrasing 4 | phrasing 5 | any phrasing |
+|---|---|---|---|---|---|---|
+| bear_objection_answered | 0% (0/20) | 0% (0/20) | 0% (0/20) | 10% (2/20) | 0% (0/20) | 10% (2/20) |
+| catalyst_in_horizon | 25% (5/20) | 25% (5/20) | 25% (5/20) | 20% (4/20) | 40% (8/20) | 55% (11/20) |
+| terminal_vulnerability | 5% (1/20) | 5% (1/20) | 5% (1/20) | 10% (2/20) | 0% (0/20) | 15% (3/20) |
+| event_risk_wait | 25% (5/20) | 35% (7/20) | 5% (1/20) | 5% (1/20) | 15% (3/20) | 35% (7/20) |
+| thesis_material_directional | 45% (9/20) | 20% (4/20) | 30% (6/20) | 30% (6/20) | 30% (6/20) | 70% (14/20) |
+| trade_proposed | 10% (2/20) | 20% (4/20) | 20% (4/20) | 35% (7/20) | 15% (3/20) | 45% (9/20) |
+
 Not computed here: rank correlation of a decision score with the consensus score (the grader emits yes/no answers, not a score); input tests; the code and Jev graders.
 

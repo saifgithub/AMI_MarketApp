@@ -19,9 +19,24 @@
 1. Grader approvals 3/50 (R2 1, R5 2), CIO 4/50 (R4 1, R5 3); both mostly PASS at R1–R4. 14/50 Contested. Tables: `grader_bakeoff_onprem_side_2026-11-21_tables.md`.
 2. **No WP-20 Room is on a Street Sell/Underperform name.** The side set chosen as the lowest-consensus names from `tickers_150.txt` (CAR, CPB, ITW, JBLU, KSS) is Street **Hold** on every Room; arm 1 is 169 Buy / 89 Hold / 42 no Street data. So WP-22 3.1's first measure ("approvals of Street Sell/Underperform names") **cannot be computed on the WP-20 data for any grader**. It needs Rooms on names whose stored `street_stance` is sell, which the CR035 universe does not supply today. Decision for WP-26: either source Sell-rated names into the acceptance universe, or drop that measure and say so.
 
+## Wording test (20 arm-1 Rooms × 5 phrasings), on-prem grader
+
+Share of Rooms where at least one rephrasing changes the answer (100 grades, 0 errors; table in `grader_bakeoff_onprem_arm1_2026-11-21_tables.md`):
+
+| question | any phrasing changes it |
+|---|---|
+| bear_objection_answered | 10% (2/20) |
+| terminal_vulnerability | 15% (3/20) |
+| event_risk_wait | 35% (7/20) |
+| trade_proposed | 45% (9/20) |
+| catalyst_in_horizon | 55% (11/20) |
+| thesis_material_directional | 70% (14/20) |
+
+**Consequence for WP-23's rule r1:** its two fixed Pass gates use one robust question (`terminal_vulnerability`, 15%) and one fragile one (`trade_proposed`, 45%; it is also answerable from the structured trade without a model, which the code grader already does). The R1/R2 ladder leans on `catalyst_in_horizon` and `thesis_material_directional`, the two least robust answers (55% and 70%) and the two most often "close". As written, the conservative-level decision is mostly a function of wording. Options before the flag goes on: answer `trade_proposed` from structure, not the model; drop or down-weight catalyst/thesis at R1/R2, or ask them as an average over the five phrasings; refit the close band with wording stability as a target.
+
 ## Not yet done
 
-1. Wording test (20 Rooms × 5 phrasings), input tests with known answers.
+1. Input tests with known answers.
 2. Jev and DeepInfra graders: **need keys** (Jev `JEV_API_KEY`; a DeepInfra key for the hosted slot). Spend for the bake-off is approved (2026-11-21); the keys are not set.
 3. Code grader over cards: after WP-20 arm 2.
 4. Recommendation: after all three graders are scored. No recommendation of Jev without noting that vendor terms are still owed.
