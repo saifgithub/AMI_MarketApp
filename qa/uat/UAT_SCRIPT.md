@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**310 cases** — 200 api, 21 device, 89 manual; 16 blocked.
+**310 cases** — 200 api, 20 device, 90 manual; 16 blocked.
 
 ## Areas
 
@@ -108,24 +108,6 @@ _Device (automated, Appium) · plans: any_
 **Expected**
 1. No forced-update screen appears
 2. The Floor and its bottom bar are on screen
-
-#### UAT-PLAT-008 — An error state on the phone shows a small copyable "Ref:" trace reference
-
-_Device (automated, Appium) · plans: any_
-
-**Preconditions**
-1. The operator arms the Alpha fault switch for the lab user only, e.g. UAT_FAULT_INJECT={"<lab-user-uuid>": ["GET /v1/messages"]} in the Alpha env, then recreates api-alpha (the log shows uat_fault_inject_active); the operator removes it and recreates the container after the run
-
-**Steps**
-1. Open the Inbox (GET /v1/messages answers 503 for the lab user only)
-2. Read the error state; tap the "Ref: xxxxxxxx" line
-3. Open You > SETTINGS > HELP > Report a problem and send a report
-
-**Expected**
-1. The error state shows its normal message plus a small "Ref: " followed by eight hex characters, never a raw exception
-2. Tapping it shows "Reference copied" and puts the full id on the clipboard
-3. The same id is found in the backend log lines and the http_audit row of the failed request, and in the stored bug report (trace_ids, visible in the admin console)
-4. An error from a request that never reached the server shows no Ref line
 
 <a id="auth"></a>
 ## Authentication, sessions & account identity
@@ -3406,6 +3388,24 @@ _Manual (iPhone checklist) · plans: any_
 
 **Expected**
 1. A message tells the user AMI could not open the store and where to update from; the button is never a silent no-op (DEF473)
+
+#### UAT-PLAT-008 — An error state on the phone shows a small copyable "Ref:" trace reference
+
+_Manual (iPhone checklist) · plans: any_
+
+**Preconditions**
+1. The operator arms the Alpha fault switch for the lab user only, e.g. UAT_FAULT_INJECT={"<lab-user-uuid>": ["GET /v1/messages"]} in the Alpha env, then recreates api-alpha (the log shows uat_fault_inject_active); the operator removes it and recreates the container after the run
+
+**Steps**
+1. Open the Inbox (GET /v1/messages answers 503 for the lab user only)
+2. Read the error state; tap the "Ref: xxxxxxxx" line
+3. Open You > SETTINGS > HELP > Report a problem and send a report
+
+**Expected**
+1. The error state shows its normal message plus a small "Ref: " followed by eight hex characters, never a raw exception
+2. Tapping it shows "Reference copied" and puts the full id on the clipboard
+3. The same id is found in the backend log lines and the http_audit row of the failed request, and in the stored bug report (trace_ids, visible in the admin console)
+4. An error from a request that never reached the server shows no Ref line
 
 #### UAT-AUTH-030 — Sign in with Apple on iPhone
 

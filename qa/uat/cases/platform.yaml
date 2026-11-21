@@ -102,7 +102,7 @@ cases:
 
   - id: UAT-PLAT-008
     title: An error state on the phone shows a small copyable "Ref:" trace reference
-    layer: device
+    layer: manual
     plans: [any]
     preconditions:
       - 'The operator arms the Alpha fault switch for the lab user only, e.g. UAT_FAULT_INJECT={"<lab-user-uuid>": ["GET /v1/messages"]} in the Alpha env, then recreates api-alpha (the log shows uat_fault_inject_active); the operator removes it and recreates the container after the run'
