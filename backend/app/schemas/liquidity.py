@@ -66,6 +66,7 @@ snapshot this rides on.
 
 from __future__ import annotations
 
+import math
 from datetime import date
 from enum import Enum
 
@@ -90,6 +91,11 @@ _SOURCE = "AMI sector/industry classification snapshot (yfinance market cap + av
 # snapshot's (`_SOURCE`), so a verdict's `source` field always names which read
 # actually produced it, exactly as `ClassificationVerdict` already does per kind.
 ON_DEMAND_SOURCE = "AMI on-demand liquidity lookup (yfinance, 24h cached)"
+
+
+def _cap_below_floor_str(cap_usd_m: float) -> str:
+    """DEF525: rounding printed $499.6M as "$500M ... below AMI's $500M floor"; round down instead."""
+    return f"${math.floor(cap_usd_m):,}M"
 
 
 class LiquidityStatus(str, Enum):
@@ -183,7 +189,7 @@ class LiquidityVerdict(BaseModel):
             reasons = []
             if self.market_cap_usd_m is not None and self.market_cap_usd_m < MICROCAP_FLOOR_USD_M:
                 reasons.append(
-                    f"${self.market_cap_usd_m:,.0f}M market cap is below AMI's "
+                    f"{_cap_below_floor_str(self.market_cap_usd_m)} market cap is below AMI's "
                     f"${MICROCAP_FLOOR_USD_M}M microcap floor"
                 )
             if (
