@@ -21,6 +21,7 @@ import 'package:ami_trade/screens/settings/ticker_rules_section.dart';
 import 'package:ami_trade/screens/auth/sign_in_screen.dart';
 import 'package:ami_trade/screens/coach/ai_coach_screen.dart';
 import 'package:ami_trade/screens/feedback/bug_report_sheet.dart';
+import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/services/diagnostics/save_timeline.dart';
 import 'package:ami_trade/state/feedback_providers.dart';
 import 'package:ami_trade/services/ads/admob_config.dart';
@@ -331,9 +332,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     // keyboard leaves with it rather than hanging over the result.
     FocusManager.instance.primaryFocus?.unfocus();
     SaveTimeline.mark('save tap');
-    await ref.read(mandateNotifierProvider.notifier).patch(updates);
+    final saved =
+        await ref.read(mandateNotifierProvider.notifier).patch(updates);
     SaveTimeline.mark('patch returned');
     if (!mounted) return;
+    if (!saved) {
+      // DEF522 — the PATCH did not land. Keep the dirty flag and the user's
+      // pending edits (SAVE stays shown for a retry), say so, and skip the
+      // audit: there is no new limit to audit against.
+      final message = ref.read(mandateNotifierProvider).error ??
+          friendlyError(StateError('mandate patch failed'),
+              action: 'save your mandate');
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+      return;
+    }
     setState(() {
       _dirty = false;
       _pendingRiskLimits.clear();

@@ -70,7 +70,10 @@ class MandateNotifier extends StateNotifier<MandateState> {
     }
   }
 
-  Future<void> patch(Map<String, dynamic> updates) async {
+  /// DEF522 — returns whether the PATCH landed. A failure is also written to
+  /// [MandateState.error], but callers must act on the return value: a stale
+  /// `error` from an earlier load is indistinguishable from this call's.
+  Future<bool> patch(Map<String, dynamic> updates) async {
     SaveTimeline.mark('patch start');
     state = state.copyWith(saving: true, clearError: true);
     try {
@@ -78,7 +81,7 @@ class MandateNotifier extends StateNotifier<MandateState> {
       final userId = await DeviceUser.getOrCreate();
       final updated = await api.patchMandate(userId: userId, updates: updates);
       SaveTimeline.mark('patch response');
-      if (!mounted) return;
+      if (!mounted) return true;
       state = state.copyWith(mandate: updated, saving: false);
       // DEF521 — NOT awaited. The journal list is up to 100 full-payload rows
       // and, on a phone behind the tunnel, took ~17 s to arrive; awaiting it
@@ -89,11 +92,14 @@ class MandateNotifier extends StateNotifier<MandateState> {
           .read(journalNotifierProvider.notifier)
           .refresh()
           .whenComplete(() => SaveTimeline.mark('journal refresh done')));
+      return true;
     } catch (e) {
-      if (!mounted) return;
+      SaveTimeline.mark('patch failed');
+      if (!mounted) return false;
       state = state.copyWith(
           saving: false,
           error: friendlyError(e, action: 'save your mandate'));
+      return false;
     }
   }
 }
