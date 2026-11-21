@@ -69,11 +69,21 @@ baseline now on Alpha's on-prem models, zero spend, no hosted vendor. WP-26 re-r
 
 ## Results — TO FILL when the jobs finish
 
-1. Approvals per risk level, arm 1 (n per cell = 2 reps x 30 tickers per level = 60): TO FILL.
-2. Flip count across reps (comparable cells of 150): TO FILL. CR251 reference (a different stack): 29/150.
-3. Minutes per Room and cost per Room (cost $0): TO FILL (pilot above).
+1. Approvals per risk level, arm 1 (n per cell = 2 reps x 30 tickers per level = 60). All 300 Rooms completed, none errored (arm 1 ended 2026-11-21 08:45Z):
+
+   | Risk | n | APPROVE | rate | PASS | other |
+   |---|---|---|---|---|---|
+   | R1 | 60 | 3 | 5% | 57 | 0 |
+   | R2 | 60 | 3 | 5% | 57 | 0 |
+   | R3 | 60 | 10 | 17% | 50 | 0 |
+   | R4 | 60 | 13 | 22% | 47 | 0 |
+   | R5 | 60 | 20 | 33% | 36 | 4 |
+
+   Approvals rise with risk level in aggregate. Per ticker they are not monotone: e.g. MA approves at R1 and R3 but not R2/R4/R5, WFC at R2/R3/R4 but not R5. The per-ticker table is in `wp20_analyze.py`'s output.
+2. Flip count across reps: **35 of 150** comparable cells (23%) disagree between rep 1 and rep 2. CR251 reference (a different stack): 29/150.
+3. Minutes per Room (wall clock, 2 in flight): n=300, mean 8.05, median 7.77, p90 9.91, max 13.74. Arm 1 wall time about 20.7 h. Cost per Room $0 (on-prem).
 4. Card completeness, arm 2 (`evidence_card_report.py`): TO FILL.
-5. Gate report arm 1, side, arm 2 (`room_contract_gates.py`): TO FILL.
+5. Gate report (`room_contract_gates.py`): **arm 1 296/300 gate-ok**. The 4 failing Rooms: three MISSING_STANCE (a Bull or Bear turn with no parseable decision and no successful repair: BAC R1 rep 1, SNAP R2 rep 1, SNAP R3 rep 2) and one PM_JSON_UNPARSEABLE (CAG R4 rep 1, CIO draw 4). Side set and arm 2: TO FILL.
 6. Approvals of Street Sell/Underperform names: none exist in either set; report approvals by Street bucket
    (buy / hold) per risk level from `street_comparison.street_rating`: TO FILL.
 
