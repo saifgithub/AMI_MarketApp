@@ -3546,10 +3546,10 @@ _Manual (iPhone checklist) · plans: any_
 
 **Steps**
 1. Settings > Account > Export my data
-2. In the share sheet save the file to Files / Drive (or mail it to yourself) and open it
+2. Tap Save to device, keep the suggested name, Save, then open the saved file from the phone (Android; on iOS the share sheet opens, choose Save to Files)
 
 **Expected**
-1. The share sheet opens with ami-data-export-<date>.json
+1. A sheet offers Save to device and Share; Save to device opens the system Save dialog with ami-data-export-<date>.json and a Saved snackbar names the file (iOS: the share sheet opens with that file)
 2. The file is readable JSON holding the trade, the Room verdicts, the mandate, the journal entry, the lesson progress and the settings
 3. It holds nothing about any other user and no Alpaca key, token or secret
 
