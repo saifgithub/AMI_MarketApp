@@ -299,3 +299,14 @@ Found: two users have duplicate training portfolios created 40 ms apart on 2026-
     1. **AMI-DL-11** (Android): HLTH-014 recovery half, ROOM-016/031, BRIEF-016.
     2. **AMI-DL-12** (iPhone): MAND-031 #4 for DEF514, BRIEF-016.
     3. HLTH-014's slow-wait half needs a user with a trial Finding left, which neither lab account has. Unit tests cover it.
+13. **AMI-DL-11** (Android, build 122): 4 of 4 passed.
+    1. HLTH-014's recovery half: FULL FINDING opens the stored Finding at once.
+    2. ROOM-016.
+    3. ROOM-031: an unchanged re-convene is free, with the "Inputs unchanged" line; after a Brief edit a new Room runs.
+    4. BRIEF-016: the header reads "2 edits made - 1 remaining".
+    5. The Brief rollback froze: **DEF519**. The history page's context popped the tab Navigator, not the root-level dialog, so the request was never sent. Fixed in build 124, and **DEF520** added a static guard over all 46 dialog sites (P42) and hardened the locked-agent sheet.
+14. **AMI-DL-12/13** (iPhone).
+    1. DEF514 on 122: no dialog seen at 0.3–3.5 s. The audit was answered about 10 s after the save, because it waited behind the sim refresh; fixed in 123.
+    2. On 123 the dialog content is correct (NFLX 46.5% against the 3% cap) but appeared 10–30 s after SAVE.
+    3. `http_audit` shows the PATCH taking 31 ms and the audit 0.4 s, and **no request for about 17 s** in between. That is an in-app stall, **DEF521**; a worker is on it.
+15. **Builds 123** (bump `04f9a791`) **and 124** (`158c4d46`) are on TestFlight and Play internal. **AMI-DL-14** (Android: BRIEF-018 rollback, BRIEF-016, FLOOR-007/008) is booked.
