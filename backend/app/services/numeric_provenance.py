@@ -316,6 +316,17 @@ NUMERIC_PROVENANCE: dict[tuple[str, str], ProvenanceRow] = {
         "and calibrated-config threshold; attached to the verdict only on "
         "gated runs with computable evidence",
     ),
+    # CR267 WP-23 — the coded rule's record. Its numerics (grader confidences and
+    # latency/cost) are read straight off the grader's result and stored as
+    # given; the outcome is a pure function of the answers
+    # (room_decision_rule.decide). The CIO states none of them.
+    ("verdict", "coded_decision"): ProvenanceRow(
+        Provenance.COMPUTED,
+        "app.services.room_decision_rule.decide + "
+        "app.services.room_runner._coded_record — grader answers copied "
+        "verbatim, outcome computed by the written rule; attached only on "
+        "Rooms that ran with ROOM_CODED_RULE_ENABLED",
+    ),
     (
         "verdict", "structure",
     ): ProvenanceRow(

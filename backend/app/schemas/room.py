@@ -157,6 +157,45 @@ class DecisionRecord(BaseModel):
     contested_reasons: list[str]
 
 
+class CodedAnswer(BaseModel):
+    """CR267 WP-23 — one grader answer, as stored on the Room."""
+
+    question: str
+    answer: str
+    confidence: float | None = None
+    close: bool = False
+    rationale: str = ""
+
+
+class CodedDecisionRecord(BaseModel):
+    """CR267 WP-23 — the coded decision rule's persisted record, riding the verdict
+    JSONB like `decision_record` (no migration).
+
+    Written only by a Room that ran with `ROOM_CODED_RULE_ENABLED`; absent (None)
+    on every other run, never a stand-in (T-BACKFILL). `outcome` is the rule's own
+    result (APPROVE / PASS / CONTESTED / UNAVAILABLE) before the deterministic
+    mandate floor, which may still turn an APPROVE into a REJECT on the verdict's
+    `action`. `answers` is every answer the grader gave, `close_questions` the ones
+    that put the decision in the Contested band, and `policy_version` carries the
+    grader, its version, the rule version and the question-set version.
+    """
+
+    outcome: Literal["APPROVE", "PASS", "CONTESTED", "UNAVAILABLE"]
+    reasons: list[str] = Field(default_factory=list)
+    close_questions: list[str] = Field(default_factory=list)
+    answers: list[CodedAnswer] = Field(default_factory=list)
+    rule_version: str
+    policy_version: str
+    risk_level: str
+    grader: str | None = None
+    grader_version: str | None = None
+    question_set_version: str | None = None
+    error: str | None = None
+    narration_overridden: bool = False
+    grader_latency_ms: int | None = None
+    grader_cost_usd: float | None = None
+
+
 class RatingSplit(BaseModel):
     """CR260 — the strong-buy→strong-sell count distribution behind the
     consensus word. Sums to the analyst count; the individual buckets are
@@ -447,6 +486,10 @@ class Verdict(BaseModel):
     # non-live scripted path, or failed closed before any evidence could be
     # scored — absence by omission, never a stand-in (T-BACKFILL).
     decision_record: DecisionRecord | None = None
+
+    # CR267 WP-23 — the coded decision rule's record; see `CodedDecisionRecord`.
+    # None on every run that ran with the rule off or predates it.
+    coded_decision: CodedDecisionRecord | None = None
 
     # CR272 (CR267 WP-14) — True when this Room was restarted on the backup LLM
     # slot after the primary failed (`room_runner.run()`), so the stored run
