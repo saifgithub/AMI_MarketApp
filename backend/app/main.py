@@ -6,7 +6,7 @@ import math
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Header, Query, Request, Response
+from fastapi import Depends, FastAPI, Header, Query, Request, Response
 from fastapi.encoders import jsonable_encoder
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.exceptions import RequestValidationError
@@ -68,6 +68,8 @@ from app.schemas.client_release_floor import ReleaseFloorResponse
 from app.services.audit import trim_audit_tables
 from app.services.client_release_floor import build_release_floor_response
 from app.services.readiness import readiness_report
+from app.services.uat_fault_inject import configure_from_settings as configure_uat_fault_inject
+from app.services.uat_fault_inject import fault_hook as uat_fault_hook
 from app.services.room_runner import get_room_runner
 
 configure_logging()
@@ -106,6 +108,7 @@ def check_secret_key_boot(env: str, secret_key: str) -> None:
 
 
 check_secret_key_boot(settings.env, settings.secret_key)
+configure_uat_fault_inject()
 
 _TRIM_INTERVAL_SECONDS = 24 * 60 * 60  # 24 h
 _SHARIA_REFRESH_INTERVAL_SECONDS = 24 * 60 * 60  # daily — SPUS publishes daily
@@ -665,6 +668,7 @@ app = FastAPI(
     docs_url="/docs" if settings.env != "prod" else None,
     redoc_url=None,
     lifespan=lifespan,
+    dependencies=[Depends(uat_fault_hook)],
 )
 
 app.add_middleware(HTTPAuditMiddleware)

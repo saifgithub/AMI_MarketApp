@@ -103,11 +103,11 @@ cases:
   - id: UAT-PLAT-008
     title: An error state on the phone shows a small copyable "Ref:" trace reference
     layer: device
-    status: blocked
-    blocked_on: 'No way to force a server-side 4xx/5xx from the device UI, and a request that never reaches the server (offline / wrong host) correctly shows no Ref. Needs a rig-side fault hook (e.g. block one route at melehost) before this can be driven by Appium; until then Saiful runs it by hand on the rig (WP-38).'
     plans: [any]
+    preconditions:
+      - 'The operator arms the Alpha fault switch for the lab user only, e.g. UAT_FAULT_INJECT={"<lab-user-uuid>": ["GET /v1/messages"]} in the Alpha env, then recreates api-alpha (the log shows uat_fault_inject_active); the operator removes it and recreates the container after the run'
     steps:
-      - 'Cause a screen that loads from the server (Inbox, Notifications or Games) to hit a server error, then open it'
+      - 'Open the Inbox (GET /v1/messages answers 503 for the lab user only)'
       - 'Read the error state; tap the "Ref: xxxxxxxx" line'
       - 'Open You > SETTINGS > HELP > Report a problem and send a report'
     expected:
