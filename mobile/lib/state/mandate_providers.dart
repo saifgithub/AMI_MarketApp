@@ -1,9 +1,12 @@
 /// Riverpod state for the user mandate (Settings → My Mandate editor).
 library;
 
+import 'dart:async';
+
 import 'package:ami_trade/models/mandate.dart';
 import 'package:ami_trade/services/api/friendly_error.dart';
 import 'package:ami_trade/services/device_user.dart';
+import 'package:ami_trade/services/diagnostics/save_timeline.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:flutter/foundation.dart';
@@ -68,14 +71,24 @@ class MandateNotifier extends StateNotifier<MandateState> {
   }
 
   Future<void> patch(Map<String, dynamic> updates) async {
+    SaveTimeline.mark('patch start');
     state = state.copyWith(saving: true, clearError: true);
     try {
       final api = _ref.read(apiClientProvider);
       final userId = await DeviceUser.getOrCreate();
       final updated = await api.patchMandate(userId: userId, updates: updates);
+      SaveTimeline.mark('patch response');
       if (!mounted) return;
       state = state.copyWith(mandate: updated, saving: false);
-      await _ref.read(journalNotifierProvider.notifier).refresh();
+      // DEF521 — NOT awaited. The journal list is up to 100 full-payload rows
+      // and, on a phone behind the tunnel, took ~17 s to arrive; awaiting it
+      // here held the Settings screen's dirty flag, keyboard and the
+      // retro-tightening audit behind a re-read that none of them depend on.
+      // The journal only needs the new plan, which is already in state.
+      unawaited(_ref
+          .read(journalNotifierProvider.notifier)
+          .refresh()
+          .whenComplete(() => SaveTimeline.mark('journal refresh done')));
     } catch (e) {
       if (!mounted) return;
       state = state.copyWith(

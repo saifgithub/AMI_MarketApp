@@ -21,6 +21,7 @@ import 'package:ami_trade/screens/settings/ticker_rules_section.dart';
 import 'package:ami_trade/screens/auth/sign_in_screen.dart';
 import 'package:ami_trade/screens/coach/ai_coach_screen.dart';
 import 'package:ami_trade/screens/feedback/bug_report_sheet.dart';
+import 'package:ami_trade/services/diagnostics/save_timeline.dart';
 import 'package:ami_trade/state/feedback_providers.dart';
 import 'package:ami_trade/services/ads/admob_config.dart';
 import 'package:ami_trade/services/ads/ads_models.dart';
@@ -326,7 +327,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final touchedRiskLimits = Map<String, dynamic>.from(_pendingRiskLimits);
     updates.addAll(touchedRiskLimits);
     if (updates.isEmpty) return;
+    // DEF521: the tap is the user's "I'm done typing" — drop focus now so the
+    // keyboard leaves with it rather than hanging over the result.
+    FocusManager.instance.primaryFocus?.unfocus();
+    SaveTimeline.mark('save tap');
     await ref.read(mandateNotifierProvider.notifier).patch(updates);
+    SaveTimeline.mark('patch returned');
+    if (!mounted) return;
     setState(() {
       _dirty = false;
       _pendingRiskLimits.clear();
@@ -355,8 +362,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     // first few seconds saw nothing and read it as "no disclosure". The
     // disclosure is the point of the save for a tightened cap, so it must not
     // queue behind a portfolio reload; the two requests now run side by side.
-    final simRefresh = ref.read(simNotifierProvider.notifier).refresh();
+    SaveTimeline.mark('sim refresh + audit start');
+    final simRefresh = ref
+        .read(simNotifierProvider.notifier)
+        .refresh()
+        .whenComplete(() => SaveTimeline.mark('sim refresh done'));
     await _discloseRetroBreach(m.userId, touchedRiskLimits.keys);
+    SaveTimeline.mark('audit step done');
     await simRefresh;
   }
 

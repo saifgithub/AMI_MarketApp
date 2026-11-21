@@ -27,7 +27,7 @@ final teamCallsProvider =
   // Same reasoning as `insightsProvider`: `plan` is re-derived server-side, so
   // a wrong value here cannot widen retention — but guessing one would
   // aggregate over whatever a default returned, so wait for the real thing.
-  final plan = ref.watch(mandateNotifierProvider).mandate?.plan;
+  final plan = ref.watch(mandateNotifierProvider.select((s) => s.mandate?.plan));
   if (plan == null) return const [];
   final api = ref.read(apiClientProvider);
   final userId = await DeviceUser.getOrCreate();
