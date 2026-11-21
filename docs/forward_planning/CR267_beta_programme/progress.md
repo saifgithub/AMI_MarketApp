@@ -293,3 +293,9 @@ Found: two users have duplicate training portfolios created 40 ms apart on 2026-
 7. **DEF516** (fixed, merged): five deprecated `/v1/coach/*` aliases awaited sync Brief handlers and returned 500. A guard test pairs each wrapper with its handler.
 8. **DEF517 fixed.** The bank key included the daily Sharia/classification snapshot's `as_of` date, so the nightly refresh (about 02:16 Riyadh) un-banked every Room. The key now keeps the verdicts and stale flags and drops the date. Ruling: a replayed Room may quote its original "as of" date, since it is labelled "Inputs unchanged since your last run on <date>".
 9. **Deploy #16** `alpha-2026-11-21-3` = `238a52be`: DEF515, DEF516 and DEF517. The first local gate failed: DEF253's test looks for the model-wait marker within 500 characters of the Finding route, and DEF515's comment had pushed it out. I moved the comment above the call and re-ran both gates. Suite PASS 9,094; local PASS; postflight PASS.
+10. **DEF518:** Brief History took the plan from a client param (default `trial_trader`), so Floor Pass users saw unlimited edits while `accept()` enforced their cap. History now reads `effective_plan_for_user`. The live API UAT strict xfails for DEF516/DEF518 are removed, and the wire-contract unverified baseline went 28 → 27.
+11. **Deploy #17** `alpha-2026-11-21-4` = `046350c5` (DEF518). The first suite gate failed on the wire ratchet (a newly verified surface) and was fixed. Suite PASS 9,098; postflight PASS; API UAT PASS 15 of 15.
+12. **Build 0.1.0+122** (bump `8ad94196`) is on TestFlight internal + Play internal; APK sha256 `64d87e51…f7ad9`. It carries the client halves of DEF514 and DEF515. Booked:
+    1. **AMI-DL-11** (Android): HLTH-014 recovery half, ROOM-016/031, BRIEF-016.
+    2. **AMI-DL-12** (iPhone): MAND-031 #4 for DEF514, BRIEF-016.
+    3. HLTH-014's slow-wait half needs a user with a trial Finding left, which neither lab account has. Unit tests cover it.
