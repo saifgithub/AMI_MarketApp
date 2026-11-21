@@ -347,21 +347,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
     // Sim portfolio's compliance evaluation depends on the mandate —
     // refresh so any newly-rejectable holdings show up correctly.
-    await ref.read(simNotifierProvider.notifier).refresh();
-    // CR101-MOBILE retro-tightening (assign §3), widened by DEF514 to every
-    // limit with a portfolio-state dimension: the two BE2 limits count open
-    // positions and open risk, and the two concentration caps are measured
-    // against current holdings (the trade ticket refuses on them), so
-    // tightening one can leave holdings already over it. The trade-pace and
-    // cooldown limits have no holdings-side reading. No preview endpoint
-    // exists (BL12's audit reads the CURRENTLY PERSISTED mandate), so this
-    // necessarily runs immediately after the save, not before it — disclosed
-    // in the bridge.
+    //
+    // DEF514 device re-check: started here but NOT awaited before the audit
+    // below. On Alpha the refresh (evaluate + portfolio + trades + orders,
+    // each re-quoting the book) plus the audit put the retro dialog ten to
+    // twenty seconds after the Save tap, so a tester's screenshots in the
+    // first few seconds saw nothing and read it as "no disclosure". The
+    // disclosure is the point of the save for a tightened cap, so it must not
+    // queue behind a portfolio reload; the two requests now run side by side.
+    final simRefresh = ref.read(simNotifierProvider.notifier).refresh();
+    await _discloseRetroBreach(m.userId, touchedRiskLimits.keys);
+    await simRefresh;
+  }
+
+  /// CR101-MOBILE retro-tightening (assign §3), widened by DEF514 to every
+  /// limit with a portfolio-state dimension: the two BE2 limits count open
+  /// positions and open risk, and the two concentration caps are measured
+  /// against current holdings (the trade ticket refuses on them), so
+  /// tightening one can leave holdings already over it. The trade-pace and
+  /// cooldown limits have no holdings-side reading. No preview endpoint
+  /// exists (BL12's audit reads the CURRENTLY PERSISTED mandate), so this
+  /// necessarily runs immediately after the save, not before it — disclosed
+  /// in the bridge.
+  Future<void> _discloseRetroBreach(
+      String userId, Iterable<String> touchedKeys) async {
     final touchedRetroFields =
-        touchedRiskLimits.keys.where(kRetroAuditedLimitKeys.contains);
+        touchedKeys.where(kRetroAuditedLimitKeys.contains);
     if (touchedRetroFields.isEmpty || !mounted) return;
     try {
-      final audit = await ref.read(apiClientProvider).auditMandateHoldings(m.userId);
+      final audit =
+          await ref.read(apiClientProvider).auditMandateHoldings(userId);
       if (!audit.anyRetroBreach || !mounted) return;
       // The concentration breaches carry their own offender lines; the plain
       // ticker list stays for the two BE2 breaches it was written for.
@@ -370,7 +385,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ? audit.violationTickers
               : const <String>[];
       await RetroTighteningDialog.show(context, listTickers, audit: audit);
-    } catch (_) {
+    } catch (e, st) {
+      // DEF514 re-check: logged too, so a parse or render failure here is
+      // diagnosable from a device log instead of reading as "no breach".
+      debugPrint('retro-tightening audit failed after save: $e\n$st');
       // DEF194 — the swallow itself stays (a failed audit read must not
       // block or misrepresent a save that already succeeded), but silence
       // on this path used to be indistinguishable from "nothing is in
