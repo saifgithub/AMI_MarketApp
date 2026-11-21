@@ -14,6 +14,9 @@
 ///   (for the panels whose copy is a fixed localised string that never saw the
 ///   exception) - and shows NOTHING when there is none, or when the latest
 ///   failure never reached the server, rather than a stale unrelated id.
+///   It listens to the store: every call site holds it as a `const` child, and
+///   a const widget instance is never rebuilt by its parent, so without the
+///   listener a retry's new id would never reach the screen (DEF526).
 /// - [AmiErrorMessage] renders an error message string and, if it ends in a
 ///   trace reference, splits that into a [TraceRefLine] under the headline.
 library;
@@ -43,7 +46,14 @@ class TraceRefLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = store ?? TraceIdStore.instance;
-    final shown = _recent ? s.recentId() : id;
+    if (!_recent) return _line(context, s, id);
+    return ListenableBuilder(
+      listenable: s,
+      builder: (context, _) => _line(context, s, s.recentId()),
+    );
+  }
+
+  Widget _line(BuildContext context, TraceIdStore s, String? shown) {
     if (shown == null || shown.isEmpty) return const SizedBox.shrink();
     final l = AppLocalizations.of(context);
     final label = l.traceRefLabel(shortTraceId(shown));
