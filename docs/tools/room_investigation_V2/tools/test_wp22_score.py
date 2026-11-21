@@ -91,6 +91,20 @@ class TranscriptTests(unittest.TestCase):
         self.assertEqual(w.build_transcript(arm(), self.ROOM).horizon, "long")
 
 
+class PickRoomTests(unittest.TestCase):
+    def test_picks_the_room_triggered_with_the_arm(self):
+        a = {**arm(), "triggered_at": "2026-11-20T12:05:58.925388+00:00"}
+        t = 1795176358.925  # 2026-11-20T12:05:58.925Z
+        early = {"id": "old", "triggered_epoch": t - 175}
+        mine = {"id": "mine", "triggered_epoch": t + 0.00005}
+        self.assertEqual(w.pick_room(a, [early, mine])["id"], "mine")
+
+    def test_no_candidate_within_five_seconds_is_none(self):
+        a = {**arm(), "triggered_at": "2026-11-20T12:05:58.925388+00:00"}
+        self.assertIsNone(w.pick_room(a, [{"id": "x", "triggered_epoch": 1795176358.925 - 60}]))
+        self.assertIsNone(w.pick_room(a, []))
+
+
 class SelectionTests(unittest.TestCase):
     def test_stride_sample_hits_every_risk(self):
         arms = [arm(t, r, rep) for r in range(1, 6) for t in "ABCDEF" for rep in (1, 2)]

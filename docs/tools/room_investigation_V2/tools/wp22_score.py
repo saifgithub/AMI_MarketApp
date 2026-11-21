@@ -45,6 +45,7 @@ import statistics
 import sys
 import time
 import urllib.request
+from datetime import datetime
 from pathlib import Path
 
 _HERE = Path(__file__).resolve()
@@ -159,24 +160,38 @@ def readonly_engine(dsn: str):
     return create_engine(dsn, connect_args={"options": "-c default_transaction_read_only=on"})
 
 
+def pick_room(arm: dict, candidates: list[dict]) -> dict | None:
+    """The room_runs row that IS this arm's run: the candidate whose triggered_at is
+    closest to the arm's own triggered_at, within 5 s. Two arm users carry an extra
+    earlier completed row from an overlapping first attempt (NO_VERDICT / duplicate);
+    matching on the timestamp keeps the Room the run record's verdict came from."""
+    t = datetime.fromisoformat(arm["triggered_at"]).timestamp()
+    best = min(candidates, key=lambda r: abs(r["triggered_epoch"] - t), default=None)
+    if best is None or abs(best["triggered_epoch"] - t) > 5:
+        return None
+    return best
+
+
 def fetch_rooms(dsn: str, arms: list[dict]) -> dict[str, dict]:
-    """{user_id: room_runs row}. One completed Room per arm user; more than one is
-    ambiguous and raises."""
+    """{arm_key: room_runs row}, each matched to its arm by user and trigger time."""
     from sqlalchemy import text
 
     eng = readonly_engine(dsn)
-    rooms: dict[str, dict] = {}
+    by_user: dict[str, list[dict]] = collections.defaultdict(list)
     with eng.connect() as c:
         rows = c.execute(text(
-            "SELECT id::text AS id, user_id::text AS user_id, ticker, status, "
-            "mandate_version, transcript FROM room_runs "
-            "WHERE user_id = ANY(CAST(:u AS uuid[])) AND status = 'completed'"
+            "SELECT id::text AS id, user_id::text AS user_id, ticker, status, mandate_version, "
+            "transcript, extract(epoch from triggered_at)::float8 AS triggered_epoch "
+            "FROM room_runs WHERE user_id = ANY(CAST(:u AS uuid[])) AND status = 'completed'"
         ), {"u": [a["user_id"] for a in arms]}).mappings().all()
         for r in rows:
-            if r["user_id"] in rooms:
-                raise RuntimeError(f"two completed rooms for user {r['user_id']}")
-            rooms[r["user_id"]] = dict(r)
-    return rooms
+            by_user[r["user_id"]].append(dict(r))
+    out = {}
+    for a in arms:
+        room = pick_room(a, by_user.get(a["user_id"], []))
+        if room is not None:
+            out[a["arm_key"]] = room
+    return out
 
 
 def vllm_model_root(base_url: str) -> str:
@@ -301,7 +316,7 @@ async def run_scoring(arms: list[dict], rooms: dict, out: Path, *,
 
     async def one(i: int, arm: dict, p: int | None) -> None:
         nonlocal errors
-        room = rooms.get(arm["user_id"])
+        room = rooms.get(arm["arm_key"])
         if room is None:
             row = result_to_row(arm, "", None, phrasing=p, model_root=model_root,
                                 error="no completed room_runs row for this arm user")
