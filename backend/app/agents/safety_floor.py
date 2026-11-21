@@ -24,6 +24,9 @@ from app.schemas.sharia import ShariaVerdict
 from app.schemas.trade import ComplianceResult, Holding, ProposedTrade, Side
 from app.services.liquidity_lookup import resolve_liquidity_cached
 from app.services.sector_allocation import (
+    held_sector_breaches as _held_sector_breaches,
+)
+from app.services.sector_allocation import (
     sector_cap_breach as _sector_cap_breach,
 )
 from app.services.sector_allocation import (
@@ -88,6 +91,16 @@ class HoldingViolation(BaseModel):
     issues: list[str] = Field(default_factory=list)
 
 
+class ConcentrationBreach(BaseModel):
+    """A name or sector the CURRENT holdings already hold over its cap (DEF514).
+    `name` is the ticker (single-name) or the GICS sector; `tickers` are the
+    holdings making it up."""
+
+    name: str
+    weight_pct: float
+    tickers: list[str] = Field(default_factory=list)
+
+
 class HoldingsAuditResult(BaseModel):
     """Result of evaluating an existing portfolio against a mandate.
 
@@ -107,6 +120,16 @@ class HoldingsAuditResult(BaseModel):
     # new BUYs; retro-tightening is NEVER a forced sell (assign invariant).
     max_open_positions_breach: bool = False
     max_open_risk_pct_breach: bool = False
+    # DEF514: the two caps measured against current holdings, same math as the
+    # trade-ticket refusal (`single_name_cap_pct` / `sector_cap_pct`). Flags and
+    # offenders, never a forced sell. Additive — a client that predates these
+    # reads them as absent.
+    single_name_cap_breach: bool = False
+    single_name_cap_pct: float | None = None
+    single_name_breaches: list[ConcentrationBreach] = Field(default_factory=list)
+    sector_cap_breach: bool = False
+    sector_cap_pct: float | None = None
+    sector_breaches: list[ConcentrationBreach] = Field(default_factory=list)
     violations: list[HoldingViolation] = Field(default_factory=list)
 
 
@@ -881,6 +904,7 @@ def check_holdings_against_mandate(
     halal_universe: set[str] | None = None,
     locale_allowed_universe: set[str] | None = None,
     existing_open_risk_pct: float | None = None,
+    sector_map: object | None = None,
 ) -> HoldingsAuditResult:
     """BL12: deterministic audit of an existing portfolio against a (possibly
     just-edited) mandate. Returns per-holding violations + portfolio-level
@@ -911,6 +935,7 @@ def check_holdings_against_mandate(
     cap_single_name = single_name_cap_pct(mandate)
 
     violations: list[HoldingViolation] = []
+    single_name_breaches: list[ConcentrationBreach] = []
     for h in holdings:
         t = h.ticker.upper().strip()
         mark = marks.get(h.ticker, h.avg_cost)
@@ -944,6 +969,10 @@ def check_holdings_against_mandate(
                 f"position {weight_pct:.1f}% exceeds single-name cap "
                 f"{cap_single_name}%"
             )
+            if cap_single_name < 100.0:
+                single_name_breaches.append(ConcentrationBreach(
+                    name=t, weight_pct=round(weight_pct, 2), tickers=[t],
+                ))
 
         if issues:
             violations.append(HoldingViolation(
@@ -953,6 +982,24 @@ def check_holdings_against_mandate(
                 weight_pct=round(weight_pct, 2),
                 issues=issues,
             ))
+
+    sector_cap = _sector_concentration_cap(mandate)
+    sector_breaches: list[ConcentrationBreach] = []
+    if sector_map is not None:
+        quotes = {
+            h.ticker: marks.get(h.ticker, h.avg_cost) for h in holdings
+        }
+        sector_breaches = [
+            ConcentrationBreach(
+                name=b.sector,
+                weight_pct=round(b.weight * 100, 2),
+                tickers=list(b.tickers),
+            )
+            for b in _held_sector_breaches(
+                holdings=holdings, quotes=quotes, sector_map=sector_map,
+                cap=sector_cap, portfolio_value=portfolio_value,
+            )
+        ]
 
     drawdown_breach = current_drawdown_pct >= mandate.max_drawdown_pct
     # CR129: unset resolves to the risk-tier preset (always active), same as
@@ -973,6 +1020,7 @@ def check_holdings_against_mandate(
             and not drawdown_breach
             and not max_open_positions_breach
             and not max_open_risk_pct_breach
+            and not sector_breaches
         ),
         mandate_version=mandate.version,
         portfolio_value=round(portfolio_value, 2),
@@ -980,6 +1028,12 @@ def check_holdings_against_mandate(
         drawdown_breach=drawdown_breach,
         max_open_positions_breach=max_open_positions_breach,
         max_open_risk_pct_breach=max_open_risk_pct_breach,
+        single_name_cap_breach=bool(single_name_breaches),
+        single_name_cap_pct=cap_single_name,
+        single_name_breaches=single_name_breaches,
+        sector_cap_breach=bool(sector_breaches),
+        sector_cap_pct=round(sector_cap * 100, 4),
+        sector_breaches=sector_breaches,
         violations=violations,
     )
 

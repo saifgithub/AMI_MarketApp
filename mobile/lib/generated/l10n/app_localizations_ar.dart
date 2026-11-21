@@ -1863,6 +1863,16 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String settingsRiskLimitsRetroSingleName(String cap, String offenders) {
+    return 'سقف المركز الواحد $cap%: $offenders';
+  }
+
+  @override
+  String settingsRiskLimitsRetroSector(String cap, String offenders) {
+    return 'سقف القطاع $cap%: $offenders';
+  }
+
+  @override
   String get settingsRiskLimitsRetroDismiss => 'فهمت';
 
   @override

@@ -1859,6 +1859,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String settingsRiskLimitsRetroSingleName(String cap, String offenders) {
+    return 'Single-name cap $cap%: $offenders';
+  }
+
+  @override
+  String settingsRiskLimitsRetroSector(String cap, String offenders) {
+    return 'Sector cap $cap%: $offenders';
+  }
+
+  @override
   String get settingsRiskLimitsRetroDismiss => 'Got it';
 
   @override

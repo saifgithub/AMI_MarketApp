@@ -194,9 +194,37 @@ class RiskComponents {
       };
 }
 
+/// DEF514 — one name or sector the CURRENT holdings hold over its cap.
+/// `name` is the ticker (single-name) or the GICS sector; `tickers` are the
+/// holdings making it up; `weightPct` is its share of the portfolio.
+class ConcentrationBreach {
+  const ConcentrationBreach({
+    required this.name,
+    required this.weightPct,
+    this.tickers = const [],
+  });
+
+  final String name;
+  final double weightPct;
+  final List<String> tickers;
+
+  static List<ConcentrationBreach> listFromJson(Object? raw) =>
+      (raw as List? ?? const [])
+          .cast<Map>()
+          .map((b) => ConcentrationBreach(
+                name: b['name'] as String? ?? '',
+                weightPct: (b['weight_pct'] as num?)?.toDouble() ?? 0,
+                tickers: (b['tickers'] as List? ?? const []).cast<String>(),
+              ))
+          .where((b) => b.name.isNotEmpty)
+          .toList();
+}
+
 /// BL12 holdings-vs-mandate audit result. CR101-MOBILE calls this
 /// immediately after a risk-limit PATCH to render the retro-tightening
 /// disclosure — flag, never a forced sell (`GET /v1/mandate/{id}/audit`).
+/// DEF514: the two concentration caps are measured against current holdings
+/// too. Fields an older server does not send read as "no breach".
 class HoldingsAuditResult {
   const HoldingsAuditResult({
     required this.passed,
@@ -204,6 +232,12 @@ class HoldingsAuditResult {
     required this.maxOpenPositionsBreach,
     required this.maxOpenRiskPctBreach,
     required this.violationTickers,
+    this.singleNameCapBreach = false,
+    this.singleNameCapPct,
+    this.singleNameBreaches = const [],
+    this.sectorCapBreach = false,
+    this.sectorCapPct,
+    this.sectorBreaches = const [],
   });
 
   final bool passed;
@@ -211,8 +245,18 @@ class HoldingsAuditResult {
   final bool maxOpenPositionsBreach;
   final bool maxOpenRiskPctBreach;
   final List<String> violationTickers;
+  final bool singleNameCapBreach;
+  final double? singleNameCapPct;
+  final List<ConcentrationBreach> singleNameBreaches;
+  final bool sectorCapBreach;
+  final double? sectorCapPct;
+  final List<ConcentrationBreach> sectorBreaches;
 
-  bool get anyRetroBreach => maxOpenPositionsBreach || maxOpenRiskPctBreach;
+  bool get anyRetroBreach =>
+      maxOpenPositionsBreach ||
+      maxOpenRiskPctBreach ||
+      singleNameCapBreach ||
+      sectorCapBreach;
 
   factory HoldingsAuditResult.fromJson(Map<String, dynamic> j) {
     final violations = (j['violations'] as List? ?? const [])
@@ -226,6 +270,13 @@ class HoldingsAuditResult {
       maxOpenPositionsBreach: (j['max_open_positions_breach'] as bool?) ?? false,
       maxOpenRiskPctBreach: (j['max_open_risk_pct_breach'] as bool?) ?? false,
       violationTickers: violations,
+      singleNameCapBreach: (j['single_name_cap_breach'] as bool?) ?? false,
+      singleNameCapPct: (j['single_name_cap_pct'] as num?)?.toDouble(),
+      singleNameBreaches:
+          ConcentrationBreach.listFromJson(j['single_name_breaches']),
+      sectorCapBreach: (j['sector_cap_breach'] as bool?) ?? false,
+      sectorCapPct: (j['sector_cap_pct'] as num?)?.toDouble(),
+      sectorBreaches: ConcentrationBreach.listFromJson(j['sector_breaches']),
     );
   }
 }

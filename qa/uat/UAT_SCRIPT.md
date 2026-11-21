@@ -4,14 +4,14 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**306 cases** — 198 api, 20 device, 88 manual; 16 blocked.
+**307 cases** — 199 api, 20 device, 88 manual; 16 blocked.
 
 ## Areas
 
 1. [Platform, version gate & UAT seeding](#platform) — 8 cases
 2. [Authentication, sessions & account identity](#auth) — 32 cases
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 20 cases
-4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 31 cases
+4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 32 cases
 5. [Floor tab & home shell](#floor) — 11 cases
 6. [Convene the Room](#room) — 31 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
@@ -998,6 +998,23 @@ _API (automated, live Alpha) · plans: trader_
 
 **Expected**
 1. 200 and every real field is unchanged
+
+#### UAT-MAND-040 — The holdings audit reports a concentration cap that current holdings breach
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. PATCH single_name_cap_pct and sector_cap_pct to 100, buy 1 share of KO, GET /v1/mandate/<id>/audit
+2. PATCH both caps to 0.0001, GET the audit again
+3. PATCH both caps to the Day Trader preset values (100), GET the audit again
+
+**Expected**
+1. At 100 the audit has single_name_cap_breach false, sector_cap_breach false and empty single_name_breaches and sector_breaches
+2. At 0.0001 single_name_cap_breach is true, single_name_cap_pct is 0.0001 and single_name_breaches names KO with a positive weight_pct and tickers ["KO"]
+3. Every entry in sector_breaches lists KO among its tickers, and sector_cap_breach is true exactly when sector_breaches is not empty (a ticker the sector map does not classify never breaches)
+4. At the Day Trader values neither breach flag is true
+
+> DEF514, 2026-11-21. Backs UAT-MAND-031 expected 4 (the Settings disclosure reads these fields). The audit keeps its earlier fields unchanged (UAT-MAND-020).
 
 ### Device (automated, Appium)
 
@@ -3604,7 +3621,7 @@ _Manual (iPhone checklist) · plans: any_
 1. A limit that follows the profile shows the selected chip "From your risk profile" with the resolved number; the chip shows the whole line including the number on all seven limits, wrapping to a second line rather than cutting it off (DEF508)
 2. A limit the user set shows "Set by you" under it and its chip reads "Use my risk profile" (tapping it clears the limit); no row ever shows both "From your risk profile" and "Set by you". "Set by you - overrides your risk profile" appears once above the rows (DEF481, 2026-11-20)
 3. The status line under the dial is "Following your risk profile", "Custom" or the Day Trader line, matching the rows
-4. Saving a cap that current holdings breach shows "Some holdings now breach this limit" with the offenders
+4. Saving a cap that current holdings breach shows "Some holdings now breach this limit" with the offenders (ticker, its weight and the cap). Applies to the single-name and sector caps as well as max open positions and max open risk (DEF514, 2026-11-21: the disclosure used to fire for the last two only)
 5. The Day Trader preset first shows its disclosure dialog (with the Barber and Odean evidence); only confirming applies it and cancelling changes nothing
 6. Confirming the preset also moves the risk dial to the highest level (5), sets Horizon to short term, Path to active and Max drawdown to 100%, all unsaved until Save (DEF481, 2026-11-20); the disclosure says so
 7. Tapping the selected Day Trader chip shows no dialog and sets the seven limits back to following the risk profile; risk level, horizon, path and drawdown stay as they were. After Save the chip is no longer selected

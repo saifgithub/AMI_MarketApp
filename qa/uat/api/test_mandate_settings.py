@@ -365,3 +365,28 @@ def test_unknown_patch_fields_do_not_change_behaviour(trader):
     for k in ("max_drawdown_pct", "risk_score", "compliance", "locale", "primary_goal", "plan", "resolved"):
         assert after[k] == before[k], k
     assert "zzz" not in after
+
+
+@pytest.mark.uat("UAT-MAND-040")
+def test_holdings_audit_reports_concentration_cap_breaches(trader):
+    _patch(trader, {"single_name_cap_pct": 100, "sector_cap_pct": 100})
+    sub = trader.post("/v1/sim/submit", json={"user_id": trader.id, "ticker": "KO", "side": "buy", "quantity": 1})
+    assert sub.status_code == 200 and sub.json()["ok"] is True, sub.text
+
+    loose = trader.get(_mid(trader) + "/audit").json()
+    assert loose["single_name_cap_breach"] is False and loose["single_name_breaches"] == []
+    assert loose["sector_cap_breach"] is False and loose["sector_breaches"] == []
+
+    _patch(trader, {"single_name_cap_pct": 0.0001, "sector_cap_pct": 0.0001})
+    tight = trader.get(_mid(trader) + "/audit").json()
+    assert tight["single_name_cap_breach"] is True and tight["single_name_cap_pct"] == 0.0001
+    offender = tight["single_name_breaches"][0]
+    assert offender["name"] == "KO" and offender["tickers"] == ["KO"] and offender["weight_pct"] > 0
+    assert tight["sector_cap_pct"] == 0.0001
+    for b in tight["sector_breaches"]:
+        assert "KO" in b["tickers"]
+    assert tight["sector_cap_breach"] is bool(tight["sector_breaches"])
+
+    _patch(trader, {k: v for k, v in _preset(trader).items() if k in ("single_name_cap_pct", "sector_cap_pct")})
+    day = trader.get(_mid(trader) + "/audit").json()
+    assert day["single_name_cap_breach"] is False and day["sector_cap_breach"] is False

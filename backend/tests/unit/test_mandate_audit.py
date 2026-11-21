@@ -218,3 +218,113 @@ def test_audit_endpoint_requires_ownership(client: TestClient) -> None:
         headers={"Authorization": f"Bearer {token}"},
     )
     assert r.status_code == 403
+
+
+# ── DEF514: concentration caps measured against current holdings ─────────────
+
+
+from app.services.sector_allocation import SectorMap  # noqa: E402
+
+_SECTORS = SectorMap(mapping={
+    "NFLX": "Communication Services",
+    "GOOGL": "Communication Services",
+    "AAPL": "Technology",
+    "MSFT": "Technology",
+    "KO": "Consumer Staples",
+})
+
+
+def _audit(mandate: Mandate, holdings, marks, *, pv: float = 10_000.0, sector_map=_SECTORS):
+    return check_holdings_against_mandate(
+        holdings=holdings, marks=marks, portfolio_value=pv,
+        current_drawdown_pct=0, mandate=mandate, sector_map=sector_map,
+    )
+
+
+def test_def514_single_name_breach_lists_the_ticker_and_weight(base_mandate: Mandate) -> None:
+    # NFLX is 46.5% of the book; the user tightens the single-name cap to 3%.
+    mandate = base_mandate.model_copy(
+        update={"single_name_cap_pct": 3.0, "sector_cap_pct": 100.0})
+    r = _audit(mandate, [_holding("NFLX", 46.5, 100), _holding("KO", 0.1, 100)],
+               {"NFLX": 100, "KO": 100})
+    assert r.single_name_cap_breach is True
+    assert r.single_name_cap_pct == 3.0
+    assert [(b.name, b.weight_pct) for b in r.single_name_breaches] == [("NFLX", 46.5)]
+    assert r.single_name_breaches[0].tickers == ["NFLX"]
+    assert r.sector_cap_breach is False
+
+
+def test_def514_single_name_no_breach_when_cap_is_looser(base_mandate: Mandate) -> None:
+    mandate = base_mandate.model_copy(
+        update={"single_name_cap_pct": 50.0, "sector_cap_pct": 100.0})
+    r = _audit(mandate, [_holding("NFLX", 46.5, 100)], {"NFLX": 100})
+    assert r.single_name_cap_breach is False
+    assert r.single_name_breaches == []
+    assert r.passed
+
+
+def test_def514_single_name_uses_the_trade_ticket_cap(base_mandate: Mandate) -> None:
+    from app.agents.safety_floor import single_name_cap_pct
+
+    mandate = base_mandate.model_copy(update={"single_name_cap_pct": 3.0})
+    r = _audit(mandate, [_holding("NFLX", 1, 100)], {"NFLX": 100})
+    assert r.single_name_cap_pct == single_name_cap_pct(mandate)
+
+
+def test_def514_sector_breach_groups_holdings_by_sector(base_mandate: Mandate) -> None:
+    # NFLX 25% + GOOGL 20% = 45% Communication Services, over a 40% cap;
+    # Technology (AAPL) is 10%, under it.
+    mandate = base_mandate.model_copy(
+        update={"sector_cap_pct": 40.0, "single_name_cap_pct": 100.0})
+    r = _audit(
+        mandate,
+        [_holding("NFLX", 25, 100), _holding("GOOGL", 20, 100), _holding("AAPL", 10, 100)],
+        {"NFLX": 100, "GOOGL": 100, "AAPL": 100},
+    )
+    assert r.sector_cap_breach is True
+    assert r.sector_cap_pct == 40.0
+    assert len(r.sector_breaches) == 1
+    b = r.sector_breaches[0]
+    assert b.name == "Communication Services"
+    assert b.weight_pct == 45.0
+    assert b.tickers == ["GOOGL", "NFLX"]
+    assert r.passed is False
+    assert r.single_name_cap_breach is False
+
+
+def test_def514_sector_no_breach_under_cap_or_when_unclassified(base_mandate: Mandate) -> None:
+    mandate = base_mandate.model_copy(
+        update={"sector_cap_pct": 40.0, "single_name_cap_pct": 100.0})
+    holdings = [_holding("NFLX", 25, 100), _holding("GOOGL", 10, 100)]
+    marks = {"NFLX": 100, "GOOGL": 100}
+    assert _audit(mandate, holdings, marks).sector_cap_breach is False  # 35% < 40%
+    # An unknown sector is "Other": disclosed elsewhere, never a breach.
+    r = _audit(mandate, [_holding("ZZZZ", 90, 100)], {"ZZZZ": 100})
+    assert r.sector_cap_breach is False
+    # No resolver supplied -> not evaluated, never claimed.
+    assert _audit(mandate, holdings, marks, sector_map=None).sector_cap_breach is False
+
+
+def test_def514_day_trader_caps_never_breach(base_mandate: Mandate) -> None:
+    # 100% caps (the Day Trader preset) permit any weight, even one name at 100%
+    # and a portfolio_value that has drifted below the holdings' value.
+    mandate = base_mandate.model_copy(
+        update={"single_name_cap_pct": 100.0, "sector_cap_pct": 100.0})
+    r = _audit(mandate, [_holding("NFLX", 100, 100)], {"NFLX": 100}, pv=9_000.0)
+    assert r.single_name_cap_breach is False
+    assert r.sector_cap_breach is False
+    assert r.single_name_breaches == [] and r.sector_breaches == []
+    # At exactly 100% the per-holding audit is clean too.
+    assert _audit(mandate, [_holding("NFLX", 100, 100)], {"NFLX": 100}).passed
+
+
+def test_def514_audit_fields_are_additive(base_mandate: Mandate) -> None:
+    r = _audit(base_mandate.model_copy(update={"single_name_cap_pct": 100.0}),
+               [_holding("AAPL", 1, 100)], {"AAPL": 100})
+    body = r.model_dump()
+    for k in ("passed", "mandate_version", "drawdown_breach", "max_open_positions_breach",
+              "max_open_risk_pct_breach", "violations"):
+        assert k in body
+    for k in ("single_name_cap_breach", "sector_cap_breach", "single_name_breaches",
+              "sector_breaches", "single_name_cap_pct", "sector_cap_pct"):
+        assert k in body
