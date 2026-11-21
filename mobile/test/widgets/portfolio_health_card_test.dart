@@ -760,6 +760,69 @@ void main() {
       expect(find.text('Upgrade your desk'), findsOneWidget);
     });
 
+    testWidgets("DEF515 - a spent trial still offers today's stored Finding",
+        (tester) async {
+      // AMI-DL-9b: the Finding was written (spending the last trial slot) but
+      // never delivered. The server says it exists; the card must offer it
+      // alongside the upgrade copy rather than show only "trial gone".
+      await _pump(
+        tester,
+        health: healthFixture(
+          gate: gateJson(planHasAccess: false),
+          todaysFindingId: 'entry-1',
+        ),
+      );
+      expect(find.text('FULL FINDING'), findsOneWidget);
+      expect(
+        find.text('Findings are included in Trader and Floor Manager plans.'),
+        findsOneWidget,
+        reason: 'the trial really is spent; the server said so',
+      );
+      expect(
+        tester
+            .widget<HexButton>(find.widgetWithText(HexButton, 'FULL FINDING'))
+            .onPressed,
+        isNotNull,
+      );
+    });
+
+    testWidgets('DEF515 - no stored Finding, no FULL FINDING on a closed gate',
+        (tester) async {
+      await _pump(
+        tester,
+        health: healthFixture(gate: gateJson(planHasAccess: false)),
+      );
+      expect(find.text('FULL FINDING'), findsNothing);
+    });
+
+    testWidgets("DEF515 - the daily-cap button is live with today's Finding",
+        (tester) async {
+      await _pump(
+        tester,
+        health: healthFixture(
+          gate: gateJson(dailyUsed: 2, dailyCap: 2),
+          todaysFindingId: 'entry-1',
+        ),
+      );
+      expect(
+        tester.widget<HexButton>(find.byType(HexButton)).onPressed,
+        isNotNull,
+        reason: 'replay is free and ungated',
+      );
+    });
+
+    testWidgets('DEF515 - the daily-cap button stays dead with nothing to replay',
+        (tester) async {
+      await _pump(
+        tester,
+        health: healthFixture(gate: gateJson(dailyUsed: 2, dailyCap: 2)),
+      );
+      expect(
+        tester.widget<HexButton>(find.byType(HexButton)).onPressed,
+        isNull,
+      );
+    });
+
     testWidgets('tiles are never gated', (tester) async {
       await _pump(
         tester,

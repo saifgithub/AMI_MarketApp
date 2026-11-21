@@ -307,7 +307,14 @@ class PortfolioHealth {
     required this.benchmarkVolAnn,
     required this.blocks,
     required this.gate,
+    this.todaysFindingId,
   });
+
+  /// DEF515 — the journal id of today's stored Finding, when the server has
+  /// one. A Finding can be written and never delivered (the phone gave up
+  /// while it was still being written), and writing it spent a trial slot; this
+  /// is what lets the card still offer it. Replay is free and ungated.
+  final String? todaysFindingId;
 
   /// "ok" | "refused_mock_data" | "no_holdings".
   final String status;
@@ -389,8 +396,15 @@ class PortfolioHealth {
       gate: gateJson == null
           ? HealthGateStatus.closed
           : HealthGateStatus.fromJson(gateJson),
+      todaysFindingId: _todaysFindingId(json['todays_finding']),
     );
   }
+}
+
+String? _todaysFindingId(Object? raw) {
+  if (raw is! Map) return null;
+  final id = raw['journal_entry_id'];
+  return id is String && id.isNotEmpty ? id : null;
 }
 
 /// The POST envelope: M07 §3.5. `sections` is the STORED report — the client

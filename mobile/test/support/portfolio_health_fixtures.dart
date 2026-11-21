@@ -90,6 +90,7 @@ Map<String, dynamic> healthJson({
   double cashFraction = 0.1667,
   double? benchmarkVolAnn = 0.1510,
   bool nested = true,
+  String? todaysFindingId,
 }) {
   final metrics = <String, dynamic>{
     'status': status,
@@ -118,6 +119,9 @@ Map<String, dynamic> healthJson({
     'generated_at': metrics['generated_at'],
     'engine_version': 'cr136.v1',
     'gate': gate ?? gateJson(),
+    'todays_finding': todaysFindingId == null
+        ? null
+        : {'journal_entry_id': todaysFindingId, 'as_of': asOf},
     if (nested) 'metrics': metrics,
   };
   return nested ? envelope : {...metrics, ...envelope};
@@ -213,8 +217,10 @@ PortfolioHealth healthFixture({
   double coveredInvestedValue = 100000,
   double cashFraction = 0.1667,
   double? benchmarkVolAnn = 0.1510,
+  String? todaysFindingId,
 }) =>
     PortfolioHealth.fromJson(healthJson(
+      todaysFindingId: todaysFindingId,
       status: status,
       asOf: asOf,
       blocks: blocks,

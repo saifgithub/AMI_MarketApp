@@ -148,11 +148,44 @@ async def sector_allocation(
 # ── CR136 Portfolio Health ──────────────────────────────────────────────────
 
 
-def _health_envelope(context: dict, gate: GateStatus) -> dict:
+def _todays_finding_ref(prior, context: dict) -> dict | None:
+    """DEF515 — the stored Finding the same-day replay would return, as a
+    pointer. `None` unless it is live and written for THIS `as_of` — the exact
+    condition the POST's idempotency return uses, kept in one place so the card
+    can never offer a replay the route would refuse to serve.
+
+    Why the tiles carry it: a Finding can be written and never delivered (the
+    client gave up while the LLM was still writing it). The trial counter is
+    journal rows, so that Finding has already spent a trial slot, and once the
+    slot is spent the card has no Finding button — without this pointer the
+    user would be told the trial is gone and shown nothing for it."""
+    if (
+        prior is None
+        or prior.deleted_at is not None
+        or context.get("status") != STATUS_OK
+        or (prior.payload or {}).get("as_of") != context.get("as_of")
+    ):
+        return None
+    return {
+        "journal_entry_id": str(prior.id),
+        "as_of": (prior.payload or {}).get("as_of"),
+    }
+
+
+def _todays_finding_lookup(user_id: UUID, portfolio_id: UUID, context: dict) -> dict | None:
+    """Sync (one journal read) so the async handler only awaits it in a thread."""
+    prior = get_journal_store().latest_portfolio_health_entry(user_id, portfolio_id)
+    return _todays_finding_ref(prior, context)
+
+
+def _health_envelope(
+    context: dict, gate: GateStatus, todays_finding: dict | None = None,
+) -> dict:
     """M07 wraps M04's context; it never edits or strips it. Stripping is the
     prompt-side context builder's job, and the tiles are entitled to the amber
     states — a `sufficient: false` block renders as the engine emitted it."""
     return {
+        "todays_finding": todays_finding,
         "status": context.get("status"),
         "as_of": context.get("as_of"),
         "generated_at": context.get("generated_at"),
@@ -180,7 +213,8 @@ async def portfolio_health(
     p = await asyncio.to_thread(sim.ensure_portfolio, user_id)
     context = await asyncio.to_thread(build_health_context, user_id)
     gate = await asyncio.to_thread(evaluate_gate, user_id, p.id)
-    return _health_envelope(context, gate)
+    todays = await asyncio.to_thread(_todays_finding_lookup, user_id, p.id, context)
+    return _health_envelope(context, gate, todays)
 
 
 @router.post("/health/{user_id}/finding")
@@ -219,11 +253,7 @@ async def portfolio_health_finding(
     prior = await asyncio.to_thread(
         store.latest_portfolio_health_entry, user_id, p.id,
     )
-    if (
-        prior is not None
-        and prior.deleted_at is None
-        and (prior.payload or {}).get("as_of") == context["as_of"]
-    ):
+    if _todays_finding_ref(prior, context) is not None:
         gate = await asyncio.to_thread(evaluate_gate, user_id, p.id)
         return _finding_envelope(prior, created=False, gate=gate)
 

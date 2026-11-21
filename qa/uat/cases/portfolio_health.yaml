@@ -172,3 +172,44 @@ cases:
       - The card caption reads "Your next reading is available on <date>." with the date in the phone's locale and time zone
       - The Finding screen shows the same sentence in a dashed slate panel; no "did not respond", no "Tap to retry", and no tappable retry
       - On the day a Finding was written, FULL FINDING stays tappable and reopens it (replay is free and ungated)
+    notes: |
+      2026-11-21 DEF515: AMI-DL-9b could not run this case on its user. The 30-day
+      cadence does NOT apply while the trial budget is open (DEF219), so a user on
+      "1 of 3 trial Findings left" correctly sees no next-reading sentence. The case
+      needs a plan-entitled user (Trader / Floor Manager) whose last Finding is on
+      an earlier day, or gate mode "plan". Do not run it on a Floor Pass trial user.
+
+  - id: UAT-HLTH-014
+    title: A slow Finding is waited for, and a Finding the phone never received is still reachable
+    layer: manual
+    plans: [floor_pass]
+    llm: true
+    preconditions:
+      - A Floor Pass user with holdings and at least one trial Finding left (the card caption reads "N of 3 trial Findings left")
+      - Run on the real phone over mobile data, not Wi-Fi, so a slow answer is realistic (DEF515; AMI-DL-9b, the model took 44 s against a 30 s client limit)
+    steps:
+      - Tap FULL FINDING once and watch the loading hexagon; do not tap anything else
+      - If the Finding screen ends on a dashed panel saying AMI's engine did not respond, leave the screen without tapping retry, then read the Portfolio Health card
+      - Reopen the Finding from the card
+    expected:
+      - The Finding screen keeps loading for as long as the model takes (up to about 3 minutes) and then shows the report; it never shows "did not respond" for an answer that arrives within that time
+      - If the panel does appear, the Finding exists only if the trial count on the card dropped by exactly 1; in that case the card still shows FULL FINDING (even with the trial spent, above the plans line) and tapping it shows the same report with no further charge
+      - If the count did not drop, nothing was written and retrying is honest; the card never reports a trial as used up unless a Finding was stored for it
+    notes: |
+      2026-11-21 DEF515: root cause was the client's 30 s receive timeout on a route
+      the server legitimately runs for 12-44 s (up to 180 s). The server finished
+      and stored the Finding after the phone hung up, spending the third trial slot,
+      and the card then offered nothing for it. Backend:
+      test_def515_health_undelivered_finding.py. Mobile:
+      def515_health_finding_outcome_unknown_test.dart and portfolio_health_card_test.dart.
+
+  - id: UAT-HLTH-015
+    title: The tiles report today's stored Finding
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - On a user who already has a Finding for today's as_of, GET /v1/portfolio/health/{uid}
+      - On a user with none, GET the same
+    expected:
+      - todays_finding is {journal_entry_id, as_of} and the id matches the journal entry that POST finding replays
+      - todays_finding is null when there is no live Finding for the current as_of (including when the only one is soft-deleted)

@@ -364,7 +364,10 @@ class _PopulatedCard extends ConsumerWidget {
             style: AmiTypography.caption,
           ),
           const SizedBox(height: AmiSpacing.m),
-          _GateCta(gate: health.gate),
+          _GateCta(
+            gate: health.gate,
+            hasTodaysFinding: health.todaysFindingId != null,
+          ),
         ],
       ),
     );
@@ -768,9 +771,15 @@ class _BarLegend extends StatelessWidget {
 // ── Gate CTA ────────────────────────────────────────────────────────────────
 
 class _GateCta extends ConsumerWidget {
-  const _GateCta({required this.gate});
+  const _GateCta({required this.gate, this.hasTodaysFinding = false});
 
   final HealthGateStatus gate;
+
+  /// DEF515 — the server holds today's Finding. Re-opening it is free and
+  /// ungated, so the refusal states below (trial spent, daily cap) must not
+  /// hide it: a Finding that was written but never delivered has already spent
+  /// the very slot those states are reporting.
+  final bool hasTodaysFinding;
 
   String _resetDateStr(WidgetRef ref) {
     final r = ref.read(mandateNotifierProvider).mandate?.creditsResetAt;
@@ -868,7 +877,8 @@ class _GateCta extends ConsumerWidget {
               child: HexButton(
                 label: l.portfolioHealthCtaFinding,
                 color: AmiColors.hexBlue,
-                onPressed: null,
+                onPressed:
+                    hasTodaysFinding ? () => _openFinding(context, ref) : null,
               ),
             ),
             const SizedBox(height: AmiSpacing.xs),
@@ -886,6 +896,17 @@ class _GateCta extends ConsumerWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (hasTodaysFinding) ...[
+              SizedBox(
+                width: double.infinity,
+                child: HexButton(
+                  label: l.portfolioHealthCtaFinding,
+                  color: AmiColors.hexBlue,
+                  onPressed: () => _openFinding(context, ref),
+                ),
+              ),
+              const SizedBox(height: AmiSpacing.s),
+            ],
             Text(l.portfolioHealthUpgradeBody, style: AmiTypography.caption),
             const SizedBox(height: AmiSpacing.xs),
             SizedBox(

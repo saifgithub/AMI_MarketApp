@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**307 cases** — 199 api, 20 device, 88 manual; 16 blocked.
+**309 cases** — 200 api, 20 device, 89 manual; 16 blocked.
 
 ## Areas
 
@@ -17,7 +17,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
 8. [Brief Your Agent](#brief) — 17 cases
 9. [Sim trading & market data](#sim-trading) — 34 cases
-10. [Portfolio health & sector analytics](#portfolio-health) — 13 cases
+10. [Portfolio health & sector analytics](#portfolio-health) — 15 cases
 11. [Watchlist & price alerts](#watchlist-alerts) — 16 cases
 12. [Lessons, quizzes, Agent Academy unlocks & glossary](#lessons) — 10 cases
 13. [Daily challenge & reminder](#daily-challenge) — 6 cases
@@ -2227,6 +2227,18 @@ _API (automated, live Alpha) · plans: floor_pass, trader · **BLOCKED** — Alp
 1. 402 with code portfolio_health_gate_closed and the gate block
 2. 429 with portfolio_health_daily_cap_reached or portfolio_health_cadence_not_elapsed (cadence carries next_eligible_at)
 
+#### UAT-HLTH-015 — The tiles report today's stored Finding
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. On a user who already has a Finding for today's as_of, GET /v1/portfolio/health/{uid}
+2. On a user with none, GET the same
+
+**Expected**
+1. todays_finding is {journal_entry_id, as_of} and the id matches the journal entry that POST finding replays
+2. todays_finding is null when there is no live Finding for the current as_of (including when the only one is soft-deleted)
+
 <a id="watchlist-alerts"></a>
 ## Watchlist & price alerts
 
@@ -4294,6 +4306,39 @@ _Manual (iPhone checklist) · plans: trader_
 1. The card caption reads "Your next reading is available on <date>." with the date in the phone's locale and time zone
 2. The Finding screen shows the same sentence in a dashed slate panel; no "did not respond", no "Tap to retry", and no tappable retry
 3. On the day a Finding was written, FULL FINDING stays tappable and reopens it (replay is free and ungated)
+
+> 2026-11-21 DEF515: AMI-DL-9b could not run this case on its user. The 30-day
+cadence does NOT apply while the trial budget is open (DEF219), so a user on
+"1 of 3 trial Findings left" correctly sees no next-reading sentence. The case
+needs a plan-entitled user (Trader / Floor Manager) whose last Finding is on
+an earlier day, or gate mode "plan". Do not run it on a Floor Pass trial user.
+
+
+#### UAT-HLTH-014 — A slow Finding is waited for, and a Finding the phone never received is still reachable
+
+_Manual (iPhone checklist) · plans: floor_pass · uses LLM_
+
+**Preconditions**
+1. A Floor Pass user with holdings and at least one trial Finding left (the card caption reads "N of 3 trial Findings left")
+2. Run on the real phone over mobile data, not Wi-Fi, so a slow answer is realistic (DEF515; AMI-DL-9b, the model took 44 s against a 30 s client limit)
+
+**Steps**
+1. Tap FULL FINDING once and watch the loading hexagon; do not tap anything else
+2. If the Finding screen ends on a dashed panel saying AMI's engine did not respond, leave the screen without tapping retry, then read the Portfolio Health card
+3. Reopen the Finding from the card
+
+**Expected**
+1. The Finding screen keeps loading for as long as the model takes (up to about 3 minutes) and then shows the report; it never shows "did not respond" for an answer that arrives within that time
+2. If the panel does appear, the Finding exists only if the trial count on the card dropped by exactly 1; in that case the card still shows FULL FINDING (even with the trial spent, above the plans line) and tapping it shows the same report with no further charge
+3. If the count did not drop, nothing was written and retrying is honest; the card never reports a trial as used up unless a Finding was stored for it
+
+> 2026-11-21 DEF515: root cause was the client's 30 s receive timeout on a route
+the server legitimately runs for 12-44 s (up to 180 s). The server finished
+and stored the Finding after the phone hung up, spending the third trial slot,
+and the card then offered nothing for it. Backend:
+test_def515_health_undelivered_finding.py. Mobile:
+def515_health_finding_outcome_unknown_test.dart and portfolio_health_card_test.dart.
+
 
 #### UAT-WATCH-011 — Watchlist tab add, swipe-to-remove and quotes
 
