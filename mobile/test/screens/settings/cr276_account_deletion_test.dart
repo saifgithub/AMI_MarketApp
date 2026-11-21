@@ -24,7 +24,9 @@ import 'package:ami_trade/state/me_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/test/test_flutter_secure_storage_platform.dart';
 import 'package:flutter_secure_storage_platform_interface/flutter_secure_storage_platform_interface.dart';
@@ -276,6 +278,8 @@ void main() {
 
       await tester.tap(find.text('Export my data'));
       await _settle(tester);
+      await tester.tap(find.text('Share'));
+      await _settle(tester);
 
       expect(api.exportCalls, 1);
       expect(shared, hasLength(1));
@@ -295,6 +299,102 @@ void main() {
 
       expect(shared, isEmpty);
       expect(find.textContaining("Couldn't export your data"), findsOneWidget);
+    });
+  });
+
+  group('Export my data - save to device (DEF524)', () {
+    final calls = <MethodCall>[];
+    late Object? Function(MethodCall) reply;
+
+    setUp(() {
+      calls.clear();
+      reply = (c) => 'ami-data-export-2026-11-21.json';
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(accountExportSaveChannel, (c) async {
+        calls.add(c);
+        return reply(c);
+      });
+    });
+    tearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(accountExportSaveChannel, null);
+    });
+
+    Future<void> openSheet(WidgetTester tester,
+        {List<(Uint8List, String)>? shared}) async {
+      await _pump(tester, api, log, shared: shared);
+      await _scrollTo(tester, find.text('Export my data'));
+      await tester.tap(find.text('Export my data'));
+      await _settle(tester);
+    }
+
+    testWidgets('offers both Save to device and Share', (tester) async {
+      await openSheet(tester);
+      expect(find.text('Save to device'), findsOneWidget);
+      expect(find.text('Share'), findsOneWidget);
+    });
+
+    testWidgets('Save calls the channel with name, mime and bytes and says Saved',
+        (tester) async {
+      final shared = <(Uint8List, String)>[];
+      await openSheet(tester, shared: shared);
+      await tester.tap(find.text('Save to device'));
+      await _settle(tester);
+
+      expect(calls, hasLength(1));
+      expect(calls.single.method, 'saveFile');
+      final args = calls.single.arguments as Map;
+      expect(args['mime'], 'application/json');
+      expect(args['name'],
+          matches(RegExp(r'^ami-data-export-\d{4}-\d{2}-\d{2}\.json$')));
+      expect(args['bytes'], [123, 125]);
+      expect(find.text('Saved ami-data-export-2026-11-21.json'),
+          findsOneWidget);
+      expect(shared, isEmpty);
+    });
+
+    testWidgets('a failed write shows an error, not Saved', (tester) async {
+      reply = (c) => throw PlatformException(code: 'write_failed');
+      await openSheet(tester);
+      await tester.tap(find.text('Save to device'));
+      await _settle(tester);
+
+      expect(find.textContaining("Couldn't save the file"), findsOneWidget);
+      expect(find.textContaining('Saved '), findsNothing);
+    });
+
+    testWidgets('cancelling the Save dialog shows nothing', (tester) async {
+      reply = (c) => null;
+      await openSheet(tester);
+      await tester.tap(find.text('Save to device'));
+      await _settle(tester);
+
+      expect(calls, hasLength(1));
+      expect(find.byType(SnackBar), findsNothing);
+    });
+
+    testWidgets('dismissing the sheet saves and shares nothing',
+        (tester) async {
+      final shared = <(Uint8List, String)>[];
+      await openSheet(tester, shared: shared);
+      await tester.tapAt(const Offset(5, 5));
+      await _settle(tester);
+
+      expect(calls, isEmpty);
+      expect(shared, isEmpty);
+      expect(find.byType(SnackBar), findsNothing);
+    });
+
+    testWidgets('iOS goes straight to the share sheet', (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      final shared = <(Uint8List, String)>[];
+      await openSheet(tester, shared: shared);
+
+      debugDefaultTargetPlatformOverride = null;
+
+      expect(find.text('Save to device'), findsNothing);
+      expect(shared, hasLength(1));
+      expect(calls, isEmpty);
     });
   });
 

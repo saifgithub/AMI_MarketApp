@@ -1565,12 +1565,55 @@ class _AccountDataActions extends ConsumerWidget {
       final d = DateTime.now().toUtc();
       final stamp =
           '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-      await ref.read(accountExportSinkProvider)(
-          bytes, 'ami-data-export-$stamp.json');
+      final name = 'ami-data-export-$stamp.json';
+      if (!accountExportOffersSave) {
+        await ref.read(accountExportSinkProvider)(bytes, name);
+        return;
+      }
+      if (!context.mounted) return;
+      final save = await _askSaveOrShare(context, l);
+      if (save == null) return;
+      if (!save) {
+        await ref.read(accountExportSinkProvider)(bytes, name);
+        return;
+      }
+      final String? saved;
+      try {
+        saved = await ref.read(accountExportSaverProvider)(bytes, name);
+      } catch (_) {
+        messenger.showSnackBar(
+            SnackBar(content: Text(l.settingsAccountExportSaveFailed)));
+        return;
+      }
+      if (saved != null) {
+        messenger.showSnackBar(
+            SnackBar(content: Text(l.settingsAccountExportSaved(saved))));
+      }
     } catch (_) {
       messenger
           .showSnackBar(SnackBar(content: Text(l.settingsAccountExportFailed)));
     }
+  }
+
+  /// true = Save to device, false = Share, null = dismissed.
+  Future<bool?> _askSaveOrShare(BuildContext context, AppLocalizations l) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l.settingsAccountExportReadyTitle),
+        content: Text(l.settingsAccountExportReadyBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l.settingsAccountExportShare),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l.settingsAccountExportSave),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _delete(BuildContext context, WidgetRef ref, AppLocalizations l,

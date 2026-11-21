@@ -5636,6 +5636,28 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t export your data. Try again in a moment.';
 
   @override
+  String get settingsAccountExportReadyTitle => 'YOUR DATA IS READY';
+
+  @override
+  String get settingsAccountExportReadyBody =>
+      'Keep a copy on this phone, or send it to another app.';
+
+  @override
+  String get settingsAccountExportSave => 'Save to device';
+
+  @override
+  String get settingsAccountExportShare => 'Share';
+
+  @override
+  String settingsAccountExportSaved(String name) {
+    return 'Saved $name';
+  }
+
+  @override
+  String get settingsAccountExportSaveFailed =>
+      'Couldn\'t save the file. Try again, or use Share.';
+
+  @override
   String get settingsAccountDelete => 'Delete account';
 
   @override

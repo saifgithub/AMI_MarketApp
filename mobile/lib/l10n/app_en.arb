@@ -6967,6 +6967,35 @@
   "@settingsAccountExportFailed": {
     "description": "CR276 - snackbar when the data export call or the share step fails. retranslate:[ar,ms]"
   },
+  "settingsAccountExportReadyTitle": "YOUR DATA IS READY",
+  "@settingsAccountExportReadyTitle": {
+    "description": "DEF524 - title of the sheet shown after the data export downloads; offers Save to device or Share. NEW key. retranslate:[ar,ms]"
+  },
+  "settingsAccountExportReadyBody": "Keep a copy on this phone, or send it to another app.",
+  "@settingsAccountExportReadyBody": {
+    "description": "DEF524 - body of the export-ready sheet. NEW key. retranslate:[ar,ms]"
+  },
+  "settingsAccountExportSave": "Save to device",
+  "@settingsAccountExportSave": {
+    "description": "DEF524 - button that opens the system Save dialog so the export stays on the phone. NEW key. retranslate:[ar,ms]"
+  },
+  "settingsAccountExportShare": "Share",
+  "@settingsAccountExportShare": {
+    "description": "DEF524 - button that opens the system share sheet for the export file. NEW key. retranslate:[ar,ms]"
+  },
+  "settingsAccountExportSaved": "Saved {name}",
+  "@settingsAccountExportSaved": {
+    "description": "DEF524 - snackbar after the export was written to the phone. {name} is the saved file name. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "settingsAccountExportSaveFailed": "Couldn't save the file. Try again, or use Share.",
+  "@settingsAccountExportSaveFailed": {
+    "description": "DEF524 - snackbar when writing the export to the phone failed. NEW key. retranslate:[ar,ms]"
+  },
   "settingsAccountDelete": "Delete account",
   "@settingsAccountDelete": {
     "description": "CR276 - Settings > Account button that starts account deletion. Beta wording: delete. retranslate:[ar,ms]"
