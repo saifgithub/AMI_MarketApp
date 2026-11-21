@@ -282,6 +282,45 @@ class BriefNotifier extends StateNotifier<BriefState> {
     } catch (e) {
       state = state.copyWith(
           error: friendlyError(e, action: 'roll back the brief'));
+      return;
+    }
+    await _refreshOpener();
+  }
+
+  /// DEF523 — the server builds the opener ("You're currently briefing me at
+  /// version N") once, at session start, so after a rollback the first bubble
+  /// kept naming the version that was just abandoned. `/v1/brief/start` is
+  /// free (no credit, no edit), so a fresh session is started and ONLY the
+  /// opener is replaced: any chat the user already had stays, and the session
+  /// id moves with it so later turns and proposals run against the rolled-back
+  /// overlay. A proposal drafted in the old session is dropped — it was
+  /// written against the version that is no longer active.
+  Future<void> _refreshOpener() async {
+    if (!mounted) return;
+    try {
+      final api = _ref.read(apiClientProvider);
+      final userId = await DeviceUser.getOrCreate();
+      final resp = await api.startBrief(
+        agentId: _agentId,
+        userId: userId,
+        mode: 'from_scratch',
+        locale: state.session?.locale ?? 'en',
+      );
+      if (!mounted) return;
+      final opener = ChatMessage(role: 'assistant', content: resp.openingMessage);
+      final messages = state.messages.isEmpty
+          ? [opener]
+          : [opener, ...state.messages.skip(1)];
+      state = state.copyWith(
+        session: resp.session,
+        currentOverlay: resp.currentOverlay,
+        messages: messages,
+        clearProposal: true,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      state = state.copyWith(
+          error: friendlyError(e, action: 'refresh the briefing'));
     }
   }
 
