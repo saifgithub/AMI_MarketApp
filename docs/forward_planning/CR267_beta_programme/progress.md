@@ -282,3 +282,7 @@ Found: two users have duplicate training portfolios created 40 ms apart on 2026-
    2. Local gate PASS.
    3. UAT override logged, for device cases only.
    4. Postflight PASS.
+3. **AMI-DL-9b** (Android, 00:00–00:16Z on 21 Nov):
+   1. UAT-HLTH-013 FAILED. FULL FINDING spun about 2 min, then showed "engine did not respond", and the card then claimed the trial was used up. Alpha's logs show no Finding POST from that account at all. Filed as **DEF515**; a worker is investigating.
+   2. UAT-ROOM-031 steps 1–2 failed, by my deploy order. Deploy #14 (DEF513) changed the bank-key composition at about 23:45Z, between the two AAPL Rooms, so the 21:02Z Room could not match. Both Rooms carry a bank key. The re-test is a re-convene of AAPL; the 00:05Z Room is banked under the new key. Step 3 (Brief edit) is held for the same slot.
+   3. The five ungranted cases are blocked.
