@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**310 cases** — 200 api, 21 device, 89 manual; 17 blocked.
+**310 cases** — 200 api, 21 device, 89 manual; 16 blocked.
 
 ## Areas
 
@@ -111,10 +111,13 @@ _Device (automated, Appium) · plans: any_
 
 #### UAT-PLAT-008 — An error state on the phone shows a small copyable "Ref:" trace reference
 
-_Device (automated, Appium) · plans: any · **BLOCKED** — No way to force a server-side 4xx/5xx from the device UI, and a request that never reaches the server (offline / wrong host) correctly shows no Ref. Needs a rig-side fault hook (e.g. block one route at melehost) before this can be driven by Appium; until then Saiful runs it by hand on the rig (WP-38)._
+_Device (automated, Appium) · plans: any_
+
+**Preconditions**
+1. The operator arms the Alpha fault switch for the lab user only, e.g. UAT_FAULT_INJECT={"<lab-user-uuid>": ["GET /v1/messages"]} in the Alpha env, then recreates api-alpha (the log shows uat_fault_inject_active); the operator removes it and recreates the container after the run
 
 **Steps**
-1. Cause a screen that loads from the server (Inbox, Notifications or Games) to hit a server error, then open it
+1. Open the Inbox (GET /v1/messages answers 503 for the lab user only)
 2. Read the error state; tap the "Ref: xxxxxxxx" line
 3. Open You > SETTINGS > HELP > Report a problem and send a report
 
