@@ -253,3 +253,21 @@ def test_finding_generates_once_then_replays_free(rich):
     if entries.status_code == 200:
         text = entries.text
         assert f["journal_entry_id"] in text
+
+
+@pytest.mark.uat("UAT-HLTH-015")
+def test_tiles_report_todays_stored_finding(free, rich):
+    """DEF515. The pointer is the same Finding the free same-day replay serves."""
+    assert _health(free)["todays_finding"] is None, "an empty book has no Finding"
+
+    h = _health(rich)
+    assert "todays_finding" in h, "the key is part of the envelope, null or not"
+    ref = h["todays_finding"]
+    if ref is None:
+        return
+    assert ref["journal_entry_id"] and ref["as_of"]
+    replay = rich.post(f"/v1/portfolio/health/{rich.id}/finding", timeout=60)
+    assert replay.status_code == 200, replay.text
+    r = replay.json()
+    assert r["created"] is False
+    assert r["journal_entry_id"] == ref["journal_entry_id"]

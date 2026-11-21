@@ -50,6 +50,10 @@ import 'package:ami_trade/services/yahoo_finance_service.dart';
 import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 
+/// DEF515 — how long the Finding POST waits for its answer. See
+/// [ApiClient.generateHealthFinding].
+const Duration kHealthFindingReceiveTimeout = Duration(seconds: 100);
+
 const String _apiUrlFromEnv = String.fromEnvironment(
   'AMI_API_URL',
   defaultValue: '',
@@ -1493,7 +1497,17 @@ class ApiClient {
       // (`generate_and_persist_finding(gateway=get_llm_gateway())`). Every
       // other portfolio call the screen makes is a database or quote read, and
       // marking this one is what keeps them out of the AMI wording.
-      options: Options(extra: kAmiWaitsOnModel),
+      //
+      // DEF515 — the 30 s default receive timeout is shorter than this route
+      // can legitimately run (12-14 s on a quiet day, 44 s measured on
+      // AMI-DL-9b, with the model allowed up to 180 s). The phone hung up at
+      // 30 s, the server finished anyway and wrote the Finding, and the user
+      // lost both the report and a trial slot. 100 s is Cloudflare's own
+      // edge limit: waiting longer than the edge would is waiting for a 524.
+      options: Options(
+        extra: kAmiWaitsOnModel,
+        receiveTimeout: kHealthFindingReceiveTimeout,
+      ),
     );
     return HealthFinding.fromJson(r.data!);
   }
