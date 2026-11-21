@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**309 cases** — 200 api, 20 device, 89 manual; 16 blocked.
+**310 cases** — 200 api, 21 device, 89 manual; 17 blocked.
 
 ## Areas
 
@@ -15,7 +15,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 5. [Floor tab & home shell](#floor) — 11 cases
 6. [Convene the Room](#room) — 31 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
-8. [Brief Your Agent](#brief) — 17 cases
+8. [Brief Your Agent](#brief) — 18 cases
 9. [Sim trading & market data](#sim-trading) — 34 cases
 10. [Portfolio health & sector analytics](#portfolio-health) — 15 cases
 11. [Watchlist & price alerts](#watchlist-alerts) — 16 cases
@@ -1745,6 +1745,24 @@ _Device (automated, Appium) · plans: floor_pass_
 **Expected**
 1. The Brief screen opens for that agent
 2. The history header reads "N edits made - M remaining" (the Floor Pass cap) or unlimited, with no chat turn started
+
+#### UAT-BRIEF-018 — Rolling a brief back to an earlier version closes the confirm dialog, sends the request and makes that version active
+
+_Device (automated, Appium) · plans: trader · **BLOCKED** — No Appium executor yet - needs a Trader account holding two accepted briefs for one agent, which costs credits; run by hand on a lab phone until an executor exists_
+
+**Preconditions**
+1. An unlocked agent with at least two saved versions (v1 and v2), v2 active
+
+**Steps**
+1. Floor > YOUR FIRM > tap the agent > BRIEF > open the version history
+2. Tap ROLLBACK TO THIS on v1, then tap ROLLBACK in the confirmation dialog
+
+**Expected**
+1. The dialog closes and the history page stays open (it does not pop, and nothing is left frozen on screen)
+2. POST /v1/brief/rollback is sent (visible in the server log) and v1 now carries the ACTIVE badge
+3. If the request fails, a message says so instead of the screen changing silently
+
+> DEF519 (2026-11-21, build 122): the dialog buttons popped with the history page context, which belongs to the tab navigator while the dialog sits on the root one, so the page closed, the dialog froze and no request was sent. Covered offline by mobile/test/screens/coach/def519_brief_rollback_dialog_test.dart.
 
 <a id="sim-trading"></a>
 ## Sim trading & market data

@@ -108,7 +108,7 @@ class _BriefHistoryScreenState extends ConsumerState<BriefHistoryScreen> {
                   final l = AppLocalizations.of(context);
                   final confirmed = await showDialog<bool>(
                     context: context,
-                    builder: (_) => AlertDialog(
+                    builder: (dialogContext) => AlertDialog(
                       backgroundColor: AmiColors.slate800,
                       title: Text(l.briefHistoryRollbackTitle(v.version),
                           style: AmiTypography.h4),
@@ -118,7 +118,7 @@ class _BriefHistoryScreenState extends ConsumerState<BriefHistoryScreen> {
                       ),
                       actions: [
                         TextButton(
-                          onPressed: () => Navigator.of(context).pop(false),
+                          onPressed: () => Navigator.of(dialogContext).pop(false),
                           child: Text(l.actionCancel),
                         ),
                         ElevatedButton(
@@ -126,16 +126,23 @@ class _BriefHistoryScreenState extends ConsumerState<BriefHistoryScreen> {
                             backgroundColor: widget.agent.color,
                             foregroundColor: AmiColors.slate900,
                           ),
-                          onPressed: () => Navigator.of(context).pop(true),
+                          onPressed: () => Navigator.of(dialogContext).pop(true),
                           child: Text(l.briefHistoryRollback),
                         ),
                       ],
                     ),
                   );
-                  if (confirmed == true && mounted) {
-                    await ref
-                        .read(briefNotifierProvider(widget.agent.id).notifier)
-                        .rollback(v.version);
+                  if (confirmed != true || !mounted) return;
+                  final notifier =
+                      ref.read(briefNotifierProvider(widget.agent.id).notifier);
+                  final messenger = ScaffoldMessenger.of(context);
+                  await notifier.rollback(v.version);
+                  final error = mounted
+                      ? ref.read(briefNotifierProvider(widget.agent.id)).error
+                      : null;
+                  if (error != null) {
+                    messenger.showSnackBar(SnackBar(content: Text(error)));
+                    notifier.clearTransientFlags();
                   }
                 },
         );
