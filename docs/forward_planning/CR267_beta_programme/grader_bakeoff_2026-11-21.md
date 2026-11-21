@@ -14,9 +14,14 @@
 6. **Consensus check is not informative yet.** The 30-ticker universe holds no Street Sell/Underperform name, so "approvals of Street Sell" is 0 for both and proves nothing. The WP-20 side set (lowest-consensus names) exists for this and is not yet scored. Share of approvals that are Street Buy: grader 67% (32/48), CIO 73% (33/45).
 7. **Per question.** `bear_objection_answered` is yes in 97% of Rooms (little signal); `event_risk_wait` flips between reps 41% of the time and `catalyst_in_horizon` 33%, the least stable answers.
 
+## Side set (5 lowest-consensus names, 50 Rooms), on-prem grader
+
+1. Grader approvals 3/50 (R2 1, R5 2), CIO 4/50 (R4 1, R5 3); both mostly PASS at R1–R4. 14/50 Contested. Tables: `grader_bakeoff_onprem_side_2026-11-21_tables.md`.
+2. **No WP-20 Room is on a Street Sell/Underperform name.** The side set chosen as the lowest-consensus names from `tickers_150.txt` (CAR, CPB, ITW, JBLU, KSS) is Street **Hold** on every Room; arm 1 is 169 Buy / 89 Hold / 42 no Street data. So WP-22 3.1's first measure ("approvals of Street Sell/Underperform names") **cannot be computed on the WP-20 data for any grader**. It needs Rooms on names whose stored `street_stance` is sell, which the CR035 universe does not supply today. Decision for WP-26: either source Sell-rated names into the acceptance universe, or drop that measure and say so.
+
 ## Not yet done
 
-1. Side set scored (Street Sell names), wording test (20 Rooms × 5 phrasings), input tests with known answers.
+1. Wording test (20 Rooms × 5 phrasings), input tests with known answers.
 2. Jev and DeepInfra graders: **need keys** (Jev `JEV_API_KEY`; a DeepInfra key for the hosted slot). Spend for the bake-off is approved (2026-11-21); the keys are not set.
 3. Code grader over cards: after WP-20 arm 2.
 4. Recommendation: after all three graders are scored. No recommendation of Jev without noting that vendor terms are still owed.
