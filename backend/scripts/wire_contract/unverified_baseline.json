@@ -3,7 +3,6 @@
   "count": 28,
   "unverified": [
     "GET /v1/ai_coach/search -> CoachSearchHit",
-    "GET /v1/brief/history/$userId/$agentId -> BriefHistory",
     "GET /v1/games/cadences -> GameCadenceInfo",
     "GET /v1/games/desks -> GameDeskProfile",
     "GET /v1/games/record -> GameRecord",
