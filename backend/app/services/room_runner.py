@@ -44,7 +44,7 @@ import weakref
 import zlib
 from collections import Counter
 from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
-from dataclasses import dataclass, field, fields as dataclass_fields, replace as _dataclass_replace
+from dataclasses import asdict as dataclass_asdict, dataclass, field, fields as dataclass_fields, replace as _dataclass_replace
 from datetime import UTC, date, datetime, timedelta, timezone
 from typing import Any, Literal
 from uuid import UUID, uuid4
@@ -73,6 +73,8 @@ from app.schemas.options import costed_structure
 from app.schemas.room import (
     AnalystTapeItem,
     AnalystView,
+    CodedAnswer,
+    CodedDecisionRecord,
     DecisionRecord,
     NextConveneDelta,
     RatingSplit,
@@ -107,6 +109,13 @@ from app.services.fundamentals import fetch_fundamentals, fetch_live_fundamental
 from app.services.journal_store import ReferenceUpdateOutcome, get_journal_store
 from app.services.cio_snapshot_codec import decode_profile, encode_profile
 from app.services import room_bank
+from app.services import room_decision_rule
+from app.services.room_grader_contract import (
+    QUESTION_SET_VERSION as _GRADER_QUESTION_SET_VERSION,
+    GraderResult,
+    RoomTranscript,
+)
+from app.services.room_grader_registry import resolve_grader
 from app.services.evidence_record import (
     EvidenceGateDecision,
     build_gate_decision,
@@ -793,6 +802,17 @@ _PM_LLM_UNAVAILABLE_REASON_LEGACY = (
 )
 
 
+# CR267 WP-23 — the coded rule's "decision unavailable" state. It reuses the
+# DEF059 CIO-outage PASS shape (`is_llm_outage_verdict` recognises it), so the
+# existing outage handling applies unchanged: the Room is refunded, never banked,
+# and "Ask the CIO again" re-grades. The reason is its own sentinel so a consumer
+# can tell a grader outage from a model outage without matching prose.
+PM_DECISION_UNAVAILABLE_REASON = (
+    "AMI could not compute a decision for this Room: its decision check was "
+    "unavailable. No trade — reconvene the room in a little while."
+)
+
+
 # CR219 R51 — the PARTIAL-outage counterpart to the sentinel above, and named
 # for the same DEF336 reason: a consumer must be able to tell a thin Room from a
 # full one without matching prose. `is_llm_outage_verdict` is a CIO-liveness
@@ -964,6 +984,7 @@ def is_llm_outage_verdict(verdict: dict | None) -> bool:
     return bool(verdict.get("overridden_from_llm")) and _reason.startswith((
         PM_LLM_UNAVAILABLE_REASON,
         _PM_LLM_UNAVAILABLE_REASON_LEGACY,
+        PM_DECISION_UNAVAILABLE_REASON,
     ))
 
 
@@ -5655,6 +5676,313 @@ def _build_decision_record(
     )
 
 
+_CODED_NARRATION_NOTE = (
+    "AMI's decision rule has already computed this Room's decision: {action}. "
+    "{why} You are narrating that decision, not making it. Explain it to the user "
+    "in your usual format, using the debate. Your action field must be {action}; "
+    "any other action is discarded. {extra}"
+)
+
+
+def _coded_action(outcome: room_decision_rule.Outcome) -> VerdictAction:
+    return (
+        VerdictAction.APPROVE
+        if outcome == room_decision_rule.Outcome.APPROVE
+        else VerdictAction.PASS
+    )
+
+
+def _coded_decision_text(decision: room_decision_rule.RuleDecision) -> str:
+    """The deterministic explanation of a computed decision. Shown when the CIO's
+    narration is unavailable or contradicts the rule."""
+    outcome = room_decision_rule.Outcome
+    why = "; ".join(decision.reasons)
+    if decision.outcome == outcome.APPROVE:
+        return f"AMI's decision rule approves this trade: {why}."
+    if decision.outcome == outcome.CONTESTED:
+        return (
+            "AMI's decision rule rates this call contested, so no trade was opened: "
+            f"{why}."
+        )
+    return f"AMI's decision rule passes on this trade: {why}. No trade was opened."
+
+
+def _coded_transcript(
+    run_id: UUID, ctx: "_RoomContext", run: RoomRun,
+) -> RoomTranscript:
+    cards = None
+    if ctx.claim_cards:
+        cards = {
+            desk.value: dataclass_asdict(desk_cards)
+            for desk, desk_cards in ctx.claim_cards.items()
+        }
+    horizon = getattr(ctx.mandate.horizon, "value", ctx.mandate.horizon)
+    return RoomTranscript(
+        room_id=str(run_id),
+        ticker=ctx.ticker,
+        risk_score=ctx.mandate.risk_score,
+        horizon=str(horizon) if horizon is not None else None,
+        turns=[
+            {
+                "agent_id": getattr(m.agent_id, "value", m.agent_id),
+                "content": m.content,
+            }
+            for m in run.transcript
+        ],
+        cards=cards,
+        proposed_trade={
+            "size_pct": ctx.trader_size_pct,
+            "entry": ctx.trader_entry,
+            "stop": ctx.trader_stop,
+            "target": ctx.trader_target,
+        },
+    )
+
+
+def _grader_error_result(
+    name: str, version: str, error: str, latency_ms: int = 0,
+) -> GraderResult:
+    return GraderResult(
+        grader=name or "unconfigured",
+        grader_version=version,
+        question_set_version=_GRADER_QUESTION_SET_VERSION,
+        answers=(),
+        latency_ms=latency_ms,
+        error=error,
+    )
+
+
+async def _grade_room(
+    *, run_id: UUID, ctx: "_RoomContext", run: RoomRun, agent_timeout_s: float,
+) -> GraderResult:
+    """Run the configured grader. Never raises: an unconfigured, unknown, slow or
+    failing grader comes back as a GraderResult with `error` set, which the rule
+    turns into Unavailable (degrade loudly, never a default verdict)."""
+    name = settings.room_grader
+    try:
+        grader = resolve_grader(name)
+    except Exception as exc:  # noqa: BLE001 — surfaced as Unavailable
+        logger.error(
+            "room_grader_unconfigured", run_id=str(run_id), grader=name,
+            error=(str(exc) or repr(exc))[:200],
+        )
+        return _grader_error_result(name, "", f"grader {name!r} could not be built")
+    if grader is None:
+        logger.error(
+            "room_grader_unconfigured", run_id=str(run_id), grader=name,
+            detail="ROOM_CODED_RULE_ENABLED is on but ROOM_GRADER is empty or unknown",
+        )
+        return _grader_error_result(
+            name, "",
+            f"no grader named {name!r} is registered" if name
+            else "no grader is configured",
+        )
+    transcript = _coded_transcript(run_id, ctx, run)
+    try:
+        result = await asyncio.wait_for(
+            asyncio.to_thread(grader.grade, transcript), timeout=agent_timeout_s,
+        )
+    except asyncio.TimeoutError:
+        logger.error("room_grader_timeout", run_id=str(run_id), grader=grader.name)
+        return _grader_error_result(
+            grader.name, grader.version, "the grader timed out",
+            int(agent_timeout_s * 1000),
+        )
+    except Exception as exc:  # noqa: BLE001
+        logger.error(
+            "room_grader_failed", run_id=str(run_id), grader=grader.name,
+            error=(str(exc) or repr(exc))[:200],
+        )
+        return _grader_error_result(
+            grader.name, grader.version,
+            f"the grader failed: {(str(exc) or type(exc).__name__)[:120]}",
+        )
+    if result.error:
+        logger.error(
+            "room_grader_failed", run_id=str(run_id), grader=result.grader,
+            error=str(result.error)[:200],
+        )
+    return result
+
+
+def _coded_record(
+    result: GraderResult,
+    decision: room_decision_rule.RuleDecision,
+    *,
+    narration_overridden: bool = False,
+) -> CodedDecisionRecord:
+    return CodedDecisionRecord(
+        outcome=decision.outcome.value,
+        reasons=list(decision.reasons),
+        close_questions=[q.value for q in decision.close_questions],
+        answers=[
+            CodedAnswer(
+                question=a.question.value,
+                answer=a.answer.value,
+                confidence=a.confidence,
+                close=a.close,
+                rationale=a.rationale,
+            )
+            for a in result.answers
+        ],
+        rule_version=decision.rule_version,
+        policy_version=decision.policy_version,
+        risk_level=decision.risk_level,
+        grader=result.grader,
+        grader_version=result.grader_version,
+        question_set_version=result.question_set_version,
+        error=result.error,
+        narration_overridden=narration_overridden,
+        grader_latency_ms=result.latency_ms,
+        grader_cost_usd=result.cost_usd,
+    )
+
+
+def _verdict_from_rule(
+    decision: room_decision_rule.RuleDecision,
+    *,
+    narration: str,
+    parsed: Verdict | None,
+    ctx: "_RoomContext",
+) -> tuple[str, Verdict, bool]:
+    """Build the verdict. The ACTION comes from `decision` alone; the narration
+    contributes only text (and, for an APPROVE, the CIO's own stated levels). It
+    is applied after the narration call, so no narration can change the action.
+    Returns (display text, verdict, narration_overridden)."""
+    action = _coded_action(decision.outcome)
+    narration_agrees = parsed is not None and (
+        (parsed.action in (VerdictAction.APPROVE, VerdictAction.MODIFY))
+        == (action == VerdictAction.APPROVE)
+    )
+    overridden = not narration_agrees
+    code_text = _coded_decision_text(decision)
+    text = narration if narration_agrees and narration else code_text
+
+    if action == VerdictAction.APPROVE:
+        if narration_agrees and parsed is not None:
+            verdict = parsed.model_copy(update={"action": VerdictAction.APPROVE})
+        else:
+            _, built = _parse_pm_verdict(
+                json.dumps({
+                    "action": "APPROVE",
+                    "size_pct": ctx.trader_size_pct,
+                    "entry": None,
+                    "stop": ctx.trader_stop,
+                    "target": ctx.trader_target,
+                    "horizon_days": ctx.trader_horizon_weeks * 7,
+                    "narration": code_text,
+                }),
+                ctx,
+            )
+            if built is None or built.action != VerdictAction.APPROVE:
+                return code_text, Verdict(
+                    action=VerdictAction.PASS,
+                    reason=(
+                        f"{code_text} The Execution Desk's levels could not be "
+                        "used, so no trade was opened."
+                    ),
+                    overridden_from_llm=True,
+                ), True
+            prov = dict(built.level_provenance or {})
+            for key in ("stop", "target"):
+                if key in prov:
+                    prov[key] = "trader"
+            verdict = built.model_copy(update={"level_provenance": prov or None})
+        return text, verdict, overridden
+
+    reason = parsed.reason if narration_agrees and parsed is not None else code_text
+    if decision.outcome == room_decision_rule.Outcome.CONTESTED and reason != code_text:
+        reason = f"{code_text} {reason}"
+    kill = parsed.kill_criterion if narration_agrees and parsed is not None else None
+    return text, Verdict(
+        action=VerdictAction.PASS,
+        reason=reason,
+        overridden_from_llm=overridden,
+        kill_criterion=kill,
+    ), overridden
+
+
+async def _run_coded_rule_cio(
+    *,
+    run_id: UUID,
+    ctx: "_RoomContext",
+    profile: dict[str, Any],
+    formatter: dict[str, Any],
+    run: RoomRun,
+    mandate: Mandate,
+    gateway: LLMGateway,
+    agent_timeout_s: float,
+) -> tuple[str, Verdict]:
+    """CR267 WP-23 — grade the debate, compute the decision by rule, let the CIO
+    narrate it, then run the unchanged deterministic mandate floor last."""
+    outcome = room_decision_rule.Outcome
+    result = await _grade_room(
+        run_id=run_id, ctx=ctx, run=run, agent_timeout_s=agent_timeout_s,
+    )
+    try:
+        policy = room_decision_rule.policy_for(
+            settings.room_coded_rule_policy_json, result.grader,
+        )
+    except room_decision_rule.PolicyConfigError:
+        policy = room_decision_rule.DEFAULT_POLICY
+        logger.error("room_coded_rule_policy_invalid", run_id=str(run_id))
+    decision = room_decision_rule.decide(result, ctx.mandate.risk_score, policy)
+    logger.info(
+        "room_coded_decision",
+        run_id=str(run_id), ticker=ctx.ticker, outcome=decision.outcome.value,
+        close=[q.value for q in decision.close_questions],
+        policy_version=decision.policy_version,
+    )
+
+    if decision.outcome == outcome.UNAVAILABLE:
+        logger.error(
+            "room_decision_unavailable", run_id=str(run_id), ticker=ctx.ticker,
+            reasons=list(decision.reasons),
+        )
+        verdict = Verdict(
+            action=VerdictAction.PASS,
+            reason=PM_DECISION_UNAVAILABLE_REASON,
+            overridden_from_llm=True,
+            coded_decision=_coded_record(result, decision),
+        )
+        return verdict.reason, verdict
+
+    action = _coded_action(decision.outcome)
+    extra = (
+        "Say the call is contested and name what was too close to call."
+        if decision.outcome == outcome.CONTESTED else ""
+    )
+    note = _CODED_NARRATION_NOTE.format(
+        action=action.value, why="; ".join(decision.reasons) + ".", extra=extra,
+    ).strip()
+    raw = await _stream_pm_response(
+        run_id=run_id, ctx=ctx, profile=profile, formatter=formatter, run=run,
+        gateway=gateway, agent_timeout_s=agent_timeout_s, extra_user_note=note,
+    )
+    narration, parsed = "", None
+    if raw:
+        narration, parsed = _parse_pm_verdict(raw, ctx)
+    else:
+        logger.warning("room_coded_narration_unavailable", run_id=str(run_id))
+
+    pm_text, verdict, overridden = _verdict_from_rule(
+        decision, narration=narration, parsed=parsed, ctx=ctx,
+    )
+    if parsed is not None and overridden:
+        logger.warning(
+            "room_narration_contradicted_rule",
+            run_id=str(run_id), rule_action=action.value,
+            narrated_action=str(parsed.action),
+        )
+    record = _coded_record(result, decision, narration_overridden=overridden)
+
+    if verdict.action == VerdictAction.APPROVE:
+        pm_text, verdict = _floor_pm_approve(
+            verdict, pm_text, run_id=run_id, ctx=ctx, mandate=mandate, profile=profile,
+        )
+    return pm_text, verdict.model_copy(update={"coded_decision": record})
+
+
 async def _run_cio_step(
     *,
     run_id: UUID,
@@ -5709,7 +6037,7 @@ async def _run_cio_step(
     # render and the post-vote application must score the SAME decision.
     _gate = (
         _build_evidence_gate(ctx=ctx, profile=profile, gateway=gateway)
-        if live
+        if live and not settings.room_coded_rule_enabled
         else None
     )
     ctx.evidence_gate = _gate
@@ -5718,6 +6046,20 @@ async def _run_cio_step(
         verdict = _assemble_no_verdict(ctx)
         pm_text = verdict.reason
         async for ev in _typewriter(
+            run_id, AgentId.PORTFOLIO_MANAGER, pm_text,
+            char_delay_min, char_delay_max,
+        ):
+            yield ev
+    # CR267 WP-23 — the coded rule supersedes the evidence gate and the CIO's own
+    # verdict: the action is computed from the grader's answers, the CIO narrates.
+    elif live and settings.room_coded_rule_enabled:
+        pm_text, verdict = await _run_coded_rule_cio(
+            run_id=run_id, ctx=ctx, profile=profile, formatter=formatter,
+            run=run, mandate=mandate, gateway=gateway,
+            agent_timeout_s=agent_timeout_s,
+        )
+        pm_text, verdict = _guard_pm_text(pm_text, verdict, run_id=run_id)
+        async for ev in _restream_for_ui(
             run_id, AgentId.PORTFOLIO_MANAGER, pm_text,
             char_delay_min, char_delay_max,
         ):

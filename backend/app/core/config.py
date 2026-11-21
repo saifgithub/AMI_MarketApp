@@ -1528,6 +1528,27 @@ class Settings(BaseSettings):
             ) from exc
         return v
 
+    # CR267 WP-23 — the coded decision rule. OFF by default: with it on, a Room's
+    # action is computed by `room_decision_rule.decide` from a grader's narrow
+    # answers, and the CIO only narrates it. `room_grader` names the registered
+    # grader (`room_grader_registry`); empty or unknown ends the Room "decision
+    # unavailable", loudly, never a default verdict. `room_coded_rule_policy_json`
+    # is the versioned per-grader ladder, validated at boot.
+    room_coded_rule_enabled: bool = False
+    room_grader: str = ""
+    room_coded_rule_policy_json: str = "{}"
+
+    @field_validator("room_coded_rule_policy_json")
+    @classmethod
+    def _coded_rule_policy_wellformed(cls, v: str) -> str:
+        from app.services.room_decision_rule import PolicyConfigError, parse_policy_json
+
+        try:
+            parse_policy_json(v)
+        except PolicyConfigError as exc:
+            raise ValueError(f"room_coded_rule_policy_json is malformed: {exc}") from exc
+        return v
+
     # CR222 §3 — pre-registration on the training trade ticket. With this on,
     # `safety_floor.check_mandate_compliance` refuses a training trade that
     # opens or adds to a position without a thesis, an invalidation and a

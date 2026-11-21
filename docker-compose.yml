@@ -641,6 +641,13 @@ services:
       ROOM_EVIDENCE_GATE_ENABLED: ${ROOM_EVIDENCE_GATE_ENABLED:-false}
       ROOM_EVIDENCE_GATE_THRESHOLDS_JSON: ${ROOM_EVIDENCE_GATE_THRESHOLDS_JSON:-{}}
       ROOM_EVIDENCE_CONTESTED_MARGIN: ${ROOM_EVIDENCE_CONTESTED_MARGIN:-0.1}
+      # CR267 WP-23 — the coded decision rule: a grader's narrow answers compute
+      # the Room's action, the CIO narrates it. Default off. ROOM_GRADER names a
+      # registered grader (empty/unknown = "decision unavailable", loudly). The
+      # policy JSON is the versioned per-grader R1..R5 ladder, validated at boot.
+      ROOM_CODED_RULE_ENABLED: ${ROOM_CODED_RULE_ENABLED:-false}
+      ROOM_GRADER: ${ROOM_GRADER:-}
+      ROOM_CODED_RULE_POLICY_JSON: ${ROOM_CODED_RULE_POLICY_JSON:-{}}
       # CR222 §3 — pre-registration on the training trade ticket, and whether
       # it also binds long_horizon mandates. See
       # Settings.training_preregistration_required /

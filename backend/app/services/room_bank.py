@@ -123,6 +123,9 @@ ROOM_POLICY_SETTINGS: frozenset[str] = frozenset({
     "room_evidence_gate_enabled",
     "room_evidence_gate_thresholds_json",
     "room_evidence_contested_margin",
+    "room_coded_rule_enabled",
+    "room_grader",
+    "room_coded_rule_policy_json",
     "room_debt_maturity_enabled",
     "room_cost_of_debt_enabled",
     "room_cashflow_bridge_enabled",
@@ -272,11 +275,36 @@ def policy_version() -> str | None:
     versions = {a.value: prompt_version(a) for a in AgentId}
     if not any(versions.values()):
         return None
-    return _sha256(_canonical({
+    from app.core.config import settings
+
+    parts: dict[str, Any] = {
         "revision": ROOM_POLICY_REVISION,
         "prompts": versions,
         "settings": policy_settings(),
-    }))[:16]
+    }
+    if settings.room_coded_rule_enabled:
+        parts["coded_rule"] = coded_rule_identity()
+    return _sha256(_canonical(parts))[:16]
+
+
+def coded_rule_identity() -> dict[str, str]:
+    """Grader name + version + rule version + question-set version + ladder, so a
+    rule, grader or question-set change re-keys Rooms (WP-23)."""
+    from app.core.config import settings
+    from app.services import room_decision_rule as rule
+    from app.services.room_grader_registry import resolve_grader
+
+    try:
+        grader = resolve_grader(settings.room_grader)
+    except Exception:  # noqa: BLE001 — an unbuildable grader must still key the Room
+        grader = None
+    name = grader.name if grader is not None else "unconfigured"
+    version = grader.version if grader is not None else ""
+    try:
+        policy = rule.policy_for(settings.room_coded_rule_policy_json, name)
+        return {"policy": rule.policy_version(name, version, policy)}
+    except rule.PolicyConfigError:
+        return {"policy": f"{name}@{version}|rule={rule.RULE_VERSION}|ladder=invalid"}
 
 
 def policy_settings() -> dict[str, Any]:
