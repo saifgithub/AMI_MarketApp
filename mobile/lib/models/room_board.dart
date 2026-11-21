@@ -132,6 +132,7 @@ class RoomBoardData {
     this.decisionRecord,
     this.nextConveneDelta,
     this.streetComparison,
+    this.flipExplainer,
     this.isRecord = false,
     this.recordedAt,
     this.runId,
@@ -173,6 +174,11 @@ class RoomBoardData {
   /// after the verdict. `null` on runs that predate the field; the card renders
   /// only when this is present AND the user's Street-comparison setting is on.
   final StreetComparison? streetComparison;
+
+  /// CR267 WP-25 — why this call differs from the user's previous one on the
+  /// name, or `null` when it does not (or the run predates the field). Both
+  /// surfaces carry it through verbatim.
+  final FlipExplainer? flipExplainer;
 
   /// True on the Journal. A journal entry is a **record, not a setup**: a June
   /// entry's `$118.20` is not a live price, so there is no trade ticket

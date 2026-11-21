@@ -7285,5 +7285,80 @@
   "settingsComplianceLiquidOnlyExplainBody": "Only tickers with sufficient average daily volume to enter and exit cleanly. Filters out micro-caps and thinly-traded names where a market order can move the price against you.",
   "@settingsComplianceLiquidOnlyExplainBody": {
     "description": "DEF494 — body of the explanation sheet for the 'Liquid-only' mandate toggle (was hard-coded English). DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review."
+  },
+  "roomFlipHeading": "CHANGED FROM {previous} TO {current}",
+  "@roomFlipHeading": {
+    "description": "CR267 WP-25. Heading on the Verdict Board card shown only when this Room's call differs from the user's previous Room on the same name. {previous} and {current} are the verdict action tokens as the wire sends them (APPROVE / PASS / REJECT ...), the same vocabulary the Journal titles use. Mono uppercase. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "previous": {
+        "type": "String"
+      },
+      "current": {
+        "type": "String"
+      }
+    }
+  },
+  "roomFlipSameInputs": "Inputs were the same as your last Room on this name. The Room's own debate reached a different call.",
+  "@roomFlipSameInputs": {
+    "description": "CR267 WP-25. Line on the flip card when the server says the two Rooms ran on identical inputs, so the difference comes from the debate itself, not from new information. Said only on the server's explicit same-inputs flag. NEW key. retranslate:[ar,ms]"
+  },
+  "roomFlipNotCompared": "The two Rooms' inputs could not be compared, so what changed is not shown.",
+  "@roomFlipNotCompared": {
+    "description": "CR267 WP-25. Line on the flip card when the server could not compare the two Rooms' inputs (one of them did not store its input parts). Never worded as 'unchanged' - an empty comparison is unknown, not none. NEW key. retranslate:[ar,ms]"
+  },
+  "roomFlipAnswersHeading": "ANSWERS THAT CHANGED",
+  "@roomFlipAnswersHeading": {
+    "description": "CR267 WP-25. Sub-label on the flip card above the list of coded-rule questions whose answer differs between the two Rooms. Each row is a short question label and 'before to after'. Omitted when the answers are unavailable. Mono uppercase. NEW key. retranslate:[ar,ms]"
+  },
+  "roomFlipQBearObjectionAnswered": "Bear objection answered",
+  "@roomFlipQBearObjectionAnswered": {
+    "description": "CR267 WP-25. Short label for the coded-rule question id bear_objection_answered (was the Bear Researcher's strongest objection answered), shown on the flip card's answers list. NEW key. retranslate:[ar,ms]"
+  },
+  "roomFlipQCatalystInHorizon": "Catalyst inside the horizon",
+  "@roomFlipQCatalystInHorizon": {
+    "description": "CR267 WP-25. Short label for the coded-rule question id catalyst_in_horizon (is there a dated catalyst inside the trade's time horizon), shown on the flip card's answers list. NEW key. retranslate:[ar,ms]"
+  },
+  "roomFlipQTerminalVulnerability": "Terminal vulnerability",
+  "@roomFlipQTerminalVulnerability": {
+    "description": "CR267 WP-25. Short label for the coded-rule question id terminal_vulnerability (does the thesis have a fatal weakness), shown on the flip card's answers list. NEW key. retranslate:[ar,ms]"
+  },
+  "roomFlipQEventRiskWait": "Event risk: wait",
+  "@roomFlipQEventRiskWait": {
+    "description": "CR267 WP-25. Short label for the coded-rule question id event_risk_wait (does a nearby event argue for waiting), shown on the flip card's answers list. NEW key. retranslate:[ar,ms]"
+  },
+  "roomFlipQThesisMaterialDirectional": "Thesis is material and directional",
+  "@roomFlipQThesisMaterialDirectional": {
+    "description": "CR267 WP-25. Short label for the coded-rule question id thesis_material_directional (is the thesis material to the price and does it point one way), shown on the flip card's answers list. NEW key. retranslate:[ar,ms]"
+  },
+  "roomFlipQTradeProposed": "Trade proposed",
+  "@roomFlipQTradeProposed": {
+    "description": "CR267 WP-25. Short label for the coded-rule question id trade_proposed (did the Room put a trade on the table), shown on the flip card's answers list. NEW key. retranslate:[ar,ms]"
+  },
+  "roomFlipJournalLine": "Changed from {previous} to {current}: {detail}",
+  "@roomFlipJournalLine": {
+    "description": "CR267 WP-25. One line on a Journal list entry for a Room run whose call differed from the previous one. {previous} and {current} are verdict action tokens; {detail} is the first changed input's summary, or the same-inputs / not-compared sentence. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "previous": {
+        "type": "String"
+      },
+      "current": {
+        "type": "String"
+      },
+      "detail": {
+        "type": "String"
+      }
+    }
+  },
+  "roomFlipJournalLineBare": "Changed from {previous} to {current}",
+  "@roomFlipJournalLineBare": {
+    "description": "CR267 WP-25. Journal list line for a flipped Room run when the server named no changed input and made no same-inputs or not-compared statement. {previous} and {current} are verdict action tokens. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "previous": {
+        "type": "String"
+      },
+      "current": {
+        "type": "String"
+      }
+    }
   }
 }

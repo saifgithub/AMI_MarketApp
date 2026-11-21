@@ -61,6 +61,7 @@ RoomBoardData boardFromRoomState({
     decisionRecord: verdict?.decisionRecord,
     nextConveneDelta: verdict?.nextConveneDelta,
     streetComparison: verdict?.streetComparison,
+    flipExplainer: verdict?.flipExplainer,
     runId: state.runId,
     voices: [
       for (final agent in kCombVoices)
@@ -165,6 +166,7 @@ RoomBoardData? boardFromJournalEntry(JournalEntry entry) {
       final Map m => StreetComparison.fromJson(m.cast<String, dynamic>()),
       _ => null,
     },
+    flipExplainer: FlipExplainer.tryParse(rawVerdict?['flip_explainer']),
     isRecord: true,
     recordedAt: entry.createdAt,
     voices: [
@@ -172,6 +174,15 @@ RoomBoardData? boardFromJournalEntry(JournalEntry entry) {
         _voiceFromRow(agent.id, rows[agent.id]),
     ],
   );
+}
+
+/// CR267 WP-25 — the flip explainer on a ROOM_RUN entry's verdict, or `null`
+/// for any other entry, a non-flip, or an entry written before the field.
+FlipExplainer? flipExplainerFromJournalEntry(JournalEntry entry) {
+  if (entry.entryType != JournalEntryType.roomRun) return null;
+  final verdict = entry.payload['verdict'];
+  if (verdict is! Map) return null;
+  return FlipExplainer.tryParse(verdict['flip_explainer']);
 }
 
 /// Twelve rows for the Journal's transcript, same as the Room's.

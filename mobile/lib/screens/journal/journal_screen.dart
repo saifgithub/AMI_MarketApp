@@ -15,6 +15,7 @@ import 'package:ami_trade/features/tour/tour_service.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/journal.dart';
+import 'package:ami_trade/models/room_board_mappers.dart';
 import 'package:ami_trade/screens/journal/journal_detail_screen.dart';
 import 'package:ami_trade/screens/journal/journal_trash_screen.dart';
 import 'package:ami_trade/services/ads/ads_models.dart';
@@ -23,6 +24,7 @@ import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/ads/ad_slot.dart';
 import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
+import 'package:ami_trade/widgets/room/room_flip_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -658,6 +660,10 @@ class _EntryCard extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
+            ],
+            if (flipExplainerFromJournalEntry(entry) case final flip?) ...[
+              const SizedBox(height: AmiSpacing.xs),
+              RoomFlipJournalLine(explainer: flip),
             ],
             if (agentLabels.isNotEmpty) ...[
               const SizedBox(height: AmiSpacing.xs),

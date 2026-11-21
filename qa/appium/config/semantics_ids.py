@@ -180,3 +180,8 @@ FLOOR_REJOIN_CTA = "ami.floor.rejoin_cta"
 # CR267 (WP-24) - the "inputs unchanged since your last run" line on a Room the
 # server handed back from the bank. Mirrors `RoomBankIds` in the Dart file.
 ROOM_BANKED_LINE = "ami.room.banked_line"
+
+# CR267 (WP-25) - the "Changed from X to Y" card on a flipped verdict and its
+# Journal one-liner. Mirrors `RoomFlipIds` in the Dart file.
+ROOM_FLIP_EXPLAINER = "ami.room.flip_explainer"
+JOURNAL_FLIP_LINE = "ami.journal.flip_line"
