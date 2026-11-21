@@ -823,6 +823,11 @@ class Settings(BaseSettings):
     # (CR040: a silent switch that stops charging is the failure to avoid).
     beta_free_credits: bool = False
 
+    # CR239 / WP-38 — device-UAT fault switch: JSON {"<user-uuid>": ["GET /v1/messages"]}.
+    # Empty = off. Inert (logged as refused) outside local/dev/staging; malformed
+    # JSON stops the boot. See app/services/uat_fault_inject.py.
+    uat_fault_inject: str = ""
+
     @field_validator("one_on_one_credit_cost", "brief_credit_cost")
     @classmethod
     def _one_on_one_cost_non_negative(cls, v: int) -> int:
