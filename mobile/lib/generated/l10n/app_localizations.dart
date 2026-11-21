@@ -9319,6 +9319,42 @@ abstract class AppLocalizations {
   /// **'Couldn\'t export your data. Try again in a moment.'**
   String get settingsAccountExportFailed;
 
+  /// DEF524 - title of the sheet shown after the data export downloads; offers Save to device or Share. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'YOUR DATA IS READY'**
+  String get settingsAccountExportReadyTitle;
+
+  /// DEF524 - body of the export-ready sheet. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Keep a copy on this phone, or send it to another app.'**
+  String get settingsAccountExportReadyBody;
+
+  /// DEF524 - button that opens the system Save dialog so the export stays on the phone. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Save to device'**
+  String get settingsAccountExportSave;
+
+  /// DEF524 - button that opens the system share sheet for the export file. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get settingsAccountExportShare;
+
+  /// DEF524 - snackbar after the export was written to the phone. {name} is the saved file name. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {name}'**
+  String settingsAccountExportSaved(String name);
+
+  /// DEF524 - snackbar when writing the export to the phone failed. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t save the file. Try again, or use Share.'**
+  String get settingsAccountExportSaveFailed;
+
   /// CR276 - Settings > Account button that starts account deletion. Beta wording: delete. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:

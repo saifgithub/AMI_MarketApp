@@ -442,8 +442,8 @@ cases:
       - 'A signed-in account with a mandate, a journal entry, a lesson in progress and a simulated trade'
     steps:
       - 'Settings > Account > Export my data'
-      - 'In the share sheet save the file to Files / Drive (or mail it to yourself) and open it'
+      - 'Tap Save to device, keep the suggested name, Save, then open the saved file from the phone (Android; on iOS the share sheet opens, choose Save to Files)'
     expected:
-      - 'The share sheet opens with ami-data-export-<date>.json'
+      - 'A sheet offers Save to device and Share; Save to device opens the system Save dialog with ami-data-export-<date>.json and a Saved snackbar names the file (iOS: the share sheet opens with that file)'
       - 'The file is readable JSON holding the trade, the Room verdicts, the mandate, the journal entry, the lesson progress and the settings'
       - 'It holds nothing about any other user and no Alpaca key, token or secret'

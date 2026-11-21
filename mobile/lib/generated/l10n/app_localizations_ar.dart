@@ -5637,6 +5637,28 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذّر تصدير بياناتك. حاول مرة أخرى بعد قليل.';
 
   @override
+  String get settingsAccountExportReadyTitle => 'بياناتك جاهزة';
+
+  @override
+  String get settingsAccountExportReadyBody =>
+      'احتفظ بنسخة على هذا الهاتف، أو أرسلها إلى تطبيق آخر.';
+
+  @override
+  String get settingsAccountExportSave => 'حفظ على الجهاز';
+
+  @override
+  String get settingsAccountExportShare => 'مشاركة';
+
+  @override
+  String settingsAccountExportSaved(String name) {
+    return 'تم حفظ $name';
+  }
+
+  @override
+  String get settingsAccountExportSaveFailed =>
+      'تعذّر حفظ الملف. حاول مرة أخرى، أو استخدم المشاركة.';
+
+  @override
   String get settingsAccountDelete => 'حذف الحساب';
 
   @override

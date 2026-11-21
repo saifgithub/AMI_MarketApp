@@ -5647,6 +5647,28 @@ class AppLocalizationsMs extends AppLocalizations {
       'Tidak dapat mengeksport data anda. Cuba lagi sebentar nanti.';
 
   @override
+  String get settingsAccountExportReadyTitle => 'DATA ANDA SEDIA';
+
+  @override
+  String get settingsAccountExportReadyBody =>
+      'Simpan satu salinan pada telefon ini, atau hantar ke apl lain.';
+
+  @override
+  String get settingsAccountExportSave => 'Simpan ke peranti';
+
+  @override
+  String get settingsAccountExportShare => 'Kongsi';
+
+  @override
+  String settingsAccountExportSaved(String name) {
+    return '$name disimpan';
+  }
+
+  @override
+  String get settingsAccountExportSaveFailed =>
+      'Tidak dapat menyimpan fail. Cuba lagi, atau gunakan Kongsi.';
+
+  @override
   String get settingsAccountDelete => 'Padam akaun';
 
   @override
