@@ -311,7 +311,7 @@ Found: two users have duplicate training portfolios created 40 ms apart on 2026-
     3. `http_audit` shows the PATCH taking 31 ms and the audit 0.4 s, and **no request for about 17 s** in between. That is an in-app stall, **DEF521**; a worker is on it.
 15. **Builds 123** (bump `04f9a791`) **and 124** (`158c4d46`) are on TestFlight and Play internal. **AMI-DL-14** (Android: BRIEF-018 rollback, BRIEF-016, FLOOR-007/008) is booked.
 16. **Rulings 2026-11-21 (Saiful, AskUserQuestion):**
-    1. S4 Beta host: no preference given, so the recommendation stands: Hetzner Singapore CPX22 + Compose. His team opens the account; WP-42 provisions.
+    1. S4 Beta host: left to last (Saiful: "you really should leave S4 to last"). No host is picked; WP-42 stays not started.
     2. CR222 (WP-37): moved out of the Beta gate; becomes a post-Beta CR.
     3. Beta E5 device matrix: the two lab phones only, no hand items. Accepted gap: UAT-ONB-043 (fresh-install onboarding) never runs on a device before Beta, since the lab phones do not uninstall.
     4. WP-22 LLM grader: run it on both on-prem ami-llm and the DeepInfra hosted model; the bake-off's DeepInfra spend is approved.
