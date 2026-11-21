@@ -74,12 +74,12 @@ async def _log_deprecation(request: Request) -> None:
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(_log_deprecation)],
 )
-async def coach_start_legacy(
+def coach_start_legacy(
     req: BriefStartRequest,
     current_user: User = Depends(get_current_user),
     engine: BriefEngine = Depends(get_brief_engine),
 ) -> BriefStartResponse:
-    return await brief_start(req, current_user, engine)
+    return brief_start(req, current_user, engine)
 
 
 @router.post("/message", dependencies=[Depends(_log_deprecation)])
@@ -105,21 +105,21 @@ async def coach_propose_legacy(
 
 
 @router.post("/accept", dependencies=[Depends(_log_deprecation)])
-async def coach_accept_legacy(
+def coach_accept_legacy(
     req: BriefAcceptRequest,
     current_user: User = Depends(get_current_user),
     engine: BriefEngine = Depends(get_brief_engine),
 ) -> dict:
-    return await brief_accept(req, current_user, engine)
+    return brief_accept(req, current_user, engine)
 
 
 @router.post("/reject", dependencies=[Depends(_log_deprecation)])
-async def coach_reject_legacy(
+def coach_reject_legacy(
     req: BriefRejectRequest,
     current_user: User = Depends(get_current_user),
     engine: BriefEngine = Depends(get_brief_engine),
 ) -> dict:
-    return await brief_reject(req, current_user, engine)
+    return brief_reject(req, current_user, engine)
 
 
 @router.post(
@@ -127,12 +127,12 @@ async def coach_reject_legacy(
     response_model=UserOverlay,
     dependencies=[Depends(_log_deprecation)],
 )
-async def coach_rollback_legacy(
+def coach_rollback_legacy(
     req: BriefRollbackRequest,
     current_user: User = Depends(get_current_user),
     store: OverlayStore = Depends(get_overlay_store),
 ) -> UserOverlay:
-    return await brief_rollback(req, current_user, store)
+    return brief_rollback(req, current_user, store)
 
 
 @router.get(
@@ -140,11 +140,11 @@ async def coach_rollback_legacy(
     response_model=BriefHistoryResponse,
     dependencies=[Depends(_log_deprecation)],
 )
-async def coach_history_legacy(
+def coach_history_legacy(
     user_id: UUID,
     agent_id: AgentId,
     plan: str = "trial_trader",
     current_user: User = Depends(get_current_user),
     store: OverlayStore = Depends(get_overlay_store),
 ) -> BriefHistoryResponse:
-    return await brief_history(user_id, agent_id, plan, current_user, store)
+    return brief_history(user_id, agent_id, plan, current_user, store)
