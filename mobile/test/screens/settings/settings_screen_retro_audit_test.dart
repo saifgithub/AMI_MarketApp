@@ -56,7 +56,7 @@ class _ScriptedMandateNotifier extends MandateNotifier {
   }
 
   @override
-  Future<void> patch(Map<String, dynamic> updates) async {
+  Future<bool> patch(Map<String, dynamic> updates) async {
     final before = state.mandate!;
     // Echo the patched value back — the "server" honestly saved it; this
     // test is about the AUDIT read failing, not the save itself.
@@ -86,6 +86,7 @@ class _ScriptedMandateNotifier extends MandateNotifier {
       creditBalance: before.creditBalance,
     );
     state = state.copyWith(mandate: next, saving: false);
+    return true;
   }
 }
 

@@ -26,8 +26,9 @@ class _RecordingMandateNotifier extends MandateNotifier {
   }
 
   @override
-  Future<void> patch(Map<String, dynamic> updates) async {
+  Future<bool> patch(Map<String, dynamic> updates) async {
     _patches.add(updates);
+    return true;
   }
 }
 

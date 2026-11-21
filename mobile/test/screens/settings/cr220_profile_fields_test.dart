@@ -76,9 +76,10 @@ class _RecordingMandateNotifier extends MandateNotifier {
   final List<Map<String, dynamic>> patches = [];
 
   @override
-  Future<void> patch(Map<String, dynamic> updates) async {
+  Future<bool> patch(Map<String, dynamic> updates) async {
     patches.add(Map<String, dynamic>.from(updates));
     state = state.copyWith(saving: false);
+    return true;
   }
 }
 

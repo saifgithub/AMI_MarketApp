@@ -56,7 +56,7 @@ class _ScriptedMandateNotifier extends MandateNotifier {
   }
 
   @override
-  Future<void> patch(Map<String, dynamic> updates) async {
+  Future<bool> patch(Map<String, dynamic> updates) async {
     final b = state.mandate!;
     final next = UserMandate(
       userId: b.userId,
@@ -85,6 +85,7 @@ class _ScriptedMandateNotifier extends MandateNotifier {
       creditBalance: b.creditBalance,
     );
     state = state.copyWith(mandate: next, saving: false);
+    return true;
   }
 }
 

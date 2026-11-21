@@ -99,11 +99,12 @@ class _RecordingMandateNotifier extends MandateNotifier {
   UserMandate Function(UserMandate before, Map<String, dynamic> updates)? onPatch;
 
   @override
-  Future<void> patch(Map<String, dynamic> updates) async {
+  Future<bool> patch(Map<String, dynamic> updates) async {
     patches.add(Map<String, dynamic>.from(updates));
     final before = state.mandate!;
     final next = onPatch?.call(before, updates) ?? before;
     state = state.copyWith(mandate: next, saving: false);
+    return true;
   }
 }
 
