@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**311 cases** — 200 api, 20 device, 91 manual; 16 blocked.
+**312 cases** — 200 api, 20 device, 92 manual; 16 blocked.
 
 ## Areas
 
@@ -21,7 +21,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 11. [Watchlist & price alerts](#watchlist-alerts) — 16 cases
 12. [Lessons, quizzes, Agent Academy unlocks & glossary](#lessons) — 10 cases
 13. [Daily challenge & reminder](#daily-challenge) — 6 cases
-14. [Decision journal, trash & the You tab](#journal) — 10 cases
+14. [Decision journal, trash & the You tab](#journal) — 11 cases
 15. [Inbox, notification centre & push](#inbox-notifications) — 8 cases
 16. [Bug reports, AMI help library & telemetry](#support) — 17 cases
 17. [Billing, plans, credits & ads](#billing) — 12 cases
@@ -3359,7 +3359,7 @@ _Device (automated, Appium) · plans: floor_pass · **BLOCKED** — CR264 Phase 
 3. No press crashes the app, adds an error-sink entry, overflows, or does nothing
 4. Every control has a catalogue entry and its observed effect matches it
 
-> WP-33 (DEF470/473/474/475/476/477/478/479): control-intent catalogue (qa/uat/controls/*.yaml) updated for the changed controls - discard-changes now discards, Alpaca link relabelled TICKER DETAIL, merge-preview RETRY/SKIP, confirm dialogs on regenerate-handle/sign-out/Alpaca disconnect and relink, Ask AMI and NO AMI VERDICT renames. Line numbers in the catalogue were not re-derived. 2026-11-20 (build 120): catalogue gains the Floor REJOIN control (DEF506, qa/uat/controls/floor.yaml); the ticker tape is out of the accessibility tree (DEF466 round 1), so the crawler cannot find tape items by label (qa/uat/controls/ticker_tape.yaml); the risk-limit chip is a custom Row-based chip with the same key riskLimitOff_<key> (DEF508); Room desk rows gain a standing-guidance label for scripted turns (DEF507). DEF481 (2026-11-20): nine back controls (one-on-one, Brief, Brief history, Room, lesson reader, journal detail, journal trash, Company Review sheet, track lessons) now carry ami.nav.back; the Convene and Merge CTAs carry ami.sheet.convene.cta / ami.sheet.merge.cta; the lesson-mode segments are ami.lesson.mode_book / ami.lesson.mode_interactive (were bare lesson_mode_*); the Floor Inbox button is now an envelope icon (the bell stays Notifications); the dead TourCard try-now entry is removed. Line numbers re-derived for these entries only.
+> WP-33 (DEF470/473/474/475/476/477/478/479): control-intent catalogue (qa/uat/controls/*.yaml) updated for the changed controls - discard-changes now discards, Alpaca link relabelled TICKER DETAIL, merge-preview RETRY/SKIP, confirm dialogs on regenerate-handle/sign-out/Alpaca disconnect and relink, Ask AMI and NO AMI VERDICT renames. Line numbers in the catalogue were not re-derived. 2026-11-20 (build 120): catalogue gains the Floor REJOIN control (DEF506, qa/uat/controls/floor.yaml); the ticker tape is out of the accessibility tree (DEF466 round 1), so the crawler cannot find tape items by label (qa/uat/controls/ticker_tape.yaml); the risk-limit chip is a custom Row-based chip with the same key riskLimitOff_<key> (DEF508); Room desk rows gain a standing-guidance label for scripted turns (DEF507). DEF481 (2026-11-20): nine back controls (one-on-one, Brief, Brief history, Room, lesson reader, journal detail, journal trash, Company Review sheet, track lessons) now carry ami.nav.back; the Convene and Merge CTAs carry ami.sheet.convene.cta / ami.sheet.merge.cta; the lesson-mode segments are ami.lesson.mode_book / ami.lesson.mode_interactive (were bare lesson_mode_*); the Floor Inbox button is now an envelope icon (the bell stays Notifications); the dead TourCard try-now entry is removed. Line numbers re-derived for these entries only. 2026-11-21 (builds 126-128): Export my data gains a YOUR DATA IS READY dialog with Save to device / Share on Android (DEF524); the Ref line under error panels now updates on every failure and is tap-to-copy (DEF526); the Room verdict card and Journal tile gain a non-interactive CHANGED FROM card / line (WP-25, ami.room.flip_explainer / ami.journal.flip_line) with 12 new strings.
 
 ## Manual — iPhone checklist
 
@@ -3404,8 +3404,9 @@ _Manual (iPhone checklist) · plans: any_
 **Expected**
 1. The error state shows its normal message plus a small "Ref: " followed by eight hex characters, never a raw exception
 2. Tapping it shows "Reference copied" and puts the full id on the clipboard
-3. The same id is found in the backend log lines and the http_audit row of the failed request, and in the stored bug report (trace_ids, visible in the admin console)
-4. An error from a request that never reached the server shows no Ref line
+3. TRY AGAIN that fails again shows the NEW id, not the first one, and an error cached before the screen opened still shows its Ref (DEF526)
+4. The same id is found in the backend log lines and the http_audit row of the failed request, and in the stored bug report (trace_ids, visible in the admin console)
+5. An error from a request that never reached the server shows no Ref line
 
 #### UAT-AUTH-030 — Sign in with Apple on iPhone
 
@@ -4509,6 +4510,20 @@ _Manual (iPhone checklist) · plans: floor_pass_
 
 **Expected**
 1. The detail shows "AMI advice: Without - manual trade", translated in Arabic and Bahasa Melayu (DEF478)
+
+#### UAT-JRNL-011 — A Room whose verdict flipped shows a "Changed from X to Y" line in the Journal list and the full card in its detail
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. Two completed Rooms on the same ticker with different verdicts (a flip cannot be forced on a real-model Room; see UAT-ROOM-032)
+
+**Steps**
+1. You > JOURNAL; find the newer Room entry; open it
+
+**Expected**
+1. The list tile carries "Changed from <PREVIOUS> to <NEW>: " and the first changed input, or the same-inputs / not-compared sentence (CR267 WP-25)
+2. The detail shows the same CHANGED FROM card as the Room verdict card
 
 #### UAT-INBOX-006 — Broadcast arrives as a push and in the inbox; reply reaches the admin feed
 

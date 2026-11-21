@@ -113,5 +113,6 @@ cases:
     expected:
       - 'The error state shows its normal message plus a small "Ref: " followed by eight hex characters, never a raw exception'
       - 'Tapping it shows "Reference copied" and puts the full id on the clipboard'
+      - 'TRY AGAIN that fails again shows the NEW id, not the first one, and an error cached before the screen opened still shows its Ref (DEF526)'
       - 'The same id is found in the backend log lines and the http_audit row of the failed request, and in the stored bug report (trace_ids, visible in the admin console)'
       - 'An error from a request that never reached the server shows no Ref line'

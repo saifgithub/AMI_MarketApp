@@ -140,3 +140,16 @@ cases:
       - 'Place a trade without convening the Room; open its journal entry'
     expected:
       - 'The detail shows "AMI advice: Without - manual trade", translated in Arabic and Bahasa Melayu (DEF478)'
+
+  - id: UAT-JRNL-011
+    title: A Room whose verdict flipped shows a "Changed from X to Y" line in the Journal list and the full card in its detail
+    layer: manual
+    plans: [floor_pass]
+    preconditions:
+      - 'Two completed Rooms on the same ticker with different verdicts (a flip cannot be forced on a real-model Room; see UAT-ROOM-032)'
+    steps:
+      - 'You > JOURNAL; find the newer Room entry; open it'
+    expected:
+      - 'The list tile carries "Changed from <PREVIOUS> to <NEW>: " and the first changed input, or the same-inputs / not-compared sentence (CR267 WP-25)'
+      - 'The detail shows the same CHANGED FROM card as the Room verdict card'
+
