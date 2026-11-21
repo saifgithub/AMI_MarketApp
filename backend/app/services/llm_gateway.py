@@ -226,6 +226,23 @@ def _desk_temperature_fields(*, ceiling: float | None = None) -> dict[str, float
     return {"temperature": value}
 
 
+_CALL_OVERRIDE_FIELDS = frozenset({"temperature", "logprobs", "top_logprobs"})
+
+
+def _call_request_overrides(meta: dict[str, Any]) -> dict[str, Any]:
+    """CR267 WP-22 — opt-in per-call sampling fields for the offline Room graders.
+
+    A grader must run at temperature 0 and read token probabilities, while the
+    desks keep the global `llm_desk_temperature`. The caller puts
+    `request_overrides` in its own `meta`; only the three whitelisted fields
+    reach the wire, and an absent key changes nothing for any other call.
+    """
+    raw = meta.get("request_overrides")
+    if not isinstance(raw, dict):
+        return {}
+    return {k: v for k, v in raw.items() if k in _CALL_OVERRIDE_FIELDS}
+
+
 class LLMProvider:
     name: str = "base"
     # CR210 — which decoding grammars this provider can actually ENFORCE.
@@ -960,6 +977,8 @@ class OpenAICompatibleProvider(LLMProvider):
         # self-inflicted.
         if constraint is not None:
             body.update(_constraint_request_fields(constraint))
+        if meta is not None:
+            body.update(_call_request_overrides(meta))
 
         # CR272 — retry TRANSIENT failures, and only before the first chunk
         # has been handed to the caller: once a chunk is out the reply is
@@ -1140,6 +1159,10 @@ class OpenAICompatibleProvider(LLMProvider):
                         finish = choices[0].get("finish_reason")
                         if finish:
                             meta["finish_reason"] = str(finish)
+                    if meta is not None and "request_overrides" in meta:
+                        lp = (choices[0].get("logprobs") or {}).get("content")
+                        if lp:
+                            meta.setdefault("logprobs", []).extend(lp)
                     delta = choices[0].get("delta") or {}
                     content = delta.get("content")
                     if content:

@@ -1,0 +1,102 @@
+{
+  "version": "q1",
+  "description": "CR267 WP-22 question set q1: six narrow yes/no questions a person reading the Room can check. phrasings feed the wording test; read_from are AgentId values.",
+  "questions": [
+    {
+      "id": "bear_objection_answered",
+      "text": "Does the Research Manager's reply, or any later turn, answer the Bear's strongest objection with specific numbers drawn from the data?",
+      "answer_semantics": {
+        "yes": "the strongest Bear objection is addressed with at least one specific figure from the data, not only with assertion",
+        "no": "it is left unanswered, or answered without numbers, or no objection was raised"
+      },
+      "read_from": ["bear_researcher", "research_manager"],
+      "phrasings": [
+        "Is the Bear's strongest objection answered with numbers?",
+        "Does the debate rebut the Bear's main argument using specific figures?",
+        "Is there a numeric answer on the table for the Bear's top concern?",
+        "Has the Bear's most serious objection been countered with concrete data?",
+        "Did anyone respond to the Bear's strongest point with actual numbers rather than assertion?"
+      ]
+    },
+    {
+      "id": "catalyst_in_horizon",
+      "text": "Does the debate name a specific catalyst that is expected to occur inside the mandate horizon?",
+      "answer_semantics": {
+        "yes": "a named event or development (for example earnings, a launch, a ruling) with a time that falls inside the stated horizon",
+        "no": "no catalyst is named, or the named one falls outside the horizon or has no time"
+      },
+      "read_from": ["research_manager", "trader"],
+      "phrasings": [
+        "Is a named catalyst expected within the mandate horizon?",
+        "Does the room identify a dated trigger that lands inside the horizon?",
+        "Is there a specific event inside the holding horizon that the thesis depends on?",
+        "Did the desks point to a concrete catalyst that arrives before the horizon ends?",
+        "Within the stated horizon, is any particular catalyst named?"
+      ]
+    },
+    {
+      "id": "terminal_vulnerability",
+      "text": "Is there a vulnerability that could permanently impair the position, raised in the debate and not answered?",
+      "answer_semantics": {
+        "yes": "a fatal-flaw type risk (for example a debt maturity the company cannot meet, a going-concern doubt, a binding legal loss) was raised and nobody answered it",
+        "no": "no such risk was raised, or it was raised and answered"
+      },
+      "read_from": ["bear_researcher", "conservative_debator"],
+      "phrasings": [
+        "Is an unresolved fatal flaw on the table?",
+        "Does the debate leave a position-ending risk unanswered?",
+        "Was a potentially permanent loss risk raised and never addressed?",
+        "Is there an open terminal risk that no desk has resolved?",
+        "Does any raised deal-breaker risk remain without an answer?"
+      ]
+    },
+    {
+      "id": "event_risk_wait",
+      "text": "Does the debate argue that the user should wait for a dated event before acting?",
+      "answer_semantics": {
+        "yes": "a desk argues for waiting for a specific dated event (earnings, a ruling, a data release) inside the horizon before taking the trade",
+        "no": "no desk argues to wait for a named event"
+      },
+      "read_from": ["news_analyst", "conservative_debator"],
+      "phrasings": [
+        "Does event risk argue for waiting before acting?",
+        "Is there a case in the room for holding off until a specific event passes?",
+        "Does any desk say to wait for a dated event before putting the trade on?",
+        "Is the recommendation to hold back pending a scheduled event?",
+        "Do the desks argue that an upcoming event makes acting now premature?"
+      ]
+    },
+    {
+      "id": "thesis_material_directional",
+      "text": "Is the evidence for the thesis material and does it point in one clear direction?",
+      "answer_semantics": {
+        "yes": "the cited evidence carries real weight (specific, sourced figures) and its net direction is clearly for or clearly against",
+        "no": "the evidence is thin, generic, or mixed with no clear net direction"
+      },
+      "read_from": ["bull_researcher", "bear_researcher", "research_manager"],
+      "phrasings": [
+        "Is thesis support both material and directional?",
+        "Does the evidence carry weight and lean clearly one way?",
+        "Is there substantial evidence that points in a single direction?",
+        "Is the case backed by weighty, directional evidence rather than thin or mixed evidence?",
+        "Does the net evidence amount to a material, one-sided signal?"
+      ]
+    },
+    {
+      "id": "trade_proposed",
+      "text": "Did the desk propose a trade?",
+      "answer_semantics": {
+        "yes": "the Execution Desk proposed a specific trade action (buy, sell, short or cover) with a size or entry",
+        "no": "no trade was proposed, or the proposal is hold or pass"
+      },
+      "read_from": ["trader"],
+      "phrasings": [
+        "Was a trade proposed by the desk?",
+        "Does the room end with a concrete trade proposal?",
+        "Did the Execution Desk put forward an actual order idea?",
+        "Is there a specific buy, sell, short or cover proposal?",
+        "Did the debate produce a proposed trade rather than hold or pass?"
+      ]
+    }
+  ]
+}
