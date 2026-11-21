@@ -20,7 +20,8 @@
 library;
 
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart' show visibleForTesting;
+import 'package:flutter/foundation.dart'
+    show ChangeNotifier, visibleForTesting;
 
 /// One recorded failure. [id] is null for a request that got no response.
 class TraceEntry {
@@ -42,13 +43,16 @@ class TraceEntry {
 const String kTraceIdExtraKey = 'ami_trace_id';
 
 /// A failure older than this is not offered as the reference for whatever
-/// error is on screen now.
-const Duration kTraceRefFreshness = Duration(minutes: 2);
+/// error is on screen now. Wide on purpose (DEF526): a screen's error state is
+/// often a provider's cached failure from well before the screen was opened,
+/// and a request that never reached the server is already recorded as a gap,
+/// so age is only a backstop for failures that bypass [ApiClient].
+const Duration kTraceRefFreshness = Duration(minutes: 30);
 
 /// The most ids a bug report carries (mirrors `MAX_TRACE_IDS` server-side).
 const int kMaxReportTraceIds = 5;
 
-class TraceIdStore {
+class TraceIdStore extends ChangeNotifier {
   TraceIdStore({DateTime Function()? now}) : _now = now ?? DateTime.now;
 
   /// The app-wide store. [ApiClient] writes it; widgets and the bug-report
@@ -76,6 +80,7 @@ class TraceIdStore {
     if (_entries.length > _capacity) {
       _entries.removeRange(0, _entries.length - _capacity);
     }
+    notifyListeners();
   }
 
   /// The id to offer for the error currently on screen: the most recent
@@ -111,7 +116,10 @@ class TraceIdStore {
   }
 
   @visibleForTesting
-  void clear() => _entries.clear();
+  void clear() {
+    _entries.clear();
+    notifyListeners();
+  }
 }
 
 /// The trace id a backend response carries: the `X-Request-Id` header, falling
