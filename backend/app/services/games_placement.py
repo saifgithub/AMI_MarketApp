@@ -152,3 +152,6 @@ def _ordinal(n: int | None) -> str:
     if 10 <= n % 100 <= 20:
         return f"{n}th"
     return f"{n}{ {1: 'st', 2: 'nd', 3: 'rd'}.get(n % 10, 'th') }"
+
+
+ordinal = _ordinal

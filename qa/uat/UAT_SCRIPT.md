@@ -3317,9 +3317,9 @@ _API (automated, live Alpha) · plans: floor_pass_
 4. GET a random run id
 
 **Expected**
-1. First entry is 200 with a run id and state entered; no credits are spent
+1. First entry is 200 with an entry id, run id, field id, cadence week and state entered; no credits are spent
 2. Second entry is 409
-3. The owner sees exactly that run in /runs and its detail is 200
+3. The owner sees exactly that run in /runs and its detail is 200, carrying field_id and days_left
 4. Another user gets 404 for it on detail, close and trade, and so does a random id
 
 #### UAT-GAME-004 — Invalid trades are refused before anything is queued

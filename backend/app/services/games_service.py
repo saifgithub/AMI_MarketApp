@@ -674,7 +674,11 @@ def get_run_detail(user_id: UUID, run_id: UUID) -> dict | None:
             entry.state, entry.intent, float(entry.fees_paid), entry.trade_count,
         )
         cadence, starts_on, ends_on = field.cadence, field.starts_on, field.ends_on
+        field_id = field.id
 
+    # DEF527 — `days_left` and `field_id` are read by `GameRunDetail.fromJson`;
+    # the run list already carries both, so the two screens cannot disagree.
+    days_left = max((ends_on - datetime.now(timezone.utc).date()).days, 0)
     nav_rows = nav_history(user_id, run_id=run_id)
     portfolio, marks, total_value, _drawdown_pct, source = (
         get_sim_engine().portfolio_marks_snapshot(user_id, kind="game", run_id=run_id)
@@ -687,11 +691,13 @@ def get_run_detail(user_id: UUID, run_id: UUID) -> dict | None:
     floored_value, live_shortfall = nav_floor(float(total_value))
     return {
         "run_id": str(run_id),
+        "field_id": str(field_id),
         "cadence": cadence,
         "state": entry_state,
         "intent": intent,
         "starts_on": starts_on.isoformat(),
         "ends_on": ends_on.isoformat(),
+        "days_left": days_left,
         "current_cash": float(portfolio.current_cash),
         # §13.3's Queued-orders surface requires `cash committed`. Without
         # it the ticket offered the whole stake no matter how much was
@@ -1262,6 +1268,43 @@ def submit_trade(
     ticker: str,
     side: Side,
     quantity: float,
+    **kwargs,
+) -> dict:
+    """`POST /v1/games/runs/{run_id}/trade` — see `_submit_trade`.
+
+    DEF527 — every outcome (queued, refused, filled, short open/cover) also
+    carries the order's own `ticker`, `side`, `quantity` and the fill `price`
+    at the TOP LEVEL. `GameTradeResult.fromJson` reads them there; the fill
+    detail used to exist only under `trade`, which a queued or refused order
+    never has, so a queued SELL parsed as a buy. The nested `trade` is kept.
+    """
+    out = _submit_trade(
+        user_id, run_id, ticker=ticker, side=side, quantity=quantity, **kwargs,
+    )
+    trade = out.get("trade")
+    filled_qty = trade["quantity"] if trade else out.get("short_quantity")
+    out.update({
+        # `GameTradeResult.fromJson` reads `status`; it used to derive it from
+        # the two booleans and fall back to `unknown`. Stated here so the wire
+        # carries the one word the ticket's banner branches on.
+        "status": "queued" if out.get("queued") else (
+            "filled" if out.get("filled") else "refused"
+        ),
+        "ticker": ticker.upper().strip(),
+        "side": side.value if hasattr(side, "value") else str(side),
+        "quantity": filled_qty if (out.get("filled") and filled_qty) else quantity,
+        "price": trade["entry_price"] if trade else None,
+    })
+    return out
+
+
+def _submit_trade(
+    user_id: UUID,
+    run_id: UUID,
+    *,
+    ticker: str,
+    side: Side,
+    quantity: float,
     order_type: OrderType = OrderType.MARKET,
     limit_price: float | None = None,
     stop: float | None = None,
@@ -1269,8 +1312,7 @@ def submit_trade(
     horizon_days: int | None = None,
     now: datetime | None = None,
 ) -> dict:
-    """`POST /v1/games/runs/{run_id}/trade` — the game trade path's
-    orchestration. Market-hours rule: outside the US regular session this
+    """The game trade path's orchestration. Market-hours rule: outside the US regular session this
     QUEUES the order (never touches `current_price` — see
     `GameQueuedOrderRow`'s docstring for why that is what keeps a queued
     order off a stale price) instead of calling
@@ -1789,6 +1831,9 @@ def preview_restart(user_id: UUID, run_id: UUID) -> dict:
     debit = _forfeit_debit_for(entry)
     return {
         "run_id": str(run_id),
+        # DEF527 — says which half this is, so a preview can never be read as
+        # a forfeit that happened (and vice versa).
+        "committed": False,
         "career_points_debit": debit,
         "reason": (
             f"forfeiting costs {debit} career points — the minimum, charged "
@@ -1841,6 +1886,7 @@ def commit_restart(user_id: UUID, run_id: UUID, *, now: datetime | None = None) 
         entry.career_points_delta = charged
     return {
         "run_id": str(run_id),
+        "committed": True,
         "state": "forfeit",
         # What the ledger ACTUALLY took, not what the floor asked for. A
         # player at zero pays nothing (the clamp), and reporting the floor
