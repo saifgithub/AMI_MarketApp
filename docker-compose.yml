@@ -582,6 +582,10 @@ services:
       ROOM_INSIDER_PLAN_TAG_ENABLED: ${ROOM_INSIDER_PLAN_TAG_ENABLED:-true}
       ROOM_INSIDER_CLUSTER_ENABLED: ${ROOM_INSIDER_CLUSTER_ENABLED:-true}
       ROOM_EDGAR_8K_FLAGS_ENABLED: ${ROOM_EDGAR_8K_FLAGS_ENABLED:-true}
+      # CR229 — BLS direct source for H1 macro prints (CPI, PPI). OFF by default,
+      # FRED stays primary. Key optional: empty = v1 (25 queries/day).
+      MACRO_DIRECT_BLS_ENABLED: ${MACRO_DIRECT_BLS_ENABLED:-false}
+      BLS_API_KEY: ${BLS_API_KEY:-}
       # CR247 Phase 4 — the second-pass verdict review (D11–D13, D27): the
       # veto review on APPROVE (fail the approval when the Bear's/Conservative's
       # numbered objections went unanswered; a veto flips to PASS, narrated and

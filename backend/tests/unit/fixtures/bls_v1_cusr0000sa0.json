@@ -1,0 +1,8 @@
+{"status":"REQUEST_SUCCEEDED","responseTime":41,"message":[],"Results":{"series":[{"seriesID":"CUSR0000SA0","data":[
+{"year":"2026","period":"M09","periodName":"September","latest":"true","value":"333.100","footnotes":[{}]},
+{"year":"2026","period":"M08","periodName":"August","value":"332.900","footnotes":[{}]},
+{"year":"2026","period":"M07","periodName":"July","value":"332.813","footnotes":[{}]},
+{"year":"2025","period":"M10","periodName":"October","value":"-","footnotes":[{"code":"X","text":"Data unavailable"}]},
+{"year":"2025","period":"M13","periodName":"Annual","value":"320.000","footnotes":[{}]},
+{"year":"2025","period":"M09","periodName":"September","value":"324.368","footnotes":[{}]}
+]}]}}

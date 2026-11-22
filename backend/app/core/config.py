@@ -1352,6 +1352,13 @@ class Settings(BaseSettings):
     room_insider_cluster_enabled: bool = True
     room_edgar_8k_flags_enabled: bool = True
 
+    # CR229 — BLS Public Data API as a non-FRED source for H1 (CPI, PPI).
+    # Default OFF: FRED stays primary. No key needed (v1, 25 queries/day); a
+    # free registration key switches to v2 (500/day). Never a silent fallback
+    # between sources — a failure is reported with the source that failed.
+    macro_direct_bls_enabled: bool = False
+    bls_api_key: str = ""
+
     # CR247 Phase 4 (D11–D13, D27) — the second-pass verdict review. Both
     # reviews are built behind INDEPENDENT flags because the Phase 0.1 outcome
     # census came back with a zero-scored ledger (D27): false-APPROVE vs
