@@ -10,9 +10,9 @@ the rule.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field, is_dataclass
 from enum import Enum
-from typing import Protocol, Sequence
+from typing import Any, Mapping, Protocol, Sequence
 
 QUESTION_SET_VERSION = "q1"
 
@@ -76,8 +76,12 @@ class RoomTranscript:
     turns: Sequence[dict]
     """Ordered desk turns: {"agent_id": str, "content": str}."""
     cards: dict | None = None
-    """CR266 typed cards when the Room ran with cards on; None otherwise."""
+    """CR266 typed cards when the Room ran with cards on; None otherwise. Built by
+    `build_cards_payload`: {"cards_by_desk": {desk: {"cards": [...], "objections":
+    [...]}}, "field_state": {...}}."""
     proposed_trade: dict | None = None
+    """Built by `build_proposed_trade`: {"action": ..., "size_pct", "entry", "stop",
+    "target"}; `action` is omitted when the Room cannot say what the desk proposed."""
 
 
 class Grader(Protocol):
@@ -85,3 +89,60 @@ class Grader(Protocol):
     version: str
 
     def grade(self, transcript: RoomTranscript) -> GraderResult: ...
+
+
+def _channel_dict(channel: Any) -> dict:
+    if is_dataclass(channel) and not isinstance(channel, type):
+        channel = asdict(channel)
+    if not isinstance(channel, Mapping):
+        raise TypeError(f"card channel must be a dataclass or mapping, got {type(channel).__name__}")
+    return {
+        "cards": [dict(c) for c in channel.get("cards") or ()],
+        "objections": [dict(o) for o in channel.get("objections") or ()],
+    }
+
+
+def build_cards_payload(
+    channels_by_desk: Mapping[str, Any] | None,
+    field_state: Mapping[str, Any] | None,
+) -> dict | None:
+    """The `RoomTranscript.cards` shape. The runner (live `ctx.claim_cards`) and the
+    offline WP-22 scorer (cards re-parsed from the audit trail) both build it here.
+
+    A desk with no cards is left out, as the runner leaves it out of `claim_cards`;
+    no desk with cards at all gives None (the code grader then answers "room ran
+    without cards"). Nothing is filled in.
+    """
+    out: dict[str, dict] = {}
+    for desk, channel in (channels_by_desk or {}).items():
+        if channel is None:
+            continue
+        body = _channel_dict(channel)
+        if body["cards"]:
+            out[str(getattr(desk, "value", desk))] = body
+    if not out:
+        return None
+    return {"cards_by_desk": out, "field_state": dict(field_state or {})}
+
+
+def build_proposed_trade(
+    *,
+    action: str | None,
+    size_pct: float | None = None,
+    entry: float | None = None,
+    stop: float | None = None,
+    target: float | None = None,
+) -> dict:
+    """The `RoomTranscript.proposed_trade` shape. `action` is the Execution Desk's
+    side as the Room knows it ("buy", "hold", "wait", ...), lower-cased; None means
+    the Room cannot say, so the key is omitted and `trade_proposed` stays
+    not-computable rather than guessed. Unset levels are omitted."""
+    trade: dict[str, Any] = {}
+    if action is not None and str(action).strip():
+        trade["action"] = str(action).strip().lower()
+    for key, value in (
+        ("size_pct", size_pct), ("entry", entry), ("stop", stop), ("target", target),
+    ):
+        if value is not None:
+            trade[key] = value
+    return trade

@@ -90,6 +90,8 @@ from app.services.room_grader_contract import (  # noqa: E402
     QuestionAnswer,
     QuestionId,
     RoomTranscript,
+    build_cards_payload,
+    build_proposed_trade,
 )
 
 CIO_AGENT = "portfolio_manager"
@@ -336,12 +338,13 @@ def proposed_trade(arm: dict, risk: int, cap_override: float | None) -> dict:
     from app.trading_math.sizing import resolved_single_name_cap_pct
 
     base = (arm.get("verdict") or {}).get("reference_price") or arm.get("spot_price") or 100.0
-    return {
-        "size_pct": resolved_single_name_cap_pct(risk, cap_override),
-        "entry": round(base, 2),
-        "stop": round(base * 0.94, 2),
-        "target": round(base * 1.13, 2),
-    }
+    return build_proposed_trade(
+        action=None,
+        size_pct=resolved_single_name_cap_pct(risk, cap_override),
+        entry=round(base, 2),
+        stop=round(base * 0.94, 2),
+        target=round(base * 1.13, 2),
+    )
 
 
 # The WP-20 harness hands every Room the same mandate shape (library/runner.py
@@ -464,7 +467,7 @@ def cards_for_room(turns: list[dict], sheet_state: dict | None, tools: tuple | N
         meta["cards"] += len(ch.cards)
     if not channels:
         return None, meta
-    return {"cards_by_desk": channels, "field_state": dict(sheet_state or {})}, meta
+    return build_cards_payload(channels, sheet_state), meta
 
 
 def attach_cards(rooms: dict, arms: list[dict], turns: dict[str, list[dict]], tools: tuple | None = None) -> None:
