@@ -23,11 +23,11 @@ ENVFILE_ARGS=()
 case "$GRADER" in
   onprem)    ALLOW=vllm;;
   jev)       ALLOW=mock;     VLLM=;;
-  deepinfra) ALLOW=vllm_fallback; VLLM=;;
-  *) echo "unknown --grader $GRADER (onprem|jev|deepinfra)"; exit 1;;
+  deepinfra|cheapllm) ALLOW=vllm_fallback; VLLM=;;
+  *) echo "unknown --grader $GRADER (onprem|jev|deepinfra|cheapllm)"; exit 1;;
 esac
 if [ "$GRADER" != onprem ]; then
-  case "$GRADER" in jev) KEYNAME=JEV_API_KEY;; *) KEYNAME=DEEPINFRA_API_KEY;; esac
+  case "$GRADER" in jev) KEYNAME=JEV_API_KEY;; cheapllm) KEYNAME=CHEAPLLM_API_KEY;; *) KEYNAME=DEEPINFRA_API_KEY;; esac
   [ -f "$W/bakeoff.env" ] || { echo "bakeoff.env missing $KEYNAME (file not found: $W/bakeoff.env, lines JEV_API_KEY=... and DEEPINFRA_API_KEY=...)"; exit 1; }
   ENVFILE_ARGS=(--env-from-file "$W/bakeoff.env")
 fi

@@ -91,7 +91,7 @@ _ARM_REP = re.compile(r"-rep(\d+)$")
 ROOM_TIMEOUT_S = 600.0
 
 # ── Hosted graders (Jev, DeepInfra): pins, prices, keys, spend cap ──────────
-GRADERS = ("onprem", "jev", "deepinfra")
+GRADERS = ("onprem", "jev", "deepinfra", "cheapllm")
 # Pinned, never "latest" (WP-23 policy key). Source: S12 plan §3 item 1 and the October
 # corpus (`jev_deep_dive_2026-10-14.md`), which logged `jev-1.13.0`; the CR257 pilot script
 # sent "jev-latest", which is exactly what production must not do.
@@ -103,6 +103,11 @@ JEV_USD_PER_M_INPUT = 0.042
 # Beta's primary model (S11 plan section 3b ruling; `infra/beta.env.example` VLLM_MODEL).
 DEEPINFRA_DEFAULT_MODEL = "deepseek-ai/DeepSeek-V4-Flash"
 DEEPINFRA_BASE_URL = "https://api.deepinfra.com/v1/openai"
+# CheapLLM (Saiful, 2026-11-22): OpenAI-compatible; its /v1/models listed exactly one model on
+# 2026-11-22. No price is published here, so its runs are capped by --max-calls.
+CHEAPLLM_BASE_URL = "https://cheapllm.shop/v1"
+CHEAPLLM_DEFAULT_MODEL = "deepseek-v4.1-flash-1017"
+HOSTED_BASE_URL = {"deepinfra": DEEPINFRA_BASE_URL, "cheapllm": CHEAPLLM_BASE_URL}
 # USD per 1M in/out, as `infra/beta.env.example` LLM_PRICES_JSON; a model outside this table
 # is unpriced unless --price-in/--price-out say otherwise (then the cap counts calls).
 DEEPINFRA_PRICES = {
@@ -112,10 +117,10 @@ DEEPINFRA_PRICES = {
 # The gateway's hosted OpenAI-compatible slot (CR272/CR281): configured, not hardcoded.
 HOSTED_SLOT = "vllm_fallback"
 KEY_FILE_NAME = "bakeoff.env"
-KEY_ENV = {"jev": "JEV_API_KEY", "deepinfra": "DEEPINFRA_API_KEY"}
+KEY_ENV = {"jev": "JEV_API_KEY", "deepinfra": "DEEPINFRA_API_KEY", "cheapllm": "CHEAPLLM_API_KEY"}
 DEFAULT_MAX_USD = 5.00
 DEFAULT_MAX_CALLS = 300
-CALLS_PER_ROOM = {"jev": 1, "deepinfra": len(QuestionId)}
+CALLS_PER_ROOM = {"jev": 1, "deepinfra": len(QuestionId), "cheapllm": len(QuestionId)}
 
 
 class BakeoffKeyError(Exception):
@@ -195,13 +200,13 @@ def price_jev(res: GraderResult) -> GraderResult:
 
 
 def configure_hosted_slot(model: str, key: str, prices: tuple[float, float] | None,
-                          settings=None) -> None:
+                          settings=None, base_url: str = DEEPINFRA_BASE_URL) -> None:
     """Point the gateway's hosted slot at DeepInfra and nothing else. Done on the in-process
     `settings` (the key never goes through a command line or a log) before the gateway is
     first built: slot `vllm_fallback`, kind openai, only that slot allowed, no on-prem."""
     if settings is None:
         from app.core.config import settings  # noqa: PLC0415
-    settings.vllm_fallback_base_url = DEEPINFRA_BASE_URL
+    settings.vllm_fallback_base_url = base_url
     settings.vllm_fallback_model = model
     settings.vllm_fallback_kind = "openai"
     settings.vllm_fallback_api_key = key
@@ -245,18 +250,22 @@ def setup_grader(args: argparse.Namespace, env: dict | None = None) -> GraderSet
             "jev_version": version, "price_per_m_input_usd": JEV_USD_PER_M_INPUT,
             "price_source": "jev_v1_pilot.py constant, unverified"})
     model = (args.model or "").strip()
+    if kind == "cheapllm" and model == DEEPINFRA_DEFAULT_MODEL:
+        model = CHEAPLLM_DEFAULT_MODEL
     if not model or model.lower().endswith("latest"):
         raise ValueError("--model must be a pinned model id, never empty or 'latest'")
-    prices = DEEPINFRA_PRICES.get(model)
+    prices = DEEPINFRA_PRICES.get(model) if kind == "deepinfra" else None
     if args.price_in is not None and args.price_out is not None:
         prices = (float(args.price_in), float(args.price_out))
-    configure_hosted_slot(model, key, prices)
+    base_url = HOSTED_BASE_URL[kind]
+    configure_hosted_slot(model, key, prices, base_url=base_url)
+    label = {"deepinfra": "DeepInfra", "cheapllm": "CheapLLM"}[kind]
 
-    def deepinfra(p):
+    def hosted(p):
         from app.services.room_graders.hosted_llm import HostedLLMGrader
-        return HostedLLMGrader(HOSTED_SLOT, version=f"hosted:deepinfra:{model}", phrasing=p)
-    return GraderSetup("deepinfra", f"DeepInfra {model}", deepinfra, guard, {
-        "model": model, "base_url": DEEPINFRA_BASE_URL, "slot": HOSTED_SLOT,
+        return HostedLLMGrader(HOSTED_SLOT, version=f"hosted:{kind}:{model}", phrasing=p)
+    return GraderSetup(kind, f"{label} {model}", hosted, guard, {
+        "model": model, "base_url": base_url, "slot": HOSTED_SLOT,
         "prices_usd_per_m_in_out": list(prices) if prices else None})
 
 
