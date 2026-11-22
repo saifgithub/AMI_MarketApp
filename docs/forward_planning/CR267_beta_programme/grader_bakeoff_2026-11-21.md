@@ -1,6 +1,6 @@
 # CR267 WP-22 grader bake-off (PARTIAL: on-prem grader, arm 1)
 
-**Status:** 1 of 3 graders scored. Jev and the DeepInfra-hosted model need API keys that are not set (keys deferred by Saiful); the code grader needs WP-20 arm 2 (cards on), which is running. Full tables: `grader_bakeoff_onprem_arm1_2026-11-21_tables.md` (from `docs/tools/room_investigation_V2/tools/wp22_score.py report`).
+**Status:** 1 of 3 graders scored. Jev and the DeepInfra-hosted model are runnable (tool built; keys not yet in bakeoff.env, see "Not yet done"); the code grader needs WP-20 arm 2 (cards on), which is running. Full tables: `grader_bakeoff_onprem_arm1_2026-11-21_tables.md` (from `docs/tools/room_investigation_V2/tools/wp22_score.py report`).
 
 **Measured on:** the 300 WP-20 arm-1 Rooms (30 tickers × R1–R5 × 2 reps, cards off), on-prem vLLM, model root `/models/qwen38-flash-next-abliterated-nvfp4` (read from `/v1/models`), temperature 0, question set q1, decision rule r1 with the default policy (unfitted placeholders). The grader saw the 11 desk turns, never the CIO's verdict. Read-only DB access; no `llm_audit` rows written; $0.
 
@@ -59,6 +59,32 @@ Share of Rooms where at least one rephrasing changes the answer (100 grades, 0 e
 
 ## Not yet done
 
-1. Jev and DeepInfra graders: **need keys** (Jev `JEV_API_KEY`; a DeepInfra key for the hosted slot). Spend for the bake-off is approved (2026-11-21); the keys are not set.
-2. Code grader over cards: after WP-20 arm 2.
-3. Recommendation: after all three graders are scored. No recommendation of Jev without noting that vendor terms are still owed.
+1. **Jev and DeepInfra graders: built (WP-22 hosted-graders lane), not yet run. They need `~/cr267_wp20/bakeoff.env` on melehost, which Saiful's team creates (the lane did not).** Spend for the bake-off is approved (2026-11-21).
+   1. Format, two lines, no quotes, no spaces around `=`, mode 600:
+      ```
+      JEV_API_KEY=<Jev key>
+      DEEPINFRA_API_KEY=<DeepInfra key>
+      ```
+   2. The key stays out of the repo, `~/ami_trade/.env` and `infra/alpha.env`. `wp22_run.sh` hands the file to the throwaway container with `docker compose run --env-from-file`; the scorer reads it from the container environment only and, if a key is missing or blank, stops with `bakeoff.env missing JEV_API_KEY` (name only, exit 2) before touching the database. `wp22_run.sh` itself refuses to start a paid grader if the file does not exist.
+   3. Pins, so the run is reproducible: Jev `jev-1.13.0` (`--jev-version`; "latest" is refused; source: S12 plan section 3 item 1 and the October corpus). DeepInfra `deepseek-ai/DeepSeek-V4-Flash` (`--model`; Beta's primary, S11 plan section 3b; priced $0.09 in / $0.18 out per 1M tokens as in `infra/beta.env.example`). The grader runs on the gateway's hosted slot (`vllm_fallback`, kind openai, `https://api.deepinfra.com/v1/openai`) configured in-process by the scorer; `LLM_PROVIDER_ALLOWLIST` is `vllm_fallback` for DeepInfra, `mock` for Jev (no gateway provider), Anthropic blanked in both.
+   4. Spend cap, enforced in code per Room before it starts: `--max-usd` (default 5.00) against each result's `cost_usd`; for Jev that is `usage.input_tokens` x $0.042 per 1M (constant from `jev_v1_pilot.py`, unverified against an invoice, outputs unbilled). A result with no cost (no usage returned, or a model with no price) counts toward `--max-calls` (default 300) instead. When a cap is hit the run stops cleanly, finished Rooms stay in the JSONL, `<out>.meta.json` records `spend.cap_hit`, `usd_spent`, `rooms_graded` and `rooms_skipped_by_cap`, and the same command resumes. With `--concurrency N` a run can overshoot by up to N-1 Rooms.
+   5. Unknowns the pilot answers: whether DeepInfra returns token probabilities together with `response_format` json_schema (if not, the grader falls back to 1-5 scores and says so in `extra.logprobs`), whether `usage` is returned on the stream (cost would then be unpriced and the call cap applies), and whether DeepSeek-V4-Flash needs thinking switched off for the grader (no extra body is set).
+2. **10-Room pilot per grader** (run on melehost; each is small at any plausible price; read the meta before going on):
+   ```
+   ssh melehost 'mkdir -p ~/cr267_wp20/out/wp22_jev ~/cr267_wp20/out/wp22_deepinfra'
+   ssh melehost '~/cr267_wp20/wp22_tool/wp22_run.sh jev_pilot score --grader jev --jev-version jev-1.13.0 --runs /out/arm1/runs_wp20-arm1.jsonl --out /out/wp22_jev/pilot.jsonl --pilot 10 --max-usd 1.00 --max-calls 60'
+   ssh melehost '~/cr267_wp20/wp22_tool/wp22_run.sh di_pilot score --grader deepinfra --model deepseek-ai/DeepSeek-V4-Flash --runs /out/arm1/runs_wp20-arm1.jsonl --out /out/wp22_deepinfra/pilot.jsonl --pilot 10 --max-usd 1.00 --max-calls 60'
+   ```
+   Cost per Room and the go/no-go for the full run (reads only the meta file, no keys; use `wp22_deepinfra` for the other grader):
+   ```
+   ssh melehost "python3 -c \"import json,sys; s=json.load(open(sys.argv[1]))['spend']; n=s['rooms_priced']; print(s); print('usd/room', s['usd_spent']/n if n else 'UNPRICED: use calls', 'x300 =', 300*s['usd_spent']/n if n else '')\" ~/cr267_wp20/out/wp22_jev/pilot.meta.json"
+   ```
+   Also check `errors` in the meta before spending more.
+3. **Full 300 Rooms per grader, only if pilot USD per Room x 300 is under the cap (5.00; if a grader is unpriced, only if pilot calls per Room x 300 is under `--max-calls`).** Background, resumable; stop only your own container (`docker stop wp22_<name>`):
+   ```
+   ssh melehost 'nohup ~/cr267_wp20/wp22_tool/wp22_run.sh jev_full score --grader jev --jev-version jev-1.13.0 --runs /out/arm1/runs_wp20-arm1.jsonl --out /out/wp22_jev/scores_arm1.jsonl --max-usd 5.00 --max-calls 300 > ~/cr267_wp20/logs/wp22_jev_full.log 2>&1 &'
+   ssh melehost 'nohup ~/cr267_wp20/wp22_tool/wp22_run.sh di_full score --grader deepinfra --model deepseek-ai/DeepSeek-V4-Flash --runs /out/arm1/runs_wp20-arm1.jsonl --out /out/wp22_deepinfra/scores_arm1.jsonl --max-usd 5.00 --concurrency 4 > ~/cr267_wp20/logs/wp22_di_full.log 2>&1 &'
+   ```
+   If the pilot says 300 Rooms would exceed the cap, do not raise `--max-usd` without Saiful. The wording (20 Rooms x 5 phrasings) and input (140 grades) tests on a hosted grader are separate runs with their own caps (`wording` and `inputs` take the same flags). Tables: `wp22_score.py report --runs ... --scores /out/wp22_<grader>/scores_arm1.jsonl --out ...` (the heading names the grader from the meta file).
+4. Code grader over cards: after WP-20 arm 2.
+5. Recommendation: after all three graders are scored. No recommendation of Jev without noting that vendor terms are still owed.

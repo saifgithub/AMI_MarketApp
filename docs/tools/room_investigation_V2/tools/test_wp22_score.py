@@ -319,5 +319,231 @@ class JudgeTests(unittest.TestCase):
         self.assertEqual(w.judge("ticker_renamed", row(a, APPROVING), row(a, {}, error="x"))[0], "na")
 
 
+# ── Hosted graders: keys, pins, spend cap, on-prem unchanged ────────────────
+
+import asyncio  # noqa: E402
+import contextlib  # noqa: E402
+import dataclasses  # noqa: E402
+import io  # noqa: E402
+import json  # noqa: E402
+import os  # noqa: E402
+import tempfile  # noqa: E402
+from types import SimpleNamespace  # noqa: E402
+from unittest import mock  # noqa: E402
+
+SENTINEL = "sk-test-SENTINEL-do-not-leak"
+
+
+def run_main(argv, env):
+    """main() with a clean key environment; returns (rc, stdout, stderr)."""
+    clean = {k: v for k, v in os.environ.items()
+             if k not in ("JEV_API_KEY", "DEEPINFRA_API_KEY", "WP22_DSN")}
+    out, err = io.StringIO(), io.StringIO()
+    with mock.patch.dict(os.environ, {**clean, **env}, clear=True), \
+            contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+        rc = w.main(argv)
+    return rc, out.getvalue(), err.getvalue()
+
+
+def score_argv(*extra):
+    return ["score", "--runs", "/nonexistent.jsonl", "--out", "/nonexistent/o.jsonl", *extra]
+
+
+class KeyGuardTests(unittest.TestCase):
+    def test_missing_jev_key_names_the_key_only_and_exits_nonzero(self):
+        rc, out, err = run_main(score_argv("--grader", "jev"), {"DEEPINFRA_API_KEY": SENTINEL})
+        self.assertEqual(rc, 2)
+        self.assertEqual(err.strip(), "bakeoff.env missing JEV_API_KEY")
+        self.assertNotIn(SENTINEL, out + err)
+
+    def test_missing_deepinfra_key_names_the_key_only_and_exits_nonzero(self):
+        rc, out, err = run_main(score_argv("--grader", "deepinfra"), {"JEV_API_KEY": SENTINEL})
+        self.assertEqual(rc, 2)
+        self.assertEqual(err.strip(), "bakeoff.env missing DEEPINFRA_API_KEY")
+        self.assertNotIn(SENTINEL, out + err)
+
+    def test_blank_key_counts_as_missing(self):
+        rc, _out, err = run_main(score_argv("--grader", "jev"), {"JEV_API_KEY": "   "})
+        self.assertEqual(rc, 2)
+        self.assertIn("bakeoff.env missing JEV_API_KEY", err)
+
+    def test_key_check_runs_before_the_database(self):
+        rc, _out, err = run_main(score_argv("--grader", "jev"), {})
+        self.assertEqual((rc, "WP22_DSN" in err), (2, False))
+
+    def test_same_guard_on_wording_and_inputs(self):
+        for sub in ("wording", "inputs"):
+            rc, _o, err = run_main([sub, "--runs", "x", "--out", "y", "--grader", "jev"], {})
+            self.assertEqual((rc, err.strip()), (2, "bakeoff.env missing JEV_API_KEY"), sub)
+
+    def test_inputs_dry_needs_no_key(self):
+        _rc, _o, err = run_main(["inputs", "--runs", "x", "--out", "y", "--grader", "jev", "--dry"],
+                                {})
+        self.assertNotIn("bakeoff.env missing", err)
+
+    def test_unknown_grader_is_refused_by_argparse(self):
+        with self.assertRaises(SystemExit), contextlib.redirect_stderr(io.StringIO()):
+            run_main(score_argv("--grader", "gpt"), {})
+
+
+class PinTests(unittest.TestCase):
+    def test_jev_refuses_latest_in_any_spelling(self):
+        for v in ("latest", "jev-latest", "JEV-LATEST", "", "  "):
+            rc, out, err = run_main(score_argv("--grader", "jev", "--jev-version", v),
+                                    {"JEV_API_KEY": SENTINEL})
+            self.assertEqual(rc, 2, v)
+            self.assertIn("pinned", err, v)
+            self.assertNotIn(SENTINEL, out + err)
+
+    def test_jev_default_is_the_pinned_october_version(self):
+        self.assertEqual(w.JEV_DEFAULT_VERSION, "jev-1.13.0")
+        args = SimpleNamespace(grader="jev", jev_version=w.JEV_DEFAULT_VERSION, model=None,
+                               max_usd=5.0, max_calls=300, price_in=None, price_out=None,
+                               slot="vllm")
+        setup = w.setup_grader(args, {"JEV_API_KEY": SENTINEL})
+        g = setup.factory(None)._inner
+        self.assertEqual((g.name, g.version), ("jev", "jev-1.13.0"))
+        self.assertNotIn(SENTINEL, json.dumps(setup.describe))
+
+    def test_deepinfra_model_must_be_pinned(self):
+        rc, _o, err = run_main(score_argv("--grader", "deepinfra", "--model", "x/latest"),
+                               {"DEEPINFRA_API_KEY": SENTINEL})
+        self.assertEqual(rc, 2)
+        self.assertIn("pinned", err)
+
+    def test_hosted_slot_points_only_at_deepinfra_with_the_key_in_process(self):
+        cfg = SimpleNamespace()
+        w.configure_hosted_slot("deepseek-ai/DeepSeek-V4-Flash", SENTINEL, (0.09, 0.18), cfg)
+        self.assertEqual(cfg.vllm_fallback_base_url, w.DEEPINFRA_BASE_URL)
+        self.assertEqual(cfg.vllm_fallback_model, "deepseek-ai/DeepSeek-V4-Flash")
+        self.assertEqual(cfg.vllm_fallback_kind, "openai")
+        self.assertEqual(cfg.vllm_fallback_api_key, SENTINEL)
+        self.assertEqual(cfg.vllm_base_url, "")
+        self.assertEqual(cfg.llm_provider_allowlist, ["vllm_fallback"])
+        self.assertEqual(json.loads(cfg.llm_prices_json),
+                         {"deepseek-ai/DeepSeek-V4-Flash": {"in": 0.09, "out": 0.18}})
+        w.configure_hosted_slot("other/model", SENTINEL, None, cfg)
+        self.assertEqual(cfg.llm_prices_json, "{}")
+
+
+class SpendCapTests(unittest.TestCase):
+    ROOM = {"id": "rid", "transcript": [{"agent_id": "bull_researcher", "content": "b"}]}
+
+    def run_rooms(self, n, grader_result, guard, concurrency=1):
+        arms = [arm(f"T{i}", 3, 1) for i in range(n)]
+        rooms = {a["arm_key"]: self.ROOM for a in arms}
+        calls = []
+
+        class Fake:
+            async def agrade(self, tr):
+                calls.append(tr.ticker)
+                return grader_result()
+
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "s.jsonl"
+            errors = asyncio.run(w.run_scoring(
+                arms, rooms, out, make_grader=lambda p: Fake(), phrasings=[None],
+                concurrency=concurrency, model_root="m", guard=guard, log=lambda *_: None))
+            rows = w.load_jsonl(out) if out.exists() else []
+        return errors, calls, rows
+
+    def priced(self, usd):
+        return lambda: dataclasses.replace(result({}), cost_usd=usd)
+
+    def test_usd_cap_stops_cleanly_and_records_it(self):
+        guard = w.SpendGuard(max_usd=1.0, max_calls=300, fallback_calls=6)
+        errors, calls, rows = self.run_rooms(10, self.priced(0.4), guard)
+        self.assertEqual(len(calls), 3)  # 0.4 x 3 = 1.2 >= 1.0: no 4th Room starts
+        self.assertEqual(len(rows), 3)
+        self.assertEqual(errors, 0)
+        s = guard.summary()
+        self.assertEqual((s["cap_hit"], s["rooms_graded"], s["rooms_skipped_by_cap"]),
+                         ("max_usd", 3, 7))
+        self.assertAlmostEqual(s["usd_spent"], 1.2)
+
+    def test_unpriced_results_are_capped_by_call_count(self):
+        guard = w.SpendGuard(max_usd=5.0, max_calls=12, fallback_calls=6)
+        _e, calls, _r = self.run_rooms(10, lambda: result({}), guard)  # no cost, calls=6 each
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(guard.summary()["cap_hit"], "max_calls")
+        self.assertEqual(guard.summary()["unpriced_calls"], 12)
+
+    def test_priced_results_do_not_spend_the_call_budget(self):
+        guard = w.SpendGuard(max_usd=100.0, max_calls=1, fallback_calls=6)
+        _e, calls, _r = self.run_rooms(5, self.priced(0.01), guard)
+        self.assertEqual(len(calls), 5)
+        self.assertIsNone(guard.summary()["cap_hit"])
+
+    def test_cap_overshoot_is_bounded_by_concurrency(self):
+        guard = w.SpendGuard(max_usd=0.5, max_calls=300, fallback_calls=6)
+        _e, calls, _r = self.run_rooms(20, self.priced(0.5), guard, concurrency=3)
+        self.assertLessEqual(len(calls), 3)
+
+    def test_no_guard_means_no_cap_the_onprem_path(self):
+        _e, calls, rows = self.run_rooms(7, lambda: result({}), None)
+        self.assertEqual((len(calls), len(rows)), (7, 7))
+
+    def test_capped_run_resumes_where_it_stopped(self):
+        arms = [arm(f"T{i}", 3, 1) for i in range(4)]
+        rooms = {a["arm_key"]: self.ROOM for a in arms}
+
+        class Fake:
+            async def agrade(self, tr):
+                return dataclasses.replace(result({}), cost_usd=1.0)
+
+        with tempfile.TemporaryDirectory() as d:
+            out = Path(d) / "s.jsonl"
+            for cap in (2.0, 100.0):
+                asyncio.run(w.run_scoring(
+                    arms, rooms, out, make_grader=lambda p: Fake(), phrasings=[None],
+                    concurrency=1, model_root="m",
+                    guard=w.SpendGuard(cap, 300, 6), log=lambda *_: None))
+            keys = [r["arm_key"] for r in w.load_jsonl(out)]
+        self.assertEqual(sorted(keys), sorted(a["arm_key"] for a in arms))
+
+
+class JevPricingTests(unittest.TestCase):
+    def test_cost_comes_from_input_tokens_at_the_documented_price(self):
+        r = dataclasses.replace(result({}), extra={"usage": {"input_tokens": 1_000_000}})
+        self.assertAlmostEqual(w.price_jev(r).cost_usd, w.JEV_USD_PER_M_INPUT)
+
+    def test_no_usage_stays_unpriced_so_the_call_cap_applies(self):
+        r = dataclasses.replace(result({}), extra={})
+        self.assertIsNone(w.price_jev(r).cost_usd)
+        g = w.SpendGuard(5.0, 300, 1)
+        g.record(w.price_jev(r))
+        self.assertEqual(g.unpriced_calls, 1)
+
+    def test_failed_result_is_not_priced(self):
+        r = dataclasses.replace(result({}, error="boom"), extra={"usage": {"input_tokens": 9}})
+        self.assertIsNone(w.price_jev(r).cost_usd)
+
+
+class OnPremUnchangedTests(unittest.TestCase):
+    def test_default_grader_is_onprem_with_no_guard_and_no_key_needed(self):
+        args = SimpleNamespace(grader="onprem", slot="vllm")
+        self.assertEqual(w._grader_preamble(args), (None, 0))
+        setup = w.setup_grader(args)
+        self.assertEqual((setup.guard, setup.describe), (None, {}))
+
+    def test_onprem_still_refuses_any_slot_but_vllm(self):
+        rc, _o, err = run_main(score_argv("--slot", "vllm_fallback"), {"WP22_DSN": "x"})
+        self.assertEqual(rc, 2)
+        self.assertIn("on-prem vLLM slot only", err)
+
+    def test_onprem_still_needs_the_dsn_and_no_key(self):
+        rc, _o, err = run_main(score_argv(), {})
+        self.assertEqual((rc, err.strip()), (2, "WP22_DSN is not set"))
+
+    def test_parser_defaults(self):
+        with mock.patch.object(w, "cmd_run", lambda a, wording: a):
+            a = w.main(score_argv())
+        self.assertEqual((a.grader, a.slot, a.max_usd, a.max_calls),
+                         ("onprem", "vllm", 5.0, 300))
+
+    def test_cap_meta_empty_for_onprem(self):
+        self.assertEqual(w._cap_meta(None), {})
+
+
 if __name__ == "__main__":
     unittest.main()

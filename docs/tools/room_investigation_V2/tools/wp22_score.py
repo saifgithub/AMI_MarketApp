@@ -26,13 +26,25 @@ Modes
            strengthened, turns reordered, ticker renamed) -> JSONL (resumable).
   report   markdown tables from the JSONL files; needs no DB and no network.
 
+Graders (--grader). `onprem` (default) is the vLLM slot, free, unchanged. `jev` and
+`deepinfra` spend money: their keys (JEV_API_KEY, DEEPINFRA_API_KEY) come only from the
+container environment, put there by `wp22_run.sh` via `--env-from-file ~/cr267_wp20/bakeoff.env`;
+a missing key stops the run naming the key, never its value. Jev is pinned (--jev-version,
+default jev-1.13.0, "latest" refused). DeepInfra runs on the gateway's hosted slot
+(`vllm_fallback`, kind openai) with --model pinned. --max-usd (default 5.00) is enforced from
+each result's cost_usd; a result with no cost (unpriced) counts toward --max-calls (default
+300) instead. The run stops cleanly when a cap is hit; `<out>.meta.json` records spend and
+the cap; rerun resumes.
+
 Run on melehost in a throwaway container of the deployed image (see
 wp22_run.sh beside this file): WP22_DSN is the read-only Postgres DSN,
 DATABASE_URL is pointed at a scratch sqlite so no app code can reach Alpha's DB.
 
 Usage
   wp22_score.py score  --runs runs_wp20-arm1.jsonl --out scores.jsonl \
-      [--pilot 10 | --limit N] [--concurrency 1] [--slot vllm]
+      [--pilot 10 | --limit N] [--concurrency 1] [--slot vllm] \
+      [--grader onprem|jev|deepinfra] [--jev-version jev-1.13.0] [--model <deepinfra id>] \
+      [--max-usd 5.00] [--max-calls 300]
   wp22_score.py wording --runs ... --out wording.jsonl [--sample 20]
   wp22_score.py report --runs runs_wp20-arm1.jsonl --scores scores.jsonl \
       [--wording wording.jsonl] [--inputs inputs.jsonl] --out report.md
@@ -77,6 +89,175 @@ QIDS = [q.value for q in QuestionId]
 PHRASINGS = (0, 1, 2, 3, 4)
 _ARM_REP = re.compile(r"-rep(\d+)$")
 ROOM_TIMEOUT_S = 600.0
+
+# ── Hosted graders (Jev, DeepInfra): pins, prices, keys, spend cap ──────────
+GRADERS = ("onprem", "jev", "deepinfra")
+# Pinned, never "latest" (WP-23 policy key). Source: S12 plan §3 item 1 and the October
+# corpus (`jev_deep_dive_2026-10-14.md`), which logged `jev-1.13.0`; the CR257 pilot script
+# sent "jev-latest", which is exactly what production must not do.
+JEV_DEFAULT_VERSION = "jev-1.13.0"
+# USD per 1M INPUT tokens, outputs not billed: the constant `jev_v1_pilot.py` prices its
+# own usage line with (`total_in / 1_000_000 * 0.042`). Unverified against an invoice; when a
+# Jev reply carries no `usage.input_tokens` the cap falls back to --max-calls.
+JEV_USD_PER_M_INPUT = 0.042
+# Beta's primary model (S11 plan section 3b ruling; `infra/beta.env.example` VLLM_MODEL).
+DEEPINFRA_DEFAULT_MODEL = "deepseek-ai/DeepSeek-V4-Flash"
+DEEPINFRA_BASE_URL = "https://api.deepinfra.com/v1/openai"
+# USD per 1M in/out, as `infra/beta.env.example` LLM_PRICES_JSON; a model outside this table
+# is unpriced unless --price-in/--price-out say otherwise (then the cap counts calls).
+DEEPINFRA_PRICES = {
+    "deepseek-ai/DeepSeek-V4-Flash": (0.09, 0.18),
+    "inclusionAI/Ling-3.0-flash": (0.06, 0.18),
+}
+# The gateway's hosted OpenAI-compatible slot (CR272/CR281): configured, not hardcoded.
+HOSTED_SLOT = "vllm_fallback"
+KEY_FILE_NAME = "bakeoff.env"
+KEY_ENV = {"jev": "JEV_API_KEY", "deepinfra": "DEEPINFRA_API_KEY"}
+DEFAULT_MAX_USD = 5.00
+DEFAULT_MAX_CALLS = 300
+CALLS_PER_ROOM = {"jev": 1, "deepinfra": len(QuestionId)}
+
+
+class BakeoffKeyError(Exception):
+    """A key the chosen grader needs is not in the environment. Names only, never values."""
+
+
+def require_key(grader: str, env: dict | None = None) -> str:
+    """The grader's key from the environment (put there by `--env-from-file bakeoff.env`).
+    Raises with the key NAME only; the value is never printed or logged by this tool."""
+    name = KEY_ENV[grader]
+    value = ((env if env is not None else os.environ).get(name) or "").strip()
+    if not value:
+        raise BakeoffKeyError(f"{KEY_FILE_NAME} missing {name}")
+    return value
+
+
+@dataclasses.dataclass
+class SpendGuard:
+    """Hard stop for the paid graders. USD is summed from each result's `cost_usd`; calls
+    are counted only for results with no cost (unpriced), so a priced run is capped by
+    money and an unpriced one by call count. Checked before each Room starts, so with
+    concurrency N a run can overshoot by at most N-1 Rooms."""
+    max_usd: float
+    max_calls: int
+    fallback_calls: int
+    usd: float = 0.0
+    graded: int = 0
+    priced: int = 0
+    unpriced_calls: int = 0
+    skipped: int = 0
+    hit: str | None = None
+
+    def record(self, res: GraderResult) -> None:
+        self.graded += 1
+        if res.cost_usd is not None:
+            self.priced += 1
+            self.usd += res.cost_usd
+        else:
+            self.unpriced_calls += int((res.extra or {}).get("calls") or self.fallback_calls)
+
+    def exceeded(self) -> str | None:
+        if self.usd >= self.max_usd:
+            self.hit = self.hit or "max_usd"
+        elif self.unpriced_calls >= self.max_calls:
+            self.hit = self.hit or "max_calls"
+        return self.hit
+
+    def summary(self) -> dict:
+        return {
+            "max_usd": self.max_usd, "max_calls": self.max_calls, "usd_spent": round(self.usd, 6),
+            "rooms_graded": self.graded, "rooms_priced": self.priced,
+            "unpriced_calls": self.unpriced_calls, "rooms_skipped_by_cap": self.skipped,
+            "cap_hit": self.hit,
+            "cap_basis": "usd from cost_usd where priced; --max-calls counts unpriced calls only",
+        }
+
+
+class JevAsync:
+    """JevGrader behind the same `agrade` the hosted grader has: the blocking HTTP call runs
+    in a thread, and the cost is filled from `usage.input_tokens` x JEV_USD_PER_M_INPUT."""
+    def __init__(self, inner) -> None:
+        self._inner = inner
+
+    async def agrade(self, transcript: RoomTranscript) -> GraderResult:
+        res = await asyncio.to_thread(self._inner.grade, transcript)
+        return price_jev(res)
+
+
+def price_jev(res: GraderResult) -> GraderResult:
+    if res.cost_usd is not None or res.error:
+        return res
+    tokens = (res.extra or {}).get("usage") or {}
+    tokens = tokens.get("input_tokens") if isinstance(tokens, dict) else None
+    if isinstance(tokens, bool) or not isinstance(tokens, (int, float)):
+        return res
+    return dataclasses.replace(res, cost_usd=tokens * JEV_USD_PER_M_INPUT / 1_000_000)
+
+
+def configure_hosted_slot(model: str, key: str, prices: tuple[float, float] | None,
+                          settings=None) -> None:
+    """Point the gateway's hosted slot at DeepInfra and nothing else. Done on the in-process
+    `settings` (the key never goes through a command line or a log) before the gateway is
+    first built: slot `vllm_fallback`, kind openai, only that slot allowed, no on-prem."""
+    if settings is None:
+        from app.core.config import settings  # noqa: PLC0415
+    settings.vllm_fallback_base_url = DEEPINFRA_BASE_URL
+    settings.vllm_fallback_model = model
+    settings.vllm_fallback_kind = "openai"
+    settings.vllm_fallback_api_key = key
+    settings.vllm_fallback_extra_body_json = ""
+    settings.vllm_base_url = ""
+    settings.llm_provider_allowlist = [HOSTED_SLOT]
+    settings.llm_prices_json = json.dumps(
+        {model: {"in": prices[0], "out": prices[1]}} if prices else {})
+
+
+@dataclasses.dataclass
+class GraderSetup:
+    kind: str
+    label: str
+    factory: object
+    guard: SpendGuard | None
+    describe: dict
+
+
+def setup_grader(args: argparse.Namespace, env: dict | None = None) -> GraderSetup:
+    """Validate the grader choice, load its key from the environment, build the factory
+    (phrasing -> grader). Raises BakeoffKeyError / ValueError; the caller prints and exits."""
+    kind = getattr(args, "grader", "onprem")
+    if kind == "onprem":
+        def onprem(p):
+            from app.services.room_graders.hosted_llm import HostedLLMGrader
+            return HostedLLMGrader(args.slot, phrasing=p)
+        return GraderSetup("onprem", "on-prem vLLM", onprem, None, {})
+    guard = SpendGuard(float(args.max_usd), int(args.max_calls), CALLS_PER_ROOM[kind])
+    if guard.max_usd <= 0 or guard.max_calls <= 0:
+        raise ValueError("--max-usd and --max-calls must be positive")
+    key = require_key(kind, env)
+    if kind == "jev":
+        version = (args.jev_version or "").strip()
+        from app.services.room_graders.jev import JevGrader
+        JevGrader(version)  # refuses empty / "latest" before any call
+
+        def jev(p):
+            return JevAsync(JevGrader(version, api_key=key, phrasing=p))
+        return GraderSetup("jev", f"Jev {version}", jev, guard, {
+            "jev_version": version, "price_per_m_input_usd": JEV_USD_PER_M_INPUT,
+            "price_source": "jev_v1_pilot.py constant, unverified"})
+    model = (args.model or "").strip()
+    if not model or model.lower().endswith("latest"):
+        raise ValueError("--model must be a pinned model id, never empty or 'latest'")
+    prices = DEEPINFRA_PRICES.get(model)
+    if args.price_in is not None and args.price_out is not None:
+        prices = (float(args.price_in), float(args.price_out))
+    configure_hosted_slot(model, key, prices)
+
+    def deepinfra(p):
+        from app.services.room_graders.hosted_llm import HostedLLMGrader
+        return HostedLLMGrader(HOSTED_SLOT, version=f"hosted:deepinfra:{model}", phrasing=p)
+    return GraderSetup("deepinfra", f"DeepInfra {model}", deepinfra, guard, {
+        "model": model, "base_url": DEEPINFRA_BASE_URL, "slot": HOSTED_SLOT,
+        "prices_usd_per_m_in_out": list(prices) if prices else None})
 
 
 # ── Identity, selection ─────────────────────────────────────────────────────
@@ -514,11 +695,9 @@ def _install_no_audit_write() -> None:
 
 
 async def run_scoring(arms: list[dict], rooms: dict, out: Path, *,
-                      slot: str, phrasings: list[int | None], concurrency: int,
-                      model_root: str | None, log=print) -> int:
-    from app.services.room_graders.hosted_llm import HostedLLMGrader
-
-    graders = {p: HostedLLMGrader(slot, phrasing=p) for p in phrasings}
+                      make_grader, phrasings: list[int | None], concurrency: int,
+                      model_root: str | None, guard: SpendGuard | None = None, log=print) -> int:
+    graders = {p: make_grader(p) for p in phrasings}
     done = _done_keys(out)
     sem = asyncio.Semaphore(max(1, concurrency))
     write_lock = asyncio.Lock()
@@ -535,9 +714,15 @@ async def run_scoring(arms: list[dict], rooms: dict, out: Path, *,
         else:
             tr = build_transcript(arm, room)
             async with sem:
+                if guard is not None and guard.exceeded():
+                    guard.skipped += 1
+                    log(f"[{i + 1}/{len(todo)}] {arm['arm_key']} p={p} SKIPPED: spend cap hit ({guard.hit})")
+                    return
                 started = time.perf_counter()
                 try:
                     res = await asyncio.wait_for(graders[p].agrade(tr), ROOM_TIMEOUT_S)
+                    if guard is not None:
+                        guard.record(res)
                     row = result_to_row(arm, room["id"], res, phrasing=p, model_root=model_root)
                 except Exception as exc:  # noqa: BLE001 — one Room never stops the run
                     row = result_to_row(
@@ -557,12 +742,46 @@ async def run_scoring(arms: list[dict], rooms: dict, out: Path, *,
     return errors
 
 
+def _grader_preamble(args: argparse.Namespace) -> tuple[GraderSetup | None, int]:
+    """Key and pin checks for the paid graders. They run BEFORE anything touches the DB so a
+    missing key fails at once, naming the key and never its value. On-prem: unchanged."""
+    if getattr(args, "grader", "onprem") == "onprem":
+        return None, 0
+    try:
+        return setup_grader(args), 0
+    except (BakeoffKeyError, ValueError) as exc:
+        print(str(exc), file=sys.stderr)
+        return None, 2
+
+
+def _model_root(args: argparse.Namespace, setup: GraderSetup | None, base_url: str) -> str:
+    if setup is not None:
+        return setup.label
+    return "dry-run" if getattr(args, "grader", "onprem") != "onprem" else vllm_model_root(base_url)
+
+
+def _cap_meta(setup: GraderSetup | None) -> dict:
+    if setup is None:
+        return {}
+    return {"grader": setup.kind, "grader_label": setup.label, **setup.describe,
+            "spend": setup.guard.summary()}
+
+
+def _report_cap(setup: GraderSetup | None) -> None:
+    if setup is not None and setup.guard.hit:
+        print(f"STOPPED BY SPEND CAP ({setup.guard.hit}): {setup.guard.skipped} Rooms not graded; "
+              "rerun with a higher cap to resume (finished Rooms are skipped).", file=sys.stderr)
+
+
 def cmd_run(args: argparse.Namespace, *, wording: bool) -> int:
+    setup, rc = _grader_preamble(args)
+    if rc:
+        return rc
     dsn = os.environ.get("WP22_DSN")
     if not dsn:
         print("WP22_DSN is not set", file=sys.stderr)
         return 2
-    if args.slot != "vllm":
+    if setup is None and args.slot != "vllm":
         print("this lane grades on the on-prem vLLM slot only (--slot vllm)", file=sys.stderr)
         return 2
     arms = load_arms(Path(args.runs))
@@ -573,8 +792,8 @@ def cmd_run(args: argparse.Namespace, *, wording: bool) -> int:
     elif args.limit:
         arms = sorted(arms, key=lambda a: (int(a["risk_score"]), a["ticker"], a["arm_key"]))[: args.limit]
     base_url = os.environ.get("VLLM_BASE_URL", "http://192.168.20.74:8000")
-    root0 = vllm_model_root(base_url)
-    print(f"on-prem vLLM {base_url} model root: {root0}")
+    root0 = _model_root(args, setup, base_url)
+    print(f"{'on-prem vLLM ' + base_url if setup is None else 'hosted grader'} model root: {root0}")
     _install_no_audit_write()
     rooms = fetch_rooms(dsn, arms)
     print(f"rooms loaded: {len(rooms)}/{len(arms)}")
@@ -582,29 +801,37 @@ def cmd_run(args: argparse.Namespace, *, wording: bool) -> int:
     out.parent.mkdir(parents=True, exist_ok=True)
     phrasings: list[int | None] = list(PHRASINGS) if wording else [None]
     t0 = time.time()
+    if setup is None:
+        def make_grader(p):
+            from app.services.room_graders.hosted_llm import HostedLLMGrader
+            return HostedLLMGrader(args.slot, phrasing=p)
+        guard = None
+    else:
+        make_grader, guard = setup.factory, setup.guard
     errors = asyncio.run(run_scoring(
-        arms, rooms, out, slot=args.slot, phrasings=phrasings,
-        concurrency=args.concurrency, model_root=root0))
-    root1 = vllm_model_root(base_url)
+        arms, rooms, out, make_grader=make_grader, phrasings=phrasings,
+        concurrency=args.concurrency, model_root=root0, guard=guard))
+    root1 = _model_root(args, setup, base_url)
     meta = {
         "started_unix": t0, "elapsed_s": round(time.time() - t0, 1), "rooms": len(arms),
         "errors": errors, "slot": args.slot, "model_root_start": root0, "model_root_end": root1,
         "question_set_version": QUESTION_SET_VERSION,
         "git_sha": os.environ.get("GIT_SHA"), "alpha_tag": os.environ.get("ALPHA_TAG"),
         "concurrency": args.concurrency,
+        **_cap_meta(setup),
     }
     out.with_suffix(".meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
     print(json.dumps(meta))
+    _report_cap(setup)
     if root0 != root1:
         print("WARNING: served model root changed during the run", file=sys.stderr)
     return 0
 
 
 async def run_inputs(arms: list[dict], rooms: dict, names: dict[str, str], out: Path, *,
-                     slot: str, concurrency: int, model_root: str | None, log=print) -> int:
-    from app.services.room_graders.hosted_llm import HostedLLMGrader
-
-    grader = HostedLLMGrader(slot, phrasing=None)
+                     make_grader, concurrency: int, model_root: str | None,
+                     guard: SpendGuard | None = None, log=print) -> int:
+    grader = make_grader(None)
     done = {(r["arm_key"], r.get("perturbation")) for r in load_jsonl(out) if not r.get("error")} \
         if out.exists() else set()
     sem = asyncio.Semaphore(max(1, concurrency))
@@ -629,9 +856,15 @@ async def run_inputs(arms: list[dict], rooms: dict, names: dict[str, str], out: 
             else:
                 tr, meta = built
                 async with sem:
+                    if guard is not None and guard.exceeded():
+                        guard.skipped += 1
+                        log(f"[{i + 1}/{len(todo)}] {arm['arm_key']} {kind} SKIPPED: spend cap hit ({guard.hit})")
+                        return
                     started = time.perf_counter()
                     try:
                         res = await asyncio.wait_for(grader.agrade(tr), ROOM_TIMEOUT_S)
+                        if guard is not None:
+                            guard.record(res)
                         row = result_to_row(arm, room["id"], res, phrasing=None, model_root=model_root)
                     except Exception as exc:  # noqa: BLE001 — one Room never stops the run
                         row = result_to_row(
@@ -655,17 +888,20 @@ async def run_inputs(arms: list[dict], rooms: dict, names: dict[str, str], out: 
 
 
 def cmd_inputs(args: argparse.Namespace) -> int:
+    setup, rc = (None, 0) if args.dry else _grader_preamble(args)
+    if rc:
+        return rc
     dsn = os.environ.get("WP22_DSN")
     if not dsn:
         print("WP22_DSN is not set", file=sys.stderr)
         return 2
-    if args.slot != "vllm":
+    if setup is None and args.slot != "vllm":
         print("this lane grades on the on-prem vLLM slot only (--slot vllm)", file=sys.stderr)
         return 2
     arms = stride_sample(load_arms(Path(args.runs)), args.sample)
     base_url = os.environ.get("VLLM_BASE_URL", "http://192.168.20.74:8000")
-    root0 = vllm_model_root(base_url)
-    print(f"on-prem vLLM {base_url} model root: {root0}")
+    root0 = _model_root(args, setup, base_url)
+    print(f"{'on-prem vLLM ' + base_url if setup is None else 'hosted grader'} model root: {root0}")
     _install_no_audit_write()
     rooms = fetch_rooms(dsn, arms)
     names = fetch_names(dsn, sorted({a["ticker"] for a in arms}))
@@ -687,9 +923,16 @@ def cmd_inputs(args: argparse.Namespace) -> int:
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
-    errors = asyncio.run(run_inputs(arms, rooms, names, out, slot=args.slot,
-                                    concurrency=args.concurrency, model_root=root0))
-    root1 = vllm_model_root(base_url)
+    if setup is None:
+        def make_grader(p):
+            from app.services.room_graders.hosted_llm import HostedLLMGrader
+            return HostedLLMGrader(args.slot, phrasing=p)
+        guard = None
+    else:
+        make_grader, guard = setup.factory, setup.guard
+    errors = asyncio.run(run_inputs(arms, rooms, names, out, make_grader=make_grader,
+                                    concurrency=args.concurrency, model_root=root0, guard=guard))
+    root1 = _model_root(args, setup, base_url)
     meta = {
         "started_unix": t0, "elapsed_s": round(time.time() - t0, 1), "rooms": len(arms),
         "perturbations": list(PERTURBATIONS), "errors": errors, "slot": args.slot,
@@ -697,9 +940,11 @@ def cmd_inputs(args: argparse.Namespace) -> int:
         "question_set_version": QUESTION_SET_VERSION, "names": names,
         "git_sha": os.environ.get("GIT_SHA"), "alpha_tag": os.environ.get("ALPHA_TAG"),
         "concurrency": args.concurrency,
+        **_cap_meta(setup),
     }
     out.with_suffix(".meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
     print(json.dumps(meta))
+    _report_cap(setup)
     if root0 != root1:
         print("WARNING: served model root changed during the run", file=sys.stderr)
     return 0
@@ -901,7 +1146,7 @@ def build_report(scores: list[dict], wording: list[dict] | None, meta: dict | No
                  inputs: list[dict] | None = None) -> str:
     ok = [r for r in scores if not r.get("error") and r["answers"]]
     errs = [r for r in scores if r.get("error") or not r["answers"]]
-    L: list[str] = ["# WP-22 step 3 — grader scoring (hosted model, on-prem)", ""]
+    L: list[str] = [f"# WP-22 step 3 — grader scoring ({(meta or {}).get('grader_label') or 'hosted model, on-prem'})", ""]
     if meta:
         L += [f"Model root: `{meta.get('model_root_start')}` (end `{meta.get('model_root_end')}`); "
               f"question set `{meta.get('question_set_version')}`; image `{meta.get('alpha_tag')}` "
@@ -1024,12 +1269,26 @@ def cmd_report(args: argparse.Namespace) -> int:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
+    def grader_args(p) -> None:
+        p.add_argument("--grader", choices=GRADERS, default="onprem",
+                       help="onprem = vLLM slot (default); jev / deepinfra = paid, keys from bakeoff.env")
+        p.add_argument("--jev-version", default=JEV_DEFAULT_VERSION,
+                       help="pinned Jev model id; 'latest' is refused")
+        p.add_argument("--model", default=DEEPINFRA_DEFAULT_MODEL, help="pinned DeepInfra model id")
+        p.add_argument("--price-in", type=float, help="USD per 1M input tokens, for a model not in the table")
+        p.add_argument("--price-out", type=float, help="USD per 1M output tokens, for a model not in the table")
+        p.add_argument("--max-usd", type=float, default=DEFAULT_MAX_USD,
+                       help="stop cleanly once priced spend reaches this (jev / deepinfra)")
+        p.add_argument("--max-calls", type=int, default=DEFAULT_MAX_CALLS,
+                       help="stop cleanly after this many UNPRICED calls (jev / deepinfra)")
+
     for name in ("score", "wording"):
         p = sub.add_parser(name)
         p.add_argument("--runs", required=True)
         p.add_argument("--out", required=True)
         p.add_argument("--slot", default="vllm", help="gateway provider slot (on-prem vLLM only)")
         p.add_argument("--concurrency", type=int, default=1)
+        grader_args(p)
         if name == "score":
             p.add_argument("--pilot", type=int, default=0, help="N Rooms spread over all risk levels")
             p.add_argument("--limit", type=int, default=0)
@@ -1042,6 +1301,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--concurrency", type=int, default=1)
     p.add_argument("--sample", type=int, default=20)
     p.add_argument("--dry", action="store_true", help="build the perturbations and print stats; no grading")
+    grader_args(p)
     p = sub.add_parser("report")
     p.add_argument("--runs", required=True)
     p.add_argument("--scores", required=True)
