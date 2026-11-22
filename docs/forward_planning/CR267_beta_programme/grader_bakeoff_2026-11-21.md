@@ -1,33 +1,38 @@
-# CR267 WP-22 grader bake-off (3 of 3 LLM graders scored on arm 1; code grader pending arm 2)
+# CR267 WP-22 grader bake-off (3 LLM graders scored on arm 1; code grader scored on arm 2)
 
-**Status:** 1 of 3 graders scored. Jev and the DeepInfra-hosted model are runnable (tool built; keys not yet in bakeoff.env, see "Not yet done"); the code grader needs WP-20 arm 2 (cards on), which is running. Full tables: `grader_bakeoff_onprem_arm1_2026-11-21_tables.md` (from `docs/tools/room_investigation_V2/tools/wp22_score.py report`).
+**Status:** all four graders scored. The on-prem, Jev and DeepInfra graders ran on the 300 WP-20 arm-1 Rooms (cards off); the code grader ran on the 300 arm-2 Rooms (cards on), because it needs the CR266 cards. Full tables: `grader_bakeoff_{onprem_arm1_2026-11-21,jev_arm1_2026-11-22,deepinfra_arm1_2026-11-22,code_arm2_2026-11-22}_tables.md` (from `docs/tools/room_investigation_V2/tools/wp22_score.py report`). Gate S3 (the pick) is Saiful's; the recommendation is below and the code grader does not change it.
 
 **Measured on:** the 300 WP-20 arm-1 Rooms (30 tickers × R1–R5 × 2 reps, cards off), on-prem vLLM, model root `/models/qwen38-flash-next-abliterated-nvfp4` (read from `/v1/models`), temperature 0, question set q1, decision rule r1 with the default policy (unfitted placeholders). The grader saw the 11 desk turns, never the CIO's verdict. Read-only DB access; no `llm_audit` rows written; $0.
 
-## Three-way comparison, 2026-11-22 (same 300 arm-1 Rooms, same q1 questions, rule r1 default policy)
+## Four-way comparison, 2026-11-22
 
-Jev pinned `jev-1.13.0`; DeepInfra `deepseek-ai/DeepSeek-V4-Flash` at temperature 0; on-prem `/models/qwen38-flash-next-abliterated-nvfp4`. Tables: `grader_bakeoff_{onprem_arm1_2026-11-21,jev_arm1_2026-11-22,deepinfra_arm1_2026-11-22}_tables.md`. Input and wording tests are 20 Rooms each (4 tickers × R1–R5), so roughly ±20 points.
+The first three graders were scored on the same 300 arm-1 Rooms (cards off), same q1 questions, rule r1 default policy. **The code grader was scored on the 300 arm-2 Rooms (cards on), a different set of Rooms**: so its columns sit beside "CIO arm 2", the CIO on those same Rooms, and cross-column comparisons carry the draw noise between two sets of Rooms (arm 1 vs arm 2 differ by +9 approvals, within noise; see the baseline file item 7). Code grader runs: **Part A**, the input production would hand it (proposed-trade block with no `action`, so `trade_proposed` is not computable); **Part B**, the same cards with `action` added to the trade block (sensitivity). Jev pinned `jev-1.13.0`; DeepInfra `deepseek-ai/DeepSeek-V4-Flash` at temperature 0; on-prem `/models/qwen38-flash-next-abliterated-nvfp4`. Tables: `grader_bakeoff_{onprem_arm1_2026-11-21,jev_arm1_2026-11-22,deepinfra_arm1_2026-11-22,code_arm2_2026-11-22}_tables.md`. Input and wording tests are 20 Rooms each (4 tickers x R1-R5), so roughly +/-20 points; the code grader has neither (it never reads prose).
 
-| measure | CIO (today) | on-prem Qwen3.8 | Jev 1.13.0 | DeepInfra DeepSeek-V4-Flash |
-|---|---|---|---|---|
-| errors (300 Rooms) | – | 0 | 0 | 0 |
-| latency per Room | – | 31.4 s | 0.3 s | 7.9 s |
-| cost per Room / 300 Rooms | – | $0 | $0.0003 / $0.10 | $0.0018 / $0.55 |
-| approvals R1 / R2 / R3 / R4 / R5 | 3 / 3 / 10 / 13 / 20 | 1 / 3 / 13 / 10 / 27 | 0 / 0 / 0 / 0 / 20 | 1 / 2 / 4 / 5 / 31 |
-| monotone in risk | yes | no (R3 > R4) | yes, but R1–R4 never approve | **yes** |
-| CONTESTED | – | 115 (38%) | 32 (11%) | **0** |
-| reps disagree on APPROVE vs not | 23% (35/150) | 16% (24/150) | **3% (4/150)** | 6% (9/150) |
-| same transcript regraded: an answer changes | – | 35% (7/20) | 15% (3/20) | **10% (2/20)** |
-| planted fatal flaw → PASS at R1–R5 | – | 75% (15/20) | **100% (20/20)** | **100% (20/20)** |
-| bear evidence removed → not more cautious | – | 65% (13/20) | **100%** | 95% (19/20) |
-| bear numbers ×2 → not less cautious | – | 75% (15/20) | 70% (14/20) | **95% (19/20)** |
-| turns reordered: answers unchanged | 20% (4/20) | 20% | 50% (10/20) | 50% (10/20) |
-| turns reordered: rule outcome unchanged | – | 12/20 | 19/20 | **20/20** |
-| ticker renamed: answers unchanged | – | 70% (14/20) | **80% (16/20)** | 50% (10/20) |
-| ticker renamed: rule outcome unchanged | – | 19/20 | 19/20 | 19/20 |
-| wording: most fragile question (any phrasing changes it) | – | thesis 70% | bear objection 85% | bear objection 90% |
-| approvals that are Street Buy | 73% (33/45) | 67% (32/48) | 89% (16/18) | 70% (26/37) |
-| agreement with the CIO's approvals | 49 | 17 of 49 | 9 of 49 | 17 of 49 |
+| measure | CIO arm 1 | on-prem Qwen3.8 | Jev 1.13.0 | DeepInfra DeepSeek-V4-Flash | CIO arm 2 | code A: production input | code B: trade action given |
+|---|---|---|---|---|---|---|---|
+| Rooms graded | 300 | 300 | 300 | 300 | 300 | 300 (arm 2) | 300 (arm 2) |
+| errors | - | 0 | 0 | 0 | - | 0 | 0 |
+| latency per Room | - | 31.4 s | 0.3 s | 7.9 s | - | under 1 ms | under 1 ms |
+| cost per Room / 300 Rooms | - | $0 | $0.0003 / $0.10 | $0.0018 / $0.55 | - | $0 | $0 |
+| approvals R1 / R2 / R3 / R4 / R5 | 3 / 3 / 10 / 13 / 20 | 1 / 3 / 13 / 10 / 27 | 0 / 0 / 0 / 0 / 20 | 1 / 2 / 4 / 5 / 31 | 4 / 2 / 12 / 16 / 24 | 0 / 0 / 0 / 0 / 0 | 0 / 0 / 28 / 24 / 53 |
+| monotone in risk | yes | no (R3 > R4) | yes, but R1-R4 never approve | **yes** | yes (R1 > R2 by 2) | never approves | no (R3 > R4; R1/R2 never approve) |
+| CONTESTED | - | 115 (38%) | 32 (11%) | **0** | - | 11 (4%) | 29 (10%) |
+| UNAVAILABLE (rule cannot decide) | - | 0 | 0 | 0 | - | **200 (67%)** | 77 (26%) |
+| Rooms the rule can decide at the Room's own level | - | 100% | 100% | 100% | - | **33% (100/300)** | 74% (223/300) |
+| reps disagree on APPROVE vs not | 23% (35/150) | 16% (24/150) | **3% (4/150)** | 6% (9/150) | 24% (36/150) | 0% (vacuous: never approves) | 21% (31/150) |
+| same transcript regraded: an answer changes | - | 35% (7/20) | 15% (3/20) | **10% (2/20)** | - | 0 by construction | 0 by construction |
+| planted fatal flaw in the debate text, PASS at R1-R5 | - | 75% (15/20) | **100% (20/20)** | **100% (20/20)** | - | not applicable: does not read text | not applicable |
+| bear evidence removed → not more cautious | - | 65% (13/20) | **100%** | 95% (19/20) | - | not applicable | not applicable |
+| bear numbers x2 → not less cautious | - | 75% (15/20) | 70% (14/20) | **95% (19/20)** | - | not applicable | not applicable |
+| turns reordered: answers unchanged | - | 20% (4/20) | 50% (10/20) | 50% (10/20) | - | not applicable | not applicable |
+| turns reordered: rule outcome unchanged | - | 12/20 | 19/20 | **20/20** | - | not applicable | not applicable |
+| ticker renamed: answers unchanged | - | 70% (14/20) | **80% (16/20)** | 50% (10/20) | - | not applicable | not applicable |
+| ticker renamed: rule outcome unchanged | - | 19/20 | 19/20 | 19/20 | - | not applicable | not applicable |
+| wording: most fragile question | - | thesis 70% | bear objection 85% | bear objection 90% | - | not applicable | not applicable |
+| **questions computable (share of Rooms)** | 100% | 100% | 100% | 100% | - | trade 0%, catalyst 0%, event risk 0%, bear objection 60%, terminal 93%, thesis 92% | as A, but trade 100% |
+| Rooms with all six computable | 100% | 100% | 100% | 100% | - | 0% | 0% |
+| approvals that are Street Buy | 73% (33/45) | 67% (32/48) | 89% (16/18) | 70% (26/37) | 73% (41/56) | n/a (no approvals) | 65% (60/93) |
+| agreement with the CIO's approvals | 49 | 17 of 49 | 9 of 49 | 17 of 49 | 58 | 0 of 58 | 37 of 58 (and 68 approvals the CIO did not make) |
 
 Reading:
 1. **DeepInfra DeepSeek-V4-Flash is the strongest of the three on every control measure that matters for a decision rule**: monotone approvals, no Contested band (its confidences are sharp, never inside 0.2 of 0.5), outcomes unchanged under turn reordering in 20/20, the planted fatal flaw caught in 20/20, and the lowest regrade noise. Its answer-level reorder and rename sensitivity (50%) mostly moves answers that do not decide the outcome.
@@ -38,7 +43,50 @@ Reading:
 
 **CheapLLM pilot (Saiful, 2026-11-22: "test out CHEAPLLM_API_KEY ... use the DSV4 they have").** Endpoint `https://cheapllm.shop/v1`; its `/v1/models` lists one model, `deepseek-v4.1-flash-1017`. 10-Room pilot, temperature 0, same q1/r1: **2/10 Rooms failed** with the provider's capacity error ("The kitchen is packed right now and we could not get a seat for this request in time"); latency **33–432 s per Room** (mean about 176 s, vs 7.9 s on DeepInfra); the 8 answered Rooms returned token probabilities (6/8 PASS, 1 CONTESTED, 0 APPROVE). No price is published, so the run was call-capped (60 calls) and cost is unknown. Not scored on the full 300: a 20% decision-unavailable rate and minutes of added latency per Room rule it out as the Room's grader today. Re-test if its capacity changes.
 
-**Recommendation (for gate S3), pending the code grader on arm 2:** DeepInfra `deepseek-ai/DeepSeek-V4-Flash` at temperature 0 as the grader, with `terminal_vulnerability` and the structured `trade_proposed` as the fixed Pass gates, and the wording-fragile questions averaged over the five phrasings (5× calls, about $0.009 and ~40 s per Room). Caveats: (a) it needs a hosted call per Room, so Alpha's on-prem-only ruling (2026-11-19) must allow it for the grader, or the coded rule runs on Beta only; (b) on Beta the desks also run on DeepSeek-V4-Flash, so the grader would judge a debate from its own model family; (c) Street-Sell behaviour is unmeasured. Jev is not recommended (approves nothing at R1–R4; vendor terms owed).
+**Recommendation (for gate S3), with the code grader scored (it does not change the pick; see "Code grader (arm 2)" below):** DeepInfra `deepseek-ai/DeepSeek-V4-Flash` at temperature 0 as the grader, with `terminal_vulnerability` and the structured `trade_proposed` as the fixed Pass gates, and the wording-fragile questions averaged over the five phrasings (5× calls, about $0.009 and ~40 s per Room). Caveats: (a) it needs a hosted call per Room, so Alpha's on-prem-only ruling (2026-11-19) must allow it for the grader, or the coded rule runs on Beta only; (b) on Beta the desks also run on DeepSeek-V4-Flash, so the grader would judge a debate from its own model family; (c) Street-Sell behaviour is unmeasured. Jev is not recommended (approves nothing at R1–R4; vendor terms owed).
+
+## Code grader (arm 2), 2026-11-22
+
+Plain code over the CR266 typed cards (`room_graders/code_cards.py`, `cards-1`), WP-22 §2.3: a missing cell is "not computable" for that question in that Room, never imputed, and completeness is its own column. Run on the 300 WP-20 arm-2 Rooms (cards on), no model, $0. Full tables, with the production-input run (Part A) and the sensitivity run with `trade_proposed` made computable (Part B): `grader_bakeoff_code_arm2_2026-11-22_tables.md`. Tool: `wp22_score.py score --grader code` (cards rebuilt from `llm_audit`, unit-tested in `test_wp22_score.py`, 71 tests pass on the Mac and in the deployed image).
+
+**Completeness (the question the spec asks first).** The cards themselves are complete in 277/300 Rooms (92%; baseline file item 4). Per question, the share of the 300 Rooms the grader could answer at all:
+
+| question | computable | yes | no | why not computable |
+|---|---|---|---|---|
+| `catalyst_in_horizon` | **0%** | - | - | no card item carries it |
+| `event_risk_wait` | **0%** | - | - | no card item carries it |
+| `trade_proposed` | **0%** as built (100% if the block carries an `action`) | 0% (Part B: 100%) | 0% | `proposed_trade` has no `action` or `side` in the production block |
+| `bear_objection_answered` | 60% (180/300) | 52% (157) | 8% (23) | 97 Rooms: no adequate Bear objection filed (the channel is optional); 23: cards incomplete |
+| `terminal_vulnerability` | 93% (279/300) | 3% (8) | 90% (271) | 21: a desk missing its balance-sheet card |
+| `thesis_material_directional` | 92% (277/300) | 56% (168) | 36% (109) | 23: cards incomplete |
+
+No Room has all six computable. A code grader that cannot answer two of six questions in any Room, and a third (bear objection) in 40%, cannot be the sole grader. The plan's own escape hatch applies: it can own questions computable from structured fields.
+
+**Rule outcomes per risk (default policy r1).**
+
+| risk | n | A: APPROVE / PASS / CONTESTED / UNAVAILABLE | B: APPROVE / PASS / CONTESTED / UNAVAILABLE | CIO APPROVE (arm 2) |
+|---|---|---|---|---|
+| R1 | 60 | 0 / 24 / 1 / 35 | 0 / 24 / 1 / 35 | 4 |
+| R2 | 60 | 0 / 27 / 3 / 30 | 0 / 27 / 3 / 30 | 2 |
+| R3 | 60 | 0 / 16 / 4 / 40 | 28 / 16 / 11 / 5 | 12 |
+| R4 | 60 | 0 / 19 / 3 / 38 | 24 / 19 / 14 / 3 | 16 |
+| R5 | 60 | 0 / 3 / 0 / 57 | 53 / 3 / 0 / 4 | 24 |
+| all | 300 | 0 / 89 / 11 / 200 | 105 / 89 / 29 / 77 | 58 |
+
+1. **As built, it never approves.** Part A is UNAVAILABLE in 200/300 Rooms because `trade_proposed` is required at every level and is never computable. Every non-PASS, non-CONTESTED Room is UNAVAILABLE.
+2. **With `trade_proposed` fixed (Part B) it still cannot decide the conservative levels.** R1 and R2 require `catalyst_in_horizon` (R1 also `event_risk_wait`), which no card carries, so every R1/R2 Room that is not already a PASS is UNAVAILABLE (65/120). At R3-R5 it approves 28/24/53 (against the CIO's 12/16/24): the approval curve is not monotone (R3 > R4) and approves far more than the CIO at R5.
+3. **Reps disagree:** Part B rule APPROVE-vs-not 21% (31/150) against 24% (36/150) for the CIO on the same Rooms; per question, `terminal_vulnerability` 3% (4/129 pairs), `bear_objection_answered` 16% (8/50), `thesis_material_directional` **34% (43/127)**. The thesis answer is the net-support score against a 0.2 cut-off and 17% of Rooms sit within 0.05 of it (the grader's own "close" flag). Regrading a Room never changes an answer (deterministic).
+4. **Consensus.** Part B approvals that are Street Buy: 65% (60/93) at all levels (R3 64%, R4 60%, R5 67%) against the CIO's 73% (41/56); no approval of a Street Sell name, by either, because none exists in the data.
+5. **The CIO on the same Rooms (arm 2):** approvals 4 / 2 / 12 / 16 / 24, reps disagree 24% (36/150), 73% of approvals on Street Buy names. Cards on moves none of the CIO's measures beyond noise (baseline file item 7).
+6. **`terminal_vulnerability` is the one answer worth taking from cards.** It is computable in 93%, stable across reps (3%), and rarely fires (3% yes: an unresolved high-severity balance-sheet objection). Rarely firing is the safe direction for a fixed Pass gate but is also why it caught nothing in this corpus; whether it agrees with the LLM graders' much higher yes rates (Jev 46%) is not measured here, because they ran on different Rooms.
+
+**What this means for WP-23.**
+1. Keep DeepInfra DeepSeek-V4-Flash as the grader (recommendation above). The code grader is not a candidate for sole grader.
+2. Answer `trade_proposed` from the structured trade, as the plan already says. This needs the production trade block to carry the action: today it has none, so even a code-owned `trade_proposed` would be not computable.
+3. Cards could back `terminal_vulnerability` as a second, code-derived Pass gate when cards are on. That is a design call for WP-23, only if cards go on (the arm-2 card gate reads FAIL: 277/300 complete, evidence-score ICC 0.71-0.86 against 0.85; baseline file item 4).
+4. **Two wiring findings in the flag-off code path, found while reading it (not fixed here, outside this lane):** (a) `room_runner._coded_transcript` builds `cards` as `{desk: {cards, objections, ...}}`, but `CodeCardsGrader` reads `cards["cards_by_desk"]` and `cards["field_state"]`; as wired, the code grader would return an error ("cards must carry a cards_by_desk object") on every cards-on Room. (b) The same function passes `proposed_trade` without `action` or `side`, so `trade_proposed` is not computable (Part A). Neither shows up in unit tests that build the cards dict by hand. Both need a DEF if the code grader is used in production.
+
+Caveats. The cards are rebuilt from `llm_audit`, which the runner's persisted transcript does not carry; the rebuild uses the backend's own parser and reproduces the card report's 277/300, and treats an envelope re-ask as adopted whenever it produced a turn (a re-ask whose stance did not parse is not distinguished). The four graders were not scored on the same Rooms (code on arm 2, the others on arm 1); arm 1 and arm 2 CIO measures agree within noise, which is the only bridge. `inputs` and `wording` were not run for the code grader (it reads no prose, so they cannot move its answers).
 
 ## On-prem grader detail (2026-11-21)
 
@@ -124,5 +172,5 @@ Share of Rooms where at least one rephrasing changes the answer (100 grades, 0 e
    ssh melehost 'nohup ~/cr267_wp20/wp22_tool/wp22_run.sh di_full score --grader deepinfra --model deepseek-ai/DeepSeek-V4-Flash --runs /out/arm1/runs_wp20-arm1.jsonl --out /out/wp22_deepinfra/scores_arm1.jsonl --max-usd 5.00 --concurrency 4 > ~/cr267_wp20/logs/wp22_di_full.log 2>&1 &'
    ```
    If the pilot says 300 Rooms would exceed the cap, do not raise `--max-usd` without Saiful. The wording (20 Rooms x 5 phrasings) and input (140 grades) tests on a hosted grader are separate runs with their own caps (`wording` and `inputs` take the same flags). Tables: `wp22_score.py report --runs ... --scores /out/wp22_<grader>/scores_arm1.jsonl --out ...` (the heading names the grader from the meta file).
-4. Code grader over cards: after WP-20 arm 2.
-5. Recommendation: after all three graders are scored. No recommendation of Jev without noting that vendor terms are still owed.
+4. Code grader over cards: done 2026-11-22 (section "Code grader (arm 2)" above).
+5. Recommendation: stands (DeepInfra); no recommendation of Jev without noting that vendor terms are still owed.
