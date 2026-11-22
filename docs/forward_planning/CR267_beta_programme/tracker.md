@@ -68,7 +68,7 @@ Status values: `not started` · `in progress` · `blocked (gate)` · `done` · `
 | DEF466 | iOS accessibility tree dark below Settings > PROFILE | in progress | `87f68b3b` | Depth ruled out (about 24 of WDA's 50). AMI-DL-20b on build 128: not reproduced across 15 scroll steps. Re-check on the next iPhone slots before closing. |
 | CR159 | Your Firm desk-banded tiers | in progress | `4a696f60` | Built and merged (13 tiles in desk bands, 8 new strings for AR/MS). Ships in build 129; needs an iPhone look at 390 and 320 pt; the Appium FLOOR-007 test may need a scroll step. |
 | CR229 | BLS/Census direct sourcing for CPI/PPI and construction | in progress | | Worker running (docs only, fetcher behind a default-off setting if clean). |
-| CR244 | Company/EDGAR data: Review display (part 1) | in progress | | Worker running (slice 1 from stored data; part 2 Room feeds planned, not built). |
+| CR244 | Company/EDGAR data | in progress | `7ae75bfc` | Part 1 (Company Review screen + endpoints) was already shipped (`9265eb66`…`e896a2fd`); only the row was stale. Rulings 2026-11-22: stays ungated; recent-filings Room feed ON in Alpha with deploy #20; float/liquidity feed to Execution Desk + Conservative Risk Officer only, worker building it. Part 2 plan: `CR244_…/PART2_PLAN.md`. |
 | DEF344 | Upgrade tap crashed with RevenueCat unconfigured | done | `206a425b` | Verified on Android (DL-16, 125) and iPhone (DL-20b, 128). |
 | DEF438 | iOS Simulator WDA tree empty | dropped | `f5a1f67a` | Saiful: drop; the lab iPhone replaces the paused simulator. |
 | CR240, CR246 | Hosted LLM eval; multi-user load simulation | dropped (absorbed) | `f5a1f67a` | Into CR267 WP-10/14/22 and WP-46. |

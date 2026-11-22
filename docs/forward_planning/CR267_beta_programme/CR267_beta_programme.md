@@ -73,6 +73,7 @@ Saiful answered the open items the same day (§3a). Two facts remain to confirm:
 6. **Alpha may call a hosted grader, for the grader only** (2026-11-22). Alpha's desks stay on-prem (amends the 2026-11-19 on-prem-only ruling for this one call); enforce with the CR281 allow-list naming the grader slot and a daily spend ceiling.
 7. **S3 (grader pick) is open.** Recommendation on record: DeepInfra `deepseek-ai/DeepSeek-V4-Flash` at temperature 0, with `terminal_vulnerability` and a structured `trade_proposed` as fixed Pass gates and the wording-fragile questions averaged over five phrasings. Saiful asked first for the CheapLLM test.
 8. **Daily review 2026-11-22: eight items started now** (WP-55 below): DEF200, DEF367, DEF385, DEF447, DEF466, CR159, CR229, CR244. Closed: DEF438 (dropped), CR240 and CR246 (absorbed into this CR), DEF344 (fixed, verified on both phones). CR267 itself flipped to `in_progress`.
+9. **CR244 (2026-11-22):** Part 1 (Company Review) was already shipped; it stays ungated. Part 2: the Room's recent-filings feed (Macro & Events, Fundamentals) goes ON in Alpha now, before WP-26, so WP-26 measures the Room as it ships; the float/liquidity feed goes to the Execution Desk and the Conservative Risk Officer only, behind a default-off setting.
 
 ## 4. Saiful gates (stop here and ask)
 
