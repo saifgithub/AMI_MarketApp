@@ -46,7 +46,28 @@ _FROMJSON = re.compile(r"([A-Z]\w*)\.fromJson\(")
 # navigation rather than from a guessed list of common names, because the
 # navigation IS the contract under test — if the client stops reading `items`,
 # this stops finding `items`, which is the correct failure.
-_ENVELOPE = re.compile(r"""\bdata\s*\??\s*\[\s*['"](\w+)['"]\s*\]""")
+#
+# DEF367 — `[!?]?`, not `\??`: `r.data!['hits']` (a bang, not a question mark)
+# is the common spelling in this file and was invisible to the first version,
+# so `aiCoachSearch` read as a list with no envelope and stayed UNVERIFIED
+# against a route that was being hit.
+_ENVELOPE = re.compile(r"""\bdata\s*[!?]?\s*\[\s*['"](\w+)['"]\s*\]""")
+
+# DEF367 — a LIST built by a collection-for rather than `.map(...)`:
+#   `{ for (final e in (r.data ?? const [])) ...: LessonStatus.fromJson(e) }`
+# The loop variable is what ties the loop to this particular `fromJson` — a bare
+# `for` somewhere earlier in the method must not make an unrelated scalar parse
+# read as a list — so `is_list` requires the loop variable to be the argument.
+_FOR_IN = re.compile(r"\bfor\s*\(\s*final\s+(\w+)\s+in\b")
+
+# DEF367 — a SCALAR parse reached through an envelope key:
+#   `SimTrade.fromJson(r.data!['trade'] as Map<String, dynamic>)`
+# The class is parsed from `body['trade']`, not from the body, so the comparator
+# must read the key (the same navigation-is-the-contract reasoning as the list
+# envelope above). Only the argument immediately after `fromJson(` counts.
+_SCALAR_ENVELOPE = re.compile(
+    r"""\s*\w+\s*\.\s*data\s*[!?]?\s*\[\s*['"](\w+)['"]\s*\]"""
+)
 
 
 @dataclass
@@ -109,6 +130,12 @@ def discover() -> list[Pair]:
             start = max(0, fm.start() - 80)
             nav = body[start : fm.start()]
             is_list = ".map(" in nav or ".map(" in body[fm.start() : fm.start() + 5]
+            if not is_list:
+                loops = list(_FOR_IN.finditer(body[max(0, fm.start() - 200): fm.start()]))
+                if loops and re.match(
+                    rf"\s*\(?\s*{re.escape(loops[-1].group(1))}\b", body[fm.end():]
+                ):
+                    is_list = True
             # The envelope lookback is deliberately much wider than the nav
             # snippet: `final items = ((r.data?['items'] as List?) ?? const []);`
             # can sit several statements above the `.map((j) => X.fromJson(j))`
@@ -117,6 +144,9 @@ def discover() -> list[Pair]:
             # `data[...]` above the parse is the one being parsed.
             env_matches = _ENVELOPE.findall(body[max(0, fm.start() - 400): fm.start()])
             envelope_key = env_matches[-1] if (is_list and env_matches) else None
+            if not is_list:
+                scalar = _SCALAR_ENVELOPE.match(body[fm.end(): fm.end() + 80])
+                envelope_key = scalar.group(1) if scalar else None
             pairs.append(
                 Pair(
                     dart_method=name,

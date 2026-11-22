@@ -81,6 +81,15 @@ def _objects(body, is_list: bool, envelope_key: str | None = None) -> list[dict]
             if isinstance(inner, list):
                 return [o for o in inner if isinstance(o, dict)]
         return []
+    # DEF367 — a scalar parsed through an envelope key (`SimTrade.fromJson(
+    # r.data!['trade'])`) is read through that key, never from the body. A body
+    # that lacks the key, or holds something other than an object there, is zero
+    # observations — the client would have thrown or defaulted, which is a real
+    # disagreement and must stay UNVERIFIED, not fall back to reading the
+    # envelope as if it were the model.
+    if envelope_key:
+        inner = body.get(envelope_key) if isinstance(body, dict) else None
+        return [inner] if isinstance(inner, dict) else []
     return [body] if isinstance(body, dict) else []
 
 

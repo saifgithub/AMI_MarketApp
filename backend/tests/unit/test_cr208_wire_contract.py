@@ -244,6 +244,104 @@ def test_a_bare_list_body_still_works_without_an_envelope_key():
     assert r["observations"] == 1
 
 
+# --------------------------------------------------------------------------
+# DEF367 — three more instrument blind spots, each hiding a surface the suite
+# already exercised (lessons by_lesson / requirements, ai_coach search, sim
+# close). Found by writing the route tests and watching them not move the count.
+# --------------------------------------------------------------------------
+
+def _discover_from(tmp_path, monkeypatch, dart_body):
+    import discover_pairs
+    src = tmp_path / "api_client.dart"
+    src.write_text(
+        "class C {\n  Future<Thing> m(String id) async {\n" + dart_body + "\n  }\n}\n"
+    )
+    monkeypatch.setattr(discover_pairs, "API_CLIENT", src)
+    return discover_pairs.discover()
+
+
+def test_a_collection_for_over_the_body_is_a_list_parse(tmp_path, monkeypatch):
+    """`{ for (final e in (r.data ?? const [])) k: Thing.fromJson(e) }` has no
+    `.map(`, so it read as a scalar and the bare-array body was compared as one
+    object. `lessonStatusByLesson` and `unlockRequirements` were stuck on it."""
+    (pair,) = _discover_from(tmp_path, monkeypatch, """
+    final r = await _dio.get<List<dynamic>>('/v1/things');
+    return {
+      for (final e in (r.data ?? const []))
+        (e as Map<String, dynamic>)['id'] as String: Thing.fromJson(e),
+    };""")
+    assert pair.is_list is True
+    assert pair.envelope_key is None
+
+
+def test_a_for_loop_that_does_not_feed_the_parse_is_not_a_list(tmp_path, monkeypatch):
+    """The loop variable ties the loop to THIS `fromJson`. Without that, any
+    `for` earlier in the method would flip an unrelated scalar parse to a list
+    and the comparator would read a single object as zero observations."""
+    (pair,) = _discover_from(tmp_path, monkeypatch, """
+    final r = await _dio.get<Map<String, dynamic>>('/v1/thing');
+    for (final x in const [1, 2]) { print(x); }
+    return Thing.fromJson(r.data!);""")
+    assert pair.is_list is False
+    assert pair.envelope_key is None
+
+
+def test_a_bang_navigation_finds_the_envelope_key(tmp_path, monkeypatch):
+    """`r.data!['hits']` — a bang, not a question mark. The first envelope
+    regex only knew `data?[...]`, so `aiCoachSearch` read as an enveloped list
+    with no envelope and stayed unverified against a route that was being hit."""
+    (pair,) = _discover_from(tmp_path, monkeypatch, """
+    final r = await _dio.get<Map<String, dynamic>>('/v1/things');
+    final hits = (r.data!['hits'] as List)
+        .map((h) => Thing.fromJson(h as Map<String, dynamic>))
+        .toList();
+    return hits;""")
+    assert pair.is_list is True
+    assert pair.envelope_key == "hits"
+
+
+def test_a_scalar_parsed_through_an_envelope_key_is_discovered(tmp_path, monkeypatch):
+    """`SimTrade.fromJson(r.data!['trade'] as Map<String, dynamic>)` — the
+    class is parsed from `body['trade']`. `simCloseTrade` compared the whole
+    `{"ok": ..., "trade": {...}}` body against SimTrade's keys."""
+    (pair,) = _discover_from(tmp_path, monkeypatch, """
+    final r = await _dio.post<Map<String, dynamic>>('/v1/things/close');
+    return Thing.fromJson(r.data!['trade'] as Map<String, dynamic>);""")
+    assert pair.is_list is False
+    assert pair.envelope_key == "trade"
+
+
+def test_a_plain_scalar_parse_has_no_envelope(tmp_path, monkeypatch):
+    (pair,) = _discover_from(tmp_path, monkeypatch, """
+    final r = await _dio.get<Map<String, dynamic>>('/v1/thing');
+    return Thing.fromJson(r.data!);""")
+    assert pair.is_list is False
+    assert pair.envelope_key is None
+
+
+def test_a_scalar_envelope_is_read_through_its_key():
+    r = compare.check_pair(
+        _pair(envelope_key="trade"),
+        _cap({"ok": True, "trade": {"a": 1}}),
+        _idx(required=["a"]),
+    )
+    assert r["status"] == "PASS"
+    assert r["observations"] == 1
+
+
+def test_a_missing_scalar_envelope_key_is_unverified_not_passed():
+    """Falling back to the body would compare `{"ok": ..., "trade": ...}`
+    against the model's keys — a server that stopped emitting `trade` must not
+    read as a pass, or (worse) as the envelope being the model."""
+    r = compare.check_pair(
+        _pair(envelope_key="trade"),
+        _cap({"ok": True, "a": 1}),
+        _idx(required=["a"]),
+    )
+    assert r["status"] == "UNVERIFIED"
+    assert r["observations"] == 0
+
+
 def test_the_ratchet_counts_duplicate_surface_ids_separately():
     """`api_client.dart::gamesRecordPrs` parses `GamePersonalRecord` twice from
     `GET /v1/games/record/prs` — once as a list, once as a scalar. Same
