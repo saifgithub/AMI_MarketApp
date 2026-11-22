@@ -27,7 +27,8 @@ case "$GRADER" in
   *) echo "unknown --grader $GRADER (onprem|jev|deepinfra)"; exit 1;;
 esac
 if [ "$GRADER" != onprem ]; then
-  [ -f "$W/bakeoff.env" ] || { echo "bakeoff.env missing (expected at $W/bakeoff.env with JEV_API_KEY= and DEEPINFRA_API_KEY=)"; exit 1; }
+  case "$GRADER" in jev) KEYNAME=JEV_API_KEY;; *) KEYNAME=DEEPINFRA_API_KEY;; esac
+  [ -f "$W/bakeoff.env" ] || { echo "bakeoff.env missing $KEYNAME (file not found: $W/bakeoff.env, lines JEV_API_KEY=... and DEEPINFRA_API_KEY=...)"; exit 1; }
   ENVFILE_ARGS=(--env-from-file "$W/bakeoff.env")
 fi
 cd $HOME/ami_trade
