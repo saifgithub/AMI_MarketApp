@@ -1,10 +1,46 @@
-# CR267 WP-22 grader bake-off (PARTIAL: on-prem grader, arm 1)
+# CR267 WP-22 grader bake-off (3 of 3 LLM graders scored on arm 1; code grader pending arm 2)
 
 **Status:** 1 of 3 graders scored. Jev and the DeepInfra-hosted model are runnable (tool built; keys not yet in bakeoff.env, see "Not yet done"); the code grader needs WP-20 arm 2 (cards on), which is running. Full tables: `grader_bakeoff_onprem_arm1_2026-11-21_tables.md` (from `docs/tools/room_investigation_V2/tools/wp22_score.py report`).
 
 **Measured on:** the 300 WP-20 arm-1 Rooms (30 tickers × R1–R5 × 2 reps, cards off), on-prem vLLM, model root `/models/qwen38-flash-next-abliterated-nvfp4` (read from `/v1/models`), temperature 0, question set q1, decision rule r1 with the default policy (unfitted placeholders). The grader saw the 11 desk turns, never the CIO's verdict. Read-only DB access; no `llm_audit` rows written; $0.
 
-## What it shows
+## Three-way comparison, 2026-11-22 (same 300 arm-1 Rooms, same q1 questions, rule r1 default policy)
+
+Jev pinned `jev-1.13.0`; DeepInfra `deepseek-ai/DeepSeek-V4-Flash` at temperature 0; on-prem `/models/qwen38-flash-next-abliterated-nvfp4`. Tables: `grader_bakeoff_{onprem_arm1_2026-11-21,jev_arm1_2026-11-22,deepinfra_arm1_2026-11-22}_tables.md`. Input and wording tests are 20 Rooms each (4 tickers × R1–R5), so roughly ±20 points.
+
+| measure | CIO (today) | on-prem Qwen3.8 | Jev 1.13.0 | DeepInfra DeepSeek-V4-Flash |
+|---|---|---|---|---|
+| errors (300 Rooms) | – | 0 | 0 | 0 |
+| latency per Room | – | 31.4 s | 0.3 s | 7.9 s |
+| cost per Room / 300 Rooms | – | $0 | $0.0003 / $0.10 | $0.0018 / $0.55 |
+| approvals R1 / R2 / R3 / R4 / R5 | 3 / 3 / 10 / 13 / 20 | 1 / 3 / 13 / 10 / 27 | 0 / 0 / 0 / 0 / 20 | 1 / 2 / 4 / 5 / 31 |
+| monotone in risk | yes | no (R3 > R4) | yes, but R1–R4 never approve | **yes** |
+| CONTESTED | – | 115 (38%) | 32 (11%) | **0** |
+| reps disagree on APPROVE vs not | 23% (35/150) | 16% (24/150) | **3% (4/150)** | 6% (9/150) |
+| same transcript regraded: an answer changes | – | 35% (7/20) | 15% (3/20) | **10% (2/20)** |
+| planted fatal flaw → PASS at R1–R5 | – | 75% (15/20) | **100% (20/20)** | **100% (20/20)** |
+| bear evidence removed → not more cautious | – | 65% (13/20) | **100%** | 95% (19/20) |
+| bear numbers ×2 → not less cautious | – | 75% (15/20) | 70% (14/20) | **95% (19/20)** |
+| turns reordered: answers unchanged | 20% (4/20) | 20% | 50% (10/20) | 50% (10/20) |
+| turns reordered: rule outcome unchanged | – | 12/20 | 19/20 | **20/20** |
+| ticker renamed: answers unchanged | – | 70% (14/20) | **80% (16/20)** | 50% (10/20) |
+| ticker renamed: rule outcome unchanged | – | 19/20 | 19/20 | 19/20 |
+| wording: most fragile question (any phrasing changes it) | – | thesis 70% | bear objection 85% | bear objection 90% |
+| approvals that are Street Buy | 73% (33/45) | 67% (32/48) | 89% (16/18) | 70% (26/37) |
+| agreement with the CIO's approvals | 49 | 17 of 49 | 9 of 49 | 17 of 49 |
+
+Reading:
+1. **DeepInfra DeepSeek-V4-Flash is the strongest of the three on every control measure that matters for a decision rule**: monotone approvals, no Contested band (its confidences are sharp, never inside 0.2 of 0.5), outcomes unchanged under turn reordering in 20/20, the planted fatal flaw caught in 20/20, and the lowest regrade noise. Its answer-level reorder and rename sensitivity (50%) mostly moves answers that do not decide the outcome.
+2. **Jev is the most repeatable across fresh Rooms (3%)** but because it approves nothing at R1–R4 at all: `thesis_material_directional` is yes in only 5% of Rooms and `trade_proposed` yes in 100%, so the rule passes almost everything below R5. It is also the most wording-sensitive on `bear_objection_answered` (85%), and vendor terms are still owed.
+3. **The on-prem Qwen3.8 grader is the weakest**: 38% Contested, 35% regrade noise, order-sensitive. Its one advantage is $0 and no third party.
+4. **All three beat the CIO's 23% rep disagreement.** None can yet be judged on Street Sell names (none in the WP-20 data).
+5. **Every grader is wording-sensitive on at least one deciding question.** Whatever is picked, the rule needs WP-23's changes: `trade_proposed` from the structured trade, and the fragile questions (DeepInfra: `bear_objection_answered` 90%, `thesis_material_directional` 70%) either averaged over phrasings or kept out of the conservative-level gates.
+
+**Recommendation (for gate S3), pending the code grader on arm 2:** DeepInfra `deepseek-ai/DeepSeek-V4-Flash` at temperature 0 as the grader, with `terminal_vulnerability` and the structured `trade_proposed` as the fixed Pass gates, and the wording-fragile questions averaged over the five phrasings (5× calls, about $0.009 and ~40 s per Room). Caveats: (a) it needs a hosted call per Room, so Alpha's on-prem-only ruling (2026-11-19) must allow it for the grader, or the coded rule runs on Beta only; (b) on Beta the desks also run on DeepSeek-V4-Flash, so the grader would judge a debate from its own model family; (c) Street-Sell behaviour is unmeasured. Jev is not recommended (approves nothing at R1–R4; vendor terms owed).
+
+## On-prem grader detail (2026-11-21)
+
+### What it shows
 
 1. **Runs clean.** 300/300 Rooms, 0 errors, 0 unparsed answers, token probabilities on every question. 31.4 s mean per Room (p95 63 s), 6 calls per Room, sharing the vLLM with WP-20 arm 2.
 2. **More stable than the CIO across fresh Rooms.** The two reps of the same ticker and risk level disagree on APPROVE-vs-not in **16% (24/150)** of pairs with the grader + rule, against **23% (35/150)** for the CIO on the same Rooms.
