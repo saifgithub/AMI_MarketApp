@@ -1352,6 +1352,13 @@ class Settings(BaseSettings):
     room_insider_cluster_enabled: bool = True
     room_edgar_8k_flags_enabled: bool = True
 
+    # DEF447 — look-back of the nightly 8-K Item 5.02 re-scan
+    # (`scripts/rescan_edgar_8k.py`, cron in `infra/cron/def447_8k_rescan.cron`).
+    # It is stored on every scan row as `window_days`, which bounds how far
+    # back the Room may claim "none filed" — keep it >= the 180-day render
+    # window; the script refuses a smaller value.
+    edgar_8k_rescan_window_days: int = 365
+
     # CR247 Phase 4 (D11–D13, D27) — the second-pass verdict review. Both
     # reviews are built behind INDEPENDENT flags because the Phase 0.1 outcome
     # census came back with a zero-scored ledger (D27): false-APPROVE vs

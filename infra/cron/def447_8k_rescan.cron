@@ -1,0 +1,11 @@
+# DEF447 — nightly re-scan of 8-K Item 5.02 (executive/board changes) filings.
+# Install on melehost as the `ami` user (after /promote-to-alpha has rsync'd this file to
+# ~/ami_trade/infra/cron/):  (crontab -l; cat ~/ami_trade/infra/cron/def447_8k_rescan.cron) | crontab -
+# NOT installed by the repo.
+#
+# 04:30 server-local: after the US filing day closes on any UTC+0..+3 host. Runs inside the
+# api-alpha container (scripts/ is bind-mounted at /app/scripts). The exit code is non-zero on
+# any fetch failure; the FAILED line makes that greppable:
+#     grep -c FAILED ~/ami_trade/logs/def447_8k_rescan.log
+# Look-back comes from EDGAR_8K_RESCAN_WINDOW_DAYS (compose, default 365).
+30 4 * * * cd $HOME/ami_trade && mkdir -p logs && { date -u +"[\%FT\%TZ] def447 rescan start"; docker compose exec -T api-alpha python scripts/rescan_edgar_8k.py || echo "[$(date -u +\%FT\%TZ)] def447 rescan FAILED rc=$?"; } >> $HOME/ami_trade/logs/def447_8k_rescan.log 2>&1
