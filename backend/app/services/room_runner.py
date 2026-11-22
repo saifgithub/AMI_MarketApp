@@ -44,7 +44,7 @@ import weakref
 import zlib
 from collections import Counter
 from collections.abc import AsyncIterator, Awaitable, Callable, Sequence
-from dataclasses import asdict as dataclass_asdict, dataclass, field, fields as dataclass_fields, replace as _dataclass_replace
+from dataclasses import dataclass, field, fields as dataclass_fields, replace as _dataclass_replace
 from datetime import UTC, date, datetime, timedelta, timezone
 from typing import Any, Literal
 from uuid import UUID, uuid4
@@ -115,6 +115,8 @@ from app.services.room_grader_contract import (
     QUESTION_SET_VERSION as _GRADER_QUESTION_SET_VERSION,
     GraderResult,
     RoomTranscript,
+    build_cards_payload,
+    build_proposed_trade,
 )
 from app.services.room_grader_registry import resolve_grader
 from app.services.evidence_record import (
@@ -5811,15 +5813,37 @@ def _coded_decision_text(decision: room_decision_rule.RuleDecision) -> str:
     return f"AMI's decision rule passes on this trade: {why}. No trade was opened."
 
 
+_TRADER_SIDE_RE = re.compile(r"(?im)^[ \t*]*Side:[ \t*]*(BUY|HOLD|WAIT)\b")
+
+
+def _trader_side(ctx: "_RoomContext", run: RoomRun) -> str | None:
+    """The Execution Desk's side as the Room knows it: a scripted turn is always
+    BUY; a live turn states it on its `Side:` line (the grammar permits BUY, HOLD,
+    WAIT). None when no turn states one — never guessed."""
+    if AgentId.TRADER in ctx.scripted_turns:
+        return "buy"
+    for m in reversed(run.transcript):
+        if getattr(m.agent_id, "value", m.agent_id) == AgentId.TRADER.value:
+            found = _TRADER_SIDE_RE.search(m.content or "")
+            return found.group(1).lower() if found else None
+    return None
+
+
 def _coded_transcript(
     run_id: UUID, ctx: "_RoomContext", run: RoomRun,
 ) -> RoomTranscript:
-    cards = None
-    if ctx.claim_cards:
-        cards = {
-            desk.value: dataclass_asdict(desk_cards)
-            for desk, desk_cards in ctx.claim_cards.items()
-        }
+    cards = build_cards_payload(
+        {desk.value: desk_cards for desk, desk_cards in ctx.claim_cards.items()},
+        (ctx.profile or {}).get("field_state"),
+    )
+    side = _trader_side(ctx, run)
+    if side in ("hold", "wait"):
+        trade = build_proposed_trade(action=side, size_pct=0.0)
+    else:
+        trade = build_proposed_trade(
+            action=side, size_pct=ctx.trader_size_pct, entry=ctx.trader_entry,
+            stop=ctx.trader_stop, target=ctx.trader_target,
+        )
     horizon = getattr(ctx.mandate.horizon, "value", ctx.mandate.horizon)
     return RoomTranscript(
         room_id=str(run_id),
@@ -5834,12 +5858,7 @@ def _coded_transcript(
             for m in run.transcript
         ],
         cards=cards,
-        proposed_trade={
-            "size_pct": ctx.trader_size_pct,
-            "entry": ctx.trader_entry,
-            "stop": ctx.trader_stop,
-            "target": ctx.trader_target,
-        },
+        proposed_trade=trade,
     )
 
 
