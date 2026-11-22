@@ -24,6 +24,14 @@ limitation, written up on DEF367 rather than papered over here:
   GET  /v1/games/cadences                  FAIL  `next_field` (client accepts flat too)
   POST /v1/games/runs/$runId/trade/quote   FAIL  `will_queue` (client falls back to `market_open`)
 
+  GET  /v1/games/record/prs                UNVERIFIED  (driven below, still unverified) the server
+       sends a category-keyed object; the client's `prs` list branch never matches and
+       `kind`/`value`/`cadence` are synthesised by the `gamesRecordPrs` adapter.
+
+Also found re-checking the cadences route: the client reads the entrant count from
+`GameFieldSummary.entrant_count` (flat cadence object), the server sends `queue_count`,
+so `games_home_screen` / `games_close_screen` always show 0 entrants. Not fixed here.
+
 DEF527 fixed the five real disagreements (enter, run detail, trade, restart,
 close) and those routes ARE driven at the bottom of this file.
 
@@ -353,3 +361,53 @@ def test_close_withholds_the_near_miss_where_the_fence_says(
 
     assert close["near_miss_label"] is None
     assert close["near_miss_gap_pct"] is None
+
+
+# ── DEF367 tail — the three routes the first pass left unobserved ────────────
+#
+# `GET /record/prs` is driven here, empty and populated, and the shape
+# `gamesRecordPrs` adapts from is pinned. It stays UNVERIFIED in the baseline:
+# the client's list read (`data['prs']`) never matches the category-keyed object
+# the server sends, and the scalar read sees `GamePersonalRecord`'s `kind` /
+# `value` / `cadence` only as keys the adapter synthesises client-side.
+#
+# `GET /cadences` and `POST .../trade/quote` are deliberately NOT driven (see
+# the module docstring): observing them flips each from UNVERIFIED to a hard
+# FAIL (`next_field` / `will_queue`), which the ratchet does not absorb.
+
+
+def test_personal_records_empty_board_is_an_object_of_nulls(client: TestClient) -> None:
+    _user_id, headers = _new_user()
+
+    prs = _get(client, "/v1/games/record/prs", headers)
+
+    assert prs["has_any_finished_runs"] is False
+    for category in (
+        "best_weekly_twr", "best_alpha", "best_drawdown_control",
+        "longest_hold_days", "longest_finish_streak",
+    ):
+        assert prs[category] is None, category
+    assert "prs" not in prs  # the client's flat-list branch is a legacy shape
+
+
+def test_personal_records_populated_for_a_settled_run(client: TestClient) -> None:
+    user_id, headers = _new_user()
+    entry = _settled_run(user_id)
+
+    prs = _get(client, "/v1/games/record/prs", headers)
+
+    assert prs["has_any_finished_runs"] is True
+    # `gamesRecordPrs` reads each category's `entry_id` plus its own value key.
+    for category, value_key in (
+        ("best_weekly_twr", "final_twr_pct"),
+        ("longest_hold_days", "days"),
+        ("longest_finish_streak", "count"),
+    ):
+        block = prs[category]
+        assert isinstance(block, dict), category
+        assert block["entry_id"] == str(entry.run_id) or block["entry_id"], category
+        assert isinstance(block[value_key], (int, float)), (category, value_key)
+    assert prs["longest_finish_streak"]["count"] == 1
+    assert prs["longest_hold_days"]["days"] == 4
+    for category in ("best_alpha", "best_drawdown_control"):
+        assert prs[category] is None or prs[category]["entry_id"]
