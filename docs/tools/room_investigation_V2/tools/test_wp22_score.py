@@ -545,5 +545,196 @@ class OnPremUnchangedTests(unittest.TestCase):
         self.assertEqual(w._cap_meta(None), {})
 
 
+# ── Code grader: cards rebuilt from the audit trail ──────────────────────────
+# These use the backend's real `parse_claim_cards` and `CodeCardsGrader`, which need the app's
+# dependencies (structlog, cryptography). Without them the class is skipped, never faked.
+
+try:
+    from app.services.room_graders.code_cards import CodeCardsGrader
+    from app.services.room_runner import parse_claim_cards  # noqa: F401
+    HAVE_APP = True
+except Exception:  # noqa: BLE001
+    HAVE_APP = False
+
+ITEMS5 = ("eq", "vc", "vh", "bs", "moat")
+
+
+def claims(items=ITEMS5, direction="support", grade="well", data="yes", nums="FCF 4.1B", objections=""):
+    lines = "\n".join(
+        f"- item={i} dir={direction} grade={grade} data={data} claim=claim on {i} nums={nums}" for i in items)
+    out = f"Prose of the turn.\n[CLAIMS]\n{lines}\n[/CLAIMS]"
+    return out + (f"\n[OBJECTIONS]\n{objections}\n[/OBJECTIONS]" if objections else "")
+
+
+def turn(desk, text, flow="room"):
+    return {"agent_id": desk, "flow": flow, "response_text": text, "epoch": 0.0, "user_id": "u"}
+
+
+LIVE_SHEET = {"free_cash_flow": "live", "roic": "live", "pe": "live", "total_debt": "live",
+              "gross_margin": "live"}
+
+
+@unittest.skipUnless(HAVE_APP, "backend app dependencies not installed")
+class CardRebuildTests(unittest.TestCase):
+    def full_turns(self, **over):
+        t = [turn(d, claims()) for d in w.CARD_DESKS]
+        for d, text in over.items():
+            t = [turn(d, text) if x["agent_id"] == d else x for x in t]
+        return t
+
+    def test_shape_is_what_the_grader_reads(self):
+        cards, meta = w.cards_for_room(self.full_turns(), LIVE_SHEET)
+        self.assertEqual(set(cards), {"cards_by_desk", "field_state"})
+        self.assertEqual(set(cards["cards_by_desk"]), set(w.CARD_DESKS))
+        ch = cards["cards_by_desk"]["bear_researcher"]
+        self.assertEqual(len(ch["cards"]), 5)
+        self.assertEqual({"item", "direction", "grade", "data", "claim", "nums"}, set(ch["cards"][0]))
+        self.assertEqual(cards["field_state"], LIVE_SHEET)
+        self.assertEqual((meta["desks_with_cards"], meta["desks_complete"], meta["cards"]), (4, 4, 20))
+
+    def test_a_complete_room_is_computable_by_the_real_grader(self):
+        cards, _ = w.cards_for_room(self.full_turns(), LIVE_SHEET)
+        tr = w.build_transcript(arm(), {"id": "r", "transcript": [], "cards": cards, "trade_action": "buy"})
+        res = CodeCardsGrader().grade(tr)
+        got = {a.question.value: a.answer.value for a in res.answers}
+        self.assertEqual(got["thesis_material_directional"], "yes")
+        self.assertEqual(got["terminal_vulnerability"], "no")
+        self.assertEqual(got["trade_proposed"], "yes")
+        self.assertEqual(got["catalyst_in_horizon"], "not_computable")
+        self.assertEqual(got["event_risk_wait"], "not_computable")
+
+    def test_the_production_trade_block_has_no_action_so_trade_proposed_is_not_computable(self):
+        cards, _ = w.cards_for_room(self.full_turns(), LIVE_SHEET)
+        tr = w.build_transcript(arm(), {"id": "r", "transcript": [], "cards": cards})
+        self.assertNotIn("action", tr.proposed_trade)
+        got = {a.question.value: a.answer.value for a in CodeCardsGrader().grade(tr).answers}
+        self.assertEqual(got["trade_proposed"], "not_computable")
+
+    def test_last_turn_per_desk_wins(self):
+        weak = claims(direction="oppose")
+        turns = [turn("bull_researcher", weak)] + [
+            turn(d, claims()) for d in w.CARD_DESKS if d != "bull_researcher"]
+        turns.append(turn("bull_researcher", claims(direction="support"), "room_envelope_repair"))
+        cards, _ = w.cards_for_room(turns, LIVE_SHEET)
+        dirs = {c["direction"] for c in cards["cards_by_desk"]["bull_researcher"]["cards"]}
+        self.assertEqual(dirs, {"support"})
+
+    def test_a_still_incomplete_cards_reask_is_rejected_like_the_runner_does(self):
+        turns = self.full_turns()
+        turns.append(turn("bear_researcher", claims(items=("eq", "vc")), "room_cards_repair"))
+        cards, meta = w.cards_for_room(turns, LIVE_SHEET)
+        self.assertEqual(len(cards["cards_by_desk"]["bear_researcher"]["cards"]), 5)
+        self.assertEqual(meta["fallback_desks"], ["bear_researcher"])
+
+    def test_a_complete_cards_reask_is_adopted(self):
+        turns = [turn(d, claims(items=("eq", "vc"))) for d in w.CARD_DESKS]
+        turns.append(turn("bear_researcher", claims(), "room_cards_repair"))
+        cards, meta = w.cards_for_room(turns, LIVE_SHEET)
+        self.assertEqual(len(cards["cards_by_desk"]["bear_researcher"]["cards"]), 5)
+        self.assertEqual(meta["fallback_desks"], [])
+        self.assertEqual(meta["desks_complete"], 1)
+
+    def test_a_missing_desk_stays_missing_and_the_cell_is_not_computable(self):
+        turns = [t for t in self.full_turns() if t["agent_id"] != "research_manager"]
+        cards, meta = w.cards_for_room(turns, LIVE_SHEET)
+        self.assertNotIn("research_manager", cards["cards_by_desk"])
+        self.assertEqual(meta["desks_without_turn"], ["research_manager"])
+        tr = w.build_transcript(arm(), {"id": "r", "transcript": [], "cards": cards, "trade_action": "buy"})
+        got = {a.question.value: a.answer.value for a in CodeCardsGrader().grade(tr).answers}
+        self.assertEqual(got["thesis_material_directional"], "not_computable")
+        self.assertEqual(got["terminal_vulnerability"], "not_computable")
+
+    def test_a_partial_channel_is_never_filled_in(self):
+        turns = self.full_turns(bull_researcher=claims(items=("eq", "vc", "vh")))
+        cards, meta = w.cards_for_room(turns, LIVE_SHEET)
+        self.assertEqual(len(cards["cards_by_desk"]["bull_researcher"]["cards"]), 3)
+        self.assertEqual(meta["desks_complete"], 3)
+        tr = w.build_transcript(arm(), {"id": "r", "transcript": [], "cards": cards, "trade_action": "buy"})
+        got = {a.question.value: a.answer.value for a in CodeCardsGrader().grade(tr).answers}
+        self.assertEqual(got["thesis_material_directional"], "not_computable")
+
+    def test_no_cards_at_all_is_none_not_an_empty_object(self):
+        turns = [turn(d, "no claims block here") for d in w.CARD_DESKS]
+        cards, meta = w.cards_for_room(turns, LIVE_SHEET)
+        self.assertIsNone(cards)
+        self.assertEqual(meta["desks_with_cards"], 0)
+        self.assertIsNone(w.cards_for_room([], LIVE_SHEET)[0])
+
+    def test_missing_fact_sheet_registry_is_passed_on_empty_so_the_grader_says_so(self):
+        cards, _ = w.cards_for_room(self.full_turns(), None)
+        self.assertEqual(cards["field_state"], {})
+        tr = w.build_transcript(arm(), {"id": "r", "transcript": [], "cards": cards, "trade_action": "buy"})
+        got = {a.question.value: a.answer.value for a in CodeCardsGrader().grade(tr).answers}
+        self.assertEqual(got["terminal_vulnerability"], "not_computable")
+
+    def test_an_unresolved_high_balance_sheet_objection_is_terminal_vulnerability_yes(self):
+        bs_oppose = claims(items=("bs",), direction="oppose")
+        bear = claims(direction="oppose", grade="well",
+                      objections="target=bs severity=high objection=cannot meet the maturity")
+        turns = self.full_turns(bear_researcher=bear)
+        cards, _ = w.cards_for_room(turns, LIVE_SHEET)
+        tr = w.build_transcript(arm(), {"id": "r", "transcript": [], "cards": cards, "trade_action": "buy"})
+        got = {a.question.value: a.answer.value for a in CodeCardsGrader().grade(tr).answers}
+        self.assertIn(got["terminal_vulnerability"], ("yes", "no"))
+        self.assertTrue(bs_oppose)  # builder sanity only; the answer above is the grader's own
+
+    def test_attach_cards_sets_cards_and_provenance_on_each_room(self):
+        rooms = {"AAA-r3-rep1": {"id": "r1", "transcript": []}, "AAA-r3-rep2": {"id": "r2", "transcript": []}}
+        arms = [arm("AAA", 3, 1), arm("AAA", 3, 2)]
+        arms[0]["verdict"]["sheet_state"] = LIVE_SHEET
+        w.attach_cards(rooms, arms, {"AAA-r3-rep1": self.full_turns(), "AAA-r3-rep2": []})
+        self.assertEqual(rooms["AAA-r3-rep1"]["cards"]["field_state"], LIVE_SHEET)
+        self.assertIsNone(rooms["AAA-r3-rep2"]["cards"])
+        self.assertEqual(rooms["AAA-r3-rep2"]["cards_meta"]["desks_with_cards"], 0)
+
+
+class CodeGraderPlumbingTests(unittest.TestCase):
+    def test_code_grader_needs_no_key_and_has_no_spend_guard(self):
+        setup = w.setup_grader(SimpleNamespace(grader="code", trade_action=None))
+        self.assertIsNone(setup.guard)
+        self.assertEqual(setup.kind, "code")
+        self.assertEqual(w._cap_meta(setup)["grader"], "code")
+        self.assertNotIn("spend", w._cap_meta(setup))
+        w._report_cap(setup)  # no guard: must not raise
+
+    def test_wording_and_inputs_are_refused_for_code_with_the_reason(self):
+        for cmd in ("wording", "inputs"):
+            rc, _o, err = run_main([cmd, "--runs", "/x.jsonl", "--out", "/x/o.jsonl", "--grader", "code"],
+                                   {"WP22_DSN": "x"})
+            self.assertEqual(rc, 2, cmd)
+            self.assertIn("never", err)
+
+    def test_trade_action_is_added_only_when_asked(self):
+        room = {"id": "r", "transcript": []}
+        self.assertNotIn("action", w.build_transcript(arm(), room).proposed_trade)
+        room["trade_action"] = "buy"
+        self.assertEqual(w.build_transcript(arm(), room).proposed_trade["action"], "buy")
+
+    def test_not_computable_rows_round_trip_and_keep_their_reason(self):
+        r = GraderResult(
+            grader="code_cards", grader_version="cards-1", question_set_version=QUESTION_SET_VERSION,
+            answers=tuple(
+                QuestionAnswer(q, Answer.NOT_COMPUTABLE, rationale="room ran without cards") for q in ALL_Q),
+            latency_ms=1, cost_usd=0.0)
+        rw = w.result_to_row(arm(), "r", r, phrasing=None, model_root="x")
+        self.assertEqual(rw["answers"]["trade_proposed"]["rationale"], "room ran without cards")
+        self.assertEqual(w.rule_outcome(rw), "UNAVAILABLE")
+
+    def test_completeness_table_counts_computable_share_and_reasons(self):
+        def mk(risk, nc):
+            ans = {q: ("not_computable" if q.value in nc else "yes") for q in ALL_Q}
+            r = GraderResult(
+                grader="code_cards", grader_version="cards-1", question_set_version=QUESTION_SET_VERSION,
+                answers=tuple(QuestionAnswer(q, Answer(ans[q]), rationale="no card" if ans[q] == "not_computable" else "")
+                              for q in ALL_Q), latency_ms=1)
+            return w.result_to_row(arm("A", risk), "r", r, phrasing=None, model_root="x")
+        rows = [mk(3, {"catalyst_in_horizon"}), mk(3, {"catalyst_in_horizon", "event_risk_wait"})]
+        text = "\n".join(w.completeness_table(rows))
+        self.assertIn("| catalyst_in_horizon | n/a | n/a | 0% (0/2) |", text)
+        self.assertIn("| event_risk_wait | n/a | n/a | 50% (1/2) |", text)
+        self.assertIn("Rooms where all six questions are computable: 0% (0/2)", text)
+        self.assertIn("no card", text)
+
+
 if __name__ == "__main__":
     unittest.main()

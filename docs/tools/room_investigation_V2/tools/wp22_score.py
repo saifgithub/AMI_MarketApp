@@ -26,6 +26,15 @@ Modes
            strengthened, turns reordered, ticker renamed) -> JSONL (resumable).
   report   markdown tables from the JSONL files; needs no DB and no network.
 
+Code grader (--grader code, WP-22 §2.3): plain code over the CR266 typed cards of a cards-ON Room
+(WP-20 arm 2), no model call, $0, no key, no vLLM. `score` rebuilds each Room's cards from Alpha's
+`llm_audit` (the card blocks are stripped from the stored transcript, so the audit turns are the only
+record), shapes them for `CodeCardsGrader` and writes the same JSONL rows, so `report` works unchanged
+and adds a completeness section (a missing cell is "not computable", never imputed). `wording` and
+`inputs` do not apply to it: the grader reads cards and the structured trade only, never turn prose, so
+a prose perturbation or rephrasing cannot reach it. `--trade-action` adds an `action` to the proposed
+trade (a sensitivity run; the production shape has none, which makes `trade_proposed` not computable).
+
 Graders (--grader). `onprem` (default) is the vLLM slot, free, unchanged. `jev` and
 `deepinfra` spend money: their keys (JEV_API_KEY, DEEPINFRA_API_KEY) come only from the
 container environment, put there by `wp22_run.sh` via `--env-from-file ~/cr267_wp20/bakeoff.env`;
@@ -43,7 +52,7 @@ DATABASE_URL is pointed at a scratch sqlite so no app code can reach Alpha's DB.
 Usage
   wp22_score.py score  --runs runs_wp20-arm1.jsonl --out scores.jsonl \
       [--pilot 10 | --limit N] [--concurrency 1] [--slot vllm] \
-      [--grader onprem|jev|deepinfra] [--jev-version jev-1.13.0] [--model <deepinfra id>] \
+      [--grader onprem|jev|deepinfra|cheapllm|code] [--trade-action buy] [--jev-version jev-1.13.0] [--model <deepinfra id>] \
       [--max-usd 5.00] [--max-calls 300]
   wp22_score.py wording --runs ... --out wording.jsonl [--sample 20]
   wp22_score.py report --runs runs_wp20-arm1.jsonl --scores scores.jsonl \
@@ -91,7 +100,7 @@ _ARM_REP = re.compile(r"-rep(\d+)$")
 ROOM_TIMEOUT_S = 600.0
 
 # ── Hosted graders (Jev, DeepInfra): pins, prices, keys, spend cap ──────────
-GRADERS = ("onprem", "jev", "deepinfra", "cheapllm")
+GRADERS = ("onprem", "jev", "deepinfra", "cheapllm", "code")
 # Pinned, never "latest" (WP-23 policy key). Source: S12 plan §3 item 1 and the October
 # corpus (`jev_deep_dive_2026-10-14.md`), which logged `jev-1.13.0`; the CR257 pilot script
 # sent "jev-latest", which is exactly what production must not do.
@@ -189,6 +198,15 @@ class JevAsync:
         return price_jev(res)
 
 
+class CodeAsync:
+    """CodeCardsGrader behind the same `agrade` the other graders have. Pure code, so it runs inline."""
+    def __init__(self, inner) -> None:
+        self._inner = inner
+
+    async def agrade(self, transcript: RoomTranscript) -> GraderResult:
+        return self._inner.grade(transcript)
+
+
 def price_jev(res: GraderResult) -> GraderResult:
     if res.cost_usd is not None or res.error:
         return res
@@ -235,6 +253,12 @@ def setup_grader(args: argparse.Namespace, env: dict | None = None) -> GraderSet
             from app.services.room_graders.hosted_llm import HostedLLMGrader
             return HostedLLMGrader(args.slot, phrasing=p)
         return GraderSetup("onprem", "on-prem vLLM", onprem, None, {})
+    if kind == "code":
+        def code(_p):
+            from app.services.room_graders.code_cards import CodeCardsGrader
+            return CodeAsync(CodeCardsGrader())
+        return GraderSetup("code", "code_cards cards-1 (no model, $0)", code, None, {
+            "trade_action": getattr(args, "trade_action", None)})
     guard = SpendGuard(float(args.max_usd), int(args.max_calls), CALLS_PER_ROOM[kind])
     if guard.max_usd <= 0 or guard.max_calls <= 0:
         raise ValueError("--max-usd and --max-calls must be positive")
@@ -344,9 +368,113 @@ def build_transcript(arm: dict, room: dict, mandate: dict | None = None) -> Room
         risk_score=risk,
         horizon=str(horizon) if horizon is not None else None,
         turns=turns,
-        cards=None,
-        proposed_trade=proposed_trade(arm, risk, mandate.get("single_name_cap_pct")),
+        cards=room.get("cards"),
+        proposed_trade=_with_action(
+            proposed_trade(arm, risk, mandate.get("single_name_cap_pct")), room.get("trade_action")),
     )
+
+
+def _with_action(trade: dict, action: str | None) -> dict:
+    return {**trade, "action": action} if action else trade
+
+
+# ── CR266 cards, rebuilt from the audit trail (code grader) ─────────────────
+# The stored room_runs transcript carries the desks' PROSE only: the runner strips the [CLAIMS] and
+# [OBJECTIONS] blocks before it persists a turn and keeps the typed cards on `ctx.claim_cards`, which
+# is not stored. The only record is each evidence desk's raw turn in `llm_audit`, so the cards are
+# re-parsed from there with the backend's own `parse_claim_cards`. Same window rule as
+# `evidence_card_report.py`: the arm's user, its [triggered_at, finished_at] window, three flows.
+
+CARD_DESKS = ("fundamentals_analyst", "bull_researcher", "bear_researcher", "research_manager")
+CARD_FLOWS = ("room", "room_envelope_repair", "room_cards_repair")
+CARDS_REPAIR_FLOW = "room_cards_repair"
+WINDOW_SLACK_S = 0.001
+
+
+def card_tools() -> tuple:
+    """(parse_claim_cards, _cards_channel_complete) from the deployed backend. Imported lazily:
+    room_runner pulls the whole app, so only the code-grader path (and its tests) pays for it."""
+    from app.services.room_runner import _cards_channel_complete, parse_claim_cards  # noqa: PLC0415
+    return parse_claim_cards, _cards_channel_complete
+
+
+def fetch_card_turns(dsn: str, arms: list[dict]) -> dict[str, list[dict]]:
+    """{arm_key: that Room's successful evidence-desk turns, in insertion order}. Read-only."""
+    from sqlalchemy import text
+
+    eng = readonly_engine(dsn)
+    by_user: dict[str, list[dict]] = collections.defaultdict(list)
+    with eng.connect() as c:
+        rows = c.execute(text(
+            "SELECT user_id::text AS user_id, agent_id, flow, response_text, "
+            "extract(epoch from created_at)::float8 AS epoch "
+            "FROM llm_audit WHERE user_id = ANY(CAST(:u AS uuid[])) AND flow = ANY(:f) "
+            "AND agent_id = ANY(:d) AND error IS NULL AND response_text IS NOT NULL "
+            "ORDER BY created_at ASC, ctid ASC"
+        ), {"u": [a["user_id"] for a in arms], "f": list(CARD_FLOWS), "d": list(CARD_DESKS)}).mappings().all()
+        for r in rows:
+            by_user[r["user_id"]].append(dict(r))
+    out = {}
+    for a in arms:
+        lo = datetime.fromisoformat(a["triggered_at"]).timestamp() - WINDOW_SLACK_S
+        hi = datetime.fromisoformat(a["finished_at"]).timestamp() + WINDOW_SLACK_S
+        out[a["arm_key"]] = [r for r in by_user.get(a["user_id"], []) if lo <= r["epoch"] <= hi]
+    return out
+
+
+def cards_for_room(turns: list[dict], sheet_state: dict | None, tools: tuple | None = None) -> tuple[dict | None, dict]:
+    """The `cards` a CodeCardsGrader reads, plus a small provenance dict.
+
+    Each desk's cards come from its LAST successful turn, except where that last turn is a cards
+    re-ask (`room_cards_repair`) whose channel is still incomplete: the runner rejects such a retry
+    and keeps the turn before it, so this does too. A desk with no parseable card is left out, as
+    the runner leaves it out of `ctx.claim_cards`; no desk with cards at all gives None (the grader
+    then answers "room ran without cards"). A missing desk or card is never filled in.
+    The envelope re-ask (`room_envelope_repair`) is taken as adopted whenever it produced a turn.
+    """
+    from dataclasses import asdict
+
+    parse, complete = tools or card_tools()
+    by_desk: dict[str, list[dict]] = collections.defaultdict(list)
+    for t in turns:
+        by_desk[t["agent_id"]].append(t)
+    channels: dict[str, dict] = {}
+    meta: dict = {"desks_with_cards": 0, "desks_complete": 0, "cards": 0, "fallback_desks": [],
+                  "desks_without_turn": [], "malformed_cards": 0, "malformed_objections": 0}
+    for desk in CARD_DESKS:
+        rows = by_desk.get(desk) or []
+        if not rows:
+            meta["desks_without_turn"].append(desk)
+            continue
+        use = rows[-1]
+        _, ch = parse(use["response_text"])
+        if use["flow"] == CARDS_REPAIR_FLOW and len(rows) > 1 and not complete(ch):
+            use = rows[-2]
+            _, ch = parse(use["response_text"])
+            meta["fallback_desks"].append(desk)
+        if ch is None:
+            continue
+        meta["malformed_cards"] += ch.malformed_cards
+        meta["malformed_objections"] += ch.malformed_objections
+        if not ch.cards:
+            continue
+        channels[desk] = asdict(ch)
+        meta["desks_with_cards"] += 1
+        meta["desks_complete"] += bool(complete(ch))
+        meta["cards"] += len(ch.cards)
+    if not channels:
+        return None, meta
+    return {"cards_by_desk": channels, "field_state": dict(sheet_state or {})}, meta
+
+
+def attach_cards(rooms: dict, arms: list[dict], turns: dict[str, list[dict]], tools: tuple | None = None) -> None:
+    """Put `cards` and `cards_meta` on each Room dict (in place) for `build_transcript`."""
+    tools = tools or card_tools()
+    for a in arms:
+        room = rooms.get(a["arm_key"])
+        if room is not None:
+            room["cards"], room["cards_meta"] = cards_for_room(
+                turns.get(a["arm_key"], []), (a.get("verdict") or {}).get("sheet_state"), tools)
 
 
 # ── Input-test perturbations (WP-22 3.3) ────────────────────────────────────
@@ -643,6 +771,7 @@ def result_to_row(arm: dict, room_id: str, result: GraderResult | None,
                 "answer": a.answer.value,
                 "confidence": a.confidence,
                 "close": a.close,
+                **({"rationale": a.rationale} if a.rationale else {}),
             }
             for a in result.answers
         },
@@ -738,6 +867,8 @@ async def run_scoring(arms: list[dict], rooms: dict, out: Path, *,
                         arm, room["id"], None, phrasing=p, model_root=model_root,
                         error=f"{type(exc).__name__}: {str(exc)[:200]}")
                     row["latency_ms"] = int((time.perf_counter() - started) * 1000)
+        if room is not None and room.get("cards_meta") is not None:
+            row["extra"]["cards_meta"] = room["cards_meta"]
         if row["error"]:
             errors += 1
         async with write_lock:
@@ -773,11 +904,11 @@ def _cap_meta(setup: GraderSetup | None) -> dict:
     if setup is None:
         return {}
     return {"grader": setup.kind, "grader_label": setup.label, **setup.describe,
-            "spend": setup.guard.summary()}
+            **({"spend": setup.guard.summary()} if setup.guard is not None else {})}
 
 
 def _report_cap(setup: GraderSetup | None) -> None:
-    if setup is not None and setup.guard.hit:
+    if setup is not None and setup.guard is not None and setup.guard.hit:
         print(f"STOPPED BY SPEND CAP ({setup.guard.hit}): {setup.guard.skipped} Rooms not graded; "
               "rerun with a higher cap to resume (finished Rooms are skipped).", file=sys.stderr)
 
@@ -793,6 +924,10 @@ def cmd_run(args: argparse.Namespace, *, wording: bool) -> int:
     if setup is None and args.slot != "vllm":
         print("this lane grades on the on-prem vLLM slot only (--slot vllm)", file=sys.stderr)
         return 2
+    if setup is not None and setup.kind == "code" and wording:
+        print("--grader code has no wording test: it reads cards and the structured trade, never prose",
+              file=sys.stderr)
+        return 2
     arms = load_arms(Path(args.runs))
     if wording:
         arms = stride_sample(arms, args.sample)
@@ -802,10 +937,15 @@ def cmd_run(args: argparse.Namespace, *, wording: bool) -> int:
         arms = sorted(arms, key=lambda a: (int(a["risk_score"]), a["ticker"], a["arm_key"]))[: args.limit]
     base_url = os.environ.get("VLLM_BASE_URL", "http://192.168.20.74:8000")
     root0 = _model_root(args, setup, base_url)
-    print(f"{'on-prem vLLM ' + base_url if setup is None else 'hosted grader'} model root: {root0}")
+    print(f"{'on-prem vLLM ' + base_url if setup is None else 'grader'} model root: {root0}")
     _install_no_audit_write()
     rooms = fetch_rooms(dsn, arms)
     print(f"rooms loaded: {len(rooms)}/{len(arms)}")
+    if setup is not None and setup.kind == "code":
+        attach_cards(rooms, arms, fetch_card_turns(dsn, arms))
+        for room in rooms.values():
+            room["trade_action"] = args.trade_action
+        print(f"cards rebuilt for {sum(r.get('cards') is not None for r in rooms.values())} Rooms")
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     phrasings: list[int | None] = list(PHRASINGS) if wording else [None]
@@ -897,6 +1037,11 @@ async def run_inputs(arms: list[dict], rooms: dict, names: dict[str, str], out: 
 
 
 def cmd_inputs(args: argparse.Namespace) -> int:
+    if getattr(args, "grader", "onprem") == "code":
+        print("--grader code has no input tests: it reads cards and the structured trade, never turn "
+              "prose, so every perturbation here (all of them edit prose) leaves its answers untouched "
+              "by construction", file=sys.stderr)
+        return 2
     setup, rc = (None, 0) if args.dry else _grader_preamble(args)
     if rc:
         return rc
@@ -1151,6 +1296,58 @@ def inputs_table(inputs: list[dict]) -> list[str]:
     return L
 
 
+def _why_key(text: str) -> str:
+    t = re.sub(r"net_support=-?[\d.]+|action=\S+", "", text or "").strip()
+    return re.sub(r"(evidence incomplete:|balance-sheet card missing from:).*", r"\1 ...", t) or "(no reason)"
+
+
+def completeness_table(ok: list[dict]) -> list[str]:
+    """Per question: how many Rooms the grader could answer at all, by risk level, and why not."""
+    rows = []
+    for q in QIDS:
+        cells = []
+        for risk in (*RISKS, "all"):
+            a = [r["answers"][q]["answer"] for r in ok
+                 if (risk == "all" or r["risk"] == risk) and q in r["answers"]]
+            cells.append(pct(sum(x != "not_computable" for x in a), len(a)))
+        rows.append([q] + cells)
+    L = ["Computable share per question (answered yes or no) by risk level:", ""]
+    L += md_table(["question"] + [f"R{r}" for r in RISKS] + ["all"], rows)
+    deciding = [q for q in QIDS]
+    full = sum(all(r["answers"].get(q, {}).get("answer") not in (None, "not_computable") for q in deciding)
+               for r in ok)
+    L += ["", f"Rooms where all six questions are computable: {pct(full, len(ok))}."]
+    never = [q for q in QIDS if not any(r["answers"].get(q, {}).get("answer") not in (None, "not_computable") for r in ok)]
+    answerable = [q for q in QIDS if q not in never]
+    if never and answerable:
+        full2 = sum(all(r["answers"].get(q, {}).get("answer") not in (None, "not_computable") for q in answerable)
+                    for r in ok)
+        L += [f"Questions this grader never answers in any Room: {', '.join(never)}. Rooms where all the others "
+              f"({len(answerable)}) are computable: {pct(full2, len(ok))}."]
+    decided = sum(rule_outcome(r) != "UNAVAILABLE" for r in ok)
+    L += [f"Rooms where the rule could decide at the Room's own risk level (outcome is not UNAVAILABLE): "
+          f"{pct(decided, len(ok))}.", ""]
+    why: dict[str, collections.Counter] = {q: collections.Counter() for q in QIDS}
+    for r in ok:
+        for q in QIDS:
+            a = r["answers"].get(q)
+            if a and a["answer"] == "not_computable":
+                why[q][_why_key(a.get("rationale", ""))] += 1
+    rows = [[q, n, reason] for q in QIDS for reason, n in why[q].most_common(4)]
+    if rows:
+        L += ["Why a cell was not computable (most common reasons per question):", ""]
+        L += md_table(["question", "Rooms", "reason"], rows)
+    cm = [r["extra"]["cards_meta"] for r in ok if (r.get("extra") or {}).get("cards_meta")]
+    if cm:
+        L += ["", "Card provenance (rebuilt from `llm_audit`): "
+              f"Rooms with cards from all four desks {pct(sum(c['desks_with_cards'] == 4 for c in cm), len(cm))}; "
+              f"all four desks with a complete five-item channel {pct(sum(c['desks_complete'] == 4 for c in cm), len(cm))}; "
+              f"Rooms where a rejected cards re-ask fell back to the earlier turn "
+              f"{sum(bool(c['fallback_desks']) for c in cm)}; "
+              f"malformed card lines in total {sum(c['malformed_cards'] for c in cm)}."]
+    return L
+
+
 def build_report(scores: list[dict], wording: list[dict] | None, meta: dict | None,
                  inputs: list[dict] | None = None) -> str:
     ok = [r for r in scores if not r.get("error") and r["answers"]]
@@ -1198,6 +1395,10 @@ def build_report(scores: list[dict], wording: list[dict] | None, meta: dict | No
         rows.append([q] + cells)
     L += md_table(["question"] + [f"R{r}" for r in RISKS], rows)
 
+    nc_rows = [r for r in ok if any(a["answer"] == "not_computable" for a in r["answers"].values())]
+    if nc_rows:
+        L += ["", "## Completeness (computable share; a missing cell is never imputed)", ""]
+        L += completeness_table(ok)
     L += ["", "## Decision-rule outcomes (default policy, rule r1)", ""]
     rows = []
     for risk in (*RISKS, "all"):
@@ -1251,7 +1452,7 @@ def build_report(scores: list[dict], wording: list[dict] | None, meta: dict | No
         if len(errs) > 40:
             L += ["", f"... and {len(errs) - 40} more."]
     L += ["", "Not computed here: rank correlation of a decision score with the consensus score "
-          "(the grader emits yes/no answers, not a score); the code and Jev graders.", ""]
+          "(the grader emits yes/no answers, not a score).", ""]
     return "\n".join(L) + "\n"
 
 
@@ -1290,6 +1491,9 @@ def main(argv: list[str] | None = None) -> int:
                        help="stop cleanly once priced spend reaches this (jev / deepinfra)")
         p.add_argument("--max-calls", type=int, default=DEFAULT_MAX_CALLS,
                        help="stop cleanly after this many UNPRICED calls (jev / deepinfra)")
+        p.add_argument("--trade-action", default=None,
+                       help="code grader only: add this `action` to the proposed trade (sensitivity run; "
+                            "the production trade block has no action, so trade_proposed is not computable)")
 
     for name in ("score", "wording"):
         p = sub.add_parser(name)

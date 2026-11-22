@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # wp22_run.sh: run wp22_score.py in a throwaway container of the deployed Alpha image (read-only DB).
 # usage: wp22_run.sh NAME ARGS...   (container name wp22_NAME; stop with: docker stop wp22_NAME)
+# `--grader code` (CodeCardsGrader over the cards-ON arm): no model call, no key, no vLLM; cards rebuilt from llm_audit.
 # Default grader (onprem): on-prem vLLM only. With `--grader jev|deepinfra` in ARGS the paid grader's
 # key comes ONLY from $HOME/cr267_wp20/bakeoff.env (JEV_API_KEY=..., DEEPINFRA_API_KEY=...), handed to
 # the container with `docker compose run --env-from-file`; this script never reads, prints or copies it.
@@ -24,9 +25,10 @@ case "$GRADER" in
   onprem)    ALLOW=vllm;;
   jev)       ALLOW=mock;     VLLM=;;
   deepinfra|cheapllm) ALLOW=vllm_fallback; VLLM=;;
-  *) echo "unknown --grader $GRADER (onprem|jev|deepinfra|cheapllm)"; exit 1;;
+  code)      ALLOW=mock;     VLLM=;;   # plain code over cards: no model, no key, no network
+  *) echo "unknown --grader $GRADER (onprem|jev|deepinfra|cheapllm|code)"; exit 1;;
 esac
-if [ "$GRADER" != onprem ]; then
+if [ "$GRADER" != onprem ] && [ "$GRADER" != code ]; then
   case "$GRADER" in jev) KEYNAME=JEV_API_KEY;; cheapllm) KEYNAME=CHEAPLLM_API_KEY;; *) KEYNAME=DEEPINFRA_API_KEY;; esac
   [ -f "$W/bakeoff.env" ] || { echo "bakeoff.env missing $KEYNAME (file not found: $W/bakeoff.env, lines JEV_API_KEY=... and DEEPINFRA_API_KEY=...)"; exit 1; }
   ENVFILE_ARGS=(--env-from-file "$W/bakeoff.env")
