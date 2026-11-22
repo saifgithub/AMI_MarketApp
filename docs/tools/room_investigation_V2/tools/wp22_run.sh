@@ -18,7 +18,7 @@ for a in "$@"; do
   case "$a" in --grader=*) GRADER=${a#--grader=};; esac
   prev=$a
 done
-PGPW=$(grep '^POSTGRES_PASSWORD=' $W/frozen/.env | cut -d= -f2-)
+PGPW=$(grep '^POSTGRES_PASSWORD=' $HOME/ami_trade/.env | cut -d= -f2-)
 [ -n "$PGPW" ] || { echo "POSTGRES_PASSWORD missing"; exit 1; }
 ENVFILE_ARGS=()
 case "$GRADER" in

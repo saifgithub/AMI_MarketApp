@@ -5,12 +5,12 @@
 #   e.g. wp20_cards_report.sh arm2 qwen38-flash-next-abliterated-nvfp4 /out/arm2/runs_wp20-arm2.jsonl /out/arm2/card_report
 # The tool files (evidence_card_report.py, cards_run.py, evidence_gate_fit.py) are read from
 # $HOME/cr267_wp20/cards_tool, mounted at a path five levels deep because the scripts compute REPO from
-# `parents[4]`. The DB password comes from $HOME/cr267_wp20/frozen/.env, is never printed and never copied.
+# `parents[4]`. The DB password comes from $HOME/ami_trade/.env (Alpha's env), is never printed and never copied.
 # Container name wp20cards_NAME; stop it with `docker stop wp20cards_NAME`. Writes only under /out.
 set -uo pipefail
 NAME=$1; PROVIDER=$2; RUNS=$3; OUTDIR=$4
 W=$HOME/cr267_wp20
-PGPW=$(grep '^POSTGRES_PASSWORD=' "$W/frozen/.env" | cut -d= -f2-)
+PGPW=$(grep '^POSTGRES_PASSWORD=' "$HOME/ami_trade/.env" | cut -d= -f2-)
 [ -n "$PGPW" ] || { echo "POSTGRES_PASSWORD missing"; exit 1; }
 cd "$HOME/ami_trade"
 exec docker compose -p ami-trade-local run --rm --no-deps --name "wp20cards_$NAME" --entrypoint python \
