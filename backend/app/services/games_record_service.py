@@ -153,6 +153,9 @@ def get_close_payload(user_id: UUID, run_id: UUID, *, now: datetime | None = Non
             "state": entry.state,
             "scoring_basis": field.scoring_basis,
             "entrant_count": field.entrant_count,
+            # DEF527 — the `n` the rank was actually taken over; the client
+            # prefers it over `entrant_count` (which counts voided runs).
+            "scored_entrant_count": entry.scored_entrant_count,
             "void_reason": entry.void_reason,
             "rank": entry.final_rank,
             "placement": {
@@ -173,11 +176,16 @@ def get_close_payload(user_id: UUID, run_id: UUID, *, now: datetime | None = Non
             ),
             "career_points_delta": entry.career_points_delta,
             "stipend_points": entry.stipend_points,
+            # DEF527 — `GameCloseResult.fromJson` reads this key; the client
+            # used to re-derive it from `stipend_points`, which is a rule the
+            # server should state once rather than two sides each own.
+            "stipend_awarded": (entry.stipend_points or 0) > 0,
             "fees_paid": float(entry.fees_paid),
             "trade_count": entry.trade_count,
             **private,
         }
         cadence = field.cadence
+        near_miss = _near_miss(s, entry, placement)
         # CR109 slice 5 — the Wind-Up (§10). Resolved here, from stored
         # columns, so the client never decides whether a run was a blowup:
         # a threshold duplicated on both sides is a threshold that will
@@ -247,6 +255,10 @@ def get_close_payload(user_id: UUID, run_id: UUID, *, now: datetime | None = Non
     return {
         **payload_entry,
         "curve": curve,
+        # DEF527 — the near-miss line's two numbers, or both `None`. See
+        # `_near_miss` for the fence; the client never computes one itself.
+        "near_miss_label": near_miss[0] if near_miss else None,
+        "near_miss_gap_pct": near_miss[1] if near_miss else None,
         # Slice 5. `None` on an ordinary close — its presence IS the switch
         # between the two ceremonies, so a client cannot render the Wind-Up's
         # framing on a run that merely lost a little.
@@ -275,6 +287,41 @@ def get_close_payload(user_id: UUID, run_id: UUID, *, now: datetime | None = Non
             "stipend_points": payload_entry["stipend_points"],
         },
     }
+
+
+def _near_miss(session, entry: GameEntryRow, placement) -> tuple[str, float] | None:
+    """`(label, gap_pct)` for design §10.1's near-miss line — *"You were 0.3%
+    off 2nd"* — or `None` when it does not apply.
+
+    Points UP only (the fence in CR109 §10.1: *"near-miss copy never renders
+    on a loss"*), so it is withheld unless ALL of these hold: the placement
+    may assert a position (so never on a void, unmeasured or thin-field run),
+    the player did not win (nobody is above them), and they did not lose money
+    (`final_twr_pct >= 0`). The gap is to the nearest entrant ranked ABOVE, by
+    the same `final_twr_pct` the rank was assigned on, and no field exists for
+    anyone below, so the downward twin cannot be written from this payload.
+    """
+    if not placement.asserts_position:
+        return None
+    if entry.final_rank is None or entry.final_rank <= 1:
+        return None
+    if entry.final_twr_pct is None or float(entry.final_twr_pct) < 0:
+        return None
+    mine = float(entry.final_twr_pct)
+    above = session.execute(
+        select(GameEntryRow.final_twr_pct, GameEntryRow.final_rank)
+        .where(
+            GameEntryRow.field_id == entry.field_id,
+            GameEntryRow.final_rank.is_not(None),
+            GameEntryRow.final_rank < entry.final_rank,
+            GameEntryRow.final_twr_pct > mine,
+        )
+        .order_by(GameEntryRow.final_twr_pct.asc())
+        .limit(1)
+    ).first()
+    if above is None:
+        return None
+    return games_placement.ordinal(above.final_rank), round(float(above.final_twr_pct) - mine, 2)
 
 
 def _wind_up_block(entry: GameEntryRow) -> dict | None:

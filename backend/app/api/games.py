@@ -177,8 +177,13 @@ async def enter(
     except ValueError as exc:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc)) from exc
     return {
+        # DEF527 — `entry_id` and `cadence` are what `GameEntry.fromJson`
+        # reads; without them the client defaulted cadence to `week` (wrong
+        # on a Monthly or Quarterly entry) and the entry id to empty.
+        "entry_id": str(entry.id),
         "run_id": str(entry.run_id),
         "field_id": str(entry.field_id),
+        "cadence": req.cadence,
         "state": entry.state,
         "intent": entry.intent,
     }

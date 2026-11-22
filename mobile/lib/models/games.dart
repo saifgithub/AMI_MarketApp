@@ -763,12 +763,20 @@ class GameTradeResult {
             : filled
                 ? 'filled'
                 : 'unknown');
+    // DEF527 — `ticker`/`side`/`quantity`/`price` ride at the top level on
+    // every outcome (the server echoes the order it received). `side` has NO
+    // default to 'buy': an order whose side is missing must not parse as a
+    // buy, because a SELL silently becoming one is the failure this closes.
+    // The fill's nested `trade` is only a fallback for an older server.
+    final trade = j['trade'] is Map<String, dynamic>
+        ? j['trade'] as Map<String, dynamic>
+        : const <String, dynamic>{};
     return GameTradeResult(
       status: status,
-      ticker: j['ticker'] as String? ?? '',
-      side: j['side'] as String? ?? 'buy',
+      ticker: (j['ticker'] ?? trade['ticker']) as String? ?? '',
+      side: (j['side'] ?? trade['side']) as String? ?? 'unknown',
       shares: ((j['shares'] ?? j['quantity']) as num?)?.toDouble(),
-      price: (j['price'] as num?)?.toDouble(),
+      price: ((j['price'] ?? trade['entry_price']) as num?)?.toDouble(),
       fee: (j['fee'] as num?)?.toDouble(),
       queuedFor: _parseDate(j['queued_for'] ?? j['next_open_at']),
     );

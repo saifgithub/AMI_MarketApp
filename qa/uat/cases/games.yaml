@@ -45,9 +45,9 @@ cases:
       - A second user fetches the first user's run and tries to trade on it
       - GET a random run id
     expected:
-      - First entry is 200 with a run id and state entered; no credits are spent
+      - First entry is 200 with an entry id, run id, field id, cadence week and state entered; no credits are spent
       - Second entry is 409
-      - The owner sees exactly that run in /runs and its detail is 200
+      - The owner sees exactly that run in /runs and its detail is 200, carrying field_id and days_left
       - Another user gets 404 for it on detail, close and trade, and so does a random id
 
   - id: UAT-GAME-004

@@ -2280,9 +2280,13 @@ class ApiClient {
     required String runId,
     bool confirm = false,
   }) async {
+    // The route reads `commit` from the QUERY STRING (`commit: bool = False`
+    // in `api/games.py`). A JSON body `{'confirm': true}` is ignored, so this
+    // used to PREVIEW on every call — a forfeit the player confirmed never
+    // happened (DEF527).
     final r = await _dio.post<Map<String, dynamic>>(
       '/v1/games/runs/$runId/restart',
-      data: {'confirm': confirm},
+      queryParameters: {'commit': confirm},
     );
     return GameRestartPreview.fromJson(r.data!);
   }
