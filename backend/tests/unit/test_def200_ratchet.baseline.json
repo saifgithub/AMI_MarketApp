@@ -1,29 +1,9 @@
 {
-  "_comment": "DEF200 \u2014 async handlers the census flags as reaching sync I/O. Frozen 2026-08-18 (AT:R70) at 87 so a ratchet could ship green over pre-existing debt; swept 2026-08-25 (AT:R74) from 86 to 38 by converting every handler that never awaited anything to a plain `def`, which Starlette runs in a threadpool. This list is meant to SHRINK. Remove an entry when its handler is converted; do not add one to get a build past the guard. READ `total_async_handlers_when_frozen` TOGETHER WITH THIS: the flagged count is a subset of the scanned population, and the vacuity guard watches the population, not the subset \u2014 otherwise finishing the work would break the guard that protects it.",
+  "_comment": "DEF200 — async handlers the census flags as reaching sync I/O. Frozen 2026-08-18 (AT:R70) at 87; swept to 38 on 2026-08-25 (plain `def`), narrowed to 21 on 2026-08-28 (call vs mention), and CLEARED to 0 on 2026-11-22 (AT:B1) by wrapping every remaining blocking call in asyncio.to_thread / run_in_threadpool. The list is empty on purpose and may only stay empty: do not add an entry to get a build past the guard. READ `total_async_handlers_when_frozen` TOGETHER WITH THIS: the flagged count is a subset of the scanned population, and the vacuity guard watches the population, not the subset — otherwise finishing the work would break the guard that protects it.",
   "frozen_at": "2026-08-18",
   "total_async_handlers_when_frozen": 71,
-  "flagged": [
-    "auth.py::_bind_onboarding_session",
-    "auth.py::magic_link_verify",
-    "backtest_admin.py::start_backtest_room_run",
-    "brief.py::brief_propose",
-    "feedback.py::submit_bug_report",
-    "mandate.py::audit_holdings",
-    "onboarding.py::confirm_readback",
-    "one_on_one.py::event_stream",
-    "one_on_one.py::send_message",
-    "portfolio.py::portfolio_health_finding",
-    "portfolio.py::sector_allocation",
-    "room.py::_finalise_to_journal",
-    "room.py::event_stream",
-    "room.py::stream_room",
-    "sim.py::close_trade",
-    "sim.py::evaluate_trades",
-    "sim.py::get_holding_lots",
-    "sim.py::preview_trade",
-    "sim.py::reset_portfolio",
-    "sim.py::submit_trade"
-  ],
+  "flagged": [],
   "swept_at": "2026-08-25",
-  "narrowed_at": "2026-08-28 (AT:R74) \u2014 38 -> 21. Not a conversion: the census now distinguishes a CALL on a sync-I/O object from a mere mention of one. Every one of the 17 removed was read by hand and is asyncio.to_thread'd or delegates to an async function. Two handlers a first, over-aggressive version of the same change had silently DROPPED \u2014 auth.py::magic_link_verify and sim.py::get_holding_lots, both genuinely blocking \u2014 are on the list because of it."
+  "narrowed_at": "2026-08-28 (AT:R74) — 38 -> 21. Not a conversion: the census now distinguishes a CALL on a sync-I/O object from a mere mention of one.",
+  "cleared_at": "2026-11-22 (AT:B1) — 21 -> 0 (20 distinct handlers; room.py::event_stream appears twice in the census for its two nested generators). Also fixed, though the old census could not see them: games.py::trade and games.py::trade_quote ran a module-local `_require_ticker_or_422` (a DB session) directly on the loop. The census was tightened in the same change: it no longer treats a handler containing ANY run_in_threadpool call as clean, awaited/async-for calls are exempt, a hand-reviewed allowlist covers pure calls, and module-local sync helpers that open a session are followed one level."
 }

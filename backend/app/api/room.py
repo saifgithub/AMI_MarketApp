@@ -116,6 +116,24 @@ def _compute_cio_retry_available(run: RoomRun | None, user_id: UUID) -> bool:
     )
 
 
+def _require_ticker_exists_sync(ticker: str) -> None:
+    """Blocking ticker-existence read, run via `asyncio.to_thread` (DEF200)."""
+    with get_session() as session:
+        require_ticker_exists(session, ticker)
+
+
+def _raw_transcript_sync(run_id: UUID) -> list:
+    """The persisted run's raw transcript JSON (blocking DB read, DEF200)."""
+    with get_session() as s:
+        row = s.get(RoomRunRow, run_id)
+        return (row.transcript or []) if row else []
+
+
+def _append_journal_entry_sync(run: RoomRun, user_id: UUID) -> None:
+    """Build + write the Journal entry (blocking DB write, DEF200)."""
+    get_journal_store().append(_build_journal_entry(run, user_id))
+
+
 class RoomStartRequest(BaseModel):
     model_config = ConfigDict(use_enum_values=True)
 
@@ -163,26 +181,27 @@ async def stream_room(
     # GET /v1/tickers/validate, so this only fires for a stale client or a
     # direct API call.
     try:
-        with get_session() as session:
-            require_ticker_exists(session, ticker)
+        await asyncio.to_thread(_require_ticker_exists_sync, ticker)
     except TickerNotFoundError as exc:
         raise HTTPException(
             status.HTTP_422_UNPROCESSABLE_ENTITY, detail=ticker_not_found_detail(exc)
         ) from exc
 
-    mandate = resolve_mandate(req.user_id, req.mandate_override, locale=req.locale)
+    mandate = await asyncio.to_thread(
+        resolve_mandate, req.user_id, req.mandate_override, locale=req.locale,
+    )
 
     async def _finalise_to_journal(run_id: UUID) -> None:
         """Write the Decision Journal entry. Retries 3× with exponential backoff
         so a transient DB hiccup doesn't silently drop the entry."""
         if run_id is None:
             return
-        run = runner.get_run(run_id)
+        run = await asyncio.to_thread(runner.get_run, run_id)
         if run is None:
             return
         for attempt in range(3):
             try:
-                get_journal_store().append(_build_journal_entry(run, req.user_id))
+                await asyncio.to_thread(_append_journal_entry_sync, run, req.user_id)
                 logger.info(
                     "room_push_stub",
                     run_id=str(run_id),
@@ -287,7 +306,7 @@ async def stream_room(
             # verdict instead of falling through to "Room ended without a
             # verdict." Each agent's full content lands in one agent_token
             # event (the client concatenates into transcript[agent_id]).
-            persisted = runner.get_run(run_id)
+            persisted = await asyncio.to_thread(runner.get_run, run_id)
             if persisted is not None:
                 # DEF161: the DB row's raw JSON is the only place that still
                 # knows whether a message's dict ever HAD a 'stance' key —
@@ -299,9 +318,7 @@ async def stream_room(
                 # the Journal mapper already does off the same stored column
                 # (`room_board_mappers.dart` `_voiceFromRow`:
                 # `stanceRecorded: row?.containsKey('stance')`).
-                with get_session() as s:
-                    row = s.get(RoomRunRow, run_id)
-                    raw_transcript = (row.transcript or []) if row else []
+                raw_transcript = await asyncio.to_thread(_raw_transcript_sync, run_id)
                 yield sse_json("started", json.dumps({'run_id': str(run_id)}))
                 for i, msg in enumerate(persisted.transcript):
                     aid = msg.agent_id if isinstance(msg.agent_id, str) else msg.agent_id.value
@@ -443,7 +460,10 @@ async def stream_room(
         # a client told "used 8 credits" for a Room that cost nothing). A run
         # that cannot be read back (row raced away) degrades to `null`/`false`
         # rather than fabricating a number nobody was charged (DEF437 class).
-        _final = runner.get_run(run_id)
+        _final = await asyncio.to_thread(runner.get_run, run_id)
+        _cio_retry_available = await asyncio.to_thread(
+            _compute_cio_retry_available, _final, req.user_id,
+        )
         yield sse_json("done", json.dumps({
             'run_id': str(run_id),
             # CR267 WP-24 — a banked return cost THIS convene nothing, whatever
@@ -461,9 +481,7 @@ async def stream_room(
             # CR237 — same computed-flag discipline as `refunded` above: the
             # client never string-matches `verdict.reason` to decide whether
             # to show "Ask the CIO again"; this is the one source of truth.
-            'cio_retry_available': _compute_cio_retry_available(
-                _final, req.user_id,
-            ),
+            'cio_retry_available': _cio_retry_available,
             # CR237 (coordinator follow-up) — the client's cue for its own
             # third cost-line sentence ("the CIO's retry was free"): a
             # retried run finished (unlike `refunded`'s outage-PASS case)
@@ -595,18 +613,19 @@ def cio_retry(
         # exactly (the retry never spends or refunds). A row that cannot be
         # read degrades to null/false, same as `stream_room`'s `done`.
         try:
-            _final = runner.get_run(run_id)
+            _final = await asyncio.to_thread(runner.get_run, run_id)
         except Exception:
             logger.exception("room_cio_retry_final_read_failed", run_id=str(run_id))
             _final = None
+        _cio_retry_available = await asyncio.to_thread(
+            _compute_cio_retry_available, _final, current_user.id,
+        )
         yield sse_json("done", json.dumps({
             "run_id": str(run_id),
             "credit_cost": _final.credit_cost if _final is not None else None,
             "refunded": run_was_refunded(_final),
             "cio_retried": bool(_final.cio_retried) if _final is not None else False,
-            "cio_retry_available": _compute_cio_retry_available(
-                _final, current_user.id,
-            ),
+            "cio_retry_available": _cio_retry_available,
         }))
 
     return StreamingResponse(

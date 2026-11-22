@@ -67,6 +67,16 @@ from app.services import account_erasure, age_confirmation
 from app.services.session_store import get_session_store
 
 
+def _hydrate_claim_sync(session, user_id: UUID) -> None:
+    """The blocking half of `_bind_onboarding_session` (DB writes), run in the
+    threadpool so it never executes on the event loop (DEF200)."""
+    age_confirmation.stamp_user(user_id, session.age_confirmed_at)
+
+    if session.completed and get_mandate_store().get(user_id) is None:
+        mandate_dict = session_to_mandate_dict(session, user_id=user_id)
+        get_mandate_store().upsert(user_id, Mandate.model_validate(mandate_dict))
+
+
 async def _bind_onboarding_session(session_id: UUID | None, user_id: UUID) -> None:
     """BL13 (AT:R32): if the client supplies the OnboardingSession that
     produced this user, stamp `claimed_user_id` on it. Idempotent — re-binding
@@ -108,11 +118,7 @@ async def _bind_onboarding_session(session_id: UUID | None, user_id: UUID) -> No
     if session.claimed_user_id == user_id:
         return
 
-    age_confirmation.stamp_user(user_id, session.age_confirmed_at)
-
-    if session.completed and get_mandate_store().get(user_id) is None:
-        mandate_dict = session_to_mandate_dict(session, user_id=user_id)
-        get_mandate_store().upsert(user_id, Mandate.model_validate(mandate_dict))
+    await run_in_threadpool(_hydrate_claim_sync, session, user_id)
 
     session.claimed_user_id = user_id
     await store.save(session)
@@ -246,7 +252,8 @@ async def magic_link_verify(
     # Binding to the caller's own user_id means a caller can only ever
     # guess against challenges they themselves created.
     try:
-        result = auth.verify_magic_link(
+        result = await run_in_threadpool(
+            auth.verify_magic_link,
             email=req.email, code=req.code, user_id=current_user.id,
             challenge_owner_id=current_user.id,
             restore_account=req.restore_account,

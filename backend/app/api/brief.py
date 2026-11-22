@@ -119,7 +119,7 @@ async def brief_message(
     # directly) inherits the same protection instead of needing its own
     # copy.
     brief_message_rate_limit.check(f"user:{current_user.id}")
-    session = engine.get_session(req.session_id)
+    session = await run_in_threadpool(engine.get_session, req.session_id)
     _own_session(current_user, session)
 
     # CR270: daily model-spend ceiling — before the concurrency slot and the
@@ -259,7 +259,7 @@ async def brief_propose(
     current_user: User = Depends(get_current_user),
     engine: BriefEngine = Depends(get_brief_engine),
 ) -> BriefProposal:
-    session = engine.get_session(req.session_id)
+    session = await run_in_threadpool(engine.get_session, req.session_id)
     _own_session(current_user, session)
     await enforce_budget("brief_propose")
     return await engine.propose(session=session, history=req.history)

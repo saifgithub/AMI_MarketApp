@@ -61,6 +61,12 @@ def _own_session(current_user: User, session: OneOnOneSession | None) -> None:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
 
 
+def _append_journal_sync(entry: JournalEntryCreate) -> None:
+    """The blocking journal write, run via `asyncio.to_thread` so the SSE
+    generator never holds the event loop on a DB session (DEF200)."""
+    get_journal_store().append(entry)
+
+
 def _agent_id_str(session: OneOnOneSession) -> str:
     return (
         session.agent_id.value
@@ -161,7 +167,7 @@ async def send_message(
     # rate limiter at all. Per-user, 12/min — see brief.py's brief_message
     # for the same rationale (bearer-keyed, not IP).
     one_on_one_message_rate_limit.check(f"user:{current_user.id}")
-    session = runner.get_session(req.session_id)
+    session = await asyncio.to_thread(runner.get_session, req.session_id)
     _own_session(current_user, session)
 
     # CR270: daily model-spend ceiling. Before the concurrency slot and the
@@ -185,7 +191,9 @@ async def send_message(
     # code path.
     cost = one_on_one_cost()
     try:
-        spend(current_user.id, cost, reason=f"one_on_one:{_agent_id_str(session)}")
+        await asyncio.to_thread(
+            spend, current_user.id, cost, reason=f"one_on_one:{_agent_id_str(session)}",
+        )
     except InsufficientCredits as e:
         # DEF201: the generator (which would otherwise release the slot in
         # its finally) never runs on this path — release here or a 402
@@ -290,7 +298,10 @@ async def send_message(
             # turn the user never got.
             if failed and cost > 0:
                 try:
-                    refund(current_user.id, cost, reason=f"one_on_one_failed:{session.id}")
+                    await asyncio.to_thread(
+                        refund, current_user.id, cost,
+                        reason=f"one_on_one_failed:{session.id}",
+                    )
                 except Exception:  # pragma: no cover
                     pass
             # Capture to Decision Journal — best-effort, never fail the stream
@@ -299,7 +310,7 @@ async def send_message(
                     reply = "".join(buffer)
                     summary = reply[:240].rstrip() + ("…" if len(reply) > 240 else "")
                     agent_id_str = _agent_id_str(session)
-                    get_journal_store().append(JournalEntryCreate(
+                    await asyncio.to_thread(_append_journal_sync, JournalEntryCreate(
                         user_id=session.user_id,
                         entry_type=EntryType.ONE_ON_ONE,
                         reference_id=session.id,

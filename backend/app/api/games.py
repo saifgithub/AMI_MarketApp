@@ -203,7 +203,7 @@ async def run_detail(
 async def trade_quote(
     run_id: UUID, req: GameQuoteRequest, current_user: User = Depends(get_current_user),
 ) -> dict:
-    _require_ticker_or_422(req.ticker)
+    await asyncio.to_thread(_require_ticker_or_422, req.ticker)
     side = req.side if isinstance(req.side, Side) else Side(req.side)
     try:
         return await asyncio.to_thread(
@@ -220,7 +220,7 @@ async def trade_quote(
 async def trade(
     run_id: UUID, req: GameTradeRequest, current_user: User = Depends(get_current_user),
 ) -> dict:
-    _require_ticker_or_422(req.ticker)
+    await asyncio.to_thread(_require_ticker_or_422, req.ticker)
     side = req.side if isinstance(req.side, Side) else Side(req.side)
     order_type = (
         req.order_type if isinstance(req.order_type, OrderType)

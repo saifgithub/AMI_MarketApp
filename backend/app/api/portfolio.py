@@ -123,7 +123,7 @@ async def sector_allocation(
         p.holdings, marks, cash=p.current_cash, sector_of=sector_map.sector,
     )
 
-    mandate = resolve_mandate(user_id, None)
+    mandate = await asyncio.to_thread(resolve_mandate, user_id, None)
     cap = sector_concentration_cap(mandate)
 
     known = {s: w for s, w in allocation.items() if s not in NON_SECTOR_BUCKETS}
@@ -249,7 +249,7 @@ async def portfolio_health_finding(
             },
         )
 
-    store = get_journal_store()
+    store = await asyncio.to_thread(get_journal_store)
     prior = await asyncio.to_thread(
         store.latest_portfolio_health_entry, user_id, p.id,
     )
