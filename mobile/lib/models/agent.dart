@@ -15,12 +15,28 @@ enum AgentFamily {
   concierge,
 }
 
+/// CR159 — the desk an agent sits on in "Your Firm". Hierarchy, not colour:
+/// [AgentFamily] lumps the Research Manager with the CIO as `manager`, which is
+/// wrong for a firm chart (Research Manager sits inside Research, the CIO sits
+/// above everything), so desk is its own field. Mirror of the backend's
+/// `AGENT_DESKS` (a unit test keeps them in lockstep). Declared top-down — the
+/// order is the order the bands render in.
+enum AgentDesk {
+  officeOfCio,
+  analyst,
+  research,
+  execution,
+  risk,
+  concierge,
+}
+
 class Agent {
   const Agent({
     required this.id,
     required this.displayName,
     required this.abbreviation,
     required this.family,
+    required this.desk,
     required this.color,
     required this.tagline,
   });
@@ -35,6 +51,9 @@ class Agent {
   final String abbreviation;
 
   final AgentFamily family;
+
+  /// CR159 — which Your Firm band this agent renders in.
+  final AgentDesk desk;
   final Color color;
 
   /// One-line role description.
@@ -50,6 +69,7 @@ const List<Agent> kAllAgents = [
     displayName: 'Fundamentals Analyst',
     abbreviation: 'FUND',
     family: AgentFamily.analyst,
+    desk: AgentDesk.analyst,
     color: AmiColors.hexCyan,
     tagline: 'Financials, intrinsic value, red flags',
   ),
@@ -58,6 +78,7 @@ const List<Agent> kAllAgents = [
     displayName: 'Technical Strategist',
     abbreviation: 'TECH',
     family: AgentFamily.analyst,
+    desk: AgentDesk.analyst,
     color: AmiColors.hexCyan,
     tagline: 'Charts, indicators, patterns, levels',
   ),
@@ -66,6 +87,7 @@ const List<Agent> kAllAgents = [
     displayName: 'Macro & Events',
     abbreviation: 'MACRO',
     family: AgentFamily.analyst,
+    desk: AgentDesk.analyst,
     color: AmiColors.hexCyan,
     tagline: 'Macro events, headlines, regulatory news',
   ),
@@ -74,6 +96,7 @@ const List<Agent> kAllAgents = [
     displayName: 'Flow & Positioning',
     abbreviation: 'FLOW',
     family: AgentFamily.analyst,
+    desk: AgentDesk.analyst,
     color: AmiColors.hexCyan,
     tagline: 'Sentiment, crowd mood, retail positioning',
   ),
@@ -84,6 +107,7 @@ const List<Agent> kAllAgents = [
     displayName: 'Bull Researcher',
     abbreviation: 'BULL',
     family: AgentFamily.researcher,
+    desk: AgentDesk.research,
     color: AmiColors.hexPurple,
     tagline: 'Builds the long case',
   ),
@@ -92,6 +116,7 @@ const List<Agent> kAllAgents = [
     displayName: 'Bear Researcher',
     abbreviation: 'BEAR',
     family: AgentFamily.researcher,
+    desk: AgentDesk.research,
     color: AmiColors.hexPurple,
     tagline: 'Builds the short / avoid case',
   ),
@@ -100,6 +125,7 @@ const List<Agent> kAllAgents = [
     displayName: 'Research Manager',
     abbreviation: 'RES-M',
     family: AgentFamily.manager,
+    desk: AgentDesk.research,
     color: AmiColors.hexPurple,
     tagline: 'Adjudicates Bull vs Bear, writes synthesis',
   ),
@@ -110,6 +136,7 @@ const List<Agent> kAllAgents = [
     displayName: 'Risk Officer — Aggressive',
     abbreviation: 'AGG',
     family: AgentFamily.risk,
+    desk: AgentDesk.risk,
     color: AmiColors.hexAmber,
     tagline: 'Argues for risk-on',
   ),
@@ -118,6 +145,7 @@ const List<Agent> kAllAgents = [
     displayName: 'Risk Officer — Conservative',
     abbreviation: 'CON',
     family: AgentFamily.risk,
+    desk: AgentDesk.risk,
     color: AmiColors.hexAmber,
     tagline: 'Argues for capital preservation',
   ),
@@ -126,6 +154,7 @@ const List<Agent> kAllAgents = [
     displayName: 'Risk Officer — Balanced',
     abbreviation: 'BAL',
     family: AgentFamily.risk,
+    desk: AgentDesk.risk,
     color: AmiColors.hexAmber,
     tagline: 'Balances aggressive vs conservative',
   ),
@@ -136,6 +165,7 @@ const List<Agent> kAllAgents = [
     displayName: 'Execution Desk',
     abbreviation: 'EXEC',
     family: AgentFamily.execution,
+    desk: AgentDesk.execution,
     color: AmiColors.hexGreen,
     tagline: 'Translates synthesis into a trade idea',
   ),
@@ -144,6 +174,7 @@ const List<Agent> kAllAgents = [
     displayName: 'Chief Investment Officer',
     abbreviation: 'CIO',
     family: AgentFamily.manager,
+    desk: AgentDesk.officeOfCio,
     color: AmiColors.hexPurple,
     tagline: 'Final call. Approves or rejects against your mandate.',
   ),
@@ -154,6 +185,7 @@ const List<Agent> kAllAgents = [
     displayName: 'AMI Concierge',
     abbreviation: 'CNC',
     family: AgentFamily.concierge,
+    desk: AgentDesk.concierge,
     color: AmiColors.hexPink,
     tagline: 'Personal assistant — lessons, journal, scheduling',
   ),
@@ -187,6 +219,18 @@ const Map<String, RoomPhase> kAgentPhase = {
   'neutral_debator': RoomPhase.risk,
   'portfolio_manager': RoomPhase.verdict,
 };
+
+/// CR159 — the agents on [desk], in roster order. Grouping is derived from the
+/// field, never from list position (T-SLICE), so a roster edit cannot silently
+/// move an agent to the wrong band.
+List<Agent> agentsOnDesk(AgentDesk desk) =>
+    kAllAgents.where((a) => a.desk == desk).toList(growable: false);
+
+/// The twelve trading agents — everyone except the Concierge, who is outside
+/// the gated roster.
+final List<Agent> kTradingAgents = kAllAgents
+    .where((a) => a.desk != AgentDesk.concierge)
+    .toList(growable: false);
 
 /// The eleven voices of the consensus comb, in speaking order — every agent
 /// except the Chief Investment Officer, whose decision is the hero tile rather than

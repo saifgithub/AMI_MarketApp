@@ -5624,6 +5624,46 @@
       }
     }
   },
+  "firmDeskYou": "YOU · CEO",
+  "@firmDeskYou": {
+    "description": "CR159. Caption under the non-agent CEO hex at the top of Your Firm — the user is the CEO of the firm below. Mono uppercase, one short line. Keep the middle dot. NEW key. retranslate:[ar,ms]"
+  },
+  "firmDeskAnalyst": "ANALYST DESK",
+  "@firmDeskAnalyst": {
+    "description": "CR159. Band label on Your Firm for the four analysts (Fundamentals, Technical Strategist, Macro & Events, Flow & Positioning). Mono uppercase. NEW key. retranslate:[ar,ms]"
+  },
+  "firmDeskResearch": "RESEARCH",
+  "@firmDeskResearch": {
+    "description": "CR159. Band label on Your Firm for the Bull Researcher, Bear Researcher and Research Manager. Mono uppercase. NEW key. retranslate:[ar,ms]"
+  },
+  "firmDeskExecution": "EXECUTION",
+  "@firmDeskExecution": {
+    "description": "CR159. Band label on Your Firm for the Execution Desk, shown beside RISK. Narrow column — keep to one word. Mono uppercase. NEW key. retranslate:[ar,ms]"
+  },
+  "firmDeskRisk": "RISK",
+  "@firmDeskRisk": {
+    "description": "CR159. Band label on Your Firm for the three Risk Officers. Mono uppercase. NEW key. retranslate:[ar,ms]"
+  },
+  "firmDeskConcierge": "CONCIERGE",
+  "@firmDeskConcierge": {
+    "description": "CR159. Band label on Your Firm for the AMI Concierge. Followed by a dash and firmDeskConciergeNote. Mono uppercase. NEW key. retranslate:[ar,ms]"
+  },
+  "firmDeskConciergeNote": "reports to you",
+  "@firmDeskConciergeNote": {
+    "description": "CR159. Appended to the CONCIERGE band label after a dash: 'CONCIERGE — reports to you'. Says the Concierge answers to the user, not to the CIO. Lowercase fragment. NEW key. retranslate:[ar,ms]"
+  },
+  "firmDeskCount": "{filled}/{total}",
+  "@firmDeskCount": {
+    "description": "CR159. Per-band seat count on Your Firm, e.g. '2/3' = two of three agents unlocked. Shown right-aligned in the band header; a standing metric may replace it later. Keep the slash, digits and order. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "filled": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "roomConsensusHeading": "CONSENSUS",
   "@roomConsensusHeading": {
     "description": "CR173. Label on the one-line strip above the Verdict Board's 11-hex comb. Mono uppercase. NEW key. retranslate:[ar,ms]"

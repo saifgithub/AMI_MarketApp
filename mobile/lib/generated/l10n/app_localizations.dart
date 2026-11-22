@@ -7294,6 +7294,54 @@ abstract class AppLocalizations {
   /// **'{filled}/{total} seats filled'**
   String floorFirmSeats(int filled, int total);
 
+  /// CR159. Caption under the non-agent CEO hex at the top of Your Firm — the user is the CEO of the firm below. Mono uppercase, one short line. Keep the middle dot. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'YOU · CEO'**
+  String get firmDeskYou;
+
+  /// CR159. Band label on Your Firm for the four analysts (Fundamentals, Technical Strategist, Macro & Events, Flow & Positioning). Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'ANALYST DESK'**
+  String get firmDeskAnalyst;
+
+  /// CR159. Band label on Your Firm for the Bull Researcher, Bear Researcher and Research Manager. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'RESEARCH'**
+  String get firmDeskResearch;
+
+  /// CR159. Band label on Your Firm for the Execution Desk, shown beside RISK. Narrow column — keep to one word. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'EXECUTION'**
+  String get firmDeskExecution;
+
+  /// CR159. Band label on Your Firm for the three Risk Officers. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'RISK'**
+  String get firmDeskRisk;
+
+  /// CR159. Band label on Your Firm for the AMI Concierge. Followed by a dash and firmDeskConciergeNote. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'CONCIERGE'**
+  String get firmDeskConcierge;
+
+  /// CR159. Appended to the CONCIERGE band label after a dash: 'CONCIERGE — reports to you'. Says the Concierge answers to the user, not to the CIO. Lowercase fragment. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'reports to you'**
+  String get firmDeskConciergeNote;
+
+  /// CR159. Per-band seat count on Your Firm, e.g. '2/3' = two of three agents unlocked. Shown right-aligned in the band header; a standing metric may replace it later. Keep the slash, digits and order. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'{filled}/{total}'**
+  String firmDeskCount(int filled, int total);
+
   /// CR173. Label on the one-line strip above the Verdict Board's 11-hex comb. Mono uppercase. NEW key. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:

@@ -277,8 +277,8 @@ void main() {
       await t.pump();
       await t.pump(const Duration(milliseconds: 400)); // route transition
       await _settle(t);
-      expect(find.byType(AgentTile), findsNWidgets(12),
-          reason: 'D-012 — twelve agents hidden is a design, twelve agents '
+      expect(find.byType(AgentTile), findsNWidgets(13),
+          reason: 'D-012 (twelve + the Concierge band, CR159) — twelve agents hidden is a design, twelve agents '
               'deleted is a different product');
     });
 
