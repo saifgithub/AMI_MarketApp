@@ -1226,3 +1226,41 @@ Remaining items, not asked one by one. Saiful: "i can accept the rest as recomme
 - **DEF486** (open since 10-20) — UNDO snackbar covers the primary button → keep in WP-33.
 
 Summary: 66 items: 53 asked, 13 accepted on recommendation, plus 2 fact questions (CR258 enrollment state, Play account type). New Beta scope: CR239 (trace IDs), CR022 (app manual corpus), CR252 (fold in before WP-10), DEF445 (WP-27), DEF469/470/482/485 (WP-33), DEF104 (WP-35). Drops: CR245, CR247, CR250, CR254. Closures to execute: DEF386 (retract CR164 Phase A findings), DEF434 (verify no --delete, then close).
+
+## 2026-11-22
+
+- **DEF100** (open since 07-24) — asked: "store billing config: keep parked (11-18 call)?" → Saiful: "Remind me what def100 is" (explained, re-asked below)
+- **DEF144** (open since 07-28) — asked: "translation code-switching: keep deferred to AR/MS?" → Saiful: "Keep deferred to AR/MS"
+- **DEF200** (open since 07-30) — asked: "sync I/O on the event loop: WP-46 decides?" → Saiful: "Start now"
+- **DEF344** (open since 08-20) — asked: "mobile billing bug: keep parked?" → Saiful: "Might need review with one of the other def in the list" (checked against DEF100, re-asked below)
+- **DEF100** (open since 07-24) — re-asked after the reminder (RevenueCat/store billing never provisioned; owner Saiful; unpark trigger for the payments track): keep parked? → Saiful: "Keep parked"
+- **DEF344** (open since 08-20) — re-asked: "upgrade-tap crash; build 125 AMI-DL-16 showed the fallback card, no crash: close as fixed?" → Saiful: "Re-check on iPhone first"
+- **DEF367** (open since 08-25) — asked: "47% wire surfaces untested (ratchet at 27): keep deferred post-Beta?" → Saiful: "Start now"
+- **DEF385** (open since 08-31) — asked: "backtest look-ahead guard stale number: keep deferred?" → Saiful: "Start now"
+- **DEF421** (open since 09-25) — asked: "RLS on app.user_id: keep as prod blocker?" → Saiful: "Keep: prod blocker"
+- **DEF438** (open since 09-25) — asked: "iOS sim WDA tree empty (sim paused, lab iPhone covers iOS): keep deferred?" → Saiful: "Drop it"
+- **DEF447** (open since 09-27) — asked: "8-K 5.02 feed never re-scanned: keep deferred?" → Saiful: "Start now"
+- **DEF466** (open since 10-19) — asked: "iOS a11y tree dark below PROFILE; WP-33 closed: where does it go?" → Saiful: "Start now (own lane)"
+- **CR159** (proposed since 08-09) — asked: "Your Firm desk structure: keep deferred?" → Saiful: "Can't remember the details" (explained, re-asked below)
+- **CR161** (proposed since 08-09) — asked: "white-label B2B2C: keep deferred?" → Saiful: "Keep deferred post-Beta"
+- **CR159** (proposed since 08-09) — re-asked after the reminder (desk-banded tiers on the Floor, design of record): same call? → Saiful: "Start now"
+- **CR191** (proposed since 08-17) — asked: "11 check-then-INSERT sites: keep deferred to prod scale?" → Saiful: "Keep deferred to prod scale"
+- **CR198** (proposed since 08-20) — asked: "referral (payments parked): keep parked?" → Saiful: "Keep parked"
+- **CR200-R005** (proposed since 10-18) — asked: "data admin module: keep deferred?" → Saiful: "Keep deferred post-Beta"
+- **CR213** (proposed since 08-31) — asked: "backtest distance-normalised reporting: keep deferred?" → Saiful: "Keep deferred post-Beta"
+- **CR229** (proposed since 09-22) — asked: "BLS/Census sourcing: keep deferred?" → Saiful: "Start now"
+- **CR238** (proposed since 09-25) — asked: "CR221 data batches 6-9: keep deferred?" → Saiful: "Keep deferred post-Beta"
+- **CR240** (proposed since 09-26) — asked: "hosted LLM provider eval: close as absorbed into CR267 WP-10/14/22?" → Saiful: "Close as absorbed"
+- **CR241** (proposed since 09-26) — asked: "users.locale write-once: keep deferred to AR/MS?" → Saiful: "Keep deferred to AR/MS"
+- **CR242** (proposed since 09-27) — asked: "Arabic Room prompt reliability: keep deferred to AR/MS?" → Saiful: "Keep deferred to AR/MS"
+- **CR243** (proposed since 09-27) — asked: "Malay Room prompt reliability: keep deferred to AR/MS?" → Saiful: "Keep deferred to AR/MS"
+- **CR244** (proposed since 09-27) — asked: "company/EDGAR data display + feeds: keep deferred?" → Saiful: "Start now"
+- **CR246** (proposed since 09-28) — asked: "multi-user load simulation: close as absorbed into WP-46?" → Saiful: "Close as absorbed"
+- **CR248** (proposed since 09-30) — asked: "Hermes ops personas: same call (not your issue)?" → Saiful: "Not my issue"
+- **CR258** (proposed since 10-13) — asked: "company developer accounts: prepared, hold the release?" → Saiful: "Hold: prepared, no release"
+- **CR261** (proposed since 10-18) — asked: "billing manual-ops catalogue: keep parked?" → Saiful: "Keep parked"
+- **CR262** (proposed since 10-18) — asked: "billing watchdog: keep parked?" → Saiful: "Keep parked"
+- **CR267** (proposed since 11-18, executing since 11-18) — asked: "flip status to in_progress?" → Saiful: "Flip to in_progress"
+- **CR280** (proposed since 11-19) — asked: "pre-registration + toll prerequisites: defer post-Beta like CR222?" → Saiful: "Defer post-Beta"
+
+Summary: 30 asked, 0 closed without asking. Start now: DEF200, DEF367, DEF385, DEF447, DEF466, CR159, CR229, CR244. Close: DEF438 (drop), CR240 + CR246 (absorbed into CR267). Flip: CR267 → in_progress. DEF344 → re-check on iPhone first. Others unchanged.
