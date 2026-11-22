@@ -162,6 +162,19 @@ def test_list_cadences_offers_all_five_with_per_cadence_held_flags():
         assert row["entry_opens_at"] < row["locks_at"]
 
 
+def test_list_cadences_sends_the_entrant_count_the_app_reads():
+    """DEF529: the app's `GameFieldSummary` (the flat cadence row) reads
+    `entrant_count`; only `queue_count` was sent, so the Games entrants line
+    always read 0."""
+    games.enter_field(uuid4(), cadence="week", now=_NOW)
+    games.enter_field(uuid4(), cadence="week", now=_NOW)
+
+    rows = {r["cadence"]: r for r in games.list_cadences(uuid4(), now=_NOW)}
+    for row in rows.values():
+        assert row["entrant_count"] == row["queue_count"]
+    assert rows["week"]["entrant_count"] >= 2
+
+
 # ══ Scoring weights (§6.3) ══════════════════════════════════════════════════
 
 

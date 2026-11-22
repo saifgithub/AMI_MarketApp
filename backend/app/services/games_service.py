@@ -598,6 +598,7 @@ def list_cadences(user_id: UUID, *, now: datetime | None = None) -> list[dict]:
                 "starts_on": field.starts_on.isoformat(),
                 "ends_on": field.ends_on.isoformat(),
                 "queue_count": field.entrant_count,
+                "entrant_count": field.entrant_count,
                 "deadline": field.locks_at.isoformat(),
                 "already_held": held,
             })
