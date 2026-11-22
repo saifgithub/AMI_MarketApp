@@ -43,6 +43,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from sqlalchemy import select
 
 from app.db import get_session, init_schema
+from app.db.ami_claim import claim
 from app.db.models import Edgar8kItemRow, Edgar8kScanRow
 from app.services.edgar_8k import (
     EXTRACTED,
@@ -156,25 +157,24 @@ def ingest_ticker(
         if extract_status != EXTRACTED:
             tally.named[extract_status].append(f"{ticker} {ref.accession_no} ({status})")
 
+        def _refresh(row: Edgar8kItemRow, extract_status=extract_status, section=section) -> None:
+            row.extract_status = extract_status
+            row.section_text = section
+            row.ingested_at = datetime.now(timezone.utc)
+
         with get_session() as session:
-            row = session.execute(
-                select(Edgar8kItemRow).where(
-                    Edgar8kItemRow.cik == cik, Edgar8kItemRow.accession_no == ref.accession_no,
-                )
-            ).scalars().first()
-            if row is None:
-                session.add(Edgar8kItemRow(
-                    ticker=ticker, cik=cik, accession_no=ref.accession_no, form=ref.form,
-                    filed=ref.filed, report_date=ref.report_date,
-                    item_codes=",".join(ref.item_codes), primary_document=ref.primary_document,
-                    extract_status=extract_status, section_text=section,
-                ))
-                tally.filings["new"] += 1
-            else:
-                row.extract_status = extract_status
-                row.section_text = section
-                row.ingested_at = datetime.now(timezone.utc)
-                tally.filings["updated"] += 1
+            claimed = claim(
+                session, Edgar8kItemRow,
+                key={"cik": cik, "accession_no": ref.accession_no},
+                values={
+                    "ticker": ticker, "form": ref.form, "filed": ref.filed,
+                    "report_date": ref.report_date, "item_codes": ",".join(ref.item_codes),
+                    "primary_document": ref.primary_document,
+                    "extract_status": extract_status, "section_text": section,
+                },
+            )
+            claimed.or_update(_refresh)
+            tally.filings["new" if claimed.created else "updated"] += 1
 
     # The scan row is written whatever happened to the DOCUMENTS: the index
     # was read, and that is what the "none filed between" claim rests on.
