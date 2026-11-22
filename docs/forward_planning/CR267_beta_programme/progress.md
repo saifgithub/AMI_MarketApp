@@ -316,4 +316,10 @@ Found: two users have duplicate training portfolios created 40 ms apart on 2026-
     3. Beta E5 device matrix: the two lab phones only, no hand items. Accepted gap: UAT-ONB-043 (fresh-install onboarding) never runs on a device before Beta, since the lab phones do not uninstall.
     4. WP-22 LLM grader: run it on both on-prem ami-llm and the DeepInfra hosted model; the bake-off's DeepInfra spend is approved.
 17. **Build 125** (DEF521, DEF522, DEF523; bump `7da6d134`) is on TestFlight and Play internal. **AMI-DL-16** (Android, 125): 6 passed (AUTH-044, BILL-012, SIM-028, SIM-029, JRNL-008), AUTH-047 blocked: Android's share sheet has no on-phone save target → **DEF524** (Save to device). **AMI-DL-15** (iPhone, 125) in progress.
+18. **2026-11-21 to 2026-11-22.**
+    1. Builds 126 (DEF524 export Save to device), 127 (DEF526 Ref line follows the trace store) and 128 (WP-25 flip card) on TestFlight + Play internal; deploys #18 (`alpha-2026-11-21-5`: DEF525, WP-22 graders offline, WP-23 flag off, WP-38 lab-only fault switch) and #19 (`alpha-2026-11-21-6`: WP-25 backend, fault switch removed), both postflight PASS.
+    2. Device runs: AMI-DL-17 (export passes; Ref missing → DEF526), DL-18 (Ref traced end to end: phone → log → http_audit → bug report; WP-38 done), DL-19 (128 regression clean), DL-20/20b (DEF344 verified on iPhone; DEF466 not reproduced on 128).
+    3. WP-20 arm 1 (300 Rooms) and the side set (50) done; arm 2 (cards on) running. No WP-20 Room is on a Street Sell name.
+    4. WP-22 bake-off: on-prem, Jev and DeepInfra graders scored on the same 300 Rooms, plus wording and input tests; CheapLLM piloted. Results and the S3 recommendation in `grader_bakeoff_2026-11-21.md`. Hosted spend $1.16.
+    5. Rulings recorded in the plan, §3b. Daily review 2026-11-22 logged (`84f8d5e9`); its eight "start now" items run as WP-55 (tracker, "Review items").
 

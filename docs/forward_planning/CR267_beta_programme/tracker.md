@@ -53,7 +53,25 @@ Status values: `not started` · `in progress` · `blocked (gate)` · `done` · `
 | WP-51 | Website waitlist | WP-00 | done | 2026-11-19 | 2026-11-20 | `588fb4bf` | Deployed 2026-11-20: WEBSITE_ADMIN_SECRET set in alpha.env, api-website rebuilt, cPanel rsynced. Admin export 403 without the secret, 200 with it. The deploy exposed DEF510 (table owner), fixed. |
 | WP-52 | Tester note + support inbox | WP-00 | waiting | 2026-11-19 | | `c9858a84` | **[HUMAN: skim the note + confirm support.ai@ mailbox]** Tester note + TestFlight/Play texts + 3 manual entries (CR022). Support mailbox steps for Saiful in part 4. Four checks fixed 2026-11-20; founder skims; mailbox to confirm (`support.ai@`). |
 | WP-53 | Exit-criteria report | WP-36, WP-46 · S9 | not started | | | | |
+| WP-55 | Daily-review items (2026-11-22) | WP-00 | in progress | 2026-11-22 | | `84f8d5e9` (review log) | Not in the original plan: Saiful started eight register items in the 2026-11-22 daily review. Per-item rows in "Review items" below. |
 | WP-54 | Beta go-live | see plan | not started | | | | |
+
+## Review items (WP-55, from the 2026-11-22 daily review)
+
+| Item | What | Status | Commits | Note |
+|---|---|---|---|---|
+| DEF200 | Blocking I/O on the event loop | in progress | `45a4d007` `1033f956` | Handler level done (census 21 → 0; the census was hiding calls and was tightened). Kept open: sync I/O inside the service methods the handlers await is not yet traced. Ships in deploy #20. |
+| DEF367 | Wire routes the app reads but no test checks | in progress | `5ea5622e` | 27 → 9 unverified; 18 routes now covered, extractor blind spots fixed. The 9 left are all Games; 5 real mismatches filed as DEF527. |
+| DEF527 | Games wire mismatches (a SELL parses as buy; cadence, entry id, days left, committed, near-miss missing) | in progress | `6cf99110` | New, found by DEF367. Worker fixing both sides per route. |
+| DEF385 | Backtest look-ahead guard reports a stale number | in progress | | Worker running. |
+| DEF447 | 8-K 5.02 officer-change feed never re-scanned | in progress | `d45c0b58` | Nightly re-scan built (claim() on the item write); cron line written. **Cron installs after deploy #20** (melehost is UTC; 04:30 UTC falls after the US filing day). Closes after its first clean run. |
+| DEF466 | iOS accessibility tree dark below Settings > PROFILE | in progress | `87f68b3b` | Depth ruled out (about 24 of WDA's 50). AMI-DL-20b on build 128: not reproduced across 15 scroll steps. Re-check on the next iPhone slots before closing. |
+| CR159 | Your Firm desk-banded tiers | in progress | `4a696f60` | Built and merged (13 tiles in desk bands, 8 new strings for AR/MS). Ships in build 129; needs an iPhone look at 390 and 320 pt; the Appium FLOOR-007 test may need a scroll step. |
+| CR229 | BLS/Census direct sourcing for CPI/PPI and construction | in progress | | Worker running (docs only, fetcher behind a default-off setting if clean). |
+| CR244 | Company/EDGAR data: Review display (part 1) | in progress | | Worker running (slice 1 from stored data; part 2 Room feeds planned, not built). |
+| DEF344 | Upgrade tap crashed with RevenueCat unconfigured | done | `206a425b` | Verified on Android (DL-16, 125) and iPhone (DL-20b, 128). |
+| DEF438 | iOS Simulator WDA tree empty | dropped | `f5a1f67a` | Saiful: drop; the lab iPhone replaces the paused simulator. |
+| CR240, CR246 | Hosted LLM eval; multi-user load simulation | dropped (absorbed) | `f5a1f67a` | Into CR267 WP-10/14/22 and WP-46. |
 
 ## Gates
 
@@ -63,7 +81,12 @@ Status values: `not started` · `in progress` · `blocked (gate)` · `done` · `
 | S1 | ✅ done | 2026-11-18 | 66 items ruled (53 asked, 13 accepted on recommendation) |
 | S2 | ✅ ruled | 2026-11-19 | Saiful: **DeepSeek-V4-Flash** for Beta (WP-10 scorecard). Alpha's backup model was switched to it; it works once DeepInfra is topped up (Saiful). |
 | S8 | ✅ done | 2026-11-19 | Adanos key rotated (Saiful). |
-| S3–S7, S10 | open | | S8 (Adanos key) blocks DEF178. S4 and S7 are Saiful's actions and can be released now. |
+| S3 | open | 2026-11-22 | Grader pick. Bake-off done for on-prem, Jev, DeepInfra; CheapLLM piloted at Saiful's request, not viable. Recommendation: DeepInfra DeepSeek-V4-Flash (plan §3b.7). Code grader waits on WP-20 arm 2. |
+| S4 | open, last | 2026-11-21 | Saiful: "you really should leave S4 to last". Beta host not picked. |
+| S5 | ✅ ruled | 2026-11-20 | Cloudflare Tier 3 + Alibaba. |
+| S6 | open | | Counsel on archive mode + PDPA cross-border; off the launch path. |
+| S7 | open | 2026-11-20 | Accounts enrolled but "clean": prepare, don't release (re-confirmed 2026-11-22 daily review). |
+| S10 | open | | |
 | S9 | ✅ ruled | 2026-11-18 | Saiful: "Lets not set a number, but if we need to set it to 60%". WP-53 reports the satisfaction rate without a pass/fail bar; where a bar is required, it is 60% thumbs-up over 100 rated runs. |
 | S11 | ✅ approved | 2026-11-18 | Plan: `S11_llm_implementation_plan.md` (rulings §3a). Alpha stays on-prem until Beta; Ling joins WP-10. |
 | S12 | ✅ approved | 2026-11-18 | Plan `S12_jev_grader_implementation_plan.md` §0. The rule decides (shadow first on Alpha). **Analyst consensus is the reference, with no human labelling** (Saiful: "didn't we agree to use the current market analysis of the ticker?"). Jev in the test only; ask TypeSafe for terms now. Other 7 recommendations accepted ($50 cap, etc.). |

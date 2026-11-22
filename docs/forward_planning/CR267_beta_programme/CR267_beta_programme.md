@@ -63,6 +63,17 @@ Saiful answered the open items the same day (§3a). Two facts remain to confirm:
 5. **Track:** the executing session commits as track B, `(AT:B<N> CR###)`, numbered per session.
 6. **Track K (Kimi) is closed.** WP-00 reads its leftovers, commits the clean ones under K's tag, and supersedes CR266.
 
+## 3b. Decisions since rev 2 (Saiful, 2026-11-20 to 2026-11-22)
+
+1. **S4 is the last decision of the programme** (2026-11-21: "you really should leave S4 to last"). No Beta host is picked; WP-42–46 wait until everything else is done.
+2. **CR222 moves out of the Beta gate** to a post-Beta CR (2026-11-21); CR280 (its slice A + toll prerequisites) is deferred post-Beta with it (2026-11-22).
+3. **The Beta E5 device matrix is the two lab phones only**, no hand items (2026-11-21). Accepted gap: UAT-ONB-043 (fresh-install onboarding) never runs on a device before Beta, since the lab phones do not uninstall.
+4. **WP-22 graders run on more than on-prem** (2026-11-21 "Both"; 2026-11-22 "We have jev and deep infra. Build both and let's test it"): bake-off spend approved; keys live in melehost `~/cr267_wp20/bakeoff.env` (mode 600), never in Alpha's env. Three-way result in `grader_bakeoff_2026-11-21.md`; total hosted spend $1.16.
+5. **CheapLLM was tested at Saiful's request** (2026-11-22, `deepseek-v4.1-flash-1017` at `cheapllm.shop`): 2/10 Rooms failed on provider capacity, 33–432 s per Room. Not viable as the grader today.
+6. **Alpha may call a hosted grader, for the grader only** (2026-11-22). Alpha's desks stay on-prem (amends the 2026-11-19 on-prem-only ruling for this one call); enforce with the CR281 allow-list naming the grader slot and a daily spend ceiling.
+7. **S3 (grader pick) is open.** Recommendation on record: DeepInfra `deepseek-ai/DeepSeek-V4-Flash` at temperature 0, with `terminal_vulnerability` and a structured `trade_proposed` as fixed Pass gates and the wording-fragile questions averaged over five phrasings. Saiful asked first for the CheapLLM test.
+8. **Daily review 2026-11-22: eight items started now** (WP-55 below): DEF200, DEF367, DEF385, DEF447, DEF466, CR159, CR229, CR244. Closed: DEF438 (dropped), CR240 and CR246 (absorbed into this CR), DEF344 (fixed, verified on both phones). CR267 itself flipped to `in_progress`.
+
 ## 4. Saiful gates (stop here and ask)
 
 | Gate | Needed before | What Saiful does |
@@ -70,8 +81,8 @@ Saiful answered the open items the same day (§3a). Two facts remain to confirm:
 | S0 | any WP | Says go on this plan. |
 | S1 | WP-01 | Answers the CR/Defect review questions live (`/daily-cr-def-review`). |
 | S2 | WP-14 | Picks the hosted model from the WP-10 scorecard. |
-| S3 | WP-23 | Picks the grader from the WP-22 bake-off scorecard; if Jev, obtains vendor terms. |
-| S4 | WP-42 | Confirms the Beta host choice, opens the account, creates the server, gives go for SSH work. |
+| S3 | WP-23 | Picks the grader from the WP-22 bake-off scorecard; if Jev, obtains vendor terms. Open; recommendation in §3b.7. |
+| S4 | WP-42 | Confirms the Beta host choice, opens the account, creates the server, gives go for SSH work. **Last decision of the programme (§3b.1).** |
 | S5 | WP-40 result | Picks the accelerator / credit programmes and applies. |
 | S6 | WP-30 release to testers | Gets counsel's ruling on archive-instead-of-delete, plus the Singapore cross-border transfer under Malaysia's PDPA. Only this narrow question; the full legal review stays in §7. Off the launch path: Beta ships in `delete`/`anonymise` mode (§3a.2), and S6 is needed only to switch to `archive`. |
 | S7 | WP-49 | Confirms company Apple/Google accounts are enrolled and usable, and whether the Play account is an organisation account. |
@@ -129,6 +140,7 @@ Model column: suggested worker tier (Opus = load-bearing, Sonnet = standard). "L
 | WP-51 | Website waitlist | WP-00 | — | Sonnet |
 | WP-52 | Tester onboarding note and support inbox | WP-00 | — | Sonnet |
 | WP-53 | Exit-criteria report | WP-36, WP-46 | S9 | Sonnet |
+| WP-55 | Daily-review items started 2026-11-22: DEF200, DEF367, DEF385, DEF447, DEF466, CR159, CR229, CR244; plus DEF527 (found by DEF367) | WP-00 | — | Sonnet |
 | WP-54 | Beta go-live | WP-12, WP-13 (enforcing), WP-26, WP-30…39, WP-45, WP-46, WP-50, WP-52, WP-53 | — | Architect |
 
 Parallelism: after WP-00, the Phase 3 packages (WP-27, WP-29…35, WP-37), WP-21a, WP-40, WP-49, WP-51 and WP-52 are independent of the Room work and of each other. WP-10…13 run together. The Room chain WP-21a → 20 → 22 → 23 → 25 → 26 is the critical path. WP-28 and WP-51 are deliberately off the launch path: the first wave is the personal network and needs no waitlist.
