@@ -23,6 +23,7 @@ substantive message — enough for the iPhone UI to feel live without keys.
 
 from __future__ import annotations
 
+import asyncio
 import re
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
@@ -258,7 +259,7 @@ class BriefEngine:
         mandate = Mandate.model_validate(session.mandate_used)
         agent_id = _coerce_agent_id(session.agent_id)
         base = load_base_prompt(agent_id)
-        active = self._store.get_active(session.user_id, agent_id)
+        active = await asyncio.to_thread(self._store.get_active, session.user_id, agent_id)
         active_block = (
             f"\n\nYour current user_overlay (v{active.version}):\n{active.content}"
             if active else "\n\nYou have no user_overlay yet — running on defaults."
@@ -266,7 +267,7 @@ class BriefEngine:
         system_prompt = base + active_block + "\n\n" + BRIEF_MODE_PREFIX
 
         # BL11 (AT:R33): effective_plan downgrades expired trials to floor_pass.
-        plan = effective_plan_for_user(session.user_id)
+        plan = await asyncio.to_thread(effective_plan_for_user, session.user_id)
         tier = pick_tier(plan, agent_id)
         messages: list[ChatMessage] = [
             ChatMessage(role=h.role, content=h.content) for h in history
@@ -385,8 +386,8 @@ class BriefEngine:
 
         if not self._llm.has_real_provider():
             seed = self._mock_proposal_seed(history)
-            full_overlay = self._compose_full_overlay(
-                session.user_id, agent_id, seed.overlay_addition
+            full_overlay = await asyncio.to_thread(
+                self._compose_full_overlay, session.user_id, agent_id, seed.overlay_addition
             )
             proposal = BriefProposal(
                 session_id=session.id,
@@ -408,7 +409,9 @@ class BriefEngine:
         text = await self._stream_to_string(
             system_prompt=PROPOSE_SYSTEM_PROMPT,
             messages=[ChatMessage(role=h.role, content=h.content) for h in history],
-            tier=pick_tier(effective_plan_for_user(session.user_id), agent_id),
+            tier=pick_tier(
+                await asyncio.to_thread(effective_plan_for_user, session.user_id), agent_id
+            ),
             locale=mandate.locale,
         )
         parsed = extract_json_object(text)
@@ -453,7 +456,9 @@ class BriefEngine:
             session.pending_proposal = proposal
             return proposal
 
-        full_overlay = self._compose_full_overlay(session.user_id, agent_id, addition)
+        full_overlay = await asyncio.to_thread(
+            self._compose_full_overlay, session.user_id, agent_id, addition
+        )
         proposal = BriefProposal(
             session_id=session.id,
             plain_english=plain or "Updated my instructions.",

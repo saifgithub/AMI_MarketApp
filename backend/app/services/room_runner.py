@@ -7572,6 +7572,16 @@ def _persist_run(run: RoomRun) -> None:
     _write_run_snapshot(seq, snap)
 
 
+async def _persist_run_async(run: RoomRun) -> None:
+    """`_persist_run` for a caller on the event loop (DEF200): the whole upsert,
+    snapshot included, runs in the threadpool. Safe because every call site is the
+    one generator that owns `run`, suspended on this await — nothing else mutates it
+    meanwhile (`_checkpoint_run_async` snapshots on the loop only because it is
+    called while analyst tasks may still be writing). Resolves `_persist_run` at call
+    time, so a test that patches it still intercepts the write."""
+    await asyncio.to_thread(_persist_run, run)
+
+
 async def _checkpoint_run_async(run: RoomRun) -> None:
     """Incremental transcript snapshot after each agent completes (DEF444: off the
     event loop). The snapshot is taken here, on the loop, so the worker thread never
@@ -8155,11 +8165,13 @@ class RoomRunner:
         """
         from app.services.mandate_store import get_mandate_store, resolve_mandate
 
-        mandate = get_mandate_store().get_version(p.user_id, p.mandate_version)
+        mandate = await asyncio.to_thread(
+            get_mandate_store().get_version, p.user_id, p.mandate_version
+        )
         if mandate is None:
             # Default-hydrated mandate path — common before Brief Your Agent
             # has been used. resolve_mandate always returns a Mandate.
-            mandate = resolve_mandate(p.user_id, None)
+            mandate = await asyncio.to_thread(resolve_mandate, p.user_id, None)
             logger.info(
                 "room_startup_retry_mandate_fallback",
                 run_id=str(p.run_id),
@@ -8182,12 +8194,14 @@ class RoomRunner:
                 user_id=str(p.user_id),
                 error=str(exc)[:200],
             )
-            credit_cost: int | None = None
-            with get_session() as s:
-                row = s.execute(
-                    select(RoomRunRow).where(RoomRunRow.id == p.run_id)
-                ).scalar_one_or_none()
-                if row is not None:
+
+            def _mark_respawn_failed() -> int | None:
+                with get_session() as s:
+                    row = s.execute(
+                        select(RoomRunRow).where(RoomRunRow.id == p.run_id)
+                    ).scalar_one_or_none()
+                    if row is None:
+                        return None
                     row.status = "failed"
                     row.bank_key = None
                     row.error_message = (
@@ -8195,7 +8209,9 @@ class RoomRunner:
                         f"snapshot ({str(exc)[:150]}) — never re-run against a "
                         "fabricated default"
                     )
-                    credit_cost = row.credit_cost
+                    return row.credit_cost
+
+            credit_cost: int | None = await asyncio.to_thread(_mark_respawn_failed)
             # RETRO-PM-FLOOR round 2 (auditor U68, MINOR-3) — the run was
             # billed at start_run (CR039's own rule: a failure on our side
             # gives the credits back). This branch marked the row `failed`
@@ -8279,13 +8295,15 @@ class RoomRunner:
                 # on_complete would have done — the closure is gone after
                 # restart, so we replay it here. Same 3× retry shape as
                 # api/room.py:_finalise_to_journal.
-                run = self.get_run(p.run_id)
+                run = await asyncio.to_thread(self.get_run, p.run_id)
                 if run is None:
                     return
                 for attempt in range(3):
                     try:
-                        get_journal_store().append(
-                            build_journal_entry_for_run(run, p.user_id)
+                        await asyncio.to_thread(
+                            lambda: get_journal_store().append(
+                                build_journal_entry_for_run(run, p.user_id)
+                            )
                         )
                         logger.info(
                             "room_startup_retry_journal_written",
@@ -8894,14 +8912,17 @@ class RoomRunner:
             # Idempotency gate FIRST — a driver retry of a completed
             # (batch, ticker, as_of) pair must die here, before any charge.
             # IntegrityError propagates loudly; the sweep driver skips on it.
-            with get_session() as session:
-                session.add(BacktestRunIndexRow(
-                    room_run_id=run_id,
-                    batch_id=backtest.batch_id,
-                    arm=backtest.arm,
-                    ticker=ticker.upper(),
-                    as_of=backtest.as_of,
-                ))
+            def _index_backtest_run() -> None:
+                with get_session() as session:
+                    session.add(BacktestRunIndexRow(
+                        room_run_id=run_id,
+                        batch_id=backtest.batch_id,
+                        arm=backtest.arm,
+                        ticker=ticker.upper(),
+                        as_of=backtest.as_of,
+                    ))
+
+            await asyncio.to_thread(_index_backtest_run)
             # Base charge through the real spend path (CR039 metering stays
             # exercised); no live-data surcharge — both feeds are ablated.
             #
@@ -8914,20 +8935,23 @@ class RoomRunner:
             # (PLD@2025-12-05), which is exactly one convene of evidence that
             # this is not theoretical.
             try:
-                _, charged_total = spend(
-                    user_id, None, reason=f"room:{ticker.upper()}:backtest",
+                _, charged_total = await asyncio.to_thread(
+                    spend, user_id, None, reason=f"room:{ticker.upper()}:backtest",
                 )
             except Exception:
-                with get_session() as session:
-                    session.execute(
-                        delete(BacktestRunIndexRow).where(
-                            BacktestRunIndexRow.room_run_id == run_id
+                def _undo_backtest_index() -> None:
+                    with get_session() as session:
+                        session.execute(
+                            delete(BacktestRunIndexRow).where(
+                                BacktestRunIndexRow.room_run_id == run_id
+                            )
                         )
-                    )
+
+                await asyncio.to_thread(_undo_backtest_index)
                 raise
             news_feed = NewsFeed(LiveDataState.UNAVAILABLE, ())
             social_feed = SocialFeed(LiveDataState.UNAVAILABLE, None)
-            roster = resolve_roster_for_user(user_id)
+            roster = await asyncio.to_thread(resolve_roster_for_user, user_id)
             logger.info(
                 "backtest_run_starting",
                 run_id=str(run_id),
@@ -8985,7 +9009,7 @@ class RoomRunner:
         # but the row is still status=running.
         existing = self._active_by_key.get(key)
         if existing is None:
-            existing = self._find_active_run(user_id, ticker)
+            existing = await asyncio.to_thread(self._find_active_run, user_id, ticker)
         if existing is not None:
             logger.info(
                 "room_dedup_attached_running",
@@ -9000,7 +9024,7 @@ class RoomRunner:
         # fact sheet, policy version, model root): same ticker is not same
         # inputs. The roster and feed decision are made here, before anything is
         # charged, because the fact sheet (and so the key) depends on them.
-        roster = resolve_roster_for_user(user_id)
+        roster = await asyncio.to_thread(resolve_roster_for_user, user_id)
         decision: _FeedDecision | None = None
         bank_prep = _BankPrep(None, None, None, None)
         if settings.room_bank_enabled:
@@ -9015,7 +9039,9 @@ class RoomRunner:
             if bank_prep.key is not None:
                 hit = await asyncio.to_thread(self._lookup_bank, bank_prep.key)
                 if hit is not None:
-                    return self._bank_hit(hit, user_id, ticker, bank_outcome)
+                    return await asyncio.to_thread(
+                        self._bank_hit, hit, user_id, ticker, bank_outcome
+                    )
 
         # CR270 — one Room in flight per user, across tickers. Past both dedup
         # tiers (the same ticker has already attached above) and before the
@@ -9068,23 +9094,29 @@ class RoomRunner:
         # here with nothing spent. A charge that then fails drops the reservation.
         reserved = False
         if bank_prep.key is not None and bank_prep.parts is not None:
-            tier = pick_tier(effective_plan_for_user(user_id), AgentId.PORTFOLIO_MANAGER)
+            tier = pick_tier(
+                await asyncio.to_thread(effective_plan_for_user, user_id),
+                AgentId.PORTFOLIO_MANAGER,
+            )
             holder = await asyncio.to_thread(
                 self._reserve_run_row,
                 run_id=run_id, user_id=user_id, ticker=ticker, mandate=mandate,
                 tier=tier, key=bank_prep.key, parts=bank_prep.parts,
             )
             if holder is not None:
-                return self._bank_hit(holder, user_id, ticker, bank_outcome)
+                return await asyncio.to_thread(
+                    self._bank_hit, holder, user_id, ticker, bank_outcome
+                )
             reserved = True
         try:
-            news_feed, social_feed, charged_total = self._resolve_and_charge_feeds(
+            news_feed, social_feed, charged_total = await asyncio.to_thread(
+                self._resolve_and_charge_feeds,
                 user_id, ticker, withheld=frozenset(roster.withheld),
                 decision=decision,
             )
         except BaseException:
             if reserved:
-                self._drop_reservation(run_id)
+                await asyncio.to_thread(self._drop_reservation, run_id)
             raise
         if reserved:
             await asyncio.to_thread(
@@ -9245,15 +9277,18 @@ class RoomRunner:
         # against it); the respawn/direct-call path (roster is None) resolves
         # it fresh here, same fallback shape as news_feed/social_feed above.
         if roster is None:
-            roster = resolve_roster_for_user(user_id) if user_id is not None else AnalystRoster(
-                present=(
-                    AgentId.FUNDAMENTALS_ANALYST, AgentId.MARKET_ANALYST,
-                    AgentId.NEWS_ANALYST, AgentId.SOCIAL_MEDIA_ANALYST,
-                ),
-                withheld=(), next_step=None,
+            roster = (
+                await asyncio.to_thread(resolve_roster_for_user, user_id)
+                if user_id is not None else AnalystRoster(
+                    present=(
+                        AgentId.FUNDAMENTALS_ANALYST, AgentId.MARKET_ANALYST,
+                        AgentId.NEWS_ANALYST, AgentId.SOCIAL_MEDIA_ANALYST,
+                    ),
+                    withheld=(), next_step=None,
+                )
             )
         # BL11 (AT:R33): effective_plan downgrades expired trials.
-        plan = effective_plan_for_user(user_id)
+        plan = await asyncio.to_thread(effective_plan_for_user, user_id)
         tier = pick_tier(plan, AgentId.PORTFOLIO_MANAGER)
         # CR039/CR090: the charge start_run actually made is the source of truth
         # for the row (so a refund on failure returns the surcharge too). Absent
@@ -9276,7 +9311,7 @@ class RoomRunner:
             bank_key=bank[0] if bank is not None else None,
             bank_inputs=dict(bank[1]) if bank is not None else None,
         )
-        _persist_run(run)
+        await _persist_run_async(run)
         logger.info("room_started", run_id=str(run_id), ticker=ticker, tier=tier)
 
         # Emit `started` first so clients have the run_id immediately —
@@ -9306,7 +9341,7 @@ class RoomRunner:
             news_feed = (
                 NewsFeed(LiveDataState.WITHHELD_TENURE, ())
                 if AgentId.NEWS_ANALYST in roster.withheld
-                else resolve_news_feed(ticker, entitled=True)
+                else await asyncio.to_thread(resolve_news_feed, ticker, entitled=True)
                 if settings.use_real_market_data
                 else NewsFeed(LiveDataState.UNAVAILABLE, ())
             )
@@ -9314,7 +9349,7 @@ class RoomRunner:
             social_feed = (
                 SocialFeed(LiveDataState.WITHHELD_TENURE, None)
                 if AgentId.SOCIAL_MEDIA_ANALYST in roster.withheld
-                else resolve_social_feed(ticker, entitled=True)
+                else await asyncio.to_thread(resolve_social_feed, ticker, entitled=True)
                 if settings.use_real_market_data
                 else SocialFeed(LiveDataState.UNAVAILABLE, None)
             )
@@ -9428,7 +9463,8 @@ class RoomRunner:
         # outage-abstain-only prior; the runner never re-queries or
         # recomputes per PM prompt, including under self-consistency.
         ctx.next_convene_delta = _build_next_convene_delta(
-            self._room_delta_context(user_id, ticker), this_profile=profile,
+            await asyncio.to_thread(self._room_delta_context, user_id, ticker),
+            this_profile=profile,
         )
 
         profile = ctx.profile
@@ -9440,7 +9476,12 @@ class RoomRunner:
         # scope per D3) rather than crashing on a missing key.
         base = profile.get("base_price")
         if base is None:
-            base = get_market_data_provider().get_price(ticker.upper().strip()) or 100.0
+            base = (
+                await asyncio.to_thread(
+                    get_market_data_provider().get_price, ticker.upper().strip()
+                )
+                or 100.0
+            )
         ctx.trader_entry = round(base, 2)
         ctx.trader_stop = round(base * 0.94, 2)
         ctx.trader_target = round(base * 1.13, 2)
@@ -9723,7 +9764,7 @@ class RoomRunner:
                         assert _attempt_snapshot is not None
                         _restore_room_attempt_state(ctx, profile, _attempt_snapshot)
                         await self._rekey_for_backup(run, gateway)
-                        _persist_run(run)
+                        await _persist_run_async(run)
                         yield RoomEvent(
                             kind="provider_switch",
                             run_id=run_id,
@@ -9784,7 +9825,7 @@ class RoomRunner:
                     flip_explainer.claim_summary_from_cards(ctx.claim_cards)
                     if settings.room_cards_envelope_enabled else None,
                 )
-            _persist_run(run)
+            await _persist_run_async(run)
             # DEF432 — Saiful, 2026-09-25: "Refund it." A Room that reaches
             # COMPLETED but whose verdict is the CR219 R51 outage NO_VERDICT
             # (too many desks scripted for AMI to stand behind a call) is an
@@ -9825,7 +9866,8 @@ class RoomRunner:
             _outage_verdict_dict = run.verdict.model_dump() if run.verdict else None
             if is_outage_shaped_verdict(_outage_verdict_dict):
                 try:
-                    refund(
+                    await asyncio.to_thread(
+                        refund,
                         user_id, run.credit_cost,
                         reason=f"room_outage_no_verdict:{run_id}",
                     )
@@ -9896,12 +9938,12 @@ class RoomRunner:
                         # leave the row reading "not refunded" while the
                         # ledger says it was.
                         try:
-                            _persist_run(run)
+                            await _persist_run_async(run)
                         except Exception:
                             logger.exception(
                                 "room_outage_refund_persist_retry", run_id=str(run_id),
                             )
-                            _persist_run(run)
+                            await _persist_run_async(run)
                     except Exception:
                         logger.exception(
                             "room_outage_refund_bookkeeping_failed",
@@ -9946,7 +9988,8 @@ class RoomRunner:
             # are not systematically worse than PASSes, never a performance
             # claim and never user-facing. `bank_verdict_outcome` swallows its
             # own exceptions: a ledger write must not fail a completed convene.
-            bank_verdict_outcome(
+            await asyncio.to_thread(
+                bank_verdict_outcome,
                 room_run_id=run_id,
                 user_id=user_id,
                 ticker=ctx.ticker,
@@ -10013,13 +10056,16 @@ class RoomRunner:
                 # treating it as live. Best-effort: a failure here must not
                 # stop the CancelledError/GeneratorExit propagating (shutdown
                 # cannot be blocked on this write succeeding).
-                try:
+                def _mark_interrupted() -> None:
                     with get_session() as s:
                         row = s.execute(
                             select(RoomRunRow).where(RoomRunRow.id == run_id)
                         ).scalar_one_or_none()
                         if row is not None and row.status == "running":
                             row.interrupted_at = datetime.now(timezone.utc)
+
+                try:
+                    await asyncio.to_thread(_mark_interrupted)
                 except Exception:
                     logger.exception(
                         "room_shutdown_mark_interrupted_failed",
@@ -10044,7 +10090,7 @@ class RoomRunner:
             run.duration_ms = int(
                 (run.finished_at - (run.started_at or run.finished_at)).total_seconds() * 1000
             )
-            _persist_run(run)
+            await _persist_run_async(run)
             logger.info(
                 "room_cancelled",
                 run_id=str(run_id),
@@ -10055,7 +10101,7 @@ class RoomRunner:
         except Exception as e:
             run.status = RoomStatus.FAILED
             run.error_message = str(e)[:500]
-            _persist_run(run)
+            await _persist_run_async(run)
             # CR039: the run was billed at start_run. It failed on our side, so
             # give the credits back — otherwise a bad deploy silently eats a
             # Floor Pass user's entire monthly allowance in one tap. Refund is
@@ -10075,7 +10121,9 @@ class RoomRunner:
                 )
             else:
                 try:
-                    refund(user_id, run.credit_cost, reason=f"room_failed:{run_id}")
+                    await asyncio.to_thread(
+                        refund, user_id, run.credit_cost, reason=f"room_failed:{run_id}"
+                    )
                 except Exception as refund_exc:
                     logger.error(
                         "room_refund_failed",
@@ -10091,7 +10139,7 @@ class RoomRunner:
                     # `status == "failed"` staying true forever (it already
                     # does, this is belt-and-braces).
                     run.refund_recorded = True
-                    _persist_run(run)
+                    await _persist_run_async(run)
             logger.error("room_failed", run_id=str(run_id), error=str(e))
             yield RoomEvent(kind="error", run_id=run_id, text=str(e)[:300])
         finally:
@@ -10157,10 +10205,10 @@ class RoomRunner:
             return
         self._retrying_runs.add(run_id)
         try:
-            run = self.get_run(run_id)
+            run = await asyncio.to_thread(self.get_run, run_id)
             from app.services.mandate_store import resolve_mandate
 
-            mandate = resolve_mandate(user_id, None)
+            mandate = await asyncio.to_thread(resolve_mandate, user_id, None)
             if not cio_retry_eligible(
                 run, requesting_user_id=user_id,
                 current_mandate_version=mandate.version,
@@ -10319,7 +10367,7 @@ class RoomRunner:
                 # here). `cio_context_snapshot`/`refund_recorded` both stay
                 # as they were, so a further retry remains offerable within
                 # the same age window.
-                _persist_run(run)
+                await _persist_run_async(run)
                 logger.info("room_cio_retry_still_down", run_id=str(run_id))
                 if run.verdict is not None:
                     yield RoomEvent(kind="verdict", run_id=run_id, verdict=run.verdict)
@@ -10366,7 +10414,7 @@ class RoomRunner:
                 run, profile,
                 original_verdict.claim_summary if original_verdict is not None else None,
             )
-            _persist_run(run)
+            await _persist_run_async(run)
             logger.info(
                 "room_cio_retry_succeeded", run_id=str(run_id),
                 action=str(run.verdict.action if run.verdict else "n/a"),
@@ -10378,7 +10426,8 @@ class RoomRunner:
             # updates it to the retry's real, scorable verdict — consistent
             # with CR219's own intent for outage rows (count what actually
             # happened, not the moment it happened to be observed).
-            bank_verdict_outcome(
+            await asyncio.to_thread(
+                bank_verdict_outcome,
                 room_run_id=run_id,
                 user_id=user_id,
                 ticker=ctx.ticker,
@@ -10393,7 +10442,8 @@ class RoomRunner:
             # only new primitive (see its own docstring).
             try:
                 draft = build_journal_entry_for_run(run, user_id)
-                outcome, _ = get_journal_store().update_by_reference(
+                outcome, _ = await asyncio.to_thread(
+                    get_journal_store().update_by_reference,
                     user_id, EntryType.ROOM_RUN, run_id, draft,
                 )
                 if outcome is ReferenceUpdateOutcome.NOT_FOUND:
@@ -10404,7 +10454,7 @@ class RoomRunner:
                     # lost from the Journal entirely. A DELETED entry is the
                     # user's own removal and is never resurrected (CR237
                     # round 2, auditor MAJOR-2).
-                    get_journal_store().append(draft)
+                    await asyncio.to_thread(get_journal_store().append, draft)
             except Exception as exc:
                 logger.error(
                     "room_cio_retry_journal_failed",
@@ -10868,7 +10918,7 @@ async def _compute_agent_text(
     analysts (`PHASES[0].agents`, R53's own scope), same reasoning.
     """
     # BL11 (AT:R33): effective_plan downgrades expired trials.
-    plan = effective_plan_for_user(ctx.user_id)
+    plan = await asyncio.to_thread(effective_plan_for_user, ctx.user_id)
     tier = pick_tier(plan, agent_id)
 
     text: str
@@ -11371,7 +11421,7 @@ async def _run_risk_officer(
     (measured floor 11.8%, vs 7.4% for no risk input) and each carries an
     `[AMI …]` mark in the transcript saying so (CR040).
     """
-    plan = effective_plan_for_user(ctx.user_id)
+    plan = await asyncio.to_thread(effective_plan_for_user, ctx.user_id)
     tier = pick_tier(plan, AgentId.RISK_OFFICER)
 
     payload: dict[str, Any] | None = None
@@ -11669,7 +11719,7 @@ async def _stream_pm_response(
     the CIO reads without displacing the safety floor's position inside it.
     """
     # BL11 (AT:R33): effective_plan downgrades expired trials.
-    plan = effective_plan_for_user(ctx.user_id)
+    plan = await asyncio.to_thread(effective_plan_for_user, ctx.user_id)
     tier = pick_tier(plan, AgentId.PORTFOLIO_MANAGER)
     # Pass ctx.user_id so build_agent_prompt picks up the user's active
     # Brief overlay for the PM (was user_id=None — AT:R27 bugfix). Note:
@@ -11854,7 +11904,7 @@ async def _reformat_pm_response(
     """One-shot DEF058 retry: ask the model to re-express the PM's prose
     verdict as the parseable JSON schema. Returns "" on timeout/exception —
     the caller then falls through to the fail-safe PASS."""
-    plan = effective_plan_for_user(ctx.user_id)
+    plan = await asyncio.to_thread(effective_plan_for_user, ctx.user_id)
     tier = pick_tier(plan, AgentId.PORTFOLIO_MANAGER)
     # DEF125 item 4: the reformatter re-emits the SAME JSON envelope the PM was
     # asked for, so a budget below the PM's guarantees the retry is clipped

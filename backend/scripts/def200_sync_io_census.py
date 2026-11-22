@@ -81,8 +81,22 @@ _REVIEWED_NON_BLOCKING: dict[tuple[str, str], str] = {
     ("credit_service", "one_on_one_cost"): "reads a settings value",
     ("llm_spend", "budget_http_exception"): "builds an HTTPException from the clock",
     ("sim_resting_orders", "bracket_closing_enabled"): "reads a settings flag",
+    ("llm_spend", "compute_cost_usd"): "settings + an in-memory price table; the only lock guards a set of already-logged labels",
+    ("credit_service", "room_cost_for_plan"): "dict lookup keyed by plan",
     ("sector_allocation", "allocate_by_sector"): "pure given the `sector_of` resolver the caller passes (a dict lookup over the pre-resolved SectorMap)",
     ("sector_allocation", "sector_concentration_cap"): "pure arithmetic over a Mandate",
+}
+
+# Singleton accessors: `get_x_store()` builds or returns the store OBJECT and opens
+# no session, so the bare call is not blocking — the METHOD called on it is. Used by
+# the SERVICE level only, which resolves `get_x_store().method(...)` to the method;
+# the handler level keeps treating the accessor call itself as the proxy for it.
+# Same rule as above: a reason per entry, and a test that the function exists.
+_SINGLETON_ACCESSORS: dict[tuple[str, str], str] = {
+    ("mandate_store", "get_mandate_store"): "returns the MandateStore singleton, opens no session",
+    ("sim_engine", "get_sim_engine"): "returns the SimEngine singleton, opens no session",
+    ("journal_store", "get_journal_store"): "returns the JournalStore singleton, opens no session",
+    ("market_data", "get_market_data_provider"): "returns the provider singleton (quote/history are the blocking calls)",
 }
 
 _KNOWN_SYNC_HTTP_MODULES: dict[str, str] = {
@@ -323,6 +337,317 @@ def flag_handlers(tree: ast.Module, bindings: dict[str, str]) -> tuple[list[str]
     return section_a, section_c, total
 
 
+# ── SERVICE LEVEL (DEF200 part 2, 2026-11-22) ────────────────────────────────
+#
+# The handler census above is one hop: a handler that `await`s a service method
+# is exempt (an async callable cannot block in ITS OWN body), so the sync I/O
+# inside that method was never traced. This level reads every `async def` under
+# app/services/ — a superset of "those handlers await", since any async service
+# function can be awaited from a handler directly or through another service —
+# and flags a blocking call made directly in its own body:
+#
+#   - a `get_session(` call, or a call into a section-B module (resolved through
+#     imports, through a parameter / `self.<attr>` / local variable typed as a
+#     section-B class, or through a sync helper in the same file that itself
+#     blocks — followed to a fixpoint, because a sync helper chain blocks
+#     whatever its depth);
+#   - `time.sleep`, builtin `open`, `os.*` filesystem calls, `shutil`,
+#     `subprocess`, `requests`, sync `httpx` (but not `httpx.AsyncClient`),
+#     `sqlite3.connect`, and the unambiguous `pathlib` I/O methods.
+#
+# Same exemptions as the handler level: a directly awaited call / `async for`
+# iterable is async by construction; a REFERENCE handed to `asyncio.to_thread` /
+# `run_in_threadpool` is not a call; nested defs are not part of the enclosing
+# body (a nested `async def` is scanned in its own right). A bare call to a
+# CapWords name is a constructor and is not treated as I/O. The hand-reviewed
+# `_REVIEWED_NON_BLOCKING` allowlist is shared.
+#
+# KNOWN LIMIT, stated rather than discovered: attribute chains rooted in an
+# untyped value (`obj.method()` where nothing says what `obj` is) are invisible,
+# and method calls on a file object (`f.write(chunk)`) are caught only through
+# the `open(...)` / `os.fdopen(...)` that produced it.
+
+_BLOCKING_BARE_CALLS = {"open", "get_session"}
+_BLOCKING_MODULE_FUNCS: dict[str, set[str] | None] = {
+    "time": {"sleep"},
+    "os": {
+        "makedirs", "mkdir", "remove", "unlink", "rename", "replace", "fsync",
+        "listdir", "scandir", "stat", "walk", "open", "fdopen", "rmdir",
+        "utime", "chmod", "write", "read", "truncate", "ftruncate",
+    },
+    "shutil": None,
+    "subprocess": None,
+    "requests": None,
+    "sqlite3": {"connect"},
+    "urllib": None,
+    "httpx": {"Client", "get", "post", "put", "patch", "delete", "request", "stream", "head"},
+}
+_BLOCKING_OS_PATH = {"exists", "isfile", "isdir", "getsize", "getmtime"}
+_BLOCKING_PATH_METHODS = {
+    "read_text", "write_text", "read_bytes", "write_bytes", "mkdir", "unlink",
+    "iterdir", "rglob", "touch", "rmdir", "samefile",
+}
+
+
+def _call_chain(f: ast.expr) -> tuple[str | None, list[str]]:
+    """(root_name, attrs_from_root_outward) for a call target: `a.b.c` -> (a, [b, c])."""
+    attrs: list[str] = []
+    node = f
+    while isinstance(node, ast.Attribute):
+        attrs.append(node.attr)
+        node = node.value
+    attrs.reverse()
+    return (node.id if isinstance(node, ast.Name) else None), attrs
+
+
+def _primitive_blocker(call: ast.Call) -> str | None:
+    """Why this call is blocking in its own right, or None."""
+    root, attrs = _call_chain(call.func)
+    if not attrs:
+        return root if root in _BLOCKING_BARE_CALLS else None
+    if root in _BLOCKING_MODULE_FUNCS:
+        allowed = _BLOCKING_MODULE_FUNCS[root]
+        if allowed is None or attrs[0] in allowed:
+            return f"{root}.{attrs[0]}"
+        if root == "os" and attrs[0] == "path" and len(attrs) > 1 and attrs[1] in _BLOCKING_OS_PATH:
+            return f"os.path.{attrs[1]}"
+    if attrs[-1] == "get_session":
+        return "get_session"
+    if attrs[-1] in _BLOCKING_PATH_METHODS:
+        return f".{attrs[-1]}"
+    return None
+
+
+def _annotation_module(ann: ast.expr | None, bindings: dict[str, str]) -> str | None:
+    """The section-B module a parameter annotation names (`OverlayStore | None`,
+    `Optional[OverlayStore]` and a plain `OverlayStore` all resolve)."""
+    if ann is None:
+        return None
+    for node in ast.walk(ann):
+        if isinstance(node, ast.Name) and node.id in bindings:
+            return bindings[node.id]
+        if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value in bindings:
+            return bindings[node.value]
+    return None
+
+
+def _expr_module(expr: ast.expr | None, typed: dict[str, str], bindings: dict[str, str]) -> str | None:
+    """The section-B module an expression's VALUE belongs to, if knowable."""
+    if expr is None:
+        return None
+    if isinstance(expr, ast.Name):
+        return typed.get(expr.id)
+    if isinstance(expr, ast.Call):
+        root, _ = _call_chain(expr.func)
+        return bindings.get(root) if root else None
+    if isinstance(expr, ast.BoolOp):
+        for v in expr.values:
+            m = _expr_module(v, typed, bindings)
+            if m:
+                return m
+    if isinstance(expr, ast.IfExp):
+        return _expr_module(expr.body, typed, bindings) or _expr_module(expr.orelse, typed, bindings)
+    return None
+
+
+def _param_types(fn: ast.AST, bindings: dict[str, str]) -> dict[str, str]:
+    out: dict[str, str] = {}
+    a = fn.args  # type: ignore[attr-defined]
+    for arg in [*a.posonlyargs, *a.args, *a.kwonlyargs]:
+        m = _annotation_module(arg.annotation, bindings)
+        if m:
+            out[arg.arg] = m
+    return out
+
+
+def _own_nodes(fn: ast.AST):
+    """Every node in a function's own body, not descending into nested defs or lambdas."""
+    stack = list(ast.iter_child_nodes(fn))
+    skip = {id(n) for n in getattr(fn, "decorator_list", [])}
+    a = getattr(fn, "args", None)
+    if a is not None:
+        skip |= {id(d) for d in [*a.defaults, *a.kw_defaults] if d is not None}
+    while stack:
+        node = stack.pop()
+        if id(node) in skip:
+            continue
+        yield node
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)):
+            continue
+        stack.extend(ast.iter_child_nodes(node))
+
+
+def _is_self_attr(t: ast.expr) -> bool:
+    return isinstance(t, ast.Attribute) and isinstance(t.value, ast.Name) and t.value.id == "self"
+
+
+def _class_attr_types(cls: ast.ClassDef, bindings: dict[str, str]) -> dict[str, str]:
+    """{attr: module} for `self.<attr> = <value typed as a section-B class>` anywhere
+    in the class (an annotated constructor parameter, or a call into a section-B
+    module such as `get_overlay_store()`)."""
+    out: dict[str, str] = {}
+    for m in cls.body:
+        if not isinstance(m, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        typed = _param_types(m, bindings)
+        for node in ast.walk(m):
+            if isinstance(node, ast.AnnAssign) and _is_self_attr(node.target):
+                mod = _annotation_module(node.annotation, bindings) or _expr_module(node.value, typed, bindings)
+                if mod:
+                    out[node.target.attr] = mod
+            elif isinstance(node, ast.Assign):
+                mod = _expr_module(node.value, typed, bindings)
+                if mod:
+                    for t in node.targets:
+                        if _is_self_attr(t):
+                            out[t.attr] = mod
+    return out
+
+
+def _function_blockers(
+    fn: ast.AST,
+    bindings: dict[str, str],
+    attr_types: dict[str, str],
+    local_fn_blockers: dict[str, str],
+    local_method_blockers: dict[str, str],
+) -> dict[str, list[int]]:
+    """Reasons `fn` blocks in its own body (empty = clean). Used for async
+    functions (to flag them) and for sync helpers (to learn which local callees
+    block)."""
+    typed = _param_types(fn, bindings)
+    own = list(_own_nodes(fn))
+    for node in own:
+        if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name):
+            m = _expr_module(node.value, typed, bindings)
+            if m:
+                typed[node.targets[0].id] = m
+    exempt: set[int] = set()
+    for node in own:
+        if isinstance(node, ast.Await) and isinstance(node.value, ast.Call):
+            exempt.add(id(node.value))
+        elif isinstance(node, ast.AsyncFor) and isinstance(node.iter, ast.Call):
+            exempt.add(id(node.iter))
+    reasons: dict[str, list[int]] = {}
+    for node in own:
+        if not isinstance(node, ast.Call) or id(node) in exempt:
+            continue
+        prim = _primitive_blocker(node)
+        if prim:
+            reasons.setdefault(prim, []).append(node.lineno)
+            continue
+        root, attrs = _call_chain(node.func)
+        if root is None:
+            f = node.func
+            if isinstance(f, ast.Attribute) and isinstance(f.value, ast.Call):
+                inner, inner_attrs = _call_chain(f.value.func)
+                if inner in bindings and not inner_attrs and (bindings[inner], f.attr) not in _REVIEWED_NON_BLOCKING:
+                    reasons.setdefault(bindings[inner], []).append(node.lineno)
+            continue
+        if not attrs:
+            if root[:1].isupper():
+                continue
+            if root in local_fn_blockers:
+                reasons.setdefault(f"local:{root}", []).append(node.lineno)
+            elif (
+                root in bindings
+                and (bindings[root], root) not in _REVIEWED_NON_BLOCKING
+                and (bindings[root], root) not in _SINGLETON_ACCESSORS
+            ):
+                reasons.setdefault(bindings[root], []).append(node.lineno)
+            continue
+        if root == "self":
+            if len(attrs) == 1 and attrs[0] in local_method_blockers:
+                reasons.setdefault(f"local:{attrs[0]}", []).append(node.lineno)
+            elif len(attrs) >= 2 and attrs[0] in attr_types:
+                mod = attr_types[attrs[0]]
+                if (mod, attrs[1]) not in _REVIEWED_NON_BLOCKING:
+                    reasons.setdefault(mod, []).append(node.lineno)
+            continue
+        mod = typed.get(root) or bindings.get(root)
+        if mod and (mod, attrs[0]) not in _REVIEWED_NON_BLOCKING:
+            reasons.setdefault(mod, []).append(node.lineno)
+    return reasons
+
+
+def flag_service_functions(
+    tree: ast.Module, bindings: dict[str, str], details: dict[str, dict[str, list[int]]] | None = None
+) -> tuple[list[str], int]:
+    """([qualified async function name (via: ...)], async_function_count) for one
+    parsed service module. Split out of [census_services] so the detection can be
+    pinned on synthetic source."""
+    flagged: list[str] = []
+    total = 0
+
+    classes = [n for n in tree.body if isinstance(n, ast.ClassDef)]
+    sync_fns = [n for n in tree.body if isinstance(n, ast.FunctionDef)]
+    class_attrs = {c.name: _class_attr_types(c, bindings) for c in classes}
+
+    units: list[tuple[str | None, ast.FunctionDef]] = [(None, f) for f in sync_fns]
+    for c in classes:
+        units += [(c.name, m) for m in c.body if isinstance(m, ast.FunctionDef)]
+    fn_block: dict[str, str] = {}
+    meth_block: dict[str, dict[str, str]] = {c.name: {} for c in classes}
+    changed = True
+    while changed:
+        changed = False
+        for cname, f in units:
+            table = fn_block if cname is None else meth_block[cname]
+            if f.name in table:
+                continue
+            why = _function_blockers(
+                f, bindings, class_attrs.get(cname, {}) if cname else {},
+                fn_block, meth_block.get(cname, {}) if cname else {},
+            )
+            if why:
+                table[f.name] = ",".join(sorted(why))
+                changed = True
+
+    def visit(node: ast.AST, cname: str | None, qual: str) -> None:
+        nonlocal total
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, ast.ClassDef):
+                visit(child, child.name, f"{qual}{child.name}.")
+            elif isinstance(child, ast.AsyncFunctionDef):
+                total += 1
+                why = _function_blockers(
+                    child, bindings, class_attrs.get(cname, {}) if cname else {},
+                    fn_block, meth_block.get(cname, {}) if cname else {},
+                )
+                if why:
+                    flagged.append(f"{qual}{child.name} (via: {', '.join(sorted(why))})")
+                    if details is not None:
+                        details[f"{qual}{child.name}"] = why
+                visit(child, cname, f"{qual}{child.name}.")
+            elif isinstance(child, ast.FunctionDef):
+                visit(child, cname, f"{qual}{child.name}.")
+            else:
+                visit(child, cname, qual)
+
+    visit(tree, None, "")
+    return flagged, total
+
+
+def census_services(details: dict[str, dict[str, list[int]]] | None = None) -> dict:
+    registry = {**_sync_db_modules(), **_KNOWN_SYNC_HTTP_MODULES}
+    flagged: list[str] = []
+    total = 0
+    for path in sorted(SERVICES_DIR.rglob("*.py")):
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        except SyntaxError as e:  # pragma: no cover
+            print(f"SKIP {path.name}: {e}", file=sys.stderr)
+            continue
+        bindings = _names_imported_from(tree, set(registry) - {path.stem})
+        per_file: dict[str, dict[str, list[int]]] = {}
+        f, n = flag_service_functions(tree, bindings, per_file)
+        total += n
+        if details is not None:
+            details.update({f"{path.relative_to(SERVICES_DIR).as_posix()}::{k}": v for k, v in per_file.items()})
+        rel = path.relative_to(SERVICES_DIR).as_posix()
+        flagged.extend(f"{rel}::{x}" for x in f)
+    return {"total_async_service_functions": total, "service_level_flagged": flagged}
+
+
 def census() -> dict:
     sync_db_modules = _sync_db_modules()
     registry = {**sync_db_modules, **_KNOWN_SYNC_HTTP_MODULES}
@@ -379,6 +704,17 @@ def main() -> int:
     print(f"\n{covered}/{result['total_async_handlers']} async handlers flagged by A or C "
           f"(the remainder either do no I/O, or reach section B only through an "
           f"intermediate service layer this one-hop pass doesn't trace).")
+
+    detail: dict[str, dict[str, list[int]]] = {}
+    svc = census_services(detail)
+    sf = svc["service_level_flagged"]
+    print(f"\n── D. Async SERVICE functions with a blocking call in their own body "
+          f"({len(sf)} of {svc['total_async_service_functions']}) ──")
+    for site in sf:
+        print(f"  {site}")
+        if "--lines" in sys.argv:
+            for reason, lines in detail[site.split(" (via:")[0]].items():
+                print(f"      {reason}: lines {sorted(set(lines))}")
     return 0
 
 

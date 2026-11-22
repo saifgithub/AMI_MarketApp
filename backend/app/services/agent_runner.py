@@ -124,7 +124,8 @@ class AgentRunner:
         # Persist the user turn first — even if the LLM call fails, the message
         # is in the audit trail.
         if session.user_id is not None:
-            record_one_on_one_message(
+            await asyncio.to_thread(
+                record_one_on_one_message,
                 session_id=session.id,
                 user_id=session.user_id,
                 agent_id=str(agent_id.value if hasattr(agent_id, "value") else agent_id),
@@ -159,7 +160,8 @@ class AgentRunner:
             if mandate.compliance.halal:
                 halal_universe = await default_halal_universe_async()
 
-            system_prompt = build_agent_prompt(
+            system_prompt = await asyncio.to_thread(
+                build_agent_prompt,
                 agent_id,
                 mandate,
                 user_id=session.user_id,
@@ -171,7 +173,7 @@ class AgentRunner:
             # ahead of the ticker-block section (DEF054/DEF055, AT:R58) so
             # the Decision Journal lookback can reuse it instead of a
             # second effective_plan_for_user() call.
-            plan = effective_plan_for_user(session.user_id)
+            plan = await asyncio.to_thread(effective_plan_for_user, session.user_id)
 
             # Live ticker context — extract any ticker the user mentioned
             # (this message, or the last 3 turns of history if this message
@@ -228,7 +230,9 @@ class AgentRunner:
             # (not duplicated between the two researchers).
             if agent_id in (AgentId.BULL_RESEARCHER, AgentId.BEAR_RESEARCHER):
                 for t in tickers:
-                    journal_block = build_journal_context_block(session.user_id, t, plan)
+                    journal_block = await asyncio.to_thread(
+                        build_journal_context_block, session.user_id, t, plan
+                    )
                     if journal_block:
                         system_prompt = system_prompt + "\n\n" + journal_block
 
@@ -338,7 +342,8 @@ class AgentRunner:
                     meta[output_guard.META_SENTINEL] = reply
 
         if session.user_id is not None and buf:
-            record_one_on_one_message(
+            await asyncio.to_thread(
+                record_one_on_one_message,
                 session_id=session.id,
                 user_id=session.user_id,
                 agent_id=str(agent_id.value if hasattr(agent_id, "value") else agent_id),
@@ -358,11 +363,11 @@ class AgentRunner:
         # BL11 (AT:R33): effective_plan downgrades expired trials. Falls
         # back to mandate.plan for pre-claim anon users (no user row yet).
         plan = (
-            effective_plan_for_user(user_id) if user_id is not None
+            await asyncio.to_thread(effective_plan_for_user, user_id) if user_id is not None
             else (Plan(mandate.plan) if isinstance(mandate.plan, str) else mandate.plan)
         )
-        journal, unlocked, lessons, unlock_reqs = load_concierge_context(
-            user_id=user_id, plan=plan,
+        journal, unlocked, lessons, unlock_reqs = await asyncio.to_thread(
+            load_concierge_context, user_id=user_id, plan=plan,
         )
 
         if not self._llm.has_real_provider():

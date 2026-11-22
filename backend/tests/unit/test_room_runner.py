@@ -2251,6 +2251,9 @@ def test_resume_pending_retries_respawns_and_completes():
         # Drain the SSE queue so the background _pump runs to completion.
         async for _ in runner2.subscribe(run_id):
             pass
+        # The sentinel reaches the subscriber BEFORE the pump's journal replay,
+        # which is awaited off-loop (DEF200). Wait for the pump itself.
+        await asyncio.gather(*runner2._pump_tasks)
 
     asyncio.run(_resume_and_wait())
 

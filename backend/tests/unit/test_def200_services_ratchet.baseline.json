@@ -1,0 +1,6 @@
+{
+  "_comment": "DEF200 part 2 (AT:B1, 2026-11-22) — async functions under app/services/ that make a blocking call (sync DB session, sync HTTP, file I/O, time.sleep) in their OWN body, as found by def200_sync_io_census.census_services(). First measured at 18 (agent_runner x2, brief_engine x2, bug_attachments, llm_gateway, price_alert_evaluator x2, room_graders/hosted_llm, room_runner x9 incl. a nested _pump) and cleared to 0 the same day by moving each blocking call to asyncio.to_thread. The list is empty on purpose and may only stay empty: do not add an entry to get a build past the guard.",
+  "first_measured": 18,
+  "flagged": [],
+  "cleared_at": "2026-11-22 (AT:B1) — 18 -> 0. Census-visible only: a service function that reaches sync I/O through a wrapper module not in the section-B registry (e.g. room_prompts, journal_context, concierge_prompts) is a second hop this level does not trace."
+}
