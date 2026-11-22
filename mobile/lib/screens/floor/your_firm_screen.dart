@@ -6,13 +6,11 @@
 /// (D-024 — Brief Your Agent's locked block stays visible in that sheet,
 /// acceptance #8), tap a locked one for the gateway-lesson path.
 ///
-/// **This screen is CR159's, and CR159 has not been built.** §6 decision #4
-/// re-scoped CR159's desk bands to be exactly this depth layer, but its row is
-/// still `proposed` — so removing the wall from the Floor without a destination
-/// would have orphaned 1-on-1, Brief Your Agent and the whole unlock path in
-/// the same commit. What lands here is therefore the *shipped wall, re-homed*:
-/// no invented structure, no desk bands, no seat metaphor. CR159 replaces this
-/// body with its bands and keeps the route.
+/// **CR159 — the wall is now desk-banded tiers** (`FirmDeskBands`): YOU, the
+/// CIO, the analyst desk, research, execution + risk, and the Concierge, each
+/// band carrying a `filled/total` count. Same tiles, same tap behaviour, same
+/// route — only the arrangement changed. The Floor's old flat `Wrap` had already
+/// moved here in CR173, so this is the one place the 12-agent grid lives.
 library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
@@ -26,10 +24,13 @@ import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/agent_action_sheet.dart';
 import 'package:ami_trade/widgets/hex/ami_screen_header.dart';
+import 'package:ami_trade/widgets/floor/firm_desk_bands.dart';
 import 'package:ami_trade/widgets/hex/hex_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ami_trade/qa/semantics_ids.dart';
+
+export 'package:ami_trade/widgets/floor/firm_desk_bands.dart' show AgentTile;
 
 class YourFirmScreen extends ConsumerWidget {
   const YourFirmScreen({super.key});
@@ -39,7 +40,6 @@ class YourFirmScreen extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final state = ref.watch(lessonsNotifierProvider);
     final unlocked = state.unlockedAgentIds;
-    final tradingAgents = kAllAgents.sublist(0, 12);
 
     return Semantics(identifier: ScreenIds.yourFirmScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
@@ -49,7 +49,7 @@ class YourFirmScreen extends ConsumerWidget {
             AmiScreenHeader(
               title: l.floorFirmHeading,
               titleColor: AmiColors.hexCyan,
-              subtitle: l.floorFirmSeats(unlocked.length, tradingAgents.length),
+              subtitle: l.floorFirmSeats(unlocked.length, kTradingAgents.length),
               showBack: true,
             ),
             Expanded(
@@ -61,20 +61,11 @@ class YourFirmScreen extends ConsumerWidget {
                         textAlign: TextAlign.center,
                         style: AmiTypography.caption),
                     const SizedBox(height: AmiSpacing.m),
-                    Wrap(
-                      spacing: AmiSpacing.m,
-                      runSpacing: AmiSpacing.l,
-                      alignment: WrapAlignment.center,
-                      children: [
-                        for (final agent in tradingAgents)
-                          AgentTile(
-                            agent: agent,
-                            unlocked: unlocked.contains(agent.id),
-                            onTap: () => unlocked.contains(agent.id)
-                                ? openAgent(context, agent)
-                                : showLockedSheet(context, ref, agent),
-                          ),
-                      ],
+                    FirmDeskBands(
+                      unlocked: unlocked,
+                      onTapAgent: (agent, isUnlocked) => isUnlocked
+                          ? openAgent(context, agent)
+                          : showLockedSheet(context, ref, agent),
                     ),
                   ],
                 ),
@@ -255,63 +246,4 @@ void showLockedSheet(BuildContext context, WidgetRef ref, Agent agent) {
       ),
     )),
   );
-}
-
-class AgentTile extends StatelessWidget {
-  const AgentTile({
-    super.key,
-    required this.agent,
-    required this.unlocked,
-    required this.onTap,
-  });
-
-  final Agent agent;
-  final bool unlocked;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 88,
-      child: Column(
-        children: [
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              Opacity(
-                opacity: unlocked ? 1.0 : 0.35,
-                child: HexAvatar(
-                  label: agent.abbreviation,
-                  color: agent.color,
-                  size: 72,
-                  onTap: onTap,
-                ),
-              ),
-              if (!unlocked)
-                IgnorePointer(
-                  child: Container(
-                    width: 72,
-                    height: 72,
-                    alignment: Alignment.center,
-                    child: const Icon(Icons.lock_outline,
-                        color: AmiColors.textLow, size: 22),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            agent.displayName,
-            textAlign: TextAlign.center,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: AmiTypography.caption.copyWith(
-              fontSize: 10,
-              color: unlocked ? AmiColors.textMed : AmiColors.textLow,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }

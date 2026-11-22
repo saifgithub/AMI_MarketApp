@@ -4431,6 +4431,32 @@ class AppLocalizationsMs extends AppLocalizations {
   }
 
   @override
+  String get firmDeskYou => 'YOU · CEO';
+
+  @override
+  String get firmDeskAnalyst => 'ANALYST DESK';
+
+  @override
+  String get firmDeskResearch => 'RESEARCH';
+
+  @override
+  String get firmDeskExecution => 'EXECUTION';
+
+  @override
+  String get firmDeskRisk => 'RISK';
+
+  @override
+  String get firmDeskConcierge => 'CONCIERGE';
+
+  @override
+  String get firmDeskConciergeNote => 'reports to you';
+
+  @override
+  String firmDeskCount(int filled, int total) {
+    return '$filled/$total';
+  }
+
+  @override
   String get roomConsensusHeading => 'CONSENSUS';
 
   @override

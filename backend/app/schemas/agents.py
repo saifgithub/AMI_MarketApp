@@ -65,6 +65,27 @@ AGENT_FAMILIES: dict[AgentId, str] = {
 }
 
 
+# CR159 — the desk each agent sits on in the app's "Your Firm" bands. Mirror of
+# `AgentDesk` in mobile/lib/models/agent.dart (a unit test keeps them in
+# lockstep). Deliberately not `AGENT_FAMILIES`: that lumps the Research Manager
+# with the CIO as "manager", which is wrong for a firm chart.
+AGENT_DESKS: dict[AgentId, str] = {
+    AgentId.FUNDAMENTALS_ANALYST: "analyst",
+    AgentId.MARKET_ANALYST: "analyst",
+    AgentId.NEWS_ANALYST: "analyst",
+    AgentId.SOCIAL_MEDIA_ANALYST: "analyst",
+    AgentId.BULL_RESEARCHER: "research",
+    AgentId.BEAR_RESEARCHER: "research",
+    AgentId.RESEARCH_MANAGER: "research",
+    AgentId.TRADER: "execution",
+    AgentId.AGGRESSIVE_DEBATOR: "risk",
+    AgentId.CONSERVATIVE_DEBATOR: "risk",
+    AgentId.NEUTRAL_DEBATOR: "risk",
+    AgentId.PORTFOLIO_MANAGER: "officeOfCio",
+    AgentId.CONCIERGE: "concierge",
+}
+
+
 AGENT_ROLE_COLORS: dict[AgentId, str] = {
     AgentId.FUNDAMENTALS_ANALYST: "cyan",
     AgentId.MARKET_ANALYST: "cyan",

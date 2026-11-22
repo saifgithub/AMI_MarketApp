@@ -12,12 +12,12 @@ controls:
     expect: sheet
     target: "ami.screen.agent_action_sheet"
     when: "agent unlocked and not the Concierge (the Concierge opens ami.screen.one_on_one directly)"
-    line: 71
-    note: "repeated (12 tiles). openAgent() at line 94."
+    line: 66
+    note: "repeated (13 tiles: the 12 trading agents + the Concierge) in desk bands YOU / CIO, ANALYST DESK, RESEARCH, EXECUTION + RISK, CONCIERGE (CR159, mobile/lib/widgets/floor/firm_desk_bands.dart). Tap routing is unchanged. openAgent() at line 83."
   - label: "<locked agent hex + name (lock icon, dimmed)>"
     kind: list_row
     expect: sheet
     target: "ami.screen.locked_agent_sheet"
     when: "agent locked"
-    line: 71
-    note: "repeated. Opens the 'HOW TO UNLOCK' sheet (showLockedSheet)."
+    line: 66
+    note: "repeated. Opens the 'HOW TO UNLOCK' sheet (showLockedSheet, line 93)."

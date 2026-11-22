@@ -86,14 +86,15 @@ cases:
       - The inbox opens with the bottom bar still visible (DEF457) and back returns to the Floor, not to a blank screen
 
   - id: UAT-FLOOR-007
-    title: Your Firm shows all twelve agents locked and a locked agent opens its unlock sheet
+    title: Your Firm shows the twelve agents in desk bands, locked ones dimmed, and a locked agent opens its unlock sheet
     layer: device
     plans: [floor_pass]
     steps:
       - 'On the Floor scroll to the YOUR FIRM row and open it'
       - 'Tap the Fundamentals Analyst'
     expected:
-      - 'The firm wall lists the twelve agents by their CR160 titles with an "N of 12 unlocked" summary'
+      - 'The firm wall lists the twelve agents by their CR160 titles with an "N of 12 unlocked" summary, in desk bands top to bottom: a YOU hex, the Chief Investment Officer, ANALYST DESK, RESEARCH, EXECUTION beside RISK (stacked on a very narrow phone), then CONCIERGE - reports to you (CR159)'
+      - 'Each band header carries its own filled/total seat count (for example 0/4 on a new account) and no band scrolls sideways at the largest system text size'
       - 'A locked agent opens a sheet with HOW TO UNLOCK, its five gateway lessons, GO TO LESSONS and an "N / 5 gateway lessons passed" progress line'
       - 'Dismissing the sheet returns to the firm wall'
 
