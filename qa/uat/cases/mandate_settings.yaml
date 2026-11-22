@@ -18,6 +18,7 @@ summary: |
   (UAT-MAND-031, UAT-MAND-011); risk-limit rows say either "From your risk profile"
   or "Set by you", never both (UAT-MAND-031); MANAGE ACCOUNT opens the subscription
   tier picker (UAT-MAND-035).
+  2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy).
 cases:
   - id: UAT-MAND-001
     title: A new user's mandate is the documented default, stamped with live plan state

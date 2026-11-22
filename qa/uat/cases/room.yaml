@@ -27,6 +27,7 @@ summary: |
   trading day, a new prompt generation or a different model is a new Room and is
   charged.
   A failed, cancelled, refunded or outage Room is never handed back.
+  2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy). Also CR244 part 2 (deploy #20): the recent-filings feed (Macro & Events, Fundamentals) and the float + dollar-volume feed (Execution Desk, Conservative Risk Officer only) are switched on in Alpha; both ride the Room bank policy version, so a Room banked before the deploy is re-run once. Verdict shape unchanged.
 cases:
   - id: UAT-ROOM-001
     title: A funded Room streams every desk through to a CIO verdict

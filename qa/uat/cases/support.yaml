@@ -15,6 +15,7 @@ summary: |
   admin-only. The help library (ai_coach) serves static, well-formed Q&A with
   no LLM call. DEF481 (2026-11-20): answer-sheet RELATED LESSONS pills open the lesson; RELATED AGENTS are plain captions. Bug reports filed by this suite land in the real triage queue and
   are prefixed "[CR263 UAT - ignore]"; at most three are filed per run.
+  2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy).
 cases:
   - id: UAT-SUPP-001
     title: A signed-in user can submit a bug report

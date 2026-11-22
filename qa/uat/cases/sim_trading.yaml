@@ -21,6 +21,7 @@ summary: |
   DEF481 (2026-11-20, build 120): the company-review detail sheet back control carries ami.nav.back. Accessibility identifiers only; nothing a
   user sees or does changed, so no case steps change.
   DEF481 (2026-11-20): the blocked-trade OPEN MY MANDATE button opens Settings scrolled to the section holding the rule that refused the order (UAT-SIM-022).
+  2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy). The duplicate ticker guard for Games trades moved off the loop too.
 cases:
   - id: UAT-SIM-001
     title: Single and batch quotes return a real, labelled price

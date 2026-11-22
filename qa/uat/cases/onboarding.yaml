@@ -13,6 +13,7 @@ summary: |
   constraint is never loosened by omission, a failed confirm does not strand the
   session, and only an explicit, authenticated "restart" can overwrite a stored
   mandate.
+  2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy).
 cases:
   - id: UAT-ONB-001
     title: Starting an interview needs no account and opens on question one

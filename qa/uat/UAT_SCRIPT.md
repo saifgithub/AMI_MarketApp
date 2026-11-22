@@ -121,6 +121,7 @@ recorded as adopting. Full email sign-in and merge are blocked on a test inbox;
 Apple and Google need a real device.
 DEF481 (2026-11-20, build 120): the merge sheet MERGE EVERYTHING button carries its ami.sheet id. Accessibility identifiers only; nothing a
 user sees or does changed, so no case steps change.
+2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy).
 
 ### API (automated, live Alpha)
 
@@ -469,6 +470,7 @@ default (an unreadable drawdown is re-asked, not stored as 30%), a restricting
 constraint is never loosened by omission, a failed confirm does not strand the
 session, and only an explicit, authenticated "restart" can overwrite a stored
 mandate.
+2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy).
 
 ### API (automated, live Alpha)
 
@@ -701,6 +703,7 @@ horizon, the active path and the largest drawdown, and its chip can be deselecte
 (UAT-MAND-031, UAT-MAND-011); risk-limit rows say either "From your risk profile"
 or "Set by you", never both (UAT-MAND-031); MANAGE ACCOUNT opens the subscription
 tier picker (UAT-MAND-035).
+2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy).
 
 ### API (automated, live Alpha)
 
@@ -1106,6 +1109,7 @@ linked paper account); that return is free. A changed mandate, any trade, a new
 trading day, a new prompt generation or a different model is a new Room and is
 charged.
 A failed, cancelled, refunded or outage Room is never handed back.
+2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy). Also CR244 part 2 (deploy #20): the recent-filings feed (Macro & Events, Fundamentals) and the float + dollar-volume feed (Execution Desk, Conservative Risk Officer only) are switched on in Alpha; both ride the Room bank policy version, so a Room banked before the deploy is re-run once. Verdict shape unchanged.
 
 ### API (automated, live Alpha)
 
@@ -1419,6 +1423,7 @@ streams. A session is private to its owner. Briefing screens belong to the
 Brief area.
 DEF481 (2026-11-20, build 120): the back control carries ami.nav.back. Accessibility identifiers only; nothing a
 user sees or does changed, so no case steps change.
+2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy).
 
 ### API (automated, live Alpha)
 
@@ -1528,6 +1533,7 @@ or at least never saved. Floor Pass is capped at 3 lifetime edits per agent.
 same until it is removed.
 DEF481 (2026-11-20, build 120): the Brief and Brief-history back controls carry ami.nav.back. Accessibility identifiers only; nothing a
 user sees or does changed, so no case steps change.
+2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy).
 
 ### API (automated, live Alpha)
 
@@ -1766,6 +1772,7 @@ reports, never an assumed price.
 DEF481 (2026-11-20, build 120): the company-review detail sheet back control carries ami.nav.back. Accessibility identifiers only; nothing a
 user sees or does changed, so no case steps change.
 DEF481 (2026-11-20): the blocked-trade OPEN MY MANDATE button opens Settings scrolled to the section holding the rule that refused the order (UAT-SIM-022).
+2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy). The duplicate ticker guard for Games trades moved off the loop too.
 
 ### API (automated, live Alpha)
 
@@ -2096,6 +2103,7 @@ the gated, LLM-backed Finding. Alpha gate at time of writing: mode trial,
 3 trial Findings, 2/day cap, 30-day cadence. Total LLM spend for this area is
 one Finding per run (UAT-HLTH-009); a Finding takes minutes on the reasoning
 model.
+2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy).
 
 ### API (automated, live Alpha)
 
@@ -2816,6 +2824,7 @@ Telemetry ingest is per-user and idempotent while the segment read is
 admin-only. The help library (ai_coach) serves static, well-formed Q&A with
 no LLM call. DEF481 (2026-11-20): answer-sheet RELATED LESSONS pills open the lesson; RELATED AGENTS are plain captions. Bug reports filed by this suite land in the real triage queue and
 are prefixed "[CR263 UAT - ignore]"; at most three are filed per run.
+2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy).
 
 ### API (automated, live Alpha)
 
@@ -3199,6 +3208,7 @@ while the real admin secret can run the read-only views and manage users. Only
 users this suite created are ever modified. Broadcast messages, push, the
 release floor, backtest runs and LLM translate are deliberately not exercised
 (they reach real users or spend LLM).
+2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy). Also DEF385: a backtest sweep now refuses to start without a cutoff probe that names the served model root.
 
 ### API (automated, live Alpha)
 
@@ -3344,6 +3354,7 @@ not a dead tap, and the effect matches the control-intent catalogue
 (qa/uat/controls/*.yaml). Destructive controls are pressed last, then the app
 is reset. Credit-spending controls (Room, 1-on-1, Brief) are pressed once per
 crawl; real-money purchases are never pressed (crawler/never_press.json).
+2026-11-22 (build 129): Your Firm lays the 13 agent tiles out in desk bands (CR159; same tiles, taps and semantics ids, catalogue qa/uat/controls/your_firm.yaml already updated); Games responses now carry the keys the app reads (DEF527; a SELL stays a sell, restart passes commit as the query param). 8 + 12 new strings are seeded for AR/MS.
 
 ### Device (automated, Appium)
 

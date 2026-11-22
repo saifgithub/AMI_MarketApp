@@ -11,6 +11,7 @@ summary: |
   (qa/uat/controls/*.yaml). Destructive controls are pressed last, then the app
   is reset. Credit-spending controls (Room, 1-on-1, Brief) are pressed once per
   crawl; real-money purchases are never pressed (crawler/never_press.json).
+  2026-11-22 (build 129): Your Firm lays the 13 agent tiles out in desk bands (CR159; same tiles, taps and semantics ids, catalogue qa/uat/controls/your_firm.yaml already updated); Games responses now carry the keys the app reads (DEF527; a SELL stays a sell, restart passes commit as the query param). 8 + 12 new strings are seeded for AR/MS.
 cases:
   - id: UAT-CTRL-001
     title: Every screen is reached and every control pressed with the expected effect

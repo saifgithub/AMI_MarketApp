@@ -13,6 +13,7 @@ summary: |
   3 trial Findings, 2/day cap, 30-day cadence. Total LLM spend for this area is
   one Finding per run (UAT-HLTH-009); a Finding takes minutes on the reasoning
   model.
+  2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy).
 cases:
   - id: UAT-HLTH-001
     title: Tiles for an empty book are free and say there is nothing to measure

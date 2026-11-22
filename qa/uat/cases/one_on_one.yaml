@@ -14,6 +14,7 @@ summary: |
   Brief area.
   DEF481 (2026-11-20, build 120): the back control carries ami.nav.back. Accessibility identifiers only; nothing a
   user sees or does changed, so no case steps change.
+  2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy).
 cases:
   - id: UAT-ONE-001
     title: Floor Pass must earn agents, but the Concierge is always open
