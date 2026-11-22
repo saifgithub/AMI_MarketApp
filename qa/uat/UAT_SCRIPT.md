@@ -1071,7 +1071,7 @@ _Device (automated, Appium) · plans: floor_pass_
 2. Tap the Fundamentals Analyst
 
 **Expected**
-1. The firm wall lists the twelve agents by their CR160 titles with an "N of 12 unlocked" summary, in desk bands top to bottom: a YOU hex, the Chief Investment Officer, ANALYST DESK, RESEARCH, EXECUTION beside RISK (stacked on a very narrow phone), then CONCIERGE - reports to you (CR159)
+1. The firm wall lists the twelve agents by their CR160 titles with an "N of 12 unlocked" summary, in desk bands top to bottom: a YOU hex, the Chief Investment Officer, ANALYST DESK, RESEARCH, EXECUTION and RISK side by side when the content column is at least about 332 pt wide (e.g. a 390 pt iPhone), stacked as two bands on narrower phones (most 360 dp Android phones), then CONCIERGE - reports to you (CR159)
 2. Each band header carries its own filled/total seat count (for example 0/4 on a new account) and no band scrolls sideways at the largest system text size
 3. A locked agent opens a sheet with HOW TO UNLOCK, its five gateway lessons, GO TO LESSONS and an "N / 5 gateway lessons passed" progress line
 4. Dismissing the sheet returns to the firm wall
