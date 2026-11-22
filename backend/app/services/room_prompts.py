@@ -74,6 +74,11 @@ from app.services.edgar_8k import EXEC_CHANGE_LABEL, executive_change_line
 from app.services.analyst_targets import analyst_split_line, analyst_tape_line
 from app.services.street_view_blind import blind_profile
 from app.services.edgar_filings_feed import FEED_LABEL, MAX_FILINGS, WINDOW_DAYS, recent_filings_line
+from app.services.float_liquidity import (
+    FEED_LABEL as FLOAT_LIQUIDITY_LABEL,
+    float_liquidity_line,
+    float_liquidity_unavailable_line,
+)
 from app.services.edgar_forensics import (
     CLUSTER_BUY_LABEL,
     EIGHT_K_FLAGS_LABEL,
@@ -2598,6 +2603,33 @@ _ATR_LANE_AGENTS: frozenset[AgentId] = frozenset({
 })
 
 
+# CR244 Part 2 — the float & liquidity block is NOT a lane domain either: it is
+# a two-desk allowlist (Saiful, 2026-11-22). The Execution Desk sizes the stop
+# and the exit against it; the Conservative Risk Officer argues the overhang
+# and liquidity tail from it. Every other agent, including the structured
+# Risk Officer (CR201) and the full-sheet `agent_id=None` render, never sees it.
+_FLOAT_LIQUIDITY_AGENTS: frozenset[AgentId] = frozenset({
+    AgentId.TRADER, AgentId.CONSERVATIVE_DEBATOR,
+})
+
+
+# The one use-sentence each of the two desks gets, carried in the flag-gated
+# header bullet rather than the persona file so a flag-off prompt stays
+# byte-identical (the persona is rendered flag-off too).
+_FLOAT_LIQUIDITY_USE: dict[AgentId, str] = {
+    AgentId.TRADER: (
+        "Let it discipline the size you propose and the exit you plan: a stop "
+        "on a thin float, or in a name that trades few dollars a day, can gap "
+        "through its level."
+    ),
+    AgentId.CONSERVATIVE_DEBATOR: (
+        "Use it for overhang and liquidity tail risk: a small float, or a size "
+        "that is large against the day's dollar volume, is a downside path "
+        "worth naming."
+    ),
+}
+
+
 def _lane_for(agent_id: AgentId | None) -> frozenset[str]:
     if agent_id is None:
         return _ALL_DOMAINS
@@ -2910,6 +2942,21 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
             header_lines.append(
                 f"- {FEED_LABEL}: not available this call — do not supply a "
                 "filing from memory."
+            )
+    # CR244 Part 2 — float & liquidity, the two-desk allowlist.
+    if settings.room_float_liquidity_enabled and agent_id in _FLOAT_LIQUIDITY_AGENTS:
+        if _is("float_liquidity", "live"):
+            header_lines.append(
+                f"- {FLOAT_LIQUIDITY_LABEL}: LIVE, AMI-computed from yfinance "
+                "share-count fields and the daily price bars; each figure carries "
+                "its own source and as-of date, and a figure the source did not "
+                "supply is marked not available beside it. "
+                + _FLOAT_LIQUIDITY_USE[agent_id]
+            )
+        else:
+            header_lines.append(
+                f"- {FLOAT_LIQUIDITY_LABEL}: not available this call — do not "
+                "supply float or dollar volume from memory."
             )
     # CR247 Phase 1D — the four forensic metadata flags, News/Macro lane.
     # Free SEC reads like the filings index above: not gated on the news
@@ -3589,6 +3636,16 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
         )
         if filings_extra:
             lines.append(filings_extra)
+    # CR244 Part 2 — float & liquidity, rendered in code for the two desks
+    # only. A non-live state degrades loudly with its reason (CR040).
+    if settings.room_float_liquidity_enabled and agent_id in _FLOAT_LIQUIDITY_AGENTS:
+        if _is("float_liquidity", "live") and profile.get("float_liquidity"):
+            lines.append(float_liquidity_line(profile["float_liquidity"]))
+        else:
+            lines.append(float_liquidity_unavailable_line(
+                profile.get("float_liquidity_unavailable_reason")
+                or "no float/liquidity read was recorded for this sheet"
+            ))
     # CR247 Phase 1D — the four forensic flags, News/Macro lane. Rendered
     # here (not inside the news branch's withheld split above) because these
     # are free SEC reads — the news feed's tenure/paywall states say nothing

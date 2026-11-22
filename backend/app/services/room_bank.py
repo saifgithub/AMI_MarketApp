@@ -137,6 +137,7 @@ ROOM_POLICY_SETTINGS: frozenset[str] = frozenset({
     "room_geographic_revenue_enabled",
     "room_executive_change_enabled",
     "room_recent_filings_enabled",
+    "room_float_liquidity_enabled",
     "room_dividend_growth_enabled",
     "room_buyback_price_enabled",
     "room_sbc_enabled",

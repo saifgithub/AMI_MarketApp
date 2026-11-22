@@ -454,6 +454,42 @@ INTENTIONALLY_OMITTED: dict[tuple[str, str, str], str] = {
         "path to real technicals at all, so ATR is correctly absent from "
         "this surface for every caller, not just this fixture's."
     ),
+    ("technicals", "room", "adv_dollar"): (
+        "CR244 Part 2 — agent-gated AND flag-gated, not a rendering gap: the value "
+        "is folded into `profile['float_liquidity']` and rendered by "
+        "`float_liquidity_line` only for `agent_id in _FLOAT_LIQUIDITY_AGENTS` "
+        "(Trader, Conservative Risk Officer) with `room_float_liquidity_enabled` on; "
+        "this env renders `agent_id=None` with the flag off. Covered by "
+        "test_cr244_float_liquidity_feed.py's per-agent render assertions."
+    ),
+    ("technicals", "one_on_one", "adv_dollar"): (
+        "CR244 Part 2 — the 1-on-1 technicals block is Market-Analyst-only; the "
+        "float/liquidity line has no 1-on-1 surface at all."
+    ),
+    ("technicals", "room", "adv_window"): (
+        "CR244 Part 2 — agent-gated AND flag-gated, not a rendering gap: the value "
+        "is folded into `profile['float_liquidity']` and rendered by "
+        "`float_liquidity_line` only for `agent_id in _FLOAT_LIQUIDITY_AGENTS` "
+        "(Trader, Conservative Risk Officer) with `room_float_liquidity_enabled` on; "
+        "this env renders `agent_id=None` with the flag off. Covered by "
+        "test_cr244_float_liquidity_feed.py's per-agent render assertions."
+    ),
+    ("technicals", "one_on_one", "adv_window"): (
+        "CR244 Part 2 — the 1-on-1 technicals block is Market-Analyst-only; the "
+        "float/liquidity line has no 1-on-1 surface at all."
+    ),
+    ("technicals", "room", "adv_as_of"): (
+        "CR244 Part 2 — agent-gated AND flag-gated, not a rendering gap: the value "
+        "is folded into `profile['float_liquidity']` and rendered by "
+        "`float_liquidity_line` only for `agent_id in _FLOAT_LIQUIDITY_AGENTS` "
+        "(Trader, Conservative Risk Officer) with `room_float_liquidity_enabled` on; "
+        "this env renders `agent_id=None` with the flag off. Covered by "
+        "test_cr244_float_liquidity_feed.py's per-agent render assertions."
+    ),
+    ("technicals", "one_on_one", "adv_as_of"): (
+        "CR244 Part 2 — the 1-on-1 technicals block is Market-Analyst-only; the "
+        "float/liquidity line has no 1-on-1 surface at all."
+    ),
     # ── social ──
     ("social", "room", "ticker"): (
         "the lookup symbol, carried on the fetch result but rendered from the "

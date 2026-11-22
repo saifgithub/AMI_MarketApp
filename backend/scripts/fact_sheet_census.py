@@ -297,6 +297,14 @@ _COMPUTED_NOT_RENDERED: dict[str, str] = {
     "macd_line": "rendered on the MACD line (CR253 lane A)",
     "macd_signal": "rendered on the MACD line (CR253 lane A)",
     "macd_histogram": "rendered on the MACD line (CR253 lane A)",
+    # CR244 Part 2 — average daily dollar volume, computed onto Technicals from
+    # the same bars and folded by `_overlay_float_liquidity` into the
+    # `float_liquidity` payload, which `float_liquidity_line` renders for the
+    # Execution Desk and the Conservative Risk Officer only, behind
+    # `room_float_liquidity_enabled` (test_cr244_float_liquidity_feed.py).
+    "adv_dollar": "rendered on the Float & liquidity line (CR244 Part 2; two desks, flag-gated)",
+    "adv_window": "rendered on the Float & liquidity line (CR244 Part 2; two desks, flag-gated)",
+    "adv_as_of": "rendered on the Float & liquidity line (CR244 Part 2; two desks, flag-gated)",
 }
 
 
