@@ -520,7 +520,7 @@ async def audit_holdings(
     themselves are BL6.
     """
     _own(current_user, user_id)
-    mandate = store.get_or_default(user_id)
+    mandate = await asyncio.to_thread(store.get_or_default, user_id)
     # DEF120 D1/D3: one to_thread hop around a single-fetch snapshot,
     # replacing three independent sync quote passes.
     portfolio, marks, portfolio_value, drawdown_pct, _source = await asyncio.to_thread(

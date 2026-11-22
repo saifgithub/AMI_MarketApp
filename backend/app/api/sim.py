@@ -651,20 +651,9 @@ def get_portfolio_history(
     )
 
 
-@router.post("/portfolio/{user_id}/reset", response_model=PortfolioSnapshot)
-async def reset_portfolio(
-    user_id: UUID,
-    current_user: User = Depends(get_current_user),
-    sim: SimEngine = Depends(get_sim_engine),
-) -> PortfolioSnapshot:
-    _own(current_user, user_id)
-    # CR004: 24h cooldown. Reset recreates the portfolio, so its
-    # created_at IS the last-reset time — no extra column needed.
-    # CR109 slice 2: scoped to kind="training" — a user can now also hold
-    # GAME portfolio rows, and `reset_portfolio()`/this cooldown are a
-    # training-only concept (`reset_portfolio()` itself is untouched by
-    # this CR). Without this scope, a user holding both would make this
-    # query raise MultipleResultsFound the moment they also had a game run.
+def _enforce_reset_cooldown_sync(user_id: UUID) -> None:
+    """The 24h reset-cooldown read (blocking DB session), run via
+    `asyncio.to_thread` so it never executes on the event loop (DEF200)."""
     with get_session() as s:
         row = s.execute(
             select(SimPortfolioRow).where(
@@ -685,7 +674,24 @@ async def reset_portfolio(
                     detail="reset_cooldown",
                     headers={"Retry-After": str(retry_after)},
                 )
-    sim.reset_portfolio(user_id)
+
+
+@router.post("/portfolio/{user_id}/reset", response_model=PortfolioSnapshot)
+async def reset_portfolio(
+    user_id: UUID,
+    current_user: User = Depends(get_current_user),
+    sim: SimEngine = Depends(get_sim_engine),
+) -> PortfolioSnapshot:
+    _own(current_user, user_id)
+    # CR004: 24h cooldown. Reset recreates the portfolio, so its
+    # created_at IS the last-reset time — no extra column needed.
+    # CR109 slice 2: scoped to kind="training" — a user can now also hold
+    # GAME portfolio rows, and `reset_portfolio()`/this cooldown are a
+    # training-only concept (`reset_portfolio()` itself is untouched by
+    # this CR). Without this scope, a user holding both would make this
+    # query raise MultipleResultsFound the moment they also had a game run.
+    await asyncio.to_thread(_enforce_reset_cooldown_sync, user_id)
+    await asyncio.to_thread(sim.reset_portfolio, user_id)
     return await get_portfolio(user_id, current_user=current_user, sim=sim)
 
 
@@ -701,8 +707,8 @@ async def preview_trade(
     """
     if current_user.id != req.user_id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
-    _require_ticker_or_422(req.ticker)
-    mandate = resolve_mandate(req.user_id, req.mandate_override)
+    await asyncio.to_thread(_require_ticker_or_422, req.ticker)
+    mandate = await asyncio.to_thread(resolve_mandate, req.user_id, req.mandate_override)
     side = req.side if isinstance(req.side, Side) else Side(req.side)
     order_type = (
         req.order_type if isinstance(req.order_type, OrderType)
@@ -769,8 +775,8 @@ async def submit_trade(
 ) -> dict:
     if current_user.id != req.user_id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
-    _require_ticker_or_422(req.ticker)
-    mandate = resolve_mandate(req.user_id, req.mandate_override)
+    await asyncio.to_thread(_require_ticker_or_422, req.ticker)
+    mandate = await asyncio.to_thread(resolve_mandate, req.user_id, req.mandate_override)
     side = req.side if isinstance(req.side, Side) else Side(req.side)
     order_type = (
         req.order_type if isinstance(req.order_type, OrderType)
@@ -1013,6 +1019,44 @@ def list_trades(
     )
 
 
+def _journal_closed_trades_sync(sim: SimEngine, user_id: UUID, updates: list) -> None:
+    """Write one Journal entry per bracket-closed trade (blocking DB I/O), run
+    via `asyncio.to_thread` so the evaluate route never holds the event loop
+    on it (DEF200)."""
+    store = get_journal_store()
+    trades_by_id = {t.id: t for t in sim.list_trades(user_id)}
+    for u in updates:
+        t = trades_by_id.get(u.trade_id)
+        if not t:
+            continue
+        try:
+            store.append(JournalEntryCreate(
+                user_id=user_id,
+                entry_type=EntryType.SIM_TRADE,
+                reference_id=t.id,
+                title=f"Closed {t.ticker} ({u.new_status.upper()}) — ${u.realised_pnl:+.2f}",
+                summary=(
+                    f"{'Target hit' if u.new_status == 'won' else 'Stop hit'} "
+                    f"at ${u.closed_price:.2f}."
+                ),
+                ticker=t.ticker,
+                tags=["sim_trade", "closed", u.new_status],
+                outcome=Outcome.WIN if u.new_status == "won" else Outcome.LOSS,
+                # CR222 §3 — the realised outcome sits beside what was
+                # registered on the way in, so a review reads thesis →
+                # invalidation → what happened without a join.
+                payload=_closed_trade_payload(
+                    user_id=user_id,
+                    trade=t,
+                    closed_price=u.closed_price,
+                    realised_pnl=u.realised_pnl,
+                    status=u.new_status,
+                ),
+            ))
+        except Exception:  # pragma: no cover
+            pass
+
+
 @router.post("/trades/{user_id}/evaluate")
 async def evaluate_trades(
     user_id: UUID,
@@ -1042,38 +1086,7 @@ async def evaluate_trades(
     )
     # For each closed trade, write a journal entry so the user sees the outcome
     if updates:
-        store = get_journal_store()
-        trades_by_id = {t.id: t for t in sim.list_trades(user_id)}
-        for u in updates:
-            t = trades_by_id.get(u.trade_id)
-            if not t:
-                continue
-            try:
-                store.append(JournalEntryCreate(
-                    user_id=user_id,
-                    entry_type=EntryType.SIM_TRADE,
-                    reference_id=t.id,
-                    title=f"Closed {t.ticker} ({u.new_status.upper()}) — ${u.realised_pnl:+.2f}",
-                    summary=(
-                        f"{'Target hit' if u.new_status == 'won' else 'Stop hit'} "
-                        f"at ${u.closed_price:.2f}."
-                    ),
-                    ticker=t.ticker,
-                    tags=["sim_trade", "closed", u.new_status],
-                    outcome=Outcome.WIN if u.new_status == "won" else Outcome.LOSS,
-                    # CR222 §3 — the realised outcome sits beside what was
-                    # registered on the way in, so a review reads thesis →
-                    # invalidation → what happened without a join.
-                    payload=_closed_trade_payload(
-                        user_id=user_id,
-                        trade=t,
-                        closed_price=u.closed_price,
-                        realised_pnl=u.realised_pnl,
-                        status=u.new_status,
-                    ),
-                ))
-            except Exception:  # pragma: no cover
-                pass
+        await asyncio.to_thread(_journal_closed_trades_sync, sim, user_id, updates)
     return {
         "ok": True,
         "updates": [
@@ -1087,6 +1100,32 @@ async def evaluate_trades(
         ],
         "resting": resting_stats,
     }
+
+
+def _journal_manual_close_sync(user_id: UUID, closed: SimTrade) -> None:
+    """Write the Journal entry for a manual close (blocking DB I/O), run via
+    `asyncio.to_thread` (DEF200). Best-effort: a failed write never fails the
+    close."""
+    try:
+        get_journal_store().append(JournalEntryCreate(
+            user_id=user_id,
+            entry_type=EntryType.SIM_TRADE,
+            reference_id=closed.id,
+            title=f"Closed {closed.ticker} (MANUAL) — ${closed.realised_pnl:+.2f}",
+            summary=f"Closed at ${closed.closed_price:.2f}.",
+            ticker=closed.ticker,
+            tags=["sim_trade", "closed", "manual"],
+            outcome=Outcome.WIN if closed.realised_pnl >= 0 else Outcome.LOSS,
+            payload=_closed_trade_payload(
+                user_id=user_id,
+                trade=closed,
+                closed_price=closed.closed_price,
+                realised_pnl=closed.realised_pnl,
+                status="manual",
+            ),
+        ))
+    except Exception:  # pragma: no cover
+        pass
 
 
 class CloseRequest(BaseModel):
@@ -1122,26 +1161,7 @@ async def close_trade(
             status.HTTP_404_NOT_FOUND,
             "trade not found or already closed",
         )
-    try:
-        get_journal_store().append(JournalEntryCreate(
-            user_id=user_id,
-            entry_type=EntryType.SIM_TRADE,
-            reference_id=closed.id,
-            title=f"Closed {closed.ticker} (MANUAL) — ${closed.realised_pnl:+.2f}",
-            summary=f"Closed at ${closed.closed_price:.2f}.",
-            ticker=closed.ticker,
-            tags=["sim_trade", "closed", "manual"],
-            outcome=Outcome.WIN if closed.realised_pnl >= 0 else Outcome.LOSS,
-            payload=_closed_trade_payload(
-                user_id=user_id,
-                trade=closed,
-                closed_price=closed.closed_price,
-                realised_pnl=closed.realised_pnl,
-                status="manual",
-            ),
-        ))
-    except Exception:  # pragma: no cover
-        pass
+    await asyncio.to_thread(_journal_manual_close_sync, user_id, closed)
     return {"ok": True, "trade": closed.to_json()}
 
 
@@ -1161,7 +1181,9 @@ async def get_holding_lots(
     """
     _own(current_user, user_id)
     q = await asyncio.to_thread(sim.current_quote, ticker)
-    lots = sim.holding_lots(user_id, ticker, current_price=q.price)
+    lots = await asyncio.to_thread(
+        sim.holding_lots, user_id, ticker, current_price=q.price,
+    )
     realised_total = round(sum(lot.realised_pnl for lot in lots), 2)
     unrealised_total = round(
         sum(lot.unrealised_pnl or 0.0 for lot in lots), 2

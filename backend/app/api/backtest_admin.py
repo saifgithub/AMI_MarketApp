@@ -20,6 +20,7 @@ place that knows the current window.
 
 from __future__ import annotations
 
+import asyncio
 from datetime import date
 from uuid import UUID
 
@@ -57,6 +58,12 @@ class BacktestRoomRunRequest(BaseModel):
     locale: str = "en"
 
 
+def _require_ticker_exists_sync(ticker: str) -> None:
+    """Blocking ticker-existence read, run via `asyncio.to_thread` (DEF200)."""
+    with get_session() as session:
+        require_ticker_exists(session, ticker)
+
+
 @router.post("/room-run", status_code=status.HTTP_202_ACCEPTED)
 async def start_backtest_room_run(
     req: BacktestRoomRunRequest,
@@ -66,14 +73,15 @@ async def start_backtest_room_run(
     if not ticker:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "ticker required")
     try:
-        with get_session() as session:
-            require_ticker_exists(session, ticker)
+        await asyncio.to_thread(_require_ticker_exists_sync, ticker)
     except TickerNotFoundError as exc:
         raise HTTPException(
             status.HTTP_422_UNPROCESSABLE_ENTITY, detail=ticker_not_found_detail(exc)
         ) from exc
 
-    mandate = resolve_mandate(req.user_id, req.mandate_override, locale=req.locale)
+    mandate = await asyncio.to_thread(
+        resolve_mandate, req.user_id, req.mandate_override, locale=req.locale,
+    )
     ctx = AsOfContext(as_of=req.as_of, batch_id=req.batch_id, arm=req.arm)
     try:
         run_id = await runner.start_run(

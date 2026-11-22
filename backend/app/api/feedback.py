@@ -22,6 +22,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, UploadFile, status
 from pydantic import ValidationError
+from starlette.concurrency import run_in_threadpool
 
 from app.core.logging import logger
 from app.schemas.feedback import (
@@ -39,6 +40,12 @@ from app.services.feedback_store import get_feedback_store
 from app.services.rate_limit import bug_upload_rate_limit
 
 router = APIRouter(prefix="/v1/feedback", tags=["feedback"])
+
+
+def _submit_bug_sync(req: BugReportRequest, user_id: UUID | None) -> BugReportResponse:
+    """The blocking DB write, run in the threadpool so it never executes on the
+    event loop (DEF200)."""
+    return get_feedback_store().submit_bug(req, user_id)
 
 
 def _resolve_user_id(authorization: str | None) -> UUID | None:
@@ -147,7 +154,7 @@ async def submit_bug_report(
             "attachment_mime": attachment_mime,
         },
     )
-    return get_feedback_store().submit_bug(req, user_id)
+    return await run_in_threadpool(_submit_bug_sync, req, user_id)
 
 
 def _require_user_id(authorization: str | None) -> UUID:

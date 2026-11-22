@@ -3,6 +3,7 @@
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from starlette.concurrency import run_in_threadpool
 
 from app.api.dependencies import get_current_user_optional
 from app.core.time import now_utc
@@ -139,6 +140,12 @@ async def submit_answer(
     )
 
 
+def _upsert_mandate_sync(user_id: UUID, mandate: Mandate) -> Mandate:
+    """The blocking mandate write, run in the threadpool so it never executes on
+    the event loop (DEF200)."""
+    return get_mandate_store().upsert(user_id, mandate)
+
+
 @router.post("/readback/confirm", response_model=ReadbackConfirmResponse)
 async def confirm_readback(
     req: ReadbackConfirmRequest,
@@ -200,14 +207,16 @@ async def confirm_readback(
     await store.save(session)
 
     if current_user is not None:
-        age_confirmation.stamp_user(current_user.id, session.age_confirmed_at)
+        await run_in_threadpool(
+            age_confirmation.stamp_user, current_user.id, session.age_confirmed_at,
+        )
 
     if restart_authed:
         # Explicit + authenticated: replace the caller's current mandate
         # outright. upsert() bumps the version and keeps prior rows for
         # history/journal replay.
-        applied = get_mandate_store().upsert(
-            current_user.id, Mandate.model_validate(mandate_dict)
+        applied = await run_in_threadpool(
+            _upsert_mandate_sync, current_user.id, Mandate.model_validate(mandate_dict),
         )
         mandate_preview = applied.model_dump(mode="json")
     else:
