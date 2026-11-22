@@ -20,6 +20,13 @@ Leakage guard (c): --window-start is REQUIRED and is the model-cutoff probe's
 window_start. Any generated as_of before it aborts the sweep. There is
 deliberately NO override flag — the refusal is code, not convention (CR164).
 
+DEF385 — the window is only meaningful for the model the probe measured, so
+--cutoff-probe (the probe's JSON report) is REQUIRED too: the sweep refuses
+unless --window-start is not earlier than that probe's window_start AND the
+probe's recorded model root equals the `root` the server reports now (re-checked
+every RECHECK_EVERY pairs and before the sentinel; a mid-batch swap aborts
+without a sentinel). The verified model is stamped to `model_<batch-id>.json`.
+
 Noise floor: --repeat-pairs N re-runs N already-planned pairs a second time
 under batch-id `<batch-id>-repeat` (their records land in
 `runs_<batch-id>-repeat.jsonl`), giving the report an in-sweep re-measurement
@@ -31,10 +38,12 @@ skipped, and the server's 409 is the backstop for anything the file missed.
 
 Usage (inside the ami_api_alpha container, from backend/):
     .venv/bin/python scripts/backtest_sweep.py --batch-id pit-pilot-1 \
-        --window-start 2026-03-06 --n-pairs 130 --seed 164
+        --window-start 2026-03-06 --n-pairs 130 --seed 164 \
+        --cutoff-probe results/cutoff_probe_2026-03-06.json
     # dry plan check, no network:
     .venv/bin/python scripts/backtest_sweep.py --batch-id x --plan-only \
-        --window-start 2026-03-06 --n-pairs 130 --seed 164
+        --window-start 2026-03-06 --n-pairs 130 --seed 164 \
+        --cutoff-probe results/cutoff_probe_2026-03-06.json
 
 ADMIN_SECRET follows room_benchmark's convention: --admin-secret beats the
 env var, which beats infra/alpha.env.
@@ -57,6 +66,7 @@ from app.services.room_runner import is_llm_outage_verdict
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from scripts import backtest_model_guard as model_guard  # noqa: E402
 from scripts.room_benchmark import (  # noqa: E402
     NEUTRAL_MANDATE_OVERRIDE,
     POST_SPACING_S,
@@ -74,6 +84,7 @@ DEFAULT_UNIVERSE = REPO_ROOT / "docs/forward_planning/CR035_room_benchmark/ticke
 DEFAULT_OUT_DIR = REPO_ROOT / "docs/forward_planning/CR164_room_backtest/results"
 
 SKIP_STATUSES = {"completed", "already_indexed"}
+RECHECK_EVERY = 20
 
 
 def parse_universe(path: Path) -> list[str]:
@@ -259,6 +270,54 @@ def _require_supervisor(args) -> None:
     )
 
 
+def verify_window_model(args) -> tuple[str, str | None]:
+    """DEF385 — refuse unless --window-start is backed by a probe of the model
+    answering now. Returns (probe_identity, served_identity); served is None
+    for --plan-only, which launches nothing and so checks the probe offline.
+    """
+    try:
+        probe = model_guard.load_probe(args.cutoff_probe)
+        probe_identity = model_guard.check_probe_window(
+            probe, args.window_start, source=str(args.cutoff_probe),
+        )
+        if args.plan_only:
+            return probe_identity, None
+        if not args.llm_base_url:
+            raise model_guard.ModelGuardError(
+                "no --llm-base-url and no VLLM_BASE_URL in the environment — "
+                "cannot identify the model answering, so cannot verify the window"
+            )
+        served = model_guard.served_identity(args.llm_base_url)
+        model_guard.check_served_matches(
+            probe_identity, served, source=str(args.cutoff_probe),
+        )
+    except model_guard.ModelGuardError as exc:
+        raise SystemExit(f"REFUSING: look-ahead window not verified.\n  {exc}") from exc
+    return probe_identity, served
+
+
+def _model_unchanged(args, served_model: str) -> bool:
+    """DEF385 — the window was verified against `served_model` at launch; a
+    sweep is hours long, so confirm the server still answers as it. A swap
+    mid-batch aborts WITHOUT the completion sentinel, so the report refuses it.
+    """
+    try:
+        now = model_guard.served_identity(args.llm_base_url)
+    except model_guard.ModelGuardError as exc:
+        print(f"\nABORTED: cannot re-verify the served model — {exc}", flush=True)
+        return False
+    if now != served_model:
+        print(
+            f"\nABORTED: the served model changed mid-batch (`{served_model}` -> "
+            f"`{now}`). Runs after the swap are on a model the look-ahead window "
+            f"was not measured for. No completion sentinel is written; re-probe "
+            f"and re-run under a NEW --batch-id.",
+            flush=True,
+        )
+        return False
+    return True
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="CR164 Room backtest sweep driver.")
     parser.add_argument("--batch-id", required=True)
@@ -269,6 +328,12 @@ def main() -> int:
     parser.add_argument("--window-start", required=True, type=date.fromisoformat,
                         help="Model-cutoff probe window_start (ISO). Any generated "
                              "as_of before it aborts. No override flag exists.")
+    parser.add_argument("--cutoff-probe", required=True, type=Path,
+                        help="DEF385: the probe's JSON report backing --window-start. "
+                             "Must have been measured against the model answering now.")
+    parser.add_argument("--llm-base-url", default=os.environ.get("VLLM_BASE_URL"),
+                        help="OpenAI-compatible host whose /v1/models `root` is the "
+                             "model answering. Default: VLLM_BASE_URL.")
     parser.add_argument("--window-end", type=date.fromisoformat, default=None,
                         help="Default: today - 35 days (room for the +20-trading-day "
                              "scoring horizon to have realized).")
@@ -320,6 +385,7 @@ def main() -> int:
     args = parser.parse_args()
 
     _require_supervisor(args)
+    probe_identity, served_model = verify_window_model(args)
 
     window_end = args.window_end or (date.today() - timedelta(days=35))
     if window_end < args.window_start:
@@ -390,6 +456,16 @@ def main() -> int:
     )
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        for stamped_id in (args.batch_id, f"{args.batch_id}-repeat"):
+            model_guard.write_stamp(
+                args.out_dir, stamped_id, served=served_model,
+                probe_source=str(args.cutoff_probe),
+                probe_window_start=json.loads(args.cutoff_probe.read_text())["window_start"],
+                window_start=args.window_start,
+            )
+    except model_guard.ModelGuardError as exc:
+        raise SystemExit(f"REFUSING: {exc}") from exc
     runs_paths = {
         args.batch_id: args.out_dir / f"runs_{args.batch_id}.jsonl",
         f"{args.batch_id}-repeat": args.out_dir / f"runs_{args.batch_id}-repeat.jsonl",
@@ -418,6 +494,8 @@ def main() -> int:
     outage_total = 0
     try:
         for i, (batch_id, ticker, as_of) in enumerate(work, 1):
+            if i % RECHECK_EVERY == 0 and not _model_unchanged(args, served_model):
+                return 4
             as_of_iso = as_of.isoformat()
             prior = latest[batch_id].get((ticker, as_of_iso))
             if prior and prior.get("status") in SKIP_STATUSES:
@@ -519,6 +597,9 @@ def main() -> int:
               "--n-pairs): completed pairs are skipped from the JSONL, and the "
               "server 409s anything the file missed.")
         return 130
+
+    if not _model_unchanged(args, served_model):
+        return 4
 
     print(f"\ndone: {done} completed this process, {skipped} already on disk, "
           f"{len(failures)} failed → {runs_paths[args.batch_id]}")

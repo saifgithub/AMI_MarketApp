@@ -32,6 +32,10 @@ from pathlib import Path
 import httpx
 import yfinance as yf
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from scripts import backtest_model_guard as model_guard  # noqa: E402
+
 # CR217 — defaults, not constants. The probe measures a MODEL's knowledge
 # cutoff, and the served model is no longer fixed: CR211 swapped the on-prem
 # serve, and CR217 evaluates a second host entirely. A hardcoded endpoint made
@@ -211,11 +215,13 @@ def main() -> None:
     # now names a different model than it did before 2026-08-28, so a report
     # keyed to the requested id can silently mis-attribute a measurement to the
     # wrong model. Record what the server says it is actually serving.
+    # DEF385: an unidentifiable server yields NO window_start — the backtest
+    # sweep refuses a probe that cannot say which model it measured.
     try:
-        served_root = httpx.get(f"{base_url}/v1/models", timeout=15).json()["data"][0]
-        served_identity = served_root.get("root") or served_root.get("id")
-    except Exception as exc:  # noqa: BLE001 — an unidentifiable server is reportable, not fatal
-        served_identity = f"UNIDENTIFIED ({type(exc).__name__})"
+        served_identity = model_guard.served_identity(base_url)
+    except model_guard.ModelGuardError as exc:
+        print(f"FATAL: {exc}", file=sys.stderr)
+        served_identity = f"{model_guard.UNIDENTIFIED_PREFIX} ({exc})"
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -324,6 +330,9 @@ def main() -> None:
             "The probe design is invalid for this model; do NOT pick a window start.",
             file=sys.stderr,
         )
+        collapse = None
+
+    if served_identity.startswith(model_guard.UNIDENTIFIED_PREFIX):
         collapse = None
 
     if collapse is None:

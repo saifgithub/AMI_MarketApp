@@ -40,6 +40,10 @@
 > not convention" — but the number that refusal enforces was a convention all along, and it
 > went stale silently. Until the sweep refuses to start unless the probe backing its window
 > was measured against the model currently answering, this can recur without a symptom.
+> **Fixed by DEF385:** the sweep now requires `--cutoff-probe <probe .json>` and refuses unless
+> that probe's recorded model `root` equals the `root` the server reports now (re-checked
+> during the batch). Probe JSONs written before DEF385 carry no identity and are refused:
+> re-run `backtest_cutoff_probe.py` against the current serve.
 
 
 **Acceptance criterion 5.** *"A pinned regression batch spec is committed and documented as the
@@ -117,6 +121,7 @@ The command it issues, for reference:
 ```bash
 docker compose exec -T api-alpha python scripts/backtest_sweep.py \
   --batch-id "$BATCH" --window-start 2025-02-28 --n-pairs 450 --seed 164 \
+  --cutoff-probe /backtest_results/<probe for the CURRENT model>.json \
   --pairs-file /backtest_results/_outcome_pairs.jsonl \
   --universe-file /backtest_results/_tickers_142.txt \
   --out-dir /backtest_results

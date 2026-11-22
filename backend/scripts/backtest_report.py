@@ -60,6 +60,7 @@ from app.services.room_runner import is_llm_outage_verdict, init_schema
 from app.db.models import BacktestRunIndexRow, PriceHistoryDailyRow, RoomRunRow
 from app.services.edgar_pit import fetch_pit_fundamentals
 from app.services.price_history import _MOCK_SOURCE
+from scripts import backtest_model_guard as model_guard
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUT_DIR = REPO_ROOT / "docs/forward_planning/CR164_room_backtest/results"
@@ -351,6 +352,28 @@ def _sentinel_line(sentinel: dict) -> str:
     return (
         f"- Sweep completion: {label} — planned {planned}, completed "
         f"{completed}{resumed}, {tail}"
+    )
+
+
+def _model_line(stamp: dict | None) -> str:
+    """DEF385 — stamp the model the look-ahead window was verified against.
+
+    A batch with no stamp predates the guard, so nothing proves its window
+    described the model that answered; the report says that instead of staying
+    silent, because silence reads as "leakage-clean".
+    """
+    if not stamp:
+        return (
+            "- Model: **NOT RECORDED (DEF385).** No `model_<batch>.json` — this "
+            "batch ran before the sweep verified its look-ahead window against "
+            "the served model, so nothing here shows the window described the "
+            "model that answered. Do not read it as leakage-clean."
+        )
+    return (
+        f"- Model: `{stamp['served_model']}` — look-ahead window start "
+        f"{stamp['window_start']} verified against probe "
+        f"`{stamp['probe_report']}` (probe window_start "
+        f"{stamp['probe_window_start']}) for this exact model root."
     )
 
 
@@ -903,6 +926,7 @@ def main() -> int:
         "",
         "## Run accounting",
         "",
+        _model_line(model_guard.read_stamp(args.out_dir, args.batch_id)),
         (
             _sentinel_line(sentinel)
             if sentinel else

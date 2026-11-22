@@ -170,6 +170,10 @@ def test_the_call_site_counts_pairs_it_skipped(tmp_path, monkeypatch):
     # launch, so it declares itself supervised rather than the guard being
     # weakened to admit it.
     monkeypatch.setenv(sweep.SUPERVISOR_ENV, "1")
+    # DEF385 — the window must be backed by a probe of the answering model.
+    probe = tmp_path / "probe.json"
+    probe.write_text(json.dumps({"window_start": "2025-02-28", "served_identity": "m1"}))
+    monkeypatch.setattr(sweep.model_guard, "served_identity", lambda url, **kw: "m1")
     monkeypatch.setattr(sweep, "_admin_secret", lambda: "secret")
     monkeypatch.setattr(sweep.httpx, "Client", _Client)
     monkeypatch.setattr(
@@ -179,6 +183,7 @@ def test_the_call_site_counts_pairs_it_skipped(tmp_path, monkeypatch):
     monkeypatch.setattr(sys, "argv", [
         "backtest_sweep.py", "--batch-id", "b2",
         "--window-start", "2025-02-28", "--window-end", "2025-03-21",
+        "--cutoff-probe", str(probe), "--llm-base-url", "http://llm",
         "--n-pairs", "3", "--seed", "164",
         "--pairs-file", str(pairs_file),
         "--universe-file", str(universe),
