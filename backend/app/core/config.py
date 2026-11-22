@@ -1267,6 +1267,16 @@ class Settings(BaseSettings):
     # always populates (a flag flip is an A/B against one cached profile).
     room_recent_filings_enabled: bool = False
 
+    # CR244 Part 2 — float and dollar-volume block (float, shares outstanding,
+    # float % of shares, average daily dollar volume with its window and
+    # as-of dates). Reaches the Execution Desk and the Conservative Risk
+    # Officer ONLY. Unlike the filings flag this one gates the FETCH as well
+    # as the render: the overlay reads the Company Review's cached profile
+    # (a yfinance + EDGAR build on a cold cache), so while dark it costs
+    # nothing and leaves the frozen fact sheet byte-identical. Rides the bank
+    # policy version (`ROOM_POLICY_SETTINGS`).
+    room_float_liquidity_enabled: bool = False
+
     # CR221 C8 — dividend growth from CR206's payment feed (no new call). 3
     # request lines from 3 agents. The series is the last REGULAR payment of
     # each year, not the year's sum: a monthly payer whose ex-date slips

@@ -136,6 +136,8 @@ from app.services.news_context import (
     pick_catalyst,
     resolve_news_feed,
 )
+from app.services.company_profile import get_company_profile
+from app.services.float_liquidity import build_float_liquidity
 from app.services.technicals import compute_technicals
 from app.services.social_context import (
     SocialFeed,
@@ -1781,6 +1783,78 @@ def _overlay_recent_filings(
     field_state["recent_filings"] = LiveDataState.LIVE.value
 
 
+def _overlay_float_liquidity(
+    profile: dict[str, Any],
+    field_state: dict[str, str],
+    ticker: str,
+    as_of: date | None,
+    technicals: Any,
+) -> None:
+    """CR244 Part 2 — float, shares outstanding, float % of shares and average
+    daily dollar volume, one `field_state` key: `float_liquidity`, with the
+    payload on `profile["float_liquidity"]` and, when the whole feed fails, its
+    reason on `profile["float_liquidity_unavailable_reason"]`.
+
+    Gated on `room_float_liquidity_enabled` at the FETCH, not only the render
+    (unlike the filings overlay): `get_company_profile` is a cold-cache yfinance
+    + EDGAR build, so while the flag is off nothing is read and nothing is
+    written — the frozen fact sheet is byte-identical to a build without this
+    feed. Because the frozen sheet is hashed into the bank key, the data the
+    desks read is keyed by construction.
+
+    LIVE-ONLY by design: the ownership snapshot has no as-of parameter, so a
+    past-dated sheet records UNAVAILABLE with that reason, as the put/call
+    overlay does. The share figures read the Company Review's cached profile
+    (no second yfinance fetch); the dollar-volume figure is computed from the
+    same daily bars `compute_technicals` already fetched for this sheet.
+    """
+    if not settings.room_float_liquidity_enabled:
+        return
+
+    def _fail(reason: str) -> None:
+        field_state["float_liquidity"] = LiveDataState.UNAVAILABLE.value
+        profile["float_liquidity_unavailable_reason"] = reason
+
+    if as_of is not None:
+        return _fail("live-only — no point-in-time float or volume store for a past-dated sheet")
+    if not settings.use_real_market_data:
+        return _fail("mock mode — the float/liquidity feed is not read")
+
+    ownership = None
+    snapshot_date: str | None = None
+    try:
+        company = get_company_profile(ticker)
+    except Exception as exc:
+        logger.warn(
+            "float_liquidity_profile_unreadable",
+            ticker=ticker.upper(), error=f"{type(exc).__name__}: {exc}",
+        )
+        company = None
+    if company is not None:
+        ownership = company.ownership
+        snapshot_date = (company.as_of or "")[:10] or None
+
+    if technicals is not None and getattr(technicals, "adv_dollar", None) is not None:
+        adv_missing = ""
+    elif field_state.get("technicals") == LiveDataState.WITHHELD_TENURE.value:
+        adv_missing = "daily price bars were not fetched this session"
+    else:
+        adv_missing = "the daily price-bar fetch failed or was too short"
+
+    data, reason = build_float_liquidity(
+        ownership=ownership,
+        snapshot_date=snapshot_date,
+        adv_dollar=getattr(technicals, "adv_dollar", None),
+        adv_window=getattr(technicals, "adv_window", 0) or 0,
+        adv_as_of=getattr(technicals, "adv_as_of", None),
+        adv_missing_reason=adv_missing,
+    )
+    if data is None:
+        return _fail(reason or "no float or volume figure resolved")
+    profile["float_liquidity"] = data
+    field_state["float_liquidity"] = LiveDataState.LIVE.value
+
+
 def _overlay_insider_forensics(
     profile: dict[str, Any], field_state: dict[str, str], ticker: str, as_of: date | None
 ) -> None:
@@ -2105,6 +2179,7 @@ def _profile_for_ticker(
     # reason per path, same contract as the put/call overlay above.
     _overlay_peer_comparison(profile, field_state, ticker, as_of)
 
+    technicals = None
     if settings.use_real_market_data:
         # Technicals (DEF052, AT:R58): RSI/trend/volume/support-breakout
         # computed from real yfinance OHLCV — one coherent block, so one
@@ -2165,6 +2240,10 @@ def _profile_for_ticker(
                 field_state["technicals"] = LiveDataState.UNAVAILABLE.value
     else:
         field_state["technicals"] = LiveDataState.UNAVAILABLE.value
+
+    # CR244 Part 2 — after technicals: the dollar-volume half rides the same
+    # OHLCV fetch, so it can only be read once that block has run.
+    _overlay_float_liquidity(profile, field_state, ticker, as_of, technicals)
 
     # DEF334: `as_of is None` gates the FETCH, not just the render. This
     # provider call is live and knows nothing about the backtest clock — in

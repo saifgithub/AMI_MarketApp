@@ -26,6 +26,7 @@ never-raises contract as fundamentals.py/news_context.py/social_context.py.
 from __future__ import annotations
 
 import math
+from datetime import datetime, timezone
 from typing import NamedTuple
 
 from app.core.config import settings
@@ -122,6 +123,14 @@ class Technicals(NamedTuple):
     macd_line: float | None = None
     macd_signal: float | None = None
     macd_histogram: float | None = None
+    # CR244 Part 2 (float/liquidity feed) — average daily DOLLAR volume: the
+    # mean of close x volume over the last `adv_window` sessions of the same
+    # fetched bars, and the date of the last bar it ran to. Execution Desk /
+    # Conservative Risk Officer only at render time. Same end-of-tuple default
+    # contract as the fields above; `None` is "not computed", never zero.
+    adv_dollar: float | None = None
+    adv_window: int = 0
+    adv_as_of: str | None = None
 
 
 def window_trend_phrase(return_pct: float, candles: int) -> str:
@@ -262,6 +271,13 @@ def compute_technicals(ticker: str) -> Technicals | None:
         bb = _bollinger_bands(closes)
         macd_t = _macd(closes)
 
+        adv_window = min(_VOLUME_BASELINE_WINDOW, len(closes))
+        adv_dollar = (
+            sum(c * v for c, v in zip(closes[-adv_window:], volumes[-adv_window:]))
+            / adv_window
+        )
+        adv_as_of = datetime.fromtimestamp(candles[-1].t, tz=timezone.utc).date().isoformat()
+
         return Technicals(
             rsi=round(rsi),
             rsi_tone=_rsi_tone(rsi),
@@ -285,6 +301,9 @@ def compute_technicals(ticker: str) -> Technicals | None:
             macd_line=round(macd_t[0], 3) if macd_t is not None else None,
             macd_signal=round(macd_t[1], 3) if macd_t is not None else None,
             macd_histogram=round(macd_t[2], 3) if macd_t is not None else None,
+            adv_dollar=round(adv_dollar, 2),
+            adv_window=adv_window,
+            adv_as_of=adv_as_of,
         )
     except Exception as exc:
         logger.warn("technicals_compute_error", ticker=ticker, error=str(exc)[:200])
