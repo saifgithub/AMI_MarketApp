@@ -196,7 +196,11 @@ class _ConcurrencyProbeGateway:
         else:
             self.pm_calls += 1 if key == "portfolio_manager" else 0
         try:
-            await asyncio.sleep(_AGENT_DELAYS.get(key, 0.0))
+            # DEF200 — the PM's per-sample plan lookup is now a threadpool hop, so a
+            # zero-length fake call can finish before the next sample has started and
+            # the fan-out stops being observable. A real model call takes seconds; the
+            # small floor restores what a zero delay used to give for free.
+            await asyncio.sleep(_AGENT_DELAYS.get(key, 0.05 if key == "portfolio_manager" else 0.0))
             text = _REPLIES.get(key, "AMI agent live reply.")
             mid = len(text) // 2
             yield text[:mid]

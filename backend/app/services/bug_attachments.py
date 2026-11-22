@@ -13,6 +13,7 @@ boundary is "filesystem of melehost", not "the internet".
 
 from __future__ import annotations
 
+import asyncio
 import os
 from pathlib import Path
 from typing import Protocol
@@ -156,6 +157,18 @@ def save_attachment(
     return rel
 
 
+def _open_exclusive_for_write(out_path: Path):
+    """O_EXCL-create `out_path` and return it as a binary file object. A sync
+    helper so `save_attachment_streaming` can hand the whole open to the
+    threadpool; closes the descriptor itself if wrapping it fails."""
+    fd = os.open(out_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o640)
+    try:
+        return os.fdopen(fd, "wb")
+    except BaseException:
+        os.close(fd)
+        raise
+
+
 async def save_attachment_streaming(
     *,
     upload: _AsyncReadable,
@@ -188,8 +201,11 @@ async def save_attachment_streaming(
     ext = _ALLOWED_MIMES[mime_lc]
     rel = f"{uuid4().hex}{ext}"
     target_dir = Path(settings.bug_attachments_dir)
+    # DEF200: every filesystem call below runs in the threadpool — this is an
+    # `async def` served by the single uvicorn loop, and a slow volume would
+    # otherwise stall every request and SSE stream for the length of an upload.
     try:
-        target_dir.mkdir(parents=True, exist_ok=True)
+        await asyncio.to_thread(target_dir.mkdir, parents=True, exist_ok=True)
     except PermissionError:
         logger.exception(
             "bug_attachment_dir_unwritable", path=str(target_dir)
@@ -206,12 +222,12 @@ async def save_attachment_streaming(
         total_cap_bytes if total_cap_bytes is not None
         else settings.bug_attachments_total_cap_bytes
     )
-    existing_total = _current_total_bytes(target_dir)
+    existing_total = await asyncio.to_thread(_current_total_bytes, target_dir)
 
-    fd = os.open(out_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o640)
+    f = await asyncio.to_thread(_open_exclusive_for_write, out_path)
     bytes_written = 0
     try:
-        with os.fdopen(fd, "wb") as f:
+        try:
             while True:
                 chunk = await upload.read(_STREAM_CHUNK_BYTES)
                 if not chunk:
@@ -234,18 +250,20 @@ async def save_attachment_streaming(
                         f"attachment storage total exceeds {vcap} bytes "
                         f"(existing {existing_total} + {bytes_written}+ this upload)"
                     )
-                f.write(chunk)
+                await asyncio.to_thread(f.write, chunk)
+        finally:
+            await asyncio.to_thread(f.close)
         if bytes_written == 0:
             # Empty body — drop the placeholder file so a retry can reuse it.
             try:
-                out_path.unlink(missing_ok=True)
+                await asyncio.to_thread(out_path.unlink, missing_ok=True)
             finally:
                 raise AttachmentRejected("empty upload")
     except Exception:
         # On any failure (cap blown, disk full, etc.) clean up the partial
         # write so a retry can succeed and the volume doesn't accrete junk.
         try:
-            out_path.unlink(missing_ok=True)
+            await asyncio.to_thread(out_path.unlink, missing_ok=True)
         finally:
             raise
     return rel

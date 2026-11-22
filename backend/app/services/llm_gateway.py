@@ -2329,7 +2329,8 @@ class LLMGateway:
             # boundaries from git SHAs by hand — the manual step that put a
             # wrong reformatter rate into CR143. Cached per agent; None for a
             # non-agent flow (Concierge, the reformatter) and on any failure.
-            record_llm_call(
+            await asyncio.to_thread(
+                record_llm_call,
                 user_id=audit_user_id if audit_user_id else None,
                 agent_id=audit_agent_id,
                 flow=audit_flow,

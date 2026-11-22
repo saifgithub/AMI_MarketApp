@@ -120,7 +120,8 @@ async def generate_alert_commentary(alert: _AlertSnapshot, current_price: float,
     framing = _COMMENTARY_FRAMING.get(alert.threshold_type, "neutral framing")
     fallback = f"{alert.ticker} crossed your {alert.threshold_type} level of ${alert.threshold_price:.2f}."
     try:
-        system_prompt = build_agent_prompt(
+        system_prompt = await asyncio.to_thread(
+            build_agent_prompt,
             AgentId.PORTFOLIO_MANAGER, mandate, user_id=alert.user_id, ticker=alert.ticker,
         )
         user_msg = (
@@ -129,7 +130,7 @@ async def generate_alert_commentary(alert: _AlertSnapshot, current_price: float,
             f"push-notification line, plain text, no markdown, under 240 characters, with {framing}. "
             f"This is a notification, not a new trade proposal."
         )
-        plan = effective_plan_for_user(alert.user_id)
+        plan = await asyncio.to_thread(effective_plan_for_user, alert.user_id)
         tier = pick_tier(plan, AgentId.PORTFOLIO_MANAGER)
         chunks: list[str] = []
         # DEF424 post-COMPLETE — a provider that is reachable but REFUSES
@@ -194,7 +195,7 @@ async def evaluate_price_alerts() -> dict[str, int]:
         "tickers": 0, "alerts_evaluated": 0, "fired": 0,
         "skipped_price_error": 0, "mandate_blocked": 0, "errors": 0,
     }
-    grouped = _fetch_active_alerts_by_ticker()
+    grouped = await asyncio.to_thread(_fetch_active_alerts_by_ticker)
     if not grouped:
         return stats
     stats["tickers"] = len(grouped)
@@ -224,7 +225,7 @@ async def evaluate_price_alerts() -> dict[str, int]:
                 if not _threshold_breached(alert.threshold_type, quote.price, alert.threshold_price):
                     continue
 
-                mandate = get_mandate_store().get_or_default(alert.user_id)
+                mandate = await asyncio.to_thread(get_mandate_store().get_or_default, alert.user_id)
                 compliance = _alert_mandate_check(alert, mandate, halal_universe, classification_universe)
                 if not compliance.passed or _implies_short_entry(alert, mandate):
                     stats["mandate_blocked"] += 1
@@ -236,7 +237,7 @@ async def evaluate_price_alerts() -> dict[str, int]:
                     continue
 
                 commentary = await generate_alert_commentary(alert, quote.price, mandate)
-                if not _fire_alert(alert.id, commentary):
+                if not await asyncio.to_thread(_fire_alert, alert.id, commentary):
                     continue  # raced with another tick/user cancel — not an error
                 stats["fired"] += 1
                 # Real network I/O (OneSignal, up to 10s timeout) — to_thread
