@@ -35,6 +35,9 @@ dependencies = [
     # fraction → a silent 100× under-report on any rebuild that resolved an
     # older wheel. (Installed: Mac 1.3.0, Alpha 1.5.1 — both satisfy this.)
     "yfinance>=1.8.0",
+    # CR282 lane D — the SC Malaysia Shariah-compliant list is published only as a
+    # PDF; pypdf (pure Python, BSD, no native deps) extracts its text.
+    "pypdf>=5.0",
     # TradingAgents — installed from local mount for dev; published version in prod
     # "tradingagents @ file:///Volumes/Extreme Pro/TradingAgent",
 ]

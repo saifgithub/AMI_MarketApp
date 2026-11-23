@@ -158,13 +158,23 @@ async def _sharia_universe_refresh() -> None:
     network fetch happens HERE (the only socket this feature opens), off the
     request path and off the event loop (`to_thread`, since it does two ~15s httpx
     round-trips); the read path resolves from the stored row and never blocks."""
-    from app.services.sharia_universe import run_sharia_refresh_tick
+    from app.services.sharia_universe import (
+        run_sharia_refresh_tick,
+        run_sharia_sc_refresh_tick,
+    )
 
     while True:
         try:
             await asyncio.to_thread(run_sharia_refresh_tick)
         except Exception:
             logger.exception("sharia_universe_refresh_failed")
+        # CR282 lane D: the SC Malaysia list rides the same loop on its own cadence
+        # (the tick no-ops unless MARKET_BURSA_ENABLED, and idles a week at a time
+        # outside the May/Nov release windows). Isolated: a US failure never skips it.
+        try:
+            await asyncio.to_thread(run_sharia_sc_refresh_tick)
+        except Exception:
+            logger.exception("sharia_sc_refresh_failed")
         await asyncio.sleep(_SHARIA_REFRESH_INTERVAL_SECONDS)
 
 

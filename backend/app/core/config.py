@@ -936,6 +936,24 @@ class Settings(BaseSettings):
     sharia_staleness_days: int = 7
     sharia_hold_window_days: int = 30
 
+    # CR282 lane D — the Securities Commission Malaysia's Shariah-compliant
+    # securities list, the second screening standard (`.KL` tickers only, and only
+    # when MARKET_BURSA_ENABLED). The SC publishes it twice a year (last Friday of
+    # May and November), as a PDF whose download URL carries a fresh GUID every
+    # release — so this setting is the STABLE index page that lists the releases;
+    # the newest file is discovered from it. A URL that answers with a PDF directly
+    # is used as-is (pin a release, or point at a mirror).
+    sharia_sc_list_url: str = (
+        "https://www.sc.com.my/development/icm/shariah-compliant-securities/"
+        "list-of-shariah-compliant-securities"
+    )
+    # The SC list is semi-annual (~183 days between releases), so the reader's window
+    # for it is ~200 days — the 30-day US hold window would pause every `.KL` halal
+    # trade five months out of six. 200 = one release interval plus ~17 days of grace
+    # for a late release; past it the standard pauses loudly (UNAVAILABLE), never
+    # "compliant". Also the source-lag threshold for the refresher's warning.
+    sharia_sc_staleness_days: int = 200
+
     # DEF061 — sourced sector/industry classification backing the `no_fossil_fuels`
     # and `no_tobacco_alcohol_gambling` mandate flags (the CR069/CR075 architecture
     # applied to sector/industry exclusions). OFF by default → both flags PAUSE

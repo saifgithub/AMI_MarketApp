@@ -1905,13 +1905,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String shariaVerdictScreenedOut(
-      String ticker, String standard, String source, String date) {
-    return '$ticker is in the S&P 500 but does not pass the $standard screen ($source, as of $date), so this mandate won\'t trade it.';
+      String ticker, String coverage, String standard, String source, String date) {
+    return '$ticker is in $coverage but does not pass the $standard screen ($source, as of $date), so this mandate won\'t trade it.';
   }
 
   @override
-  String shariaVerdictUnknown(String ticker, String standard) {
-    return '$ticker isn\'t in the S&P 500, so the $standard screen AMI uses hasn\'t reviewed it. That\'s not a ruling either way — AMI doesn\'t know.';
+  String shariaVerdictUnknown(String ticker, String coverage, String standard) {
+    return '$ticker isn\'t in $coverage, so the $standard screen AMI uses hasn\'t reviewed it. That\'s not a ruling either way — AMI doesn\'t know.';
   }
 
   @override

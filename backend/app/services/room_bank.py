@@ -491,6 +491,8 @@ def universe_digest(halal: Any, classification: Any, ticker: str) -> str:
         return getattr(verdict.status, "value", verdict.status)
 
     t = ticker.upper().strip()
+    # CR282 lane D: a `.KL` ticker's halal state (and staleness) is its own market's.
+    halal = halal.for_ticker(t) if hasattr(halal, "for_ticker") else halal
     return _digest({
         "halal": [
             _status(halal.resolve(t)), bool(halal.stale),

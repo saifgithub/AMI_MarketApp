@@ -435,6 +435,12 @@ services:
       # purpose — a recorded, attributable list is safer to hold than a fresh
       # fetch, and this buys the runway that turns DEF093's block into an ageing.
       SHARIA_HOLD_WINDOW_DAYS: ${SHARIA_HOLD_WINDOW_DAYS:-30}
+      # CR282 lane D: Securities Commission Malaysia Shariah-compliant list (the
+      # `.KL` standard; fetched only while MARKET_BURSA_ENABLED). The URL is the SC's
+      # stable index page — the PDF itself changes GUID every release. 200 days = one
+      # semi-annual release interval plus grace, not the 30-day US window.
+      SHARIA_SC_LIST_URL: ${SHARIA_SC_LIST_URL:-https://www.sc.com.my/development/icm/shariah-compliant-securities/list-of-shariah-compliant-securities}
+      SHARIA_SC_STALENESS_DAYS: ${SHARIA_SC_STALENESS_DAYS:-200}
       # DEF061: sourced sector/industry classification for the no_fossil_fuels +
       # no_tobacco_alcohol_gambling flags. OFF by default → both PAUSE loudly rather
       # than silently permit every name. Flip on once the first live classify pass

@@ -62,6 +62,7 @@ class ShariaVerdict {
     required this.standard,
     required this.source,
     this.asOf,
+    this.coverage = 'the S&P 500',
   });
 
   final ShariaStatus status;
@@ -76,6 +77,11 @@ class ShariaVerdict {
   /// ISO date from the source's own as-of stamp. Null only when the backend
   /// could not stamp one (an unavailable/paused screen).
   final DateTime? asOf;
+
+  /// The universe the standard covers ("the S&P 500", "Bursa Malaysia"), so the
+  /// screened-out / unknown copy names it instead of hard-coding the S&P 500.
+  /// Defaults to the US value for a backend that predates CR282 lane D.
+  final String coverage;
 
   bool get isBlocking => status.isBlocking;
 
@@ -93,6 +99,9 @@ class ShariaVerdict {
       standard: j['standard'] as String? ?? '',
       source: j['source'] as String? ?? '',
       asOf: _parseDate(j['as_of']),
+      coverage: (j['coverage'] as String?)?.trim().isNotEmpty == true
+          ? j['coverage'] as String
+          : 'the S&P 500',
     );
   }
 

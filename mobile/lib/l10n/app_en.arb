@@ -2284,13 +2284,17 @@
       }
     }
   },
-  "shariaVerdictScreenedOut": "{ticker} is in the S&P 500 but does not pass the {standard} screen ({source}, as of {date}), so this mandate won't trade it.",
+  "shariaVerdictScreenedOut": "{ticker} is in {coverage} but does not pass the {standard} screen ({source}, as of {date}), so this mandate won't trade it.",
   "@shariaVerdictScreenedOut": {
-    "description": "CR069 Phase 1b. Shown on a REJECTED trade: the ticker is inside the parent index and absent from the compliant set, so it is a real exclusion under this standard and the trade is blocked. OBSERVANCE-SENSITIVE. Translator notes: (a) this is the ONLY one of the four verdict strings that reports a negative screen result — keep it clearly distinct from shariaVerdictUnknown, which reports NO ruling; conflating the two is the specific confusion CR069 design constraint 2 forbids; (b) attribute the exclusion to the named standard, not to AMI. {standard} and {source} arrive untranslated.",
+    "description": "CR069 Phase 1b. Shown on a REJECTED trade: the ticker is inside the parent index and absent from the compliant set, so it is a real exclusion under this standard and the trade is blocked. OBSERVANCE-SENSITIVE. Translator notes: (a) this is the ONLY one of the four verdict strings that reports a negative screen result — keep it clearly distinct from shariaVerdictUnknown, which reports NO ruling; conflating the two is the specific confusion CR069 design constraint 2 forbids; (b) attribute the exclusion to the named standard, not to AMI. {standard} and {source} arrive untranslated. CR282 lane D: the hard-coded 'S&P 500' became the {coverage} placeholder — the backend verdict names the universe its standard covers ('the S&P 500' for the US standard, 'Bursa Malaysia' for the SC Malaysia list), so the US text is unchanged and a .KL ticker no longer reads 'S&P 500'. {coverage} is a backend-supplied proper name and arrives untranslated. retranslate:[ar,ms]",
     "placeholders": {
       "ticker": {
         "type": "String",
         "example": "META"
+      },
+      "coverage": {
+        "type": "String",
+        "example": "the S&P 500"
       },
       "standard": {
         "type": "String",
@@ -2306,13 +2310,17 @@
       }
     }
   },
-  "shariaVerdictUnknown": "{ticker} isn't in the S&P 500, so the {standard} screen AMI uses hasn't reviewed it. That's not a ruling either way — AMI doesn't know.",
+  "shariaVerdictUnknown": "{ticker} isn't in {coverage}, so the {standard} screen AMI uses hasn't reviewed it. That's not a ruling either way — AMI doesn't know.",
   "@shariaVerdictUnknown": {
-    "description": "CR069 Phase 1b. Shown on a SUCCESSFUL, PERMITTED trade (G3, resolved 2026-07-23: unknown permits, with the disclosure attached) when the ticker sits outside the parent index and the standard therefore never examined it. OBSERVANCE-SENSITIVE and the highest-risk string in this set. Translator notes: (a) this is NOT a rejection, NOT a warning, and NOT a statement that the trade was risky — the trade went through; (b) 'hasn't reviewed it' must NOT become 'not permitted', 'haram', 'non-compliant', 'doubtful' or 'mashbooh' — turning an absence of a ruling into a negative ruling is a false assurance in the direction nobody checks, and is exactly what CR069 design constraint 2 forbids; (c) 'AMI doesn't know' is deliberate humility and must survive. {standard} arrives untranslated.",
+    "description": "CR069 Phase 1b. Shown on a SUCCESSFUL, PERMITTED trade (G3, resolved 2026-07-23: unknown permits, with the disclosure attached) when the ticker sits outside the parent index and the standard therefore never examined it. OBSERVANCE-SENSITIVE and the highest-risk string in this set. Translator notes: (a) this is NOT a rejection, NOT a warning, and NOT a statement that the trade was risky — the trade went through; (b) 'hasn't reviewed it' must NOT become 'not permitted', 'haram', 'non-compliant', 'doubtful' or 'mashbooh' — turning an absence of a ruling into a negative ruling is a false assurance in the direction nobody checks, and is exactly what CR069 design constraint 2 forbids; (c) 'AMI doesn't know' is deliberate humility and must survive. {standard} arrives untranslated. CR282 lane D: the hard-coded 'S&P 500' became the {coverage} placeholder — the backend verdict names the universe its standard covers ('the S&P 500' for the US standard, 'Bursa Malaysia' for the SC Malaysia list), so the US text is unchanged and a .KL ticker no longer reads 'S&P 500'. {coverage} is a backend-supplied proper name and arrives untranslated. retranslate:[ar,ms]",
     "placeholders": {
       "ticker": {
         "type": "String",
         "example": "ASML"
+      },
+      "coverage": {
+        "type": "String",
+        "example": "the S&P 500"
       },
       "standard": {
         "type": "String",
