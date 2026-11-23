@@ -83,7 +83,7 @@ Status values: `not started` · `in progress` · `blocked (gate)` · `done` · `
 | S1 | ✅ done | 2026-11-18 | 66 items ruled (53 asked, 13 accepted on recommendation) |
 | S2 | ✅ ruled | 2026-11-19 | Saiful: **DeepSeek-V4-Flash** for Beta (WP-10 scorecard). Alpha's backup model was switched to it; it works once DeepInfra is topped up (Saiful). |
 | S8 | ✅ done | 2026-11-19 | Adanos key rotated (Saiful). |
-| S3 | open | 2026-11-22 | Grader pick. Bake-off done for on-prem, Jev, DeepInfra; CheapLLM piloted at Saiful's request, not viable. Recommendation: DeepInfra DeepSeek-V4-Flash (plan §3b.7). Code grader scored on arm 2 (2026-11-22): cannot be the sole grader (two of six questions never computable from cards); does not change the recommendation. |
+| S3 | ✅ ruled | 2026-11-23 | **Saiful 2026-11-23: "use deepinfra".** Grader = DeepInfra `deepseek-ai/DeepSeek-V4-Flash`, temperature 0, grader only (Alpha desks stay on-prem; ruling 2026-11-22). WP-23 wiring started (Sonnet lane `lane/wp23-deepinfra-grader`). Fitting run on the WP-20 Rooms is hosted spend (~$3) and waits for its own go. |
 | S4 | open, last | 2026-11-21 | Saiful: "you really should leave S4 to last". Beta host not picked. |
 | S5 | ✅ ruled | 2026-11-20 | Cloudflare Tier 3 + Alibaba. |
 | S6 | open | | Counsel on archive mode + PDPA cross-border; off the launch path. |
