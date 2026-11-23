@@ -14,6 +14,8 @@ library;
 import 'dart:async';
 import 'dart:ui' as ui;
 
+import 'package:ami_trade/features/markets/market.dart';
+import 'package:ami_trade/features/markets/money.dart';
 import 'package:ami_trade/services/yahoo_finance_service.dart';
 import 'package:ami_trade/state/ticker_tape_provider.dart';
 import 'package:ami_trade/theme/ami_text_scale.dart';
@@ -241,7 +243,6 @@ class _TapeItem extends StatelessWidget {
     final arrowColor = isUp
         ? AmiColors.hexGreen
         : (isDown ? AmiColors.hexRed : AmiColors.textLow);
-    final priceFmt = NumberFormat.simpleCurrency(decimalDigits: 2);
     final pctFmt = NumberFormat('0.0');
 
     return Directionality(
@@ -270,7 +271,7 @@ class _TapeItem extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    priceFmt.format(quote.price),
+                    formatMoney(quote.price, market: marketForTicker(quote.symbol)),
                     style: AmiTypography.labelMono
                         .copyWith(color: AmiColors.textHigh, fontSize: 10),
                   ),

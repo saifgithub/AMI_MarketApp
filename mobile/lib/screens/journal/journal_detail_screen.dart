@@ -4,6 +4,8 @@
 /// and lets the user attach a note + tags + outcome.
 library;
 
+import 'package:ami_trade/features/markets/market.dart';
+import 'package:ami_trade/features/markets/money.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/journal.dart';
@@ -301,16 +303,20 @@ class _PayloadBlock extends StatelessWidget {
         final realisedPnl = t['realised_pnl'];
         final verdictRef = t['verdict_ref'] as String?;
         final rows = <_KV>[];
+        final tradeMarket = marketForTicker(t['ticker'] as String?);
         if (horizonDays != null) rows.add(_KV('Horizon', '$horizonDays days'));
         if (status != null) rows.add(_KV('Status', status));
         if (openedAt != null) rows.add(_KV('Opened at', openedAt));
         if (closedAt != null) rows.add(_KV('Closed at', closedAt));
         if (closedPrice is num) {
-          rows.add(_KV('Closed price', '\$${closedPrice.toStringAsFixed(2)}'));
+          rows.add(_KV('Closed price', formatMoney(closedPrice,
+              market: tradeMarket, grouped: false)));
         }
         if (realisedPnl is num && realisedPnl != 0) {
-          final sign = realisedPnl >= 0 ? '+' : '';
-          rows.add(_KV('Realised P&L', '$sign\$${realisedPnl.toStringAsFixed(2)}'));
+          rows.add(_KV(
+              'Realised P&L',
+              formatMoney(realisedPnl,
+                  market: tradeMarket, signed: true, grouped: false)));
         }
         if (verdictRef != null && verdictRef.isNotEmpty) {
           // First 8 chars match the short_id surfaced in the bug-report UI.
@@ -499,6 +505,7 @@ class _RoomRunReplayState extends ConsumerState<_RoomRunReplay> {
           )
         else ...[
           RoomTranscriptRows(
+            market: marketForTicker(widget.entry.ticker),
             voices: transcriptVoicesFromJournalEntry(widget.entry),
             expandedAgentId: _jumpAgentId,
             highlightAgentId: _jumpAgentId,

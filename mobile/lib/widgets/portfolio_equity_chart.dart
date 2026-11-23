@@ -24,6 +24,8 @@ library;
 
 import 'dart:ui' as ui;
 
+import 'package:ami_trade/features/markets/market.dart';
+import 'package:ami_trade/features/markets/money.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/services/api/friendly_error.dart';
@@ -44,7 +46,10 @@ const double _kChartHeight = 96;
 String _isolateNumeric(String s) => '\u2066$s\u2069';
 
 class PortfolioEquityChart extends ConsumerWidget {
-  const PortfolioEquityChart({super.key});
+  const PortfolioEquityChart({super.key, this.market = AppMarket.us});
+
+  /// CR282 - the book's market, for the crosshair readout.
+  final AppMarket market;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -60,7 +65,7 @@ class PortfolioEquityChart extends ConsumerWidget {
               ? () => ref.invalidate(portfolioHistoryProvider)
               : null,
         ),
-        data: (history) => _EquityCurveCard(l: l, history: history),
+        data: (history) => _EquityCurveCard(l: l, history: history, market: market),
       ),
     );
   }
@@ -126,10 +131,12 @@ class _EquityCurveNotice extends StatelessWidget {
 }
 
 class _EquityCurveCard extends StatefulWidget {
-  const _EquityCurveCard({required this.l, required this.history});
+  const _EquityCurveCard(
+      {required this.l, required this.history, required this.market});
 
   final AppLocalizations l;
   final SimPortfolioHistory history;
+  final AppMarket market;
 
   @override
   State<_EquityCurveCard> createState() => _EquityCurveCardState();
@@ -246,7 +253,8 @@ class _EquityCurveCardState extends State<_EquityCurveCard> {
                 width: double.infinity,
                 child: CustomPaint(
                   painter:
-                      _EquityCurvePainter(points: points, dragX: _dragX),
+                      _EquityCurvePainter(
+                          points: points, dragX: _dragX, market: widget.market),
                 ),
               ),
             ),
@@ -303,7 +311,10 @@ void _drawDashedLine(
 }
 
 class _EquityCurvePainter extends CustomPainter {
-  _EquityCurvePainter({required this.points, required this.dragX});
+  _EquityCurvePainter(
+      {required this.points, required this.dragX, required this.market});
+
+  final AppMarket market;
 
   final List<SimPortfolioHistoryPoint> points;
   final double? dragX;
@@ -403,7 +414,8 @@ class _EquityCurvePainter extends CustomPainter {
     final i = _nearestIndex(x, offsets);
     final p = points[i];
     final readout =
-        '${DateFormat('MMM d').format(p.asOfDate)} · \$${p.nav.toStringAsFixed(2)}';
+        '${DateFormat('MMM d').format(p.asOfDate)} · '
+        '${formatMoney(p.nav, market: market, grouped: false)}';
     final tp = TextPainter(
       text: TextSpan(
         text: readout,

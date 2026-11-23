@@ -13,6 +13,8 @@ library;
 
 import 'dart:async';
 
+import 'package:ami_trade/features/markets/market.dart';
+import 'package:ami_trade/features/markets/money.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/widgets/trace_ref_line.dart';
 import 'package:ami_trade/models/agent.dart';
@@ -212,6 +214,7 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
                       // scroll to as agents move through it.
                       if (settled)
                         RoomTranscriptRows(
+                          market: marketForTicker(widget.ticker),
                           voices: transcriptVoicesFromRoomState(state),
                           expandedAgentId: _jumpAgentId,
                           highlightAgentId: _jumpAgentId,
@@ -1506,21 +1509,24 @@ class _VerdictCard extends ConsumerWidget {
               label: l.roomMetricEntry,
               value: verdict.entry == null
                   ? '—'
-                  : '\$${verdict.entry!.toStringAsFixed(2)}',
+                  : formatMoney(verdict.entry!,
+                      market: marketForTicker(ticker), grouped: false),
               accent: accent,
             ),
             _MetricRow(
               label: l.roomMetricStop,
               value: verdict.stop == null
                   ? '—'
-                  : '\$${verdict.stop!.toStringAsFixed(2)}',
+                  : formatMoney(verdict.stop!,
+                      market: marketForTicker(ticker), grouped: false),
               accent: accent,
             ),
             _MetricRow(
               label: l.roomMetricTarget,
               value: verdict.target == null
                   ? '—'
-                  : '\$${verdict.target!.toStringAsFixed(2)}',
+                  : formatMoney(verdict.target!,
+                      market: marketForTicker(ticker), grouped: false),
               accent: accent,
             ),
             _MetricRow(
@@ -1628,7 +1634,8 @@ class _VerdictCard extends ConsumerWidget {
                     const SizedBox(width: AmiSpacing.s),
                     Text(
                       '${existingTrade.side.toUpperCase()} ${existingTrade.quantity.toStringAsFixed(0)} '
-                      '${existingTrade.ticker} @ \$${existingTrade.entryPrice.toStringAsFixed(2)}',
+                      '${existingTrade.ticker} @ '
+                      '${formatMoney(existingTrade.entryPrice, market: marketForTicker(existingTrade.ticker), grouped: false)}',
                       style: AmiTypography.labelMono.copyWith(
                         color: AmiColors.hexGreen,
                         fontWeight: FontWeight.w600,
@@ -1833,7 +1840,7 @@ class _VerdictActions extends ConsumerWidget {
                     '${existingTrade.side.toUpperCase()} '
                     '${existingTrade.quantity.toStringAsFixed(0)} '
                     '${existingTrade.ticker} @ '
-                    '\$${existingTrade.entryPrice.toStringAsFixed(2)}',
+                    '${formatMoney(existingTrade.entryPrice, market: marketForTicker(existingTrade.ticker), grouped: false)}',
                     style: AmiTypography.labelMono.copyWith(
                       color: AmiColors.hexGreen,
                       fontWeight: FontWeight.w600,

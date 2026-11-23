@@ -5,6 +5,8 @@
 /// watchlist (Portfolio tab); the tape omits it for default filler tickers.
 library;
 
+import 'package:ami_trade/features/markets/market.dart';
+import 'package:ami_trade/features/markets/money.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/screens/agent/one_on_one_screen.dart';
@@ -15,7 +17,6 @@ import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 
 void showWatchlistSheet(
   BuildContext context,
@@ -67,7 +68,7 @@ void showWatchlistSheet(
                 const SizedBox(width: AmiSpacing.s),
                 if (price != null)
                   Text(
-                    NumberFormat.simpleCurrency(decimalDigits: 2).format(price),
+                    formatMoney(price, market: marketForTicker(ticker)),
                     style: AmiTypography.statMid,
                   ),
               ],
