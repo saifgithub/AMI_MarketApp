@@ -39,6 +39,7 @@ import 'package:ami_trade/screens/sim/ticker_detail_screen.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
 import 'package:ami_trade/services/ads/ads_models.dart';
 import 'package:ami_trade/state/alpaca_providers.dart';
+import 'package:ami_trade/state/bursa_providers.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
@@ -136,7 +137,17 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
       _runTour();
     });
 
-    final state = ref.watch(simNotifierProvider);
+    final usState = ref.watch(simNotifierProvider);
+    // CR282 - with Bursa off (`kBursaEnabled`) this is always US and the Bursa
+    // provider is never watched, so the screen is exactly the pre-CR282 one.
+    final bursaOn = ref.watch(bursaEnabledProvider);
+    final market = bursaOn ? ref.watch(selectedMarketProvider) : AppMarket.us;
+    final state = _viewState(
+      market: market,
+      bursaOn: bursaOn,
+      us: usState,
+      bursa: market == AppMarket.my ? ref.watch(bursaSimProvider) : null,
+    );
     final watchlist = ref.watch(watchlistNotifierProvider);
     return Semantics(identifier: ScreenIds.portfolioScreen, container: true, explicitChildNodes: true, child: Scaffold(
       backgroundColor: AmiColors.slate900,
@@ -157,17 +168,33 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
                 ),
               ],
             ),
-            Expanded(child: _body(context, state, watchlist)),
+            if (bursaOn)
+              _MarketSwitch(
+                selected: market,
+                onSelect: (m) =>
+                    ref.read(selectedMarketProvider.notifier).select(m),
+              ),
+            Expanded(child: _body(context, state, watchlist, market)),
           ],
         ),
       ),
     ));
   }
 
+  /// CR282 - re-read the book on screen (and the US book too, which owns the
+  /// order sweep and the shared order list).
+  Future<void> _refreshBooks(AppMarket market) async {
+    await ref.read(simNotifierProvider.notifier).refresh();
+    if (market == AppMarket.my) {
+      await ref.read(bursaSimProvider.notifier).refresh();
+    }
+  }
+
   Widget _body(
     BuildContext context,
     SimState state,
     WatchlistState watchlist,
+    AppMarket market,
   ) {
     if (state.loading && state.portfolio == null) {
       return const Center(child: CircularProgressIndicator());
@@ -191,8 +218,7 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
                 const SizedBox(height: AmiSpacing.l),
                 HexButton(
                   label: l.portfolioRetry,
-                  onPressed: () =>
-                      ref.read(simNotifierProvider.notifier).refresh(),
+                  onPressed: () => _refreshBooks(market),
                 ),
               ],
             ],
@@ -202,6 +228,28 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
     }
     final p = state.portfolio;
     if (p == null) return const SizedBox.shrink();
+
+    // CR282 - a Bursa book nothing has touched yet: say what it will be, rather
+    // than a RM50,000 value card over three empty tabs.
+    if (market == AppMarket.my && _isUntouchedBook(p, state)) {
+      final l = AppLocalizations.of(context);
+      return RefreshIndicator(
+        color: AmiColors.hexCyan,
+        onRefresh: () => _refreshBooks(market),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            AmiEmptyState(
+              icon: Icons.account_balance_outlined,
+              title: l.portfolioBursaEmpty(formatMoney(p.startingCapital,
+                  market: AppMarket.my, decimals: 0)),
+              ctaLabel: l.portfolioBursaEmptyCta,
+              onCta: () => TradeTicketSheet.show(context),
+            ),
+          ],
+        ),
+      );
+    }
 
     // CR188 slice 3 — `status` is NOT a position predicate. It carries "the
     // ledger still needs this row"; the screen used to read it as "there is a
@@ -221,7 +269,7 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
       color: AmiColors.hexCyan,
       onRefresh: () async {
         await Future.wait<void>([
-          ref.read(simNotifierProvider.notifier).refresh(),
+          _refreshBooks(market),
           ref.read(watchlistNotifierProvider.notifier).refresh(),
         ]);
         ref.invalidate(alpacaLinkedProvider);
@@ -264,6 +312,7 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
                 p.optionStructures.length,
             watchlistCount: restingOrderCount(state),
             historyCount: transactions.length,
+            includeAlpaca: market != AppMarket.my,
             hasOpenTrade: p.holdings.isNotEmpty ||
                 p.shorts.isNotEmpty ||
                 p.options.isNotEmpty ||
@@ -281,7 +330,7 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
               children: [
                 _paneRoot(ScreenIds.portfolioPositionsPane, _PositionsTab(
                   holdings: p.holdings,
-                  market: p.market,
+                  market: market == AppMarket.my ? AppMarket.my : p.market,
                   // CR170 — a user whose only activity is a resting order has
                   // traded; telling them otherwise is a hint that contradicts
                   // the Orders tab beside it.
@@ -294,13 +343,118 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
                   sharesCommitted: p.sharesCommitted,
                   onTradeTicket: () => TradeTicketSheet.show(context),
                 )),
-                _paneRoot(ScreenIds.portfolioOrdersPane, const _OrdersTab()),
-                _paneRoot(ScreenIds.portfolioHistoryPane,
-                    _HistoryTab(closedTrades: transactions, watchlist: watchlist)),
+                _paneRoot(
+                    ScreenIds.portfolioOrdersPane,
+                    _OrdersTab(
+                        market: ref.read(bursaEnabledProvider) ? market : null)),
+                _paneRoot(
+                    ScreenIds.portfolioHistoryPane,
+                    _HistoryTab(
+                        closedTrades: transactions,
+                        watchlist: watchlist,
+                        bookMarket: market)),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// CR282 - the state the screen renders for [market]. With Bursa off it is the
+/// US state untouched. With it on, the book's own portfolio and trades come from
+/// [bursa] for Bursa, and the (shared, all-markets) order list in [us] is cut to
+/// this market so a US order never counts against the Bursa tab and vice versa.
+SimState _viewState({
+  required AppMarket market,
+  required bool bursaOn,
+  required SimState us,
+  required SimState? bursa,
+}) {
+  if (!bursaOn) return us;
+  final base = market == AppMarket.my && bursa != null ? bursa : us;
+  return SimState(
+    portfolio: base.portfolio,
+    trades: base.trades,
+    restingOrders: [
+      for (final o in us.restingOrders)
+        if (marketForTicker(o.ticker) == market) o,
+    ],
+    restingOrdersSupported: us.restingOrdersSupported,
+    loading: base.loading,
+    error: base.error,
+    errorRetryable: base.errorRetryable,
+  );
+}
+
+/// CR282 - true for a Bursa book the user has not traded in: no holdings, no
+/// ledger rows, no working order, cash exactly the starting capital. The server
+/// creates the book on first read, so "no book yet" and "book nothing has
+/// touched" look the same on the wire - and to the user they are the same.
+bool _isUntouchedBook(SimPortfolio p, SimState view) =>
+    p.holdings.isEmpty &&
+    view.trades.isEmpty &&
+    view.restingOrders.isEmpty &&
+    (p.currentCash - p.startingCapital).abs() < 0.005;
+
+/// CR282 - US | BURSA, shown only in a build that has Bursa.
+class _MarketSwitch extends StatelessWidget {
+  const _MarketSwitch({required this.selected, required this.onSelect});
+
+  final AppMarket selected;
+  final ValueChanged<AppMarket> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final options = <(AppMarket, String)>[
+      (AppMarket.us, l.portfolioMarketUs),
+      (AppMarket.my, l.portfolioMarketBursa),
+    ];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+          AmiSpacing.m, AmiSpacing.s, AmiSpacing.m, 0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: AmiColors.slate900,
+          borderRadius: BorderRadius.circular(AmiRadii.card),
+          border: Border.all(color: AmiColors.slate700),
+        ),
+        child: Row(
+          children: [
+            for (final (m, label) in options)
+              Expanded(
+                child: Semantics(
+                  button: true,
+                  selected: m == selected,
+                  child: InkWell(
+                    onTap: () => onSelect(m),
+                    borderRadius: BorderRadius.circular(AmiRadii.card),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: m == selected
+                            ? AmiColors.hexCyan.withValues(alpha: 0.2)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(AmiRadii.card),
+                      ),
+                      child: Text(
+                        label,
+                        style: AmiTypography.labelMono.copyWith(
+                          fontSize: 11,
+                          color: m == selected
+                              ? AmiColors.hexCyan
+                              : AmiColors.textLow,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -507,7 +661,12 @@ class _PortfolioTabBar extends ConsumerWidget {
     required this.watchlistCount,
     required this.historyCount,
     required this.hasOpenTrade,
+    this.includeAlpaca = true,
   });
+
+  /// CR282 - false on the Bursa book: Alpaca has no Bursa, so its counts are
+  /// not part of any of this book's three tabs.
+  final bool includeAlpaca;
 
   final GlobalKey watchlistTabKey;
   final int selected;
@@ -529,7 +688,8 @@ class _PortfolioTabBar extends ConsumerWidget {
     // false while `alpacaLinkedProvider` itself is still resolving, which is
     // the correct posture here too (nothing to combine yet, and the AMI
     // count alone is never wrong).
-    final linked = ref.watch(alpacaLinkedProvider).valueOrNull ?? false;
+    final linked =
+        includeAlpaca && (ref.watch(alpacaLinkedProvider).valueOrNull ?? false);
 
     final positions = _TabCount(
       ami: positionsCount,
@@ -1009,19 +1169,27 @@ class _PositionsTab extends StatelessWidget {
               children: [
                 // CR109 slice 1 — the equity curve. Training-portfolio only,
                 // additive: no game surface, no new nav destination.
-                PortfolioEquityChart(market: market),
-                const _SectorAllocationSection(),
-                const PortfolioHealthCard(),
-                // Below the book, above holdings: a short is a live position
-                // like a holding, but it is not one — the user owes the
-                // shares — so it gets its own group rather than a row inside
-                // HOLDINGS with a badge on it.
-                const ShortPositionsSection(),
-                // Options sit after shorts and before holdings for the same
-                // reason shorts sit there: an option is not a holding — it
-                // expires, and the thing a user must see about it is how long
-                // it has left, not what it is worth per share.
-                const OptionPositionsSection(),
+                //
+                // CR282 - the equity curve, sector donut, health card, shorts
+                // and options all read the US book (the MYR book has no NAV
+                // history yet, no shorts, no options), so none of them is drawn
+                // under a Bursa book: a US number under an RM header is the
+                // wrong-currency lie this CR exists to remove.
+                if (market != AppMarket.my) ...[
+                  PortfolioEquityChart(market: market),
+                  const _SectorAllocationSection(),
+                  const PortfolioHealthCard(),
+                  // Below the book, above holdings: a short is a live position
+                  // like a holding, but it is not one — the user owes the
+                  // shares — so it gets its own group rather than a row inside
+                  // HOLDINGS with a badge on it.
+                  const ShortPositionsSection(),
+                  // Options sit after shorts and before holdings for the same
+                  // reason shorts sit there: an option is not a holding — it
+                  // expires, and the thing a user must see about it is how long
+                  // it has left, not what it is worth per share.
+                  const OptionPositionsSection(),
+                ],
                 if (holdings.isEmpty &&
                     !hasRestingOrders &&
                     !hasShorts &&
@@ -1057,10 +1225,11 @@ class _PositionsTab extends StatelessWidget {
               ),
             ),
           ),
-        const SliverPadding(
-          padding: EdgeInsets.symmetric(horizontal: AmiSpacing.m),
-          sliver: SliverToBoxAdapter(child: _AlpacaPortfolioSection()),
-        ),
+        if (market != AppMarket.my)
+          const SliverPadding(
+            padding: EdgeInsets.symmetric(horizontal: AmiSpacing.m),
+            sliver: SliverToBoxAdapter(child: _AlpacaPortfolioSection()),
+          ),
         const SliverToBoxAdapter(child: SizedBox(height: AmiSpacing.m)),
       ],
     );
@@ -1364,23 +1533,30 @@ class _DonutPainter extends CustomPainter {
 /// A sell with nothing behind it would open a short, has no tile to live on,
 /// and does appear here.
 class _OrdersTab extends ConsumerWidget {
-  const _OrdersTab();
+  const _OrdersTab({this.market});
+
+  /// CR282 - null (Bursa off) shows the whole book as before; otherwise only
+  /// this market's orders.
+  final AppMarket? market;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return CustomScrollView(
       key: const PageStorageKey('portfolioOrdersScroll'),
-      slivers: const [
+      slivers: [
         SliverPadding(
-          padding: EdgeInsets.symmetric(horizontal: AmiSpacing.m),
-          sliver: SliverToBoxAdapter(child: RestingOrdersSection()),
+          padding: const EdgeInsets.symmetric(horizontal: AmiSpacing.m),
+          sliver: SliverToBoxAdapter(
+              child: RestingOrdersSection(market: market)),
         ),
         // CR234 — Alpaca's own open orders, alongside AMI's resting book
-        // above. Renders nothing when no Alpaca account is linked.
-        SliverPadding(
-          padding: EdgeInsets.symmetric(horizontal: AmiSpacing.m),
-          sliver: SliverToBoxAdapter(child: AlpacaOpenOrdersSection()),
-        ),
+        // above. Renders nothing when no Alpaca account is linked. US only:
+        // Alpaca has no Bursa.
+        if (market != AppMarket.my)
+          const SliverPadding(
+            padding: EdgeInsets.symmetric(horizontal: AmiSpacing.m),
+            sliver: SliverToBoxAdapter(child: AlpacaOpenOrdersSection()),
+          ),
       ],
     );
   }
@@ -1728,9 +1904,16 @@ class _WatchlistDeleteBackground extends StatelessWidget {
 /// forever as an OPEN row against zero shares. A purchase and a sale both
 /// happened; whether the ledger still needs the row is not the user's concern.
 class _HistoryTab extends ConsumerStatefulWidget {
-  const _HistoryTab({required this.closedTrades, required this.watchlist});
+  const _HistoryTab({
+    required this.closedTrades,
+    required this.watchlist,
+    this.bookMarket = AppMarket.us,
+  });
   final List<SimTrade> closedTrades;
   final WatchlistState watchlist;
+
+  /// CR282 - the book on screen; the closed-trade summary prints in its money.
+  final AppMarket bookMarket;
 
   @override
   ConsumerState<_HistoryTab> createState() => _HistoryTabState();
@@ -1763,10 +1946,11 @@ class _HistoryTabState extends ConsumerState<_HistoryTab> {
           ),
           // CR234 — a user with zero AMI trades can still have Alpaca order
           // history; the empty-AMI-history state must not hide it.
-          const SliverPadding(
-            padding: EdgeInsets.symmetric(horizontal: AmiSpacing.m),
-            sliver: SliverToBoxAdapter(child: AlpacaHistorySection()),
-          ),
+          if (widget.bookMarket != AppMarket.my)
+            const SliverPadding(
+              padding: EdgeInsets.symmetric(horizontal: AmiSpacing.m),
+              sliver: SliverToBoxAdapter(child: AlpacaHistorySection()),
+            ),
           // DEF472 — a brand-new user has no trades yet but still needs to
           // see and add to the watchlist; only the non-empty path had it.
           ..._watchlistSlivers(context, ref, widget.watchlist),
@@ -1789,9 +1973,7 @@ class _HistoryTabState extends ConsumerState<_HistoryTab> {
     final lost = settled.length - won;
     final hitRate = settled.isEmpty ? 0.0 : won / settled.length * 100;
     final net = settled.fold<double>(0, (s, t) => s + t.realisedPnl);
-    // CR282 - one book's trades share a market; the first settled trade names it.
-    final netMarket =
-        settled.isEmpty ? AppMarket.us : marketForTicker(settled.first.ticker);
+    final netMarket = widget.bookMarket;
 
     final dateFmt = DateFormat('d MMM');
     final fromDate = (visible.last.closedAt ?? visible.last.openedAt);
@@ -1857,10 +2039,11 @@ class _HistoryTabState extends ConsumerState<_HistoryTab> {
         // CR234 — recently-closed Alpaca orders (filled/cancelled/expired),
         // its own section so a limit order that just filled is visible here
         // rather than nowhere. Renders nothing when unlinked or empty.
-        const SliverPadding(
-          padding: EdgeInsets.symmetric(horizontal: AmiSpacing.m),
-          sliver: SliverToBoxAdapter(child: AlpacaHistorySection()),
-        ),
+        if (widget.bookMarket != AppMarket.my)
+          const SliverPadding(
+            padding: EdgeInsets.symmetric(horizontal: AmiSpacing.m),
+            sliver: SliverToBoxAdapter(child: AlpacaHistorySection()),
+          ),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(
             AmiSpacing.m,

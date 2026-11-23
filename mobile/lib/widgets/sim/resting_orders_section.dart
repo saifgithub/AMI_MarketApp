@@ -97,14 +97,29 @@ Color restingOrderStateColor(RestingOrderState s) => switch (s) {
     };
 
 class RestingOrdersSection extends ConsumerWidget {
-  const RestingOrdersSection({super.key});
+  const RestingOrdersSection({super.key, this.market});
+
+  /// CR282 - null (Bursa off) lists every order as before; otherwise only the
+  /// orders on this market's tickers (the server's order list spans markets).
+  final AppMarket? market;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(simNotifierProvider);
     if (!state.restingOrdersSupported) return const SizedBox.shrink();
-    final live = state.liveRestingOrders;
-    final settled = state.settledRestingOrders;
+    final m = market;
+    final live = m == null
+        ? state.liveRestingOrders
+        : [
+            for (final o in state.liveRestingOrders)
+              if (marketForTicker(o.ticker) == m) o
+          ];
+    final settled = m == null
+        ? state.settledRestingOrders
+        : [
+            for (final o in state.settledRestingOrders)
+              if (marketForTicker(o.ticker) == m) o
+          ];
     if (live.isEmpty && settled.isEmpty) return const SizedBox.shrink();
     final l = AppLocalizations.of(context);
 

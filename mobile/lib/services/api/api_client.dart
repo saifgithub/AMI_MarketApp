@@ -27,6 +27,7 @@ import 'package:ami_trade/models/company_profile.dart';
 import 'package:ami_trade/models/daily_challenge.dart';
 import 'package:ami_trade/models/feedback.dart';
 import 'package:ami_trade/models/games.dart';
+import 'package:ami_trade/features/markets/market.dart';
 import 'package:ami_trade/models/inbox_message.dart';
 import 'package:ami_trade/models/journal.dart';
 import 'package:ami_trade/models/lessons.dart';
@@ -1214,6 +1215,30 @@ class ApiClient {
   Future<SimPortfolio> simPortfolio(String userId) async {
     final r = await _dio.get<Map<String, dynamic>>('/v1/sim/portfolio/$userId');
     return SimPortfolio.fromJson(r.data!);
+  }
+
+  /// CR282 - a non-US book (`?market=MY`, the MYR book). The server creates
+  /// the book on its first read; US stays on [simPortfolio] unchanged.
+  Future<SimPortfolio> simMarketPortfolio(
+      String userId, AppMarket market) async {
+    final r = await _dio.get<Map<String, dynamic>>(
+      '/v1/sim/portfolio/$userId',
+      queryParameters: {'market': market.apiCode},
+    );
+    return SimPortfolio.fromJson(r.data!);
+  }
+
+  /// CR282 - the trade ledger of a non-US book.
+  Future<List<SimTrade>> simMarketTrades(
+      String userId, AppMarket market) async {
+    final r = await _dio.get<Map<String, dynamic>>(
+      '/v1/sim/trades/$userId',
+      queryParameters: {'market': market.apiCode},
+    );
+    final list = ((r.data?['trades'] as List?) ?? const []);
+    return list
+        .map((t) => SimTrade.fromJson(t as Map<String, dynamic>))
+        .toList();
   }
 
   Future<SimPortfolio> simResetPortfolio(String userId) async {

@@ -879,6 +879,34 @@ class UnmeasuredRule {
       );
 }
 
+/// CR282 - the itemised fee estimate a non-US preview carries (`fees` on
+/// `POST /v1/sim/preview`; brokerage + clearing + stamp duty for Bursa). Null
+/// on every US preview, where the book charges none.
+class SimFees {
+  const SimFees({
+    required this.brokerage,
+    required this.clearing,
+    required this.stampDuty,
+    required this.total,
+  });
+
+  final double brokerage;
+  final double clearing;
+  final double stampDuty;
+  final double total;
+
+  static SimFees? fromJson(Map<String, dynamic>? j) {
+    if (j == null) return null;
+    double n(String k) => (j[k] as num?)?.toDouble() ?? 0;
+    return SimFees(
+      brokerage: n('brokerage'),
+      clearing: n('clearing'),
+      stampDuty: n('stamp_duty'),
+      total: n('total'),
+    );
+  }
+}
+
 class SimPreviewResult {
   const SimPreviewResult({
     required this.accepted,
@@ -887,6 +915,8 @@ class SimPreviewResult {
     this.shariaVerdict,
     this.accountKind,
     this.unmeasuredRules = const [],
+    this.currency,
+    this.fees,
   });
 
   final bool accepted;
@@ -895,6 +925,15 @@ class SimPreviewResult {
   final ShariaVerdict? shariaVerdict;
   final String? accountKind;
   final List<UnmeasuredRule> unmeasuredRules;
+
+  /// CR282 - the book's ISO currency as the server states it; null on a
+  /// payload that predates the MYR book (reads as USD).
+  final String? currency;
+
+  /// CR282 - itemised fees; null for US.
+  final SimFees? fees;
+
+  AppMarket get market => AppMarket.fromCurrencyCode(currency);
 
   factory SimPreviewResult.fromJson(Map<String, dynamic> j) {
     final compliance =
@@ -910,6 +949,8 @@ class SimPreviewResult {
       unmeasuredRules: ((j['unmeasured_rules'] as List?) ?? const [])
           .map((e) => UnmeasuredRule.fromJson((e as Map).cast<String, dynamic>()))
           .toList(),
+      currency: j['currency'] as String?,
+      fees: SimFees.fromJson((j['fees'] as Map?)?.cast<String, dynamic>()),
     );
   }
 }

@@ -31,6 +31,9 @@ enum AppMarket {
   /// for quantity steppers and hints.
   final int boardLot;
 
+  /// The `market` query-parameter value the sim routes take (`US` | `MY`).
+  String get apiCode => this == AppMarket.my ? 'MY' : 'US';
+
   /// An API payload's `currency` -> its market. Null, empty, or any code the
   /// app has no market for resolves to US - the pre-CR282 behaviour, never a
   /// guess at a third currency.

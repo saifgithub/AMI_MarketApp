@@ -5920,4 +5920,48 @@ class AppLocalizationsMs extends AppLocalizations {
   String roomFlipJournalLineBare(String previous, String current) {
     return 'Changed from $previous to $current';
   }
+
+  @override
+  String get portfolioMarketUs => 'AMI Trade US book';
+
+  @override
+  String get portfolioMarketBursa => 'BURSA';
+
+  @override
+  String portfolioBursaEmpty(String amount) {
+    return 'Buku Bursa anda bermula dengan $amount apabila anda membuat dagangan Bursa pertama anda.';
+  }
+
+  @override
+  String get portfolioBursaEmptyCta => 'DAGANGAN BURSA BARU';
+
+  @override
+  String tradeTicketBoardLotHint(int lot) {
+    return 'Bursa didagangkan dalam lot papan sebanyak $lot. Masukkan gandaan $lot.';
+  }
+
+  @override
+  String tradeTicketQtyLessLot(int lot) {
+    return 'Kurangkan kuantiti sebanyak $lot';
+  }
+
+  @override
+  String tradeTicketQtyMoreLot(int lot) {
+    return 'Tambah kuantiti sebanyak $lot';
+  }
+
+  @override
+  String get tradeTicketFeesHeading => 'ANGGARAN YURAN';
+
+  @override
+  String get tradeTicketFeeBrokerage => 'Upah broker';
+
+  @override
+  String get tradeTicketFeeClearing => 'Yuran penjelasan';
+
+  @override
+  String get tradeTicketFeeStampDuty => 'Duti setem';
+
+  @override
+  String get tradeTicketFeeTotal => 'Jumlah yuran';
 }

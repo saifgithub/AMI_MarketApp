@@ -9805,6 +9805,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Changed from {previous} to {current}'**
   String roomFlipJournalLineBare(String previous, String current);
+
+  /// CR282 F2. Label of the US half of the Portfolio market switch (US | BURSA). Mono uppercase, one short token; keep as the market's usual short name. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'US'**
+  String get portfolioMarketUs;
+
+  /// CR282 F2. Label of the Bursa Malaysia half of the Portfolio market switch (US | BURSA). Mono uppercase, one short token; Bursa is a proper name, keep it. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'BURSA'**
+  String get portfolioMarketBursa;
+
+  /// CR282 F2. Empty state on the Portfolio screen's Bursa side before any Bursa trade. {amount} is the already-formatted starting capital, e.g. 'RM50,000' - do not reformat it or move the currency symbol. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Your Bursa book starts with {amount} when you place your first Bursa trade.'**
+  String portfolioBursaEmpty(String amount);
+
+  /// CR282 F2. Button under the Bursa empty state that opens the trade ticket. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'NEW BURSA TRADE'**
+  String get portfolioBursaEmptyCta;
+
+  /// CR282 F2. Inline hint under the quantity field on a Bursa (.KL) ticket when the typed quantity is not a multiple of the board lot. {lot} is the lot size (100). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Bursa trades in board lots of {lot}. Enter a multiple of {lot}.'**
+  String tradeTicketBoardLotHint(int lot);
+
+  /// CR282 F2. Screen-reader label of the minus button on the Bursa quantity stepper. {lot} is the lot size (100). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Reduce quantity by {lot}'**
+  String tradeTicketQtyLessLot(int lot);
+
+  /// CR282 F2. Screen-reader label of the plus button on the Bursa quantity stepper. {lot} is the lot size (100). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Increase quantity by {lot}'**
+  String tradeTicketQtyMoreLot(int lot);
+
+  /// CR282 F2. Heading of the itemised fee estimate shown on a Bursa ticket before the user confirms. Mono uppercase. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'ESTIMATED FEES'**
+  String get tradeTicketFeesHeading;
+
+  /// CR282 F2. One line of the Bursa fee estimate: the broker's commission. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Brokerage'**
+  String get tradeTicketFeeBrokerage;
+
+  /// CR282 F2. One line of the Bursa fee estimate: the clearing fee. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Clearing'**
+  String get tradeTicketFeeClearing;
+
+  /// CR282 F2. One line of the Bursa fee estimate: stamp duty. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Stamp duty'**
+  String get tradeTicketFeeStampDuty;
+
+  /// CR282 F2. Last line of the Bursa fee estimate: the sum of the fees above. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Total fees'**
+  String get tradeTicketFeeTotal;
 }
 
 class _AppLocalizationsDelegate

@@ -199,12 +199,17 @@ void main() {
     test('the read path asks isRetryable and the write paths refuse', () {
       final calls = errorCalls();
       final reads = [for (final c in calls) if (c.contains('isRetryable(')) c];
-      expect(reads, hasLength(1),
-          reason: 'exactly one path — the portfolio read — may offer a retry. '
+      // CR282 - two reads may offer a retry: the US portfolio and the Bursa
+      // book (the same read, `?market=MY`). Nothing else.
+      expect(reads, hasLength(2),
+          reason: 'only the portfolio reads (US and Bursa) may offer a retry. '
               'A timeout on submit/cancel/reset means the request WAS sent, '
               'and re-sending a mutation whose first attempt may have '
               'succeeded is a second order, not a recovery.');
-      expect(reads.single, contains('load your portfolio'));
+      expect(reads.where((c) => c.contains('load your portfolio')),
+          hasLength(1));
+      expect(reads.where((c) => c.contains('load your Bursa book')),
+          hasLength(1));
     });
   });
 }

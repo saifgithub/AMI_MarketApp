@@ -5908,4 +5908,48 @@ class AppLocalizationsAr extends AppLocalizations {
   String roomFlipJournalLineBare(String previous, String current) {
     return 'Changed from $previous to $current';
   }
+
+  @override
+  String get portfolioMarketUs => 'US';
+
+  @override
+  String get portfolioMarketBursa => 'BURSA';
+
+  @override
+  String portfolioBursaEmpty(String amount) {
+    return 'Your Bursa book starts with $amount when you place your first Bursa trade.';
+  }
+
+  @override
+  String get portfolioBursaEmptyCta => 'NEW BURSA TRADE';
+
+  @override
+  String tradeTicketBoardLotHint(int lot) {
+    return 'Bursa trades in board lots of $lot. Enter a multiple of $lot.';
+  }
+
+  @override
+  String tradeTicketQtyLessLot(int lot) {
+    return 'Reduce quantity by $lot';
+  }
+
+  @override
+  String tradeTicketQtyMoreLot(int lot) {
+    return 'Increase quantity by $lot';
+  }
+
+  @override
+  String get tradeTicketFeesHeading => 'ESTIMATED FEES';
+
+  @override
+  String get tradeTicketFeeBrokerage => 'Brokerage';
+
+  @override
+  String get tradeTicketFeeClearing => 'Clearing';
+
+  @override
+  String get tradeTicketFeeStampDuty => 'Stamp duty';
+
+  @override
+  String get tradeTicketFeeTotal => 'Total fees';
 }
