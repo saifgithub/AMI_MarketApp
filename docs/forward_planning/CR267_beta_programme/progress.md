@@ -334,3 +334,10 @@ Found: two users have duplicate training portfolios created 40 ms apart on 2026-
 
 1. DEF447 first nightly (04:30Z): ingest, filings and text all 0 failures, but rc=1 on `no_cik` for QRVO, ROKU, WBD. All three are absent from SEC `company_tickers.json` (corporate actions), so it would fail every night. DEF447 stays open.
 2. Next: `rescan_edgar_8k.py` puts an already-scanned ticker that has left the SEC map in a non-failing, named bucket, with a test and the full suite; flip DEF447 after the next clean nightly. Then the DEF367 fresh worker, then deploy #22 (entry 21).
+
+### 23. 2026-11-23 18:45 +03 — deploy #22 live; DEF367 merged
+
+1. Deploy #22 `alpha-2026-11-23-2` = `c3e3a53f`. Suite 9428 passed / 0 failed / 0 errors; local gate PASS; UAT gate OVERRIDE (stale Android FLOOR-007, ONB-043 only); API changed set PASS (UAT-GAME-002 asserts `entrant_count`); alpha-post PASS; health reports the tag. Ships DEF529 and the DEF447 rescan fix.
+2. Postflight tree check flagged `logs/` (host cron log). Real gap: the standard rsync `--delete` would wipe the DEF447 log every deploy. Fixed in `c41328ac` (rsync, postflight, tree gate, test). A dry-run with the fixed excludes showed no other drift.
+3. DEF367 done: worker's lane verified by git + 75 wire tests; merged `a835d735`; baseline 4 → 0. Test-only, rides deploy #23.
+4. Next: DEF447 closes after the 2026-11-24 04:30Z nightly reads clean. Then idle on Saiful's items (S3 grader pick, S6, S7, S4).
