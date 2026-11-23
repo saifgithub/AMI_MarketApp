@@ -32,6 +32,7 @@ cases:
       - GET /v1/games/cadences, /desks, /record, /record/prs as a fresh user
     expected:
       - cadences lists the weekly field with state, deadline and already_held false
+      - every cadence row carries entrant_count (equal to queue_count), the key the Games entrants line reads (DEF529)
       - desks lists named desks each with a rule and a universe
       - A new user's record is zero points, zero runs, title apprentice, and no PR is invented (has_any_finished_runs false, every best_* null)
 

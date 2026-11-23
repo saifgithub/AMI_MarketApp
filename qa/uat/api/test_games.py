@@ -24,6 +24,8 @@ def test_game_read_contracts(seed):
     week = next(c for c in cad.json() if c["cadence"] == "week")
     assert week["state"] and week["deadline"]
     assert week["already_held"] is False
+    for c in cad.json():
+        assert c["entrant_count"] == c["queue_count"], c["cadence"]  # DEF529
 
     desks = u.get("/v1/games/desks")
     assert desks.status_code == 200 and desks.json()

@@ -3313,8 +3313,9 @@ _API (automated, live Alpha) · plans: floor_pass_
 
 **Expected**
 1. cadences lists the weekly field with state, deadline and already_held false
-2. desks lists named desks each with a rule and a universe
-3. A new user's record is zero points, zero runs, title apprentice, and no PR is invented (has_any_finished_runs false, every best_* null)
+2. every cadence row carries entrant_count (equal to queue_count), the key the Games entrants line reads (DEF529)
+3. desks lists named desks each with a rule and a universe
+4. A new user's record is zero points, zero runs, title apprentice, and no PR is invented (has_any_finished_runs false, every best_* null)
 
 #### UAT-GAME-003 — Entry is free, single-use per field, and the run is private to its owner
 
