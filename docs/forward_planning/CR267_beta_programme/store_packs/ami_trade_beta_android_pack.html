@@ -1,0 +1,208 @@
+<title>AMI Trade Beta: Play Pack</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: one reading column of numbered console steps; a sticky summary rail on wide screens. AMI hex tokens. */
+:root {
+  --bg: #f6f8fb; --surface: #ffffff; --sunk: #eef2f7; --line: #d5dde8;
+  --fg: #0f172a; --muted: #475569; --dim: #64748b;
+  --brand: #2563eb; --brand-soft: rgba(37,99,235,.10);
+  --ok: #047857; --ok-soft: rgba(16,185,129,.13);
+  --me: #0e7490; --me-soft: rgba(6,182,212,.13);
+  --you: #b45309; --you-soft: rgba(245,158,11,.16);
+  --bad: #b91c1c; --bad-soft: rgba(239,68,68,.13);
+  --font-ui: 'IBM Plex Sans', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b1120; --surface: #111827; --sunk: #0f172a; --line: #263244;
+  --fg: #f3f4f6; --muted: #94a3b8; --dim: #64748b;
+  --brand: #3b82f6; --brand-soft: rgba(59,130,246,.16);
+  --ok: #34d399; --ok-soft: rgba(16,185,129,.16);
+  --me: #22d3ee; --me-soft: rgba(6,182,212,.16);
+  --you: #fbbf24; --you-soft: rgba(245,158,11,.16);
+  --bad: #f87171; --bad-soft: rgba(239,68,68,.16);
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0b1120; --surface: #111827; --sunk: #0f172a; --line: #263244;
+  --fg: #f3f4f6; --muted: #94a3b8; --dim: #64748b;
+  --brand: #3b82f6; --brand-soft: rgba(59,130,246,.16);
+  --ok: #34d399; --ok-soft: rgba(16,185,129,.16);
+  --me: #22d3ee; --me-soft: rgba(6,182,212,.16);
+  --you: #fbbf24; --you-soft: rgba(245,158,11,.16);
+  --bad: #f87171; --bad-soft: rgba(239,68,68,.16);
+  color-scheme: dark; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-block: 28px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.top { display: grid; gap: 10px; margin-bottom: 24px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--brand); display: flex; gap: 12px; flex-wrap: wrap; }
+.eyebrow span + span::before { content: "⬡"; margin-right: 12px; color: var(--dim); }
+h1 { font-size: clamp(26px, 4vw, 36px); line-height: 1.15; margin: 0; letter-spacing: -.01em; text-wrap: balance; font-weight: 700; }
+.lede { color: var(--muted); max-width: 68ch; margin: 0; }
+.meta { font-family: var(--font-mono); font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 18px; }
+.meta b { color: var(--fg); font-weight: 600; }
+.layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 28px; align-items: start; }
+@media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } .rail { order: -1; position: static !important; } }
+.rail { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px); display: grid; gap: 16px; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+.panel h3 { margin: 0 0 10px; font-size: 12px; font-family: var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.tallies { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.tally { display: grid; justify-items: center; padding: 8px 4px; border-radius: 8px; }
+.tally .n { font-family: var(--font-mono); font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.tally .k { font-size: 11px; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+.t-ready { background: var(--ok-soft); } .t-ready .n { color: var(--ok); }
+.t-me { background: var(--me-soft); } .t-me .n { color: var(--me); }
+.t-you { background: var(--you-soft); } .t-you .n { color: var(--you); }
+.t-blocked { background: var(--bad-soft); } .t-blocked .n { color: var(--bad); }
+.progress { margin-top: 12px; font-size: 13px; color: var(--muted); }
+.bar { height: 6px; border-radius: 3px; background: var(--sunk); margin-top: 6px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--brand); transition: width .3s; }
+.youlist { list-style: none; padding: 0; margin: 0; display: grid; gap: 6px; }
+.youlist li { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; font-size: 13.5px; }
+.youlist a { color: var(--fg); text-decoration: none; border-bottom: 1px dotted var(--dim); }
+.youlist a:hover { color: var(--brand); }
+.legend { display: grid; gap: 6px; font-size: 13px; color: var(--muted); }
+.legend div { display: flex; gap: 8px; align-items: center; }
+.steps { display: grid; gap: 18px; min-width: 0; }
+.step { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 18px 18px 8px; min-width: 0; }
+.step.is-done { opacity: .62; }
+.shead { display: flex; gap: 12px; align-items: center; margin-bottom: 6px; }
+.shead h2 { font-size: 18px; margin: 0; font-weight: 600; text-wrap: balance; }
+.done { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.done input { width: 18px; height: 18px; accent-color: var(--brand); margin: 0; }
+.num { font-family: var(--font-mono); font-size: 13px; color: var(--brand); background: var(--brand-soft); border-radius: 6px; padding: 2px 7px; }
+.snote { color: var(--muted); font-size: 14px; margin: 4px 0 12px; max-width: 72ch; }
+.items { list-style: none; padding: 0; margin: 0; display: grid; }
+.item { padding: 12px 0; border-top: 1px solid var(--line); display: grid; gap: 6px; min-width: 0; }
+.items .item:first-child { border-top: 0; }
+.ihead { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.label { font-weight: 600; font-size: 14.5px; }
+.chip { font-family: var(--font-mono); font-size: 11px; letter-spacing: .05em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; white-space: nowrap; font-weight: 600; }
+.c-ready { color: var(--ok); background: var(--ok-soft); }
+.c-me { color: var(--me); background: var(--me-soft); }
+.c-you { color: var(--you); background: var(--you-soft); }
+.c-blocked { color: var(--bad); background: var(--bad-soft); }
+.val { color: var(--fg); font-size: 14.5px; overflow-wrap: anywhere; }
+.val.mono { font-family: var(--font-mono); font-size: 13.5px; }
+.val.block { font-family: var(--font-ui); white-space: pre-wrap; background: var(--sunk); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; margin: 0; max-height: 320px; overflow: auto; font-size: 13.5px; line-height: 1.55; }
+.tools { display: flex; gap: 10px; align-items: center; justify-content: flex-end; }
+.count { font-family: var(--font-mono); font-size: 12px; color: var(--dim); font-variant-numeric: tabular-nums; }
+.count.over { color: var(--bad); font-weight: 600; }
+.copy { font: 600 12px var(--font-mono); letter-spacing: .04em; text-transform: uppercase; color: var(--brand); background: var(--brand-soft); border: 1px solid transparent; border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+.copy:hover { border-color: var(--brand); }
+.copy:focus-visible, .done input:focus-visible, .youlist a:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+.copy.ok { color: var(--ok); background: var(--ok-soft); }
+.note { color: var(--muted); font-size: 13.5px; margin: 0; }
+.tablewrap { overflow-x: auto; margin: 4px 0 10px; border: 1px solid var(--line); border-radius: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; min-width: 560px; }
+th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: var(--sunk); font-weight: 600; }
+tbody tr:last-child td { border-bottom: 0; }
+footer { margin-top: 28px; color: var(--dim); font-size: 13px; }
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow"><span>Google Play</span><span>Beta release pack</span><span>CR267 WP-50</span></div>
+    <h1>AMI Trade Beta: Play Pack</h1>
+    <p class="lede">Everything the company Play Console asks for to run the AMI Trade Beta on a closed testing track, in the order the console asks for it.</p>
+    <div class="meta"><span>App ID <b>ai.agenticmarketintel.trade</b></span><span>Target <b>Closed testing track, reviewed by Google Play</b></span><span>Prepared <b>2026-11-23</b></span></div>
+  </header>
+  <div class="layout">
+    <main class="steps"><section class="step" id="p-gates"><header class="shead"><label class="done"><input type="checkbox" id="chk-p-gates" data-step="p-gates"><span class="num">01</span></label><h2>Gates before the first upload</h2></header><ul class="items"><li class="item st-ready"><div class="ihead"><span class="label">Company (organization) developer account</span><span class="chip c-ready">Ready</span></div><div class="val" id="v-p-gates-0">Enrolled. The 12-testers-for-14-days rule applies to personal accounts, so it should not apply here.</div><p class="note">Check the Dashboard: if it shows a testing requirement for production access, it applies after all.</p></li><li class="item st-blocked"><div class="ihead"><span class="label">Beta server live at api-beta.agenticmarketintel.ai</span><span class="chip c-blocked">Blocked</span></div><div class="val" id="v-p-gates-1">A Beta build bakes this address in and cannot switch servers.</div><p class="note">Gate S4.</p></li><li class="item st-you"><div class="ihead"><span class="label">Release go</span><span class="chip c-you">You</span></div><div class="val" id="v-p-gates-2">Your go for WP-49 release steps 8–23.</div><p class="note">Gate S7.</p></li><li class="item st-you"><div class="ihead"><span class="label">Support mailbox works</span><span class="chip c-you">You</span></div><div class="val" id="v-p-gates-3">support.ai@agenticmarketintel.ai receives mail (it is the listing contact address).</div><p class="note">WP-52.</p></li></ul></section><section class="step" id="p-create"><header class="shead"><label class="done"><input type="checkbox" id="chk-p-create" data-step="p-create"><span class="num">02</span></label><h2>Create app</h2></header><ul class="items"><li class="item st-ready"><div class="ihead"><span class="label">App name</span><span class="chip c-ready">Ready</span></div><div class="val" id="v-p-create-0">AMI Trade</div><div class="tools"><span class="count">9 / 30</span><button class="copy" type="button" data-target="v-p-create-0">Copy</button></div><p class="note">You were doing this on 2026-11-23.</p></li><li class="item st-ready"><div class="ihead"><span class="label">Default language</span><span class="chip c-ready">Ready</span></div><div class="val" id="v-p-create-1">English (United States), en-US</div></li><li class="item st-ready"><div class="ihead"><span class="label">App or game</span><span class="chip c-ready">Ready</span></div><div class="val" id="v-p-create-2">App</div></li><li class="item st-ready"><div class="ihead"><span class="label">Free or paid</span><span class="chip c-ready">Ready</span></div><div class="val" id="v-p-create-3">Free</div><p class="note">Cannot be changed to paid later; in-app purchases are still allowed.</p></li><li class="item st-you"><div class="ihead"><span class="label">Declarations</span><span class="chip c-you">You</span></div><div class="val" id="v-p-create-4">Developer Program Policies, US export laws: tick both.</div></li><li class="item st-ready"><div class="ihead"><span class="label">Package name</span><span class="chip c-ready">Ready</span></div><div class="val mono" id="v-p-create-5">ai.agenticmarketintel.trade</div><div class="tools"><button class="copy" type="button" data-target="v-p-create-5">Copy</button></div><p class="note">Set permanently by the first uploaded AAB.</p></li></ul></section><section class="step" id="p-content"><header class="shead"><label class="done"><input type="checkbox" id="chk-p-content" data-step="p-content"><span class="num">03</span></label><h2>Policy &gt; App content</h2></header><ul class="items"><li class="item st-ready"><div class="ihead"><span class="label">Privacy policy</span><span class="chip c-ready">Ready</span></div><div class="val mono" id="v-p-content-0">https://www.agenticmarketintel.ai/privacy/</div><div class="tools"><button class="copy" type="button" data-target="v-p-content-0">Copy</button></div></li><li class="item st-ready"><div class="ihead"><span class="label">App access</span><span class="chip c-ready">Ready</span></div><div class="val" id="v-p-content-1">All functionality is available without special access. The app starts anonymously; sign-in is optional.</div></li><li class="item st-you"><div class="ihead"><span class="label">Ads</span><span class="chip c-you">You</span></div><div class="val" id="v-p-content-2">Recommended answer: Yes, contains ads.</div><p class="note">Beta builds show house fill (our own promos) and link the AdMob SDK without starting it. Answering Yes is the safe side; switch to No only if you rule house fill out of the Beta.</p></li><li class="item st-ready"><div class="ihead"><span class="label">Content rating (IARC)</span><span class="chip c-ready">Ready</span></div><pre class="val block" id="v-p-content-3">Category: Reference, News, or Educational. Violence, sexuality, language, controlled substances: None. Real-money gambling: No. Simulated gambling: No. Users interact or exchange content: No. Shares location: No. Digital purchases: Yes (the app has in-app purchases, off during Beta).</pre><p class="note">Expected result: a low age rating. The 18+ audience is set in the next item.</p></li><li class="item st-ready"><div class="ihead"><span class="label">Target audience</span><span class="chip c-ready">Ready</span></div><div class="val" id="v-p-content-4">18 and over only. Appeals to children: No.</div><p class="note">Matches the in-app 18+ gate (CR273).</p></li><li class="item st-ready"><div class="ihead"><span class="label">News app</span><span class="chip c-ready">Ready</span></div><div class="val" id="v-p-content-5">No</div></li><li class="item st-ready"><div class="ihead"><span class="label">Financial features</span><span class="chip c-ready">Ready</span></div><div class="val" id="v-p-content-6">Declare no regulated financial features: no loans, no payments, no real trading or brokerage. Describe it as simulated trading education.</div><p class="note">Check the console&#x27;s current option list; pick the &#x27;none of these&#x27; path.</p></li><li class="item st-ready"><div class="ihead"><span class="label">Government app · Health</span><span class="chip c-ready">Ready</span></div><div class="val" id="v-p-content-7">No · No</div></li><li class="item st-me"><div class="ihead"><span class="label">Advertising ID</span><span class="chip c-me">I do</span></div><div class="val" id="v-p-content-8">Answered after I check the first Beta AAB&#x27;s merged manifest.</div><p class="note">The AdMob plugin can add the AD_ID permission even though our manifest does not. I report which answer is true.</p></li><li class="item st-ready"><div class="ihead"><span class="label">Data safety</span><span class="chip c-ready">Ready</span></div><div class="val" id="v-p-content-9">Form below.</div></li></ul></section><section class="step" id="p-datasafety"><header class="shead"><label class="done"><input type="checkbox" id="chk-p-datasafety" data-step="p-datasafety"><span class="num">04</span></label><h2>Data safety form</h2></header><p class="snote">Built from the app&#x27;s privacy manifest and SDK list. Service providers (Supabase, RevenueCat, Sentry, OneSignal, model hosts) process data for us, which Play does not count as sharing.</p><div class="tablewrap"><table><thead><tr><th>Data type</th><th>Collected</th><th>Required</th><th>Purposes</th></tr></thead><tbody><tr><td>Personal info › Name</td><td>Yes</td><td>Optional (sign-in)</td><td>App functionality, Account management</td></tr><tr><td>Personal info › Email address</td><td>Yes</td><td>Optional (sign-in)</td><td>App functionality, Account management</td></tr><tr><td>Personal info › User IDs</td><td>Yes</td><td>Required</td><td>App functionality, Analytics</td></tr><tr><td>Financial info › Other financial info</td><td>Yes</td><td>Required</td><td>App functionality, Personalization (the simulated mandate: goals, risk limits, holdings)</td></tr><tr><td>Financial info › Purchase history</td><td>No (Beta)</td><td>n/a</td><td>Add when billing turns on</td></tr><tr><td>Photos</td><td>Yes</td><td>Optional</td><td>App functionality (bug-report attachment)</td></tr><tr><td>App activity › App interactions</td><td>Yes</td><td>Required</td><td>Analytics, App functionality</td></tr><tr><td>App activity › Other user-generated content</td><td>Yes</td><td>Required</td><td>App functionality (journal, questions to the desk, bug-report text)</td></tr><tr><td>App info and performance › Crash logs</td><td>Yes</td><td>Required</td><td>App functionality</td></tr><tr><td>App info and performance › Diagnostics</td><td>Yes</td><td>Required</td><td>App functionality</td></tr><tr><td>Device or other IDs</td><td>Yes</td><td>Required</td><td>App functionality (push notifications)</td></tr><tr><td>Location, Contacts, Messages, Audio, Calendar, Health, Web history</td><td>No</td><td>n/a</td><td></td></tr></tbody></table></div><ul class="items"><li class="item st-ready"><div class="ihead"><span class="label">Data shared with third parties</span><span class="chip c-ready">Ready</span></div><div class="val" id="v-p-datasafety-0">No</div></li><li class="item st-ready"><div class="ihead"><span class="label">Encrypted in transit</span><span class="chip c-ready">Ready</span></div><div class="val" id="v-p-datasafety-1">Yes</div></li><li class="item st-ready"><div class="ihead"><span class="label">Account creation</span><span class="chip c-ready">Ready</span></div><div class="val" id="v-p-datasafety-2">Anonymous by default; optional sign-in with Google or an email code.</div></li><li class="item st-ready"><div class="ihead"><span class="label">Deletion</span><span class="chip c-ready">Ready</span></div><div class="val" id="v-p-datasafety-3">Users can request deletion in the app and on the web.</div></li><li class="item st-ready"><div class="ihead"><span class="label">Delete account URL</span><span class="chip c-ready">Ready</span></div><div class="val mono" id="v-p-datasafety-4">https://www.agenticmarketintel.ai/ami-trade/sad-to-see-you-go</div><div class="tools"><button class="copy" type="button" data-target="v-p-datasafety-4">Copy</button></div></li></ul></section><section class="step" id="p-listing"><header class="shead"><label class="done"><input type="checkbox" id="chk-p-listing" data-step="p-listing"><span class="num">05</span></label><h2>Grow &gt; Store presence &gt; Main store listing</h2></header><ul class="items"><li class="item st-ready"><div class="ihead"><span class="label">App name</span><span class="chip c-ready">Ready</span></div><div class="val" id="v-p-listing-0">AMI Trade: Practise the Call</div><div class="tools"><span class="count">28 / 30</span><button class="copy" type="button" data-target="v-p-listing-0">Copy</button></div></li><li class="item st-ready"><div class="ihead"><span class="label">Short description</span><span class="chip c-ready">Ready</span></div><div class="val" id="v-p-listing-1">Learn to make and defend a trading call. A simulated desk debates; you decide.</div><div class="tools"><span class="count">78 / 80</span><button class="copy" type="button" data-target="v-p-listing-1">Copy</button></div></li><li class="item st-ready"><div class="ihead"><span class="label">Full description</span><span class="chip c-ready">Ready</span></div><pre class="val block" id="v-p-listing-2">AMI Trade teaches you to make a trading decision and defend it. You practise on real market data, in a simulated portfolio, with none of your money at risk.
+
+The practice arena is the Room: a simulated desk of AMI analysts. Choose a ticker and the desk works it in front of you: fundamentals, market technicals, news and events, retail positioning, a bull case, a bear case, three Risk Officers pressing the position size from three directions, and a Chief Investment Officer who rules on the trade. You read the debate. You question anyone you disagree with. Then you make your call, and AMI runs it in your simulated portfolio and records your reasoning.
+
+WHAT YOU PRACTISE
+
+• Building a thesis and stress-testing it. Every call meets a bear case and three Risk Officers before you commit.
+• Defending a position against your own mandate. Your goals, risk limits, constraints and holdings shape what every analyst says. Submit a trade that breaks your own mandate and the Chief Investment Officer refuses it, with the reason.
+• Reading analysis critically. The analysts disagree on the record, and the Evaluation track teaches you to spot a weak argument or a fabricated number.
+• Learning from your own record. Every debate, call and reason is stored in your decision journal.
+• The foundations. 342 lessons, daily challenges, streaks and leagues.
+• Sharia and ethical screening against an AAOIFI-based compliant list, with the as-of date on every verdict.
+
+THIS IS A BETA
+
+The Room is experimental: it can be slow or wrong, and finding out where is the point of the Beta. Everything is free during the Beta. Report a problem from YOU &gt; SETTINGS &gt; HELP.
+
+IMPORTANT
+
+AMI Trade is an educational simulation for adults. It is not investment advice, not a brokerage, and not a recommendation service. All trading is simulated with virtual money. There is no real-money trading and no live brokerage connection: the only broker link is an optional Alpaca paper-trading account, which also uses simulated money. What the Room produces is a training exercise, not guidance on what to buy or sell. Market data is delayed by 15 minutes. Sharia screening reports a screen against a published compliant list; it is not a religious ruling. Nothing in this app is a prediction or forecasts a return.
+
+Privacy Policy: https://www.agenticmarketintel.ai/privacy/
+Terms of Service: https://www.agenticmarketintel.ai/terms/
+Delete your account and data: https://www.agenticmarketintel.ai/ami-trade/sad-to-see-you-go</pre><div class="tools"><span class="count">2,500 / 4,000</span><button class="copy" type="button" data-target="v-p-listing-2">Copy</button></div><p class="note">Beta edition of the WP-29 copy: English only, no pricing block, Alpaca paper named, deletion link added.</p></li><li class="item st-me"><div class="ihead"><span class="label">App icon 512×512</span><span class="chip c-me">I do</span></div><div class="val" id="v-p-listing-3">I export it from the 1024 hi-res icon.</div></li><li class="item st-me"><div class="ihead"><span class="label">Feature graphic 1024×500</span><span class="chip c-me">I do</span></div><div class="val" id="v-p-listing-4">Not made yet.</div><p class="note">I build it in the same hex style as the developer header.</p></li><li class="item st-me"><div class="ihead"><span class="label">Phone screenshots (2–8)</span><span class="chip c-me">I do</span></div><div class="val" id="v-p-listing-5">Not taken yet.</div><p class="note">I capture them from the device rig on the dark theme; plan in marketing/users/assets/screenshots_and_captions.md.</p></li><li class="item st-ready"><div class="ihead"><span class="label">Category · Tags</span><span class="chip c-ready">Ready</span></div><div class="val" id="v-p-listing-6">Finance · Education, Stock trading, Investing</div></li><li class="item st-ready"><div class="ihead"><span class="label">Contact email</span><span class="chip c-ready">Ready</span></div><div class="val mono" id="v-p-listing-7">support.ai@agenticmarketintel.ai</div><div class="tools"><button class="copy" type="button" data-target="v-p-listing-7">Copy</button></div></li><li class="item st-ready"><div class="ihead"><span class="label">Website</span><span class="chip c-ready">Ready</span></div><div class="val mono" id="v-p-listing-8">https://www.agenticmarketintel.ai/</div><div class="tools"><button class="copy" type="button" data-target="v-p-listing-8">Copy</button></div></li></ul></section><section class="step" id="p-signing"><header class="shead"><label class="done"><input type="checkbox" id="chk-p-signing" data-step="p-signing"><span class="num">06</span></label><h2>First upload and app signing</h2></header><ul class="items"><li class="item st-you"><div class="ihead"><span class="label">First AAB</span><span class="chip c-you">You</span></div><div class="val" id="v-p-signing-0">Upload by hand in the console (Play needs this to enrol the app in Play App Signing). I build the AAB; you drag it in.</div></li><li class="item st-you"><div class="ihead"><span class="label">Play App Signing</span><span class="chip c-you">You</span></div><div class="val" id="v-p-signing-1">Accept Google-managed signing key.</div></li><li class="item st-you"><div class="ihead"><span class="label">SHA-1 of the app signing key</span><span class="chip c-you">You</span></div><div class="val" id="v-p-signing-2">Setup &gt; App signing. Send it to me.</div></li><li class="item st-me"><div class="ihead"><span class="label">Google sign-in clients</span><span class="chip c-me">I do</span></div><div class="val" id="v-p-signing-3">Google Cloud: an Android OAuth client (package + SHA-1) and a Web client; backend GOOGLE_AUDIENCES gets the Web client ID.</div><p class="note">WP-49 prep step 4 has the consent-screen details.</p></li><li class="item st-me"><div class="ihead"><span class="label">Forced-update link</span><span class="chip c-me">I do</span></div><div class="val mono" id="v-p-signing-4">ANDROID_PLAY_STORE_URL=https://play.google.com/store/apps/details?id=ai.agenticmarketintel.trade</div><p class="note">Required on Beta (DEF511).</p></li></ul></section><section class="step" id="p-closed"><header class="shead"><label class="done"><input type="checkbox" id="chk-p-closed" data-step="p-closed"><span class="num">07</span></label><h2>Testing &gt; Closed testing</h2></header><ul class="items"><li class="item st-you"><div class="ihead"><span class="label">Track</span><span class="chip c-you">You</span></div><div class="val" id="v-p-closed-0">Create a closed track named &#x27;Beta&#x27;.</div></li><li class="item st-you"><div class="ihead"><span class="label">Testers</span><span class="chip c-you">You</span></div><div class="val" id="v-p-closed-1">A Google Group (easiest to manage) or an email list.</div></li><li class="item st-ready"><div class="ihead"><span class="label">Feedback URL or email</span><span class="chip c-ready">Ready</span></div><div class="val mono" id="v-p-closed-2">support.ai@agenticmarketintel.ai</div><div class="tools"><button class="copy" type="button" data-target="v-p-closed-2">Copy</button></div></li><li class="item st-you"><div class="ihead"><span class="label">Countries</span><span class="chip c-you">You</span></div><div class="val" id="v-p-closed-3">All countries, or the Beta markets you choose.</div></li><li class="item st-ready"><div class="ihead"><span class="label">Release name</span><span class="chip c-ready">Ready</span></div><div class="val" id="v-p-closed-4">0.1.0 (next build after 129)</div></li><li class="item st-ready"><div class="ihead"><span class="label">Release notes</span><span class="chip c-ready">Ready</span></div><pre class="val block" id="v-p-closed-5">AMI Trade Beta, an experimental training simulator. Practise making and defending trading decisions with a simulated desk of AMI analysts (the Room). Simulation-only: no real money, no real orders, not investment advice.
+
+Try: onboarding, a Room on a ticker you know, a simulated trade, a lesson, sign-in. Report problems from YOU &gt; SETTINGS &gt; HELP &gt; Report a problem, and include any &quot;Ref:&quot; code. Export or delete your data in SETTINGS &gt; ACCOUNT.</pre><div class="tools"><span class="count">447 / 500</span><button class="copy" type="button" data-target="v-p-closed-5">Copy</button></div></li><li class="item st-me"><div class="ihead"><span class="label">Later uploads</span><span class="chip c-me">I do</span></div><div class="val" id="v-p-closed-6">publish_playstore.sh has only an internal lane. I add a closed-testing lane before the second Beta build.</div></li><li class="item st-you"><div class="ihead"><span class="label">Send for review</span><span class="chip c-you">You</span></div><div class="val" id="v-p-closed-7">Publishing overview &gt; Send changes for review.</div></li></ul></section></main>
+    <aside class="rail">
+      <div class="panel">
+        <h3>Status</h3>
+        <div class="tallies"><div class="tally t-ready"><span class="n">28</span><span class="k">Ready</span></div><div class="tally t-me"><span class="n">7</span><span class="k">I do</span></div><div class="tally t-you"><span class="n">11</span><span class="k">You</span></div><div class="tally t-blocked"><span class="n">1</span><span class="k">Blocked</span></div></div>
+        <div class="progress"><span id="prog">0 of 0 steps ticked</span><div class="bar"><i id="progbar"></i></div></div>
+      </div>
+      <div class="panel">
+        <h3>Needs you, or blocked</h3>
+        <ul class="youlist"><li><a href="#p-gates">Beta server live at api-beta.agenticmarketintel.ai</a><span class="chip c-blocked">Blocked</span></li><li><a href="#p-gates">Release go</a><span class="chip c-you">You</span></li><li><a href="#p-gates">Support mailbox works</a><span class="chip c-you">You</span></li><li><a href="#p-create">Declarations</a><span class="chip c-you">You</span></li><li><a href="#p-content">Ads</a><span class="chip c-you">You</span></li><li><a href="#p-signing">First AAB</a><span class="chip c-you">You</span></li><li><a href="#p-signing">Play App Signing</a><span class="chip c-you">You</span></li><li><a href="#p-signing">SHA-1 of the app signing key</a><span class="chip c-you">You</span></li><li><a href="#p-closed">Track</a><span class="chip c-you">You</span></li><li><a href="#p-closed">Testers</a><span class="chip c-you">You</span></li><li><a href="#p-closed">Countries</a><span class="chip c-you">You</span></li><li><a href="#p-closed">Send for review</a><span class="chip c-you">You</span></li></ul>
+      </div>
+      <div class="panel legend">
+        <h3>Key</h3>
+        <div><span class="chip c-ready">Ready</span> prepared; paste or select it</div>
+        <div><span class="chip c-me">I do</span> my next job, no input needed</div>
+        <div><span class="chip c-you">You</span> only you can do it in the console</div>
+        <div><span class="chip c-blocked">Blocked</span> waits on a gate</div>
+      </div>
+    </aside>
+  </div>
+  <footer>Ticks are saved in this browser only. Source copy: marketing/users/assets/store_listing_copy.md and docs/forward_planning/CR267_beta_programme/tester_onboarding_note.md on beta/cr267. Simulation only: AMI Trade is not investment advice.</footer>
+</div>
+
+<script>
+(function () {
+  var KEY = "ami-beta-pack-android";
+  var state = {};
+  try { state = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { state = {}; }
+  var boxes = Array.prototype.slice.call(document.querySelectorAll("input[data-step]"));
+  function paint() {
+    var n = 0;
+    boxes.forEach(function (b) {
+      var sec = document.getElementById(b.dataset.step);
+      if (sec) sec.classList.toggle("is-done", b.checked);
+      if (b.checked) n++;
+    });
+    document.getElementById("prog").textContent = n + " of " + boxes.length + " steps ticked";
+    document.getElementById("progbar").style.width = (boxes.length ? (100 * n / boxes.length) : 0) + "%";
+  }
+  boxes.forEach(function (b) {
+    b.checked = !!state[b.dataset.step];
+    b.addEventListener("change", function () {
+      state[b.dataset.step] = b.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+      paint();
+    });
+  });
+  paint();
+  document.addEventListener("click", function (ev) {
+    var btn = ev.target.closest(".copy");
+    if (!btn) return;
+    var el = document.getElementById(btn.dataset.target);
+    if (!el) return;
+    var text = el.textContent;
+    function done(ok) {
+      btn.textContent = ok ? "Copied" : "Selected";
+      btn.classList.toggle("ok", ok);
+      setTimeout(function () { btn.textContent = "Copy"; btn.classList.remove("ok"); }, 1600);
+    }
+    function select() {
+      var r = document.createRange(); r.selectNodeContents(el);
+      var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); done(false);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, select);
+    } else { select(); }
+  });
+})();
+</script>
