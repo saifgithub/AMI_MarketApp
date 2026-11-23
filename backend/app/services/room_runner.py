@@ -213,6 +213,7 @@ from app.services.entitlements import (
 from app.services.tier_policy import pick_tier
 from app.services.sim_engine import get_sim_engine
 from app.services.verdict_outcomes import bank_verdict_outcome
+from app.trading_math.markets import Market, market_for
 from app.trading_math.portfolio import shares_for_size
 from app.trading_math.risk import drawdown_contribution
 from app.trading_math.sizing import resolved_single_name_cap_pct, risk_debator_sizes
@@ -8508,7 +8509,11 @@ class RoomRunner:
         """
         try:
             withheld = frozenset(roster.withheld)
-            trading_date = room_bank.trading_date_for(now_utc())
+            trading_date = (
+                room_bank.trading_date_for(now_utc())
+                if market_for(ticker) is Market.US
+                else room_bank.trading_date_for(now_utc(), ticker)
+            )
             variant = room_bank.sheet_variant(
                 news_state=decision.news_feed.state.value,
                 social_state=decision.social_feed.state.value,

@@ -57,6 +57,7 @@ import httpx
 from app.core.config import settings
 from app.core.logging import logger
 from app.services.asof_context import current_asof
+from app.trading_math.market_calendar import CalendarUnavailable, is_market_open
 from app.trading_math.market_hours import is_us_market_open
 from app.trading_math.markets import Market, market_for
 
@@ -70,23 +71,25 @@ class Quote(NamedTuple):
     price: float
     source: str
     change_pct: float = 0.0      # vs previous close; 0.0 for mock/degraded
-    market_state: str = "CLOSED" # REGULAR | PRE | POST | CLOSED | UNKNOWN (non-US, until its calendar lands)
+    market_state: str = "CLOSED" # REGULAR | PRE | POST | CLOSED | UNKNOWN (holiday table exhausted)
 
 
 def _market_state_for(ticker: str) -> str:
-    """REGULAR | CLOSED for US (the CR109 calendar); UNKNOWN for any other market.
+    """REGULAR | CLOSED per the ticker's own market calendar (CR109 US, CR282 MY).
 
-    TODO(CR282 lane B): Bursa calendar + sessions. Until then a `.KL` quote says
-    UNKNOWN — never a fabricated OPEN/CLOSED. Clients treat anything but
-    PRE/POST/CLOSED as "no pill", so UNKNOWN renders as no state at all.
+    A `.KL` quote is CLOSED at lunch and on Bursa holidays. UNKNOWN only when the
+    holiday table does not cover today (logged as an error) — never a guessed
+    OPEN. Clients treat anything but PRE/POST/CLOSED as "no pill".
     """
-    if market_for(ticker) is not Market.US:
+    now = datetime.datetime.now(datetime.timezone.utc)
+    market = market_for(ticker)
+    if market is Market.US:
+        return "REGULAR" if is_us_market_open(now) else "CLOSED"
+    try:
+        return "REGULAR" if is_market_open(market, now) else "CLOSED"
+    except CalendarUnavailable as exc:
+        logger.error("market_calendar_unavailable", ticker=ticker, error=str(exc))
         return "UNKNOWN"
-    return (
-        "REGULAR"
-        if is_us_market_open(datetime.datetime.now(datetime.timezone.utc))
-        else "CLOSED"
-    )
 
 
 class Candle(NamedTuple):

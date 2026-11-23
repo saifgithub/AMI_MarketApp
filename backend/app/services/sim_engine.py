@@ -90,7 +90,9 @@ from app.services.liquidity_lookup import ensure_liquidity_cached
 from app.services.sector_allocation import default_sector_map
 from app.services.sharia_universe import default_halal_universe
 from app.trading_math.quote_fillability import is_fillable, refusal_reason
+from app.trading_math.market_calendar import session_close_on_or_after as market_session_close
 from app.trading_math.market_hours import session_close_on_or_after
+from app.trading_math.markets import Market, market_for
 from app.trading_math.order_pricing import (
     LotBracket,
     blended_bracket,
@@ -227,7 +229,7 @@ def retire_values(state: str, now: datetime, **extra) -> dict:
 RESTING_ORDER_TIFS: dict[str, int] = {"day": 0, "gtd_30": 30, "gtd_90": 90}
 
 
-def resting_order_expiry(tif: str, placed_at: datetime) -> datetime:
+def resting_order_expiry(tif: str, placed_at: datetime, ticker: str | None = None) -> datetime:
     """CR170 §2 — when this order dies, anchored to a **session** close.
 
     An unknown TIF collapses to DAY rather than to the longest one: guessing
@@ -236,7 +238,11 @@ def resting_order_expiry(tif: str, placed_at: datetime) -> datetime:
     value must never resolve to the most powerful option).
     """
     days = RESTING_ORDER_TIFS.get(tif, 0)
-    return session_close_on_or_after(placed_at + timedelta(days=days))
+    target = placed_at + timedelta(days=days)
+    market = market_for(ticker) if ticker else Market.US
+    if market is Market.US:
+        return session_close_on_or_after(target)
+    return market_session_close(market, target)
 
 
 @dataclass
@@ -1950,7 +1956,7 @@ class SimEngine:
         computation has no compensating write, so there is nothing to leak.
         """
         placed_at = datetime.now(timezone.utc)
-        expires_at = resting_order_expiry(tif, placed_at)
+        expires_at = resting_order_expiry(tif, placed_at, ticker)
         order_id = uuid4()
         with get_session() as s:
             p_row = self._load_portfolio_row(s, user_id)
