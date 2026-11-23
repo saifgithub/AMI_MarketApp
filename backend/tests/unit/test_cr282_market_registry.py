@@ -297,3 +297,13 @@ def test_market_state_my_is_regular_or_closed_from_the_bursa_calendar():
 
 def test_market_state_us_is_regular_or_closed():
     assert market_data._market_state_for("AAPL") in {"REGULAR", "CLOSED"}
+
+
+def test_five_digit_ace_leap_codes_are_bursa_codes():
+    """Lane D: 37 ACE/LEAP securities on the SC list carry 5-digit codes."""
+    from app.trading_math.markets import is_bursa_code
+
+    assert is_bursa_code("03068.KL")
+    assert is_bursa_code("1155.KL")
+    assert not is_bursa_code("123456.KL")
+    assert not is_bursa_code("115.KL")

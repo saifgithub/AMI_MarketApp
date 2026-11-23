@@ -85,11 +85,13 @@ void main() {
         expect(d.ticker, '1155.KL', reason: input);
       }
       expect(routeOmnibox('5099a', bursaEnabled: true).ticker, '5099A.KL');
+      // 5-digit ACE/LEAP codes are on the SC Shariah list (lane D).
+      expect(routeOmnibox('03068', bursaEnabled: true).ticker, '03068.KL');
     });
 
     test('flag on: US tickers and non-codes are unchanged', () {
       expect(routeOmnibox('AAPL', bursaEnabled: true).ticker, 'AAPL');
-      for (final input in ['115', '11555', '1155.US', '1155.KLX']) {
+      for (final input in ['115', '115555', '1155.US', '1155.KLX']) {
         expect(routeOmnibox(input, bursaEnabled: true).route,
             OmniboxRoute.concierge,
             reason: input);

@@ -72,7 +72,7 @@ MARKETS: dict[Market, MarketSpec] = {
 
 # Bursa stock codes are four digits, occasionally with a trailing letter on
 # Yahoo (`5099.KL`, `0166.KL`). Shape only — existence is the reference list's job.
-_BURSA_CODE_RE = re.compile(r"^[0-9]{4}[A-Z]?\.KL$")
+_BURSA_CODE_RE = re.compile(r"^[0-9]{4,5}[A-Z]?\.KL$")  # 5 digits: ACE/LEAP codes (e.g. 03068) on the SC list
 
 
 def spec_for(market: Market) -> MarketSpec:

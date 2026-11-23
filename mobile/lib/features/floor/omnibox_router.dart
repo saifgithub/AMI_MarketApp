@@ -28,7 +28,7 @@ final _tickerShape = RegExp(r'^[A-Za-z]{1,5}$');
 
 /// CR282: a Bursa code - four digits, optionally one trailing letter, with or
 /// without the `.KL` suffix. Only consulted when Bursa is switched on.
-final _bursaShape = RegExp(r'^[0-9]{4}[A-Za-z]?(\.[Kk][Ll])?$');
+final _bursaShape = RegExp(r'^[0-9]{4,5}[A-Za-z]?(\.[Kk][Ll])?$');
 
 enum OmniboxRoute {
   /// Ticker-shaped: arm the Room.

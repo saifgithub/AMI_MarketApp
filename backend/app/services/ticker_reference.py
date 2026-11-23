@@ -355,7 +355,7 @@ def run_ticker_reference_refresh_tick(
 #: to the Bursa pass only — it is independent of `_LISTED_MIN_ROWS`.
 _BURSA_MIN_ROWS = 500
 
-_BURSA_CODE_FILE_RE = re.compile(r"^[0-9]{4}[A-Z]?$")
+_BURSA_CODE_FILE_RE = re.compile(r"^[0-9]{4,5}[A-Z]?$")
 
 
 def parse_bursa_csv(text: str) -> list[dict]:
