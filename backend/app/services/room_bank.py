@@ -154,6 +154,10 @@ ROOM_POLICY_SETTINGS: frozenset[str] = frozenset({
 # Settings the Room code reads that do not change a Room's content, with why.
 ROOM_SETTINGS_NOT_KEYED: dict[str, str] = {
     "room_agent_timeout_s": "failure-mode timing, not content",
+    "room_grader_deepinfra_base_url": "endpoint of the grader; the grader's identity (model, averaging) is keyed through the grader version in `coded_rule`",
+    "room_grader_deepinfra_model": "keyed through the grader version in `coded_rule` (policy hash), not as a raw setting",
+    "room_grader_deepinfra_api_key": "a credential, never keyed or logged",
+    "room_grader_deepinfra_timeout_s": "failure-mode timing, not content",
     "room_char_delay_min_ms": "stream pacing",
     "room_char_delay_max_ms": "stream pacing",
     "room_turn_pace_cap_s": "stream pacing",

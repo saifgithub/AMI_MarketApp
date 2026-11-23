@@ -146,3 +146,28 @@ def build_proposed_trade(
         if value is not None:
             trade[key] = value
     return trade
+
+
+NO_TRADE_ACTIONS = frozenset(
+    {"", "hold", "pass", "none", "no_trade", "no trade", "wait", "skip"}
+)
+
+
+def trade_proposed_answer(trade: Mapping[str, Any] | None) -> QuestionAnswer:
+    """`trade_proposed` from the structured trade alone, never from prose or a model.
+
+    No block at all means no trade was proposed. A block that cannot say what the
+    Execution Desk proposed (no `action` or `side`) is not computable, never guessed.
+    """
+    q = QuestionId.TRADE_PROPOSED
+    if not trade:
+        return QuestionAnswer(q, Answer.NO, rationale="no proposed trade")
+    action = trade.get("action", trade.get("side"))
+    if action is None:
+        return QuestionAnswer(
+            q, Answer.NOT_COMPUTABLE, rationale="proposed_trade carries no action or side"
+        )
+    proposed = str(action).strip().lower() not in NO_TRADE_ACTIONS
+    return QuestionAnswer(
+        q, Answer.YES if proposed else Answer.NO, rationale=f"action={action}"
+    )

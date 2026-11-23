@@ -1,9 +1,11 @@
 """CR267 WP-23: resolves the configured Room grader by name.
 
-The grader is not chosen yet (gate S3). `ROOM_GRADER` names one; the WP-22 graders
-register a factory here under that name once the bake-off picks a winner. An empty or
-unknown name resolves to None and the Room ends "decision unavailable", loudly logged,
-never a default verdict.
+`ROOM_GRADER` names one. Gate S3 (Saiful, 2026-11-23) picked the hosted DeepInfra
+grader, registered below as "deepinfra"; other graders register a factory here under
+their own name. An empty or unknown name resolves to None and the Room ends "decision
+unavailable", loudly logged, never a default verdict. A factory that cannot build its
+grader (the DeepInfra key is missing) raises, which the runner turns into the same
+visible state.
 """
 
 from __future__ import annotations
@@ -32,3 +34,12 @@ def resolve_grader(name: str | None) -> Grader | None:
         return None
     factory = _FACTORIES.get(name.strip())
     return factory() if factory is not None else None
+
+
+def _build_deepinfra() -> Grader:
+    from app.services.room_graders.deepinfra import build_from_settings
+
+    return build_from_settings()
+
+
+register_grader("deepinfra", _build_deepinfra)

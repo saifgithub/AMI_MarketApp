@@ -69,6 +69,9 @@ class _CallFailed(RuntimeError):
     pass
 
 
+_SAME_PHRASING: Any = object()
+
+
 def _run_sync(coro: Any) -> Any:
     try:
         asyncio.get_running_loop()
@@ -186,10 +189,16 @@ class HostedLLMGrader:
             return None
 
     async def _grade_question(
-        self, q: Question, rendered: str, tally: dict[str, Any]
+        self,
+        q: Question,
+        rendered: str,
+        tally: dict[str, Any],
+        phrasing: int | None = _SAME_PHRASING,
     ) -> QuestionAnswer:
+        if phrasing is _SAME_PHRASING:
+            phrasing = self._phrasing
         prompt = (
-            f"{rendered}\n\n---\nQuestion: {q.text_for(self._phrasing)}\n"
+            f"{rendered}\n\n---\nQuestion: {q.text_for(phrasing)}\n"
             f"yes means: {q.yes}\nno means: {q.no}"
         )
         text, meta = await self._ask(
@@ -208,7 +217,7 @@ class HostedLLMGrader:
         p_yes = p_yes_from_logprobs(meta.get("logprobs"))
         if p_yes is None:
             tally["logprobs_missing"] += 1
-            p_yes = await self._score_fallback(q, rendered, tally)
+            p_yes = await self._score_fallback(q, rendered, tally, phrasing)
         if p_yes is None:
             return QuestionAnswer(
                 q.id, answer, rationale="no probability or score could be read"
@@ -221,9 +230,13 @@ class HostedLLMGrader:
         )
 
     async def _score_fallback(
-        self, q: Question, rendered: str, tally: dict[str, Any]
+        self,
+        q: Question,
+        rendered: str,
+        tally: dict[str, Any],
+        phrasing: int | None,
     ) -> float | None:
-        prompt = f"{rendered}\n\n---\nQuestion: {q.text_for(self._phrasing)}"
+        prompt = f"{rendered}\n\n---\nQuestion: {q.text_for(phrasing)}"
         text, meta = await self._ask(
             _SYSTEM_SCORE, prompt, _SCORE_CONSTRAINT, logprobs=False
         )

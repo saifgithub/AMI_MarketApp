@@ -58,6 +58,13 @@ Usage
   wp22_score.py report --runs runs_wp20-arm1.jsonl --scores scores.jsonl \
       [--wording wording.jsonl] [--inputs inputs.jsonl] --out report.md
   wp22_score.py inputs --runs ... --out inputs.jsonl [--sample 20]
+  wp22_score.py fit    --scores scores.jsonl [--inputs inputs.jsonl] [--max-contested 0.20] [--out fit.json]
+
+WP-23 close-cut fit. `--grader deepinfra_room` is the grader production runs (phrasing averaging,
+structured trade, direct client; needs `--trade-action buy` because the stored Rooms carry no
+Execution Desk side). `fit` then re-applies the rule offline (no DB, no network, no key) under each
+candidate `close_below_confidence` and prints the value that minimises rep disagreement within the
+Contested cap, plus the `ROOM_CODED_RULE_POLICY_JSON` to set. Consensus is never read.
 """
 from __future__ import annotations
 
@@ -102,7 +109,7 @@ _ARM_REP = re.compile(r"-rep(\d+)$")
 ROOM_TIMEOUT_S = 600.0
 
 # ── Hosted graders (Jev, DeepInfra): pins, prices, keys, spend cap ──────────
-GRADERS = ("onprem", "jev", "deepinfra", "cheapllm", "code")
+GRADERS = ("onprem", "jev", "deepinfra", "cheapllm", "code", "deepinfra_room")
 # Pinned, never "latest" (WP-23 policy key). Source: S12 plan §3 item 1 and the October
 # corpus (`jev_deep_dive_2026-10-14.md`), which logged `jev-1.13.0`; the CR257 pilot script
 # sent "jev-latest", which is exactly what production must not do.
@@ -128,10 +135,14 @@ DEEPINFRA_PRICES = {
 # The gateway's hosted OpenAI-compatible slot (CR272/CR281): configured, not hardcoded.
 HOSTED_SLOT = "vllm_fallback"
 KEY_FILE_NAME = "bakeoff.env"
-KEY_ENV = {"jev": "JEV_API_KEY", "deepinfra": "DEEPINFRA_API_KEY", "cheapllm": "CHEAPLLM_API_KEY"}
+KEY_ENV = {"jev": "JEV_API_KEY", "deepinfra": "DEEPINFRA_API_KEY", "cheapllm": "CHEAPLLM_API_KEY",
+           "deepinfra_room": "DEEPINFRA_API_KEY"}
 DEFAULT_MAX_USD = 5.00
 DEFAULT_MAX_CALLS = 300
-CALLS_PER_ROOM = {"jev": 1, "deepinfra": len(QuestionId), "cheapllm": len(QuestionId)}
+# deepinfra_room (the grader production runs, WP-23): 3 single-call questions + 2 fragile questions x 5
+# phrasings; trade_proposed is code-owned, never asked.
+CALLS_PER_ROOM = {"jev": 1, "deepinfra": len(QuestionId), "cheapllm": len(QuestionId),
+                  "deepinfra_room": 13}
 
 
 class BakeoffKeyError(Exception):
@@ -275,6 +286,8 @@ def setup_grader(args: argparse.Namespace, env: dict | None = None) -> GraderSet
         return GraderSetup("jev", f"Jev {version}", jev, guard, {
             "jev_version": version, "price_per_m_input_usd": JEV_USD_PER_M_INPUT,
             "price_source": "jev_v1_pilot.py constant, unverified"})
+    if kind == "deepinfra_room":
+        return _setup_deepinfra_room(args, key, guard)
     model = (args.model or "").strip()
     if kind == "cheapllm" and model == DEEPINFRA_DEFAULT_MODEL:
         model = CHEAPLLM_DEFAULT_MODEL
@@ -293,6 +306,32 @@ def setup_grader(args: argparse.Namespace, env: dict | None = None) -> GraderSet
     return GraderSetup(kind, f"{label} {model}", hosted, guard, {
         "model": model, "base_url": base_url, "slot": HOSTED_SLOT,
         "prices_usd_per_m_in_out": list(prices) if prices else None})
+
+
+def _setup_deepinfra_room(args: argparse.Namespace, key: str, guard: SpendGuard) -> GraderSetup:
+    """The grader production runs (WP-23 gate S3): `DeepInfraGrader` with its phrasing averaging,
+    structured `trade_proposed` and direct client, so a fit scores exactly what ships. The offline
+    Rooms carry no Execution Desk side, so `--trade-action` stands in for it on every Room."""
+    model = (args.model or "").strip()
+    if not model or model.lower().endswith("latest"):
+        raise ValueError("--model must be a pinned model id, never empty or 'latest'")
+    if not (getattr(args, "trade_action", None) or "").strip():
+        raise ValueError("--trade-action is required for --grader deepinfra_room (the stored Rooms "
+                         "carry no Execution Desk side; `buy` = every Room proposed a trade)")
+    prices = DEEPINFRA_PRICES.get(model)
+    if args.price_in is not None and args.price_out is not None:
+        prices = (float(args.price_in), float(args.price_out))
+    from app.core.config import settings  # noqa: PLC0415
+    settings.llm_prices_json = json.dumps({model: {"in": prices[0], "out": prices[1]}} if prices else {})
+
+    def room(_p):
+        from app.services.room_graders.deepinfra import DeepInfraGrader
+        return DeepInfraGrader(base_url=DEEPINFRA_BASE_URL, model=model, api_key=key, timeout_s=30.0)
+    from app.services.room_graders.deepinfra import grader_version  # noqa: PLC0415
+    return GraderSetup("deepinfra_room", f"DeepInfra production grader {grader_version(model)}", room,
+                       guard, {"model": model, "base_url": DEEPINFRA_BASE_URL,
+                               "prices_usd_per_m_in_out": list(prices) if prices else None,
+                               "trade_action": args.trade_action})
 
 
 # ── Identity, selection ─────────────────────────────────────────────────────
@@ -633,23 +672,23 @@ def p_yes(row: dict, q: str) -> float | None:
     return a["confidence"] if a["answer"] == "yes" else 1.0 - a["confidence"]
 
 
-def outcome_at(row: dict, risk: int) -> str:
+def outcome_at(row: dict, risk: int, policy=DEFAULT_POLICY) -> str:
     if row.get("error") or not row.get("answers"):
         return "UNAVAILABLE"
-    return decide(row_to_result(row), risk, DEFAULT_POLICY).outcome.value
+    return decide(row_to_result(row), risk, policy).outcome.value
 
 
-def judge(kind: str, orig: dict, row: dict) -> tuple[str, str]:
+def judge(kind: str, orig: dict, row: dict, policy=DEFAULT_POLICY) -> tuple[str, str]:
     """(pass | fail | na, why) for one perturbed row against its expectation, computed
     from the stored answers so the rule can change without re-running the grader.
     More cautious = APPROVE < CONTESTED < PASS."""
     if orig.get("error") or not orig.get("answers") or row.get("error") or not row.get("answers"):
         return "na", "grade missing or errored"
     risk = int(row["risk"])
-    o0, o1 = outcome_at(orig, risk), outcome_at(row, risk)
+    o0, o1 = outcome_at(orig, risk, policy), outcome_at(row, risk, policy)
     if kind == "planted_flaw":
         tv = (row["answers"].get("terminal_vulnerability") or {}).get("answer")
-        bad = [f"R{r}={o}" for r in RISKS if (o := outcome_at(row, r)) != "PASS"]
+        bad = [f"R{r}={o}" for r in RISKS if (o := outcome_at(row, r, policy)) != "PASS"]
         ok = tv == "yes" and not bad
         return ("pass" if ok else "fail"), f"terminal_vulnerability={tv}; " + (
             "PASS at R1-R5" if not bad else "not PASS at " + ",".join(bad))
@@ -931,6 +970,10 @@ def cmd_run(args: argparse.Namespace, *, wording: bool) -> int:
         print("--grader code has no wording test: it reads cards and the structured trade, never prose",
               file=sys.stderr)
         return 2
+    if setup is not None and setup.kind == "deepinfra_room" and wording:
+        print("--grader deepinfra_room averages the phrasings itself; the wording test is for the "
+              "single-phrasing graders", file=sys.stderr)
+        return 2
     arms = load_arms(Path(args.runs))
     if wording:
         arms = stride_sample(arms, args.sample)
@@ -949,6 +992,9 @@ def cmd_run(args: argparse.Namespace, *, wording: bool) -> int:
         for room in rooms.values():
             room["trade_action"] = args.trade_action
         print(f"cards rebuilt for {sum(r.get('cards') is not None for r in rooms.values())} Rooms")
+    if setup is not None and setup.kind == "deepinfra_room":
+        for room in rooms.values():
+            room["trade_action"] = args.trade_action
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     phrasings: list[int | None] = list(PHRASINGS) if wording else [None]
@@ -1063,6 +1109,9 @@ def cmd_inputs(args: argparse.Namespace) -> int:
     rooms = fetch_rooms(dsn, arms)
     names = fetch_names(dsn, sorted({a["ticker"] for a in arms}))
     print(f"rooms loaded: {len(rooms)}/{len(arms)}; company names: {len(names)}")
+    if setup is not None and setup.kind == "deepinfra_room":
+        for room in rooms.values():
+            room["trade_action"] = args.trade_action
     if args.dry:
         for arm in arms:
             room = rooms.get(arm["arm_key"])
@@ -1479,6 +1528,105 @@ def cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
+# ── Fit: close_below_confidence (WP-23 step 4) ──────────────────────────────
+# Offline, no DB, no network: reads the per-Room answers a `score` run already stored (and, if given,
+# the `inputs` run) and re-applies the rule under each candidate cut-off. Consensus (Street rating)
+# is NEVER read here: it is held out for evaluation. The CR257 holdouts are the third target in the
+# plan; they are not in these files, so the chosen value is checked against them by hand before it
+# goes in ROOM_CODED_RULE_POLICY_JSON.
+FIT_GRID = (0.0,) + tuple(round(0.55 + 0.05 * i, 2) for i in range(9))
+FIT_MAX_CONTESTED = 0.20
+FIT_TESTS = ("planted_flaw", "bear_removed", "bear_strengthened")
+
+
+def policy_with_cut(cut: float):
+    return dataclasses.replace(DEFAULT_POLICY, close_below_confidence=cut, source="fit")
+
+
+def fit_metrics(rows: list[dict], inputs: list[dict] | None, cut: float) -> dict:
+    """What one candidate cut-off does: Contested share, approvals, rep disagreement on
+    APPROVE-vs-not (target a), and, with inputs, the known-answer pass rate (target b)."""
+    policy = policy_with_cut(cut)
+    ok = [r for r in rows if not r.get("error") and r.get("answers")]
+    out = {r["arm_key"]: outcome_at(r, int(r["risk"]), policy) for r in ok}
+    cells: dict[tuple, dict[str, dict]] = collections.defaultdict(dict)
+    for r in ok:
+        cells[(r["ticker"], r["risk"])][r["rep"]] = r
+    pairs = disagree = 0
+    for reps in cells.values():
+        if len(reps) != 2:
+            continue
+        a, b = reps[min(reps)], reps[max(reps)]
+        pairs += 1
+        disagree += (out[a["arm_key"]] == "APPROVE") != (out[b["arm_key"]] == "APPROVE")
+    contested = sum(v == "CONTESTED" for v in out.values())
+    m = {
+        "cut": cut, "rooms": len(ok), "pairs": pairs, "rep_disagree": disagree,
+        "rep_disagree_rate": (disagree / pairs) if pairs else None,
+        "approve": sum(v == "APPROVE" for v in out.values()),
+        "contested": contested,
+        "contested_share": (contested / len(ok)) if ok else None,
+        "unavailable": sum(v == "UNAVAILABLE" for v in out.values()),
+    }
+    if inputs:
+        by: dict[str, dict[str, dict]] = collections.defaultdict(dict)
+        for r in inputs:
+            by[r["arm_key"]][r["perturbation"]] = r
+        n = npass = 0
+        for g in by.values():
+            orig = g.get("original")
+            for k in FIT_TESTS:
+                r = g.get(k)
+                if orig is None or r is None or r.get("skipped"):
+                    continue
+                verdict = judge(k, orig, r, policy)[0]
+                n += verdict != "na"
+                npass += verdict == "pass"
+        m["input_tests"], m["input_pass"] = n, npass
+    return m
+
+
+def choose_cut(table: list[dict], max_contested: float) -> dict:
+    """Pre-registered choice: among cut-offs whose Contested share is within the cap, the one
+    with the lowest rep disagreement; ties go to the higher input-test pass rate, then the lower
+    cut-off. None within the cap falls back to 0.0 (the grader's own `close` flag only)."""
+    inside = [m for m in table if m["contested_share"] is not None and m["contested_share"] <= max_contested
+              and m["rep_disagree_rate"] is not None]
+    if not inside:
+        return {**next(m for m in table if m["cut"] == 0.0), "cap_unmet": True}
+    best = min(inside, key=lambda m: (m["rep_disagree_rate"], -(m.get("input_pass") or 0), m["cut"]))
+    return {**best, "cap_unmet": False}
+
+
+def cmd_fit(args: argparse.Namespace) -> int:
+    rows = load_jsonl(Path(args.scores))
+    inputs = load_jsonl(Path(args.inputs)) if args.inputs else None
+    table = [fit_metrics(rows, inputs, c) for c in FIT_GRID]
+    chosen = choose_cut(table, args.max_contested)
+    levels = {lvl: {"required_yes": sorted(q.value for q in lp.required_yes),
+                    "blocking_yes": sorted(q.value for q in lp.blocking_yes)}
+              for lvl, lp in DEFAULT_POLICY.levels.items()}
+    grader = next((r.get("grader") for r in rows if r.get("grader")), "deepinfra")
+    policy_json = {grader: {"close_below_confidence": chosen["cut"], **levels}}
+    report = {"max_contested": args.max_contested, "grid": table, "chosen": chosen,
+              "policy_json": policy_json,
+              "note": "fitted on rep agreement and the input tests only; never on consensus. Check the "
+                      "CR257 holdouts by hand before setting ROOM_CODED_RULE_POLICY_JSON."}
+    if args.out:
+        Path(args.out).write_text(json.dumps(report, indent=2), encoding="utf-8")
+    print(f"{'cut':>5} {'rooms':>5} {'pairs':>5} {'rep_dis':>8} {'approve':>7} {'contested':>9} {'unavail':>7}"
+          + ("  inputs" if inputs else ""))
+    for m in table:
+        rate = "n/a" if m["rep_disagree_rate"] is None else f"{100 * m['rep_disagree_rate']:.0f}%"
+        share = "n/a" if m["contested_share"] is None else f"{100 * m['contested_share']:.0f}%"
+        print(f"{m['cut']:>5} {m['rooms']:>5} {m['pairs']:>5} {rate:>8} {m['approve']:>7} {share:>9} "
+              f"{m['unavailable']:>7}" + (f"  {m['input_pass']}/{m['input_tests']}" if inputs else ""))
+    print(f"chosen close_below_confidence={chosen['cut']}"
+          + ("  (NO cut-off met the Contested cap; kept the placeholder)" if chosen["cap_unmet"] else ""))
+    print("ROOM_CODED_RULE_POLICY_JSON=" + json.dumps(policy_json, separators=(",", ":")))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -1524,9 +1672,17 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--wording")
     p.add_argument("--inputs")
     p.add_argument("--out")
+    p = sub.add_parser("fit", help="fit close_below_confidence offline from a finished `score` run")
+    p.add_argument("--scores", required=True)
+    p.add_argument("--inputs")
+    p.add_argument("--max-contested", type=float, default=FIT_MAX_CONTESTED,
+                   help="largest Contested share a candidate cut-off may produce")
+    p.add_argument("--out")
     args = ap.parse_args(argv)
     if args.cmd == "report":
         return cmd_report(args)
+    if args.cmd == "fit":
+        return cmd_fit(args)
     if args.cmd == "inputs":
         return cmd_inputs(args)
     return cmd_run(args, wording=args.cmd == "wording")

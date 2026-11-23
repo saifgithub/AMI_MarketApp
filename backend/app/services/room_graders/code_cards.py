@@ -31,11 +31,9 @@ from app.services.room_grader_contract import (
     QuestionAnswer,
     QuestionId,
     RoomTranscript,
+    trade_proposed_answer,
 )
 
-NO_TRADE_ACTIONS = frozenset(
-    {"", "hold", "pass", "none", "no_trade", "no trade", "wait", "skip"}
-)
 _SEVERITY_RANK = {"high": 2, "medium": 1}
 _GRADE_BINDS = frozenset({"well", "partial"})
 
@@ -116,16 +114,7 @@ class CodeCardsGrader:
         return tuple(out)
 
     def _trade_proposed(self, trade: dict | None) -> QuestionAnswer:
-        q = QuestionId.TRADE_PROPOSED
-        if not trade:
-            return QuestionAnswer(q, Answer.NO, rationale="no proposed trade")
-        action = trade.get("action", trade.get("side"))
-        if action is None:
-            return _nc(q, "proposed_trade carries no action or side")
-        proposed = str(action).strip().lower() not in NO_TRADE_ACTIONS
-        return QuestionAnswer(
-            q, Answer.YES if proposed else Answer.NO, rationale=f"action={action}"
-        )
+        return trade_proposed_answer(trade)
 
     def _thesis(self, record: EvidenceRecord | None) -> QuestionAnswer:
         q = QuestionId.THESIS_MATERIAL_DIRECTIONAL

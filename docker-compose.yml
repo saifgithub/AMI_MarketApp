@@ -659,6 +659,14 @@ services:
       ROOM_CODED_RULE_ENABLED: ${ROOM_CODED_RULE_ENABLED:-false}
       ROOM_GRADER: ${ROOM_GRADER:-}
       ROOM_CODED_RULE_POLICY_JSON: ${ROOM_CODED_RULE_POLICY_JSON:-{}}
+      # CR267 WP-23 gate S3 — ROOM_GRADER=deepinfra: the hosted grader (grader ONLY;
+      # the desks stay on-prem and LLM_PROVIDER_ALLOWLIST is not widened). Called
+      # directly, not through the gateway. Key empty with the rule on and this grader
+      # chosen refuses boot. Pinned model id, never "latest".
+      ROOM_GRADER_DEEPINFRA_BASE_URL: ${ROOM_GRADER_DEEPINFRA_BASE_URL:-https://api.deepinfra.com/v1/openai}
+      ROOM_GRADER_DEEPINFRA_MODEL: ${ROOM_GRADER_DEEPINFRA_MODEL:-deepseek-ai/DeepSeek-V4-Flash}
+      ROOM_GRADER_DEEPINFRA_API_KEY: ${ROOM_GRADER_DEEPINFRA_API_KEY:-}
+      ROOM_GRADER_DEEPINFRA_TIMEOUT_S: ${ROOM_GRADER_DEEPINFRA_TIMEOUT_S:-30.0}
       # CR222 §3 — pre-registration on the training trade ticket, and whether
       # it also binds long_horizon mandates. See
       # Settings.training_preregistration_required /
