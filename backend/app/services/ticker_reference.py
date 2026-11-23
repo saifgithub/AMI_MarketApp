@@ -43,7 +43,12 @@ from app.core.logging import logger
 from app.db import get_session
 from app.db.models import TickerReferenceRow
 from app.schemas.tickers import TickerSuggestion
-from app.trading_math.markets import accepted_without_reference
+from app.trading_math.markets import MARKETS, Market, accepted_without_reference
+
+#: CR282 lane C — the `exchange` label that marks a Bursa row. Refreshes are
+#: scoped by it: the US refresh never touches these rows, and a Bursa load never
+#: touches the US ones, so neither source's absence deactivates the other.
+BURSA_EXCHANGE = MARKETS[Market.MY].exchange_label
 
 # ── Parsing ──────────────────────────────────────────────────────────────────
 
@@ -183,14 +188,23 @@ def _network_fetch(listed_url: str, other_url: str) -> list[dict]:
 # ── Storage (one row per symbol, soft-delete on absence) ────────────────────
 
 
-def upsert_reference(session, records: list[dict], now: datetime) -> dict:
-    """Mark every existing row inactive, then reactivate everything in
-    `records`. A symbol absent from `records` (delisted, or a source hiccup
+def upsert_reference(
+    session, records: list[dict], now: datetime, *, bursa: bool = False,
+) -> dict:
+    """Mark every existing row of THIS source inactive, then reactivate everything
+    in `records`. The source is the US lists by default and the Bursa list when
+    `bursa=True` (CR282): each pass only deactivates its own exchange's rows.
+
+    A symbol absent from `records` (delisted, or a source hiccup
     that dropped it) ends this call with `is_active = False` — soft-deleted,
     row kept. Runs inside one transaction (the caller's `get_session()` block),
     so concurrent readers see either the fully-old or fully-new state, never a
     transient all-inactive gap."""
-    session.execute(update(TickerReferenceRow).values(is_active=False))
+    scope = (
+        TickerReferenceRow.exchange == BURSA_EXCHANGE if bursa
+        else TickerReferenceRow.exchange != BURSA_EXCHANGE
+    )
+    session.execute(update(TickerReferenceRow).where(scope).values(is_active=False))
     seen: set[str] = set()
     upserted = 0
     for rec in records:
@@ -217,15 +231,22 @@ def upsert_reference(session, records: list[dict], now: datetime) -> dict:
             row.last_seen_at = now
     session.flush()
     deactivated = session.execute(
-        select(TickerReferenceRow.symbol).where(TickerReferenceRow.is_active.is_(False))
+        select(TickerReferenceRow.symbol).where(
+            TickerReferenceRow.is_active.is_(False), scope,
+        )
     ).scalars().all()
     return {"upserted": upserted, "deactivated": len(deactivated)}
 
 
 def _latest_refresh_at(session) -> datetime | None:
+    """Freshness of the US lists only — a Bursa load must not make the US
+    refresh look already done."""
     return session.execute(
         select(TickerReferenceRow.last_seen_at)
-        .where(TickerReferenceRow.is_active.is_(True))
+        .where(
+            TickerReferenceRow.is_active.is_(True),
+            TickerReferenceRow.exchange != BURSA_EXCHANGE,
+        )
         .order_by(TickerReferenceRow.last_seen_at.desc())
         .limit(1)
     ).scalar_one_or_none()
@@ -325,6 +346,67 @@ def run_ticker_reference_refresh_tick(
     _invalidate_active_symbol_cache()
     logger.info("ticker_reference_refresh_stored", fetched_at=now.isoformat(), **counts)
     return "stored"
+
+
+# ── Bursa Malaysia list (CR282 lane C) ──────────────────────────────────────
+
+#: Truncation floor for a Bursa code file: the Main Market alone lists ~800
+#: counters, so a file below this is truncated, not a shrunken market. Applies
+#: to the Bursa pass only — it is independent of `_LISTED_MIN_ROWS`.
+_BURSA_MIN_ROWS = 500
+
+_BURSA_CODE_FILE_RE = re.compile(r"^[0-9]{4}[A-Z]?$")
+
+
+def parse_bursa_csv(text: str) -> list[dict]:
+    """Parse a `code,name` CSV (header optional) into reference records.
+
+    Codes are the bare four-digit Bursa stock code; the stored symbol is the
+    Yahoo form `<code>.KL`. Malformed rows are dropped, never guessed at.
+    """
+    import csv
+    import io
+
+    records: list[dict] = []
+    for row in csv.reader(io.StringIO(text)):
+        if len(row) < 2:
+            continue
+        code = row[0].strip().upper().removesuffix(".KL")
+        name = row[1].strip()
+        if not _BURSA_CODE_FILE_RE.match(code) or not name:
+            continue
+        records.append({
+            "symbol": f"{code}.KL",
+            "company_name": name,
+            "exchange": BURSA_EXCHANGE,
+            "is_etf": False,
+        })
+    return records
+
+
+def load_bursa_reference(text: str, now: datetime | None = None) -> dict:
+    """Load a Bursa code CSV into `ticker_reference`, scoped to Bursa rows.
+
+    Refuses a file under `_BURSA_MIN_ROWS` (truncated) and leaves the held rows
+    untouched, exactly like the US refresh. US rows are never read or changed.
+    """
+    now = now or datetime.now(timezone.utc)
+    records = parse_bursa_csv(text)
+    if len(records) < _BURSA_MIN_ROWS:
+        raise TickerReferenceSourceError(
+            f"Bursa code file parsed to {len(records)} rows "
+            f"(< floor {_BURSA_MIN_ROWS}) — treating as truncated"
+        )
+    try:
+        with get_session() as session:
+            counts = upsert_reference(session, records, now, bursa=True)
+    except IntegrityError:
+        # failure_patterns.md P15 — a concurrent load wrote the same rows.
+        logger.warn("ticker_reference_bursa_load_concurrent", fetched_at=now.isoformat())
+        return {"upserted": 0, "deactivated": 0, "skipped_concurrent": 1}
+    _invalidate_active_symbol_cache()
+    logger.info("ticker_reference_bursa_loaded", **counts)
+    return counts
 
 
 # ── Read path: exact lookup + closest-match suggestion ──────────────────────

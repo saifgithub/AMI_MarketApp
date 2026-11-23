@@ -85,6 +85,7 @@ from app.services.sim_engine import (
     LIVE_RESTING_STATES,
     SimEngine,
     SimRestingOrder,
+    book_kind,
     get_sim_engine,
     retire_values,
 )
@@ -98,7 +99,9 @@ from app.services.sim_trade_effects import (
     record_compliance_block,
 )
 from app.schemas.trade import OrderType, Side
+from app.trading_math.market_calendar import CalendarUnavailable, is_market_open
 from app.trading_math.market_hours import is_us_market_open
+from app.trading_math.markets import Market, market_enabled, market_for
 from app.trading_math.quote_fillability import is_fillable
 from app.trading_math.order_pricing import is_triggered
 
@@ -178,7 +181,7 @@ class RestingCommitment:
     resting_order_count: int
 
 
-def commitment_for(user_id: UUID) -> RestingCommitment:
+def commitment_for(user_id: UUID, market: Market = Market.US) -> RestingCommitment:
     """A pure DB read over the live book — no quote fan-out.
 
     Strictly cheaper than the games precedent it follows (`_queued_orders_priced`
@@ -192,10 +195,13 @@ def commitment_for(user_id: UUID) -> RestingCommitment:
     stops a user resting two sells for shares they hold once. Per ticker, because
     the fence is per holding — a single total would let a sell of 10 AAPL cover
     a sell of 10 MSFT.
+
+    CR282: scoped to one market's book (US by default) — a ringgit order's
+    commitment must never be summed into the dollar book's.
     """
     cash = 0.0
     shares: dict[str, float] = {}
-    orders = _live_orders(user_id)
+    orders = [o for o in _live_orders(user_id) if market_for(o.ticker) is market]
     for order in orders:
         named = order.named_price
         if order.side == Side.BUY:
@@ -350,21 +356,23 @@ def _stamp_rejected(order_id: UUID, reason: str, now: datetime) -> None:
         )
 
 
-def _users_with_open_trades() -> list[UUID]:
+def _users_with_open_trades(market: Market = Market.US) -> list[UUID]:
     with get_session() as s:
         rows = s.execute(
             select(SimTradeRow.user_id)
             .join(SimPortfolioRow, SimPortfolioRow.id == SimTradeRow.portfolio_id)
             .where(
                 SimTradeRow.status == "open",
-                SimPortfolioRow.kind == "training",
+                SimPortfolioRow.kind == book_kind(market),
             )
             .distinct()
         ).scalars().all()
     return list(rows)
 
 
-def _sweep_position_brackets(engine: SimEngine, user_id: UUID | None) -> int:
+def _sweep_position_brackets(
+    engine: SimEngine, user_id: UUID | None, market: Market = Market.US,
+) -> int:
     """Drive the SHIPPED `SimTradeRow.stop`/`.target` bracket from the tick.
 
     Two evaluators over two tables, and this sweep calls both rather than
@@ -378,11 +386,14 @@ def _sweep_position_brackets(engine: SimEngine, user_id: UUID | None) -> int:
     that only fires when you open the app is not a stop-loss**, for an audience
     asleep 22:30–05:00 local while the US session runs.
     """
-    users = [user_id] if user_id is not None else _users_with_open_trades()
+    users = [user_id] if user_id is not None else _users_with_open_trades(market)
     closed = 0
     for uid in users:
         try:
-            closed += len(engine.evaluate_outcomes(uid))
+            closed += len(
+                engine.evaluate_outcomes(uid) if market is Market.US
+                else engine.evaluate_outcomes(uid, market)
+            )
         except Exception:  # pragma: no cover — one user must not stop the sweep
             logger.exception("sim_bracket_sweep_failed", user_id=str(uid))
     return closed
@@ -746,6 +757,26 @@ def _fill_triggered(
     return filled, rejected
 
 
+def open_markets(now: datetime) -> set[Market]:
+    """The markets whose session is open at `now` — the sweep's per-market gate.
+
+    US is exactly `is_us_market_open`. A non-US market counts only when its
+    flag is on AND its own calendar says open; a calendar that cannot answer
+    (holiday table exhausted) is logged as an error and treated as closed,
+    never as open (CR040).
+    """
+    out: set[Market] = set()
+    if is_us_market_open(now):
+        out.add(Market.US)
+    if market_enabled(Market.MY):
+        try:
+            if is_market_open(Market.MY, now):
+                out.add(Market.MY)
+        except CalendarUnavailable as exc:
+            logger.error("sim_sweep_market_calendar_unavailable", market="MY", error=str(exc))
+    return out
+
+
 def sweep_resting_orders(
     *,
     user_id: UUID | None = None,
@@ -762,7 +793,7 @@ def sweep_resting_orders(
     init_schema()
     engine = engine or get_sim_engine()
     now = now or datetime.now(timezone.utc)
-    market_open = is_us_market_open(now)
+    markets_open = open_markets(now)
 
     stats = {
         "expired": _expire_elapsed(now, user_id),
@@ -788,7 +819,7 @@ def sweep_resting_orders(
     # option expires at 16:00 ET on its date whether or not we are polling.
     stats["option_events"] = _sweep_option_lifecycle(engine, user_id)
 
-    if not market_open:
+    if not markets_open:
         # CR109 §5.1's time machine: outside the session a "trigger" is a
         # trigger against a stale last price. The expiry pass above still ran,
         # deliberately — an order dies at its session close whether or not the
@@ -797,21 +828,28 @@ def sweep_resting_orders(
         return stats
 
     if bracket_closing_enabled():
-        stats["brackets_closed"] = _sweep_position_brackets(engine, user_id)
+        if Market.US in markets_open:
+            stats["brackets_closed"] = _sweep_position_brackets(engine, user_id)
+        if Market.MY in markets_open:
+            stats["brackets_closed"] += _sweep_position_brackets(
+                engine, user_id, Market.MY,
+            )
         # §7 — hours-gated, and that placement IS the rule: a margin close
         # against a stale overnight print is CR109 §5.1's time machine in the
         # direction that costs the user money, which makes it worse than
         # DEF261, not better.
-        stats["shorts_bracketed"], stats["shorts_margined"] = _sweep_short_positions(
-            engine, user_id,
-        )
+        if Market.US in markets_open:
+            stats["shorts_bracketed"], stats["shorts_margined"] = _sweep_short_positions(
+                engine, user_id,
+            )
         # CR172 §7 / criterion 5. Inside DEF305's kill switch with the others
         # because it is the same class of act: a forced close off a price
         # nobody checked. It runs last so the day's assignments have already
         # settled — an assignment is one of the three ways a short call loses
         # its cover, and judging coverage first would close a call whose cover
         # had just been delivered.
-        stats["options_margined"] = _check_option_margin(engine, user_id)
+        if Market.US in markets_open:
+            stats["options_margined"] = _check_option_margin(engine, user_id)
     else:
         # DEF305 — both legs, because both force-close a position off a price
         # whose source nobody checked, and the margin leg is the worse of the
@@ -827,7 +865,11 @@ def sweep_resting_orders(
             ),
         )
 
-    orders = _live_orders(user_id)
+    # CR282 — each order fills only inside ITS market's session. With Bursa off
+    # (or US the only open market) this is exactly the old whole-book read.
+    orders = [
+        o for o in _live_orders(user_id) if market_for(o.ticker) in markets_open
+    ]
     if not orders:
         return stats
     stats["checked"] = len(orders)

@@ -591,6 +591,14 @@ class SimPortfolioRow(Base):
     name: Mapped[str] = mapped_column(String, default="Main", nullable=False)
     starting_capital: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     current_cash: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    # CR282 lane C — which market's book this is ('US' | 'MY'); the book's
+    # currency, board lot and fee schedule all derive from it. The MY book is
+    # `kind="training_my"` (a distinct kind, not a second "training" row) so
+    # every existing `kind == "training"` lookup keeps returning the US book
+    # and cannot raise MultipleResultsFound — see `book_kind` in sim_engine.
+    market: Mapped[str] = mapped_column(
+        String, default="US", server_default="US", nullable=False,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
     )

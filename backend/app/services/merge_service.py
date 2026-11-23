@@ -370,6 +370,36 @@ class MergeService:
             counts["game_portfolios"] = game_portfolios_moved
             counts["game_trades"] = game_trades_moved
 
+            # ── MYR book (CR282 lane C) ──────────────────────────────
+            # The anonymous user's Bursa book moves to the adopter only when
+            # the adopter has none of its own (a singleton per user — the same
+            # "keep the adopter's" rule as the training book). When both have
+            # one the orphan's stays on the orphan user: ringgit cash cannot be
+            # folded into another book without an FX rule, and dropping a book
+            # the user may have traded would lose real history.
+            my_source = s.execute(
+                select(SimPortfolioRow).where(
+                    SimPortfolioRow.user_id == from_user_id,
+                    SimPortfolioRow.kind == "training_my",
+                )
+            ).scalar_one_or_none()
+            my_target = s.execute(
+                select(SimPortfolioRow).where(
+                    SimPortfolioRow.user_id == to_user_id,
+                    SimPortfolioRow.kind == "training_my",
+                )
+            ).scalar_one_or_none()
+            my_moved = 0
+            if my_source is not None and my_target is None:
+                s.execute(
+                    update(SimTradeRow)
+                    .where(SimTradeRow.portfolio_id == my_source.id)
+                    .values(user_id=to_user_id)
+                )
+                my_source.user_id = to_user_id
+                my_moved = 1
+            counts["my_portfolios"] = my_moved
+
             # ── game_entries (UNIQUE on field_id+user_id) ────────────
             # A conflict is only possible if BOTH accounts already hold an
             # entry in the exact same field — rare, but possible (both an

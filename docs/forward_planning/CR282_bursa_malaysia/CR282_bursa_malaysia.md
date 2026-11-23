@@ -64,6 +64,15 @@ The decision log places Bursa Malaysia in Phase 2 ("US equities only at MVP. GCC
 
 On Alpha with the flag on: search `1155.KL`, convene a Room whose stored record shows MYR, FBM KLCI and every unavailable desk input named; buy 100 units into the MYR book with Bursa fees; a 150-unit order is refused with the board-lot reason; the Shariah verdict cites the SC list and its as-of date; a Bursa holiday shows the market closed. With the flag off, nothing changes (full suite + UAT). Off in Beta builds until counsel Question 4 and the data licence are answered.
 
+## Lane C — MYR book (built 2026-11-24, branch `lane/cr282-myr-book`)
+
+1. Migration `cr282a0b0c0d1`: `sim_portfolios.market` (NOT NULL, default `'US'`). The MYR book is `kind="training_my"`, `market="MY"`, RM50,000, created on the first Bursa action. A distinct kind (not a second `training` row) is what keeps every existing `kind == "training"` lookup a US-only single-row read.
+2. Rules live in `backend/app/trading_math/bursa_rules.py`: board lot 100, tick grid, ±30% price limit (30 sen below RM1), fee schedule. Tick table: circular rr2_110411, **UNVERIFIED against later amendments**. Fees: brokerage 0.10% min RM8 and clearing 0.03% cap RM1,000 are **UNVERIFIED research figures**; stamp duty 0.10% cap RM1,000 is secondary-sourced; no SST on ordinary-share brokerage is UNVERIFIED.
+3. A Bursa order that breaks a market rule raises `MarketRuleViolation` and the sim routes return HTTP 422 `{code, message, market}`; mandate refusals keep their existing 200 `ok:false` shape.
+4. `sweep_resting_orders` gates per market: US orders when NYSE is open, `.KL` orders when `is_market_open(Market.MY)`. Market orders fill at the delayed quote at any time, as the US book does.
+5. Bursa ticker list: no source with clear terms found (Bursa blocks automated fetches; third-party listing sites not scraped). The per-exchange loader and refresh scoping are built (`load_bursa_reference`, `upsert_reference(bursa=True)`); until a code CSV is supplied `.KL` stays accepted on shape.
+6. Deferred: NAV/TWR snapshots, portfolio history and the nightly NAV tick still cover the US book only; Bursa bracket closes are not journaled.
+
 ## Lane log
 
 1. **Lane A** (market registry) merged `aff7a6d3`, suite 9539/0.
