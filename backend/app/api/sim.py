@@ -345,6 +345,9 @@ class PortfolioSnapshot(BaseModel):
     # to "mock_walk" so the LIVE pill never lies. See
     # `SimEngine.aggregate_source`.
     price_source: str = "mock_walk"
+    # CR282: the book's currency. Every book is USD until the MYR book (lane C)
+    # sets "MYR"; the app formats money from it (SimPortfolio.currency).
+    currency: str = "USD"
 
     # CR170 §6 — what the live resting book ties up. Computed at read time,
     # never reserved: a reserved-cash debit is indistinguishable from a loss in
