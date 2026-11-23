@@ -73,6 +73,8 @@ def _translate(exc: games.GamesServiceError) -> HTTPException:
         return HTTPException(status.HTTP_404_NOT_FOUND, str(exc))
     if isinstance(exc, games.RunNotLiveError):
         return HTTPException(status.HTTP_409_CONFLICT, str(exc))
+    if isinstance(exc, games.MarketNotInGamesError):
+        return HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc))
     if isinstance(exc, games.UnsupportedCadenceError):
         return HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(exc))
     return HTTPException(status.HTTP_400_BAD_REQUEST, str(exc))  # pragma: no cover

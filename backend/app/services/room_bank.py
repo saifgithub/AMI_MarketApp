@@ -75,6 +75,8 @@ from app.db.models import RoomFactSheetRow, RoomRunRow
 from app.schemas import TWELVE_AGENT_IDS, AgentId
 from app.schemas.mandate import Mandate
 from app.services.cio_snapshot_codec import decode_profile, encode_profile
+from app.trading_math.market_calendar import trading_date as market_trading_date
+from app.trading_math.markets import Market, market_for
 from app.trading_math.session_calendar import last_us_session_date
 
 # Bump when the Room's decision logic changes in a way the assembled prompts do
@@ -259,9 +261,13 @@ def _sha256(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
 
-def trading_date_for(now: datetime) -> date:
-    """The US equities session date `now` belongs to (see `session_calendar`)."""
-    return last_us_session_date(now)
+def trading_date_for(now: datetime, ticker: str | None = None) -> date:
+    """The session date `now` belongs to in the ticker's market (US by default;
+    see `session_calendar` and `market_calendar`). Raises `CalendarUnavailable`
+    for a market whose holiday table does not reach `now`."""
+    if ticker is None or market_for(ticker) is Market.US:
+        return last_us_session_date(now)
+    return market_trading_date(market_for(ticker), now)
 
 
 def mandate_digest(mandate: Mandate) -> str:

@@ -289,8 +289,10 @@ def test_options_us_ticker_unchanged(bursa_on):
 # ── market_state ─────────────────────────────────────────────────────────────
 
 
-def test_market_state_my_is_unknown_never_open_or_closed():
-    assert market_data._market_state_for("1155.KL") == "UNKNOWN"
+def test_market_state_my_is_regular_or_closed_from_the_bursa_calendar():
+    # Lane B replaced the UNKNOWN placeholder; UNKNOWN is now only the
+    # beyond-the-holiday-table case (test_cr282_market_calendar.py).
+    assert market_data._market_state_for("1155.KL") in {"REGULAR", "CLOSED"}
 
 
 def test_market_state_us_is_regular_or_closed():

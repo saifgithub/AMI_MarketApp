@@ -57,6 +57,7 @@ from app.services.games_scoring import (
 from app.services.portfolio_nav_daily import nav_history, twr_pct_for_window
 from app.services.sim_engine import GAME_QUOTE_UNAVAILABLE_REASON, get_sim_engine
 from app.trading_math.market_hours import is_us_market_open, next_us_market_open
+from app.trading_math.markets import Market, market_for
 from app.trading_math.shorts import nav_floor, short_buyin_trigger_price
 from app.trading_math.shorts import short_cover_proceeds as _short_cover_proceeds
 from app.trading_math.shorts import short_needs_buyin
@@ -95,6 +96,18 @@ _RUN_DAYS = 4  # Monday .. Friday inclusive
 class GamesServiceError(Exception):
     """Base for every games_service error — routes translate these to
     the right HTTP status in `api/games.py`."""
+
+
+class MarketNotInGamesError(GamesServiceError):
+    """A non-US ticker reached a Games path. Games run on the US calendar only
+    (`is_us_market_open`); Bursa in Games is CR282 phase 2."""
+
+
+def _require_us_ticker(ticker: str) -> None:
+    if market_for(ticker) is not Market.US:
+        raise MarketNotInGamesError(
+            f"{ticker} is not available in Games — Games trade US equities only"
+        )
 
 
 class AlreadyEnteredError(GamesServiceError):
@@ -1182,8 +1195,9 @@ def quote_trade(
             "quote_trade needs exactly one of quantity or notional"
         )
     _require_live_entry(user_id, run_id)
-    sim = get_sim_engine()
     ticker = ticker.upper().strip()
+    _require_us_ticker(ticker)
+    sim = get_sim_engine()
     quote = sim.current_quote(ticker)
     if quantity is None:
         if quote.price <= 0:
@@ -1322,6 +1336,7 @@ def _submit_trade(
     now = now or datetime.now(timezone.utc)
     _require_live_entry(user_id, run_id)
     ticker = ticker.upper().strip()
+    _require_us_ticker(ticker)
     side_str = side.value if hasattr(side, "value") else str(side)
     order_type_str = order_type.value if hasattr(order_type, "value") else str(order_type)
 
