@@ -37,6 +37,11 @@ class ShariaStatus(str, Enum):
     UNAVAILABLE = "unavailable"
 
 
+# What the US standard screens. Every pre-CR282 verdict is a US verdict; a verdict from
+# any other standard names its own coverage (CR282 lane D: "Bursa Malaysia").
+DEFAULT_COVERAGE = "the S&P 500"
+
+
 def _as_of_str(as_of: date | None) -> str:
     return as_of.isoformat() if as_of is not None else "unknown"
 
@@ -56,6 +61,10 @@ class ShariaVerdict(BaseModel):
     standard: str  # e.g. "AAOIFI"
     source: str  # e.g. "S&P 500 Sharia Industry Exclusions Index (via SPUS)"
     as_of: date | None = None
+    # The universe this standard covers, named so the surface can say "isn't in
+    # {coverage}" without hard-coding the S&P 500 (CR282 lane D). "S&P 500" for the
+    # US standard — the value every pre-CR282 verdict implied.
+    coverage: str = DEFAULT_COVERAGE
 
     @property
     def is_blocking(self) -> bool:
@@ -73,6 +82,19 @@ class ShariaVerdict(BaseModel):
         when = _as_of_str(self.as_of)
         if self.status is ShariaStatus.PASS:
             return f"{t} passes the {self.standard} screen ({self.source}, as of {when})."
+        if self.coverage != DEFAULT_COVERAGE:
+            # Non-US standard: the published list IS the whole classification of
+            # its market, so absence from it is a real exclusion (not "unreviewed").
+            if self.status is ShariaStatus.SCREENED_OUT:
+                return (
+                    f"{t} is not on the {self.standard} Shariah-compliant list "
+                    f"({self.source}, as of {when}), so this mandate won't trade it."
+                )
+            if self.status is ShariaStatus.UNKNOWN:
+                return (
+                    f"{t} isn't covered by {self.coverage}, so the {self.standard} screen AMI "
+                    f"uses hasn't reviewed it. That's not a ruling either way — AMI doesn't know."
+                )
         if self.status is ShariaStatus.SCREENED_OUT:
             return (
                 f"{t} is in the parent index but does not pass the {self.standard} "

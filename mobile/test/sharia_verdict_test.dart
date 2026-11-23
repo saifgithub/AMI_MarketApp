@@ -281,4 +281,54 @@ void main() {
       expect(r.shariaVerdict!.isBlocking, isFalse);
     });
   });
+
+  // CR282 lane D — the screened-out / unknown copy names the standard's own coverage
+  // (backend `coverage`), so a Bursa name never reads "S&P 500" and the US text is
+  // byte-identical to what shipped.
+  group('coverage comes from the verdict, not a hard-coded S&P 500', () {
+    ShariaVerdict bursa(ShariaStatus st) => ShariaVerdict(
+          status: st,
+          ticker: '1155.KL',
+          standard: 'SC Malaysia',
+          source: 'SC Malaysia Shariah Advisory Council list',
+          asOf: DateTime.utc(2026, 5, 29),
+          coverage: 'Bursa Malaysia',
+        );
+
+    testWidgets('a Bursa screened-out names Bursa Malaysia and the SC list',
+        (tester) async {
+      final body =
+          (await _render(tester, bursa(ShariaStatus.screenedOut))).join(' ');
+      expect(body, contains('is in Bursa Malaysia but does not pass'));
+      expect(body, contains('SC Malaysia Shariah Advisory Council list'));
+      expect(body, contains('2026-05-29'));
+      expect(body, isNot(contains('S&P 500')));
+    });
+
+    testWidgets('the US wording is unchanged', (tester) async {
+      final us =
+          (await _render(tester, _verdict(ShariaStatus.screenedOut, 'META')))
+              .join(' ');
+      expect(us, contains('META is in the S&P 500 but does not pass'));
+    });
+
+    test('fromJson reads coverage and defaults to the US value', () {
+      final withCov = ShariaVerdict.fromJson({
+        'status': 'pass',
+        'ticker': '5183.KL',
+        'standard': 'SC Malaysia',
+        'source': 'SC Malaysia Shariah Advisory Council list',
+        'as_of': '2026-05-29',
+        'coverage': 'Bursa Malaysia',
+      });
+      expect(withCov!.coverage, 'Bursa Malaysia');
+      final without = ShariaVerdict.fromJson({
+        'status': 'pass',
+        'ticker': 'AAPL',
+        'standard': 'AAOIFI',
+        'source': 's',
+      });
+      expect(without!.coverage, 'the S&P 500');
+    });
+  });
 }
