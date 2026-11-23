@@ -15,6 +15,8 @@ library;
 
 import 'dart:async';
 
+import 'package:ami_trade/features/markets/market.dart';
+import 'package:ami_trade/features/markets/money.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/alpaca.dart';
 import 'package:ami_trade/models/room.dart';
@@ -557,13 +559,15 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     if (stopIsWrongSide(isShort: isShort, entry: entry, stop: stop) == true) {
       return isShort
           ? l.tradeTicketRefuseShortStop
-          : l.tradeTicketRefuseLongStop(stop!.toStringAsFixed(2));
+          : l.tradeTicketRefuseLongStop(formatMoney(stop!,
+              market: marketForTicker(typed), grouped: false));
     }
     if (targetIsWrongSide(isShort: isShort, entry: entry, target: target) ==
         true) {
       return isShort
           ? l.tradeTicketRefuseShortTarget
-          : l.tradeTicketRefuseLongTarget(target!.toStringAsFixed(2));
+          : l.tradeTicketRefuseLongTarget(formatMoney(target!,
+              market: marketForTicker(typed), grouped: false));
     }
     return null;
   }
@@ -726,8 +730,9 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     return l.tradeTicketNoticeRaisesStop(
       (held + qty).toStringAsFixed(0),
       typed,
-      currentStop.toStringAsFixed(2),
-      resulting.toStringAsFixed(2),
+      formatMoney(currentStop,
+          market: marketForTicker(typed), grouped: false),
+      formatMoney(resulting, market: marketForTicker(typed), grouped: false),
     );
   }
 
@@ -1362,7 +1367,8 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
       return '${_side.toUpperCase()} $typed — resting order placed.';
     }
     return '${filled.side.toUpperCase()} ${filled.quantity.toStringAsFixed(0)} '
-        '${filled.ticker} @ \$${filled.entryPrice.toStringAsFixed(2)}';
+        '${filled.ticker} @ '
+        '${formatMoney(filled.entryPrice, market: marketForTicker(filled.ticker), grouped: false)}';
   }
 
   /// The one confirmation, whichever of the four things just happened.
@@ -1408,7 +1414,8 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
       message = l.tradeTicketResting(
         _side.toUpperCase(),
         typed,
-        (result.order?.namedPrice ?? 0).toStringAsFixed(2),
+        formatMoney(result.order?.namedPrice ?? 0,
+            market: marketForTicker(typed), grouped: false),
       );
       icon = Icons.schedule;
       background = AmiColors.hexCyan;
@@ -1417,7 +1424,8 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
         filled.side.toUpperCase(),
         filled.quantity.toStringAsFixed(0),
         filled.ticker,
-        filled.entryPrice.toStringAsFixed(2),
+        formatMoney(filled.entryPrice,
+            market: marketForTicker(filled.ticker), grouped: false),
       );
       icon = Icons.check_circle;
       background = AmiColors.hexGreen;
@@ -1959,6 +1967,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                       const SizedBox(height: AmiSpacing.xs),
                       _QuoteChip(
                         quote: _quote,
+                        ticker: _ticker.text.trim().toUpperCase(),
                         loading: _quoteLoading || _validator.checking,
                       ),
                     ],
@@ -2398,6 +2407,8 @@ class _OrderIntentHint extends StatelessWidget {
     final fillsNow = intent == OrderIntent.fillsNow;
     final accent = fillsNow ? AmiColors.hexGreen : AmiColors.hexCyan;
     final below = restsBelow(side: side, orderType: orderType);
+    String m(double v) =>
+        formatMoney(v, market: marketForTicker(ticker), grouped: false);
     return Padding(
       padding: const EdgeInsets.only(top: AmiSpacing.s),
       child: Row(
@@ -2411,14 +2422,10 @@ class _OrderIntentHint extends StatelessWidget {
                   ? l.tradeTicketHintFillsNow
                   : (orderType == SimOrderType.stopLimit
                       ? l.tradeTicketHintRestsStopLimit(
-                          ticker,
-                          named.toStringAsFixed(2),
-                          (limitPrice ?? 0).toStringAsFixed(2))
+                          ticker, m(named), m(limitPrice ?? 0))
                       : (below
-                          ? l.tradeTicketHintRestsBelow(
-                              ticker, named.toStringAsFixed(2))
-                          : l.tradeTicketHintRestsAbove(
-                              ticker, named.toStringAsFixed(2)))),
+                          ? l.tradeTicketHintRestsBelow(ticker, m(named))
+                          : l.tradeTicketHintRestsAbove(ticker, m(named)))),
               style: AmiTypography.caption.copyWith(color: accent),
             ),
           ),
@@ -2432,7 +2439,10 @@ class _OrderIntentHint extends StatelessWidget {
 /// %, and a LIVE / MOCK pill so the user has a price anchor when setting
 /// TP / SL on a manual trade.
 class _QuoteChip extends StatelessWidget {
-  const _QuoteChip({required this.quote, required this.loading});
+  const _QuoteChip(
+      {required this.quote, required this.loading, required this.ticker});
+
+  final String ticker;
 
   final ({
     double price,
@@ -2481,7 +2491,9 @@ class _QuoteChip extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Text('\$${q.price.toStringAsFixed(2)}',
+          Text(
+              formatMoney(q.price,
+                  market: marketForTicker(ticker), grouped: false),
               style: AmiTypography.statMid.copyWith(color: AmiColors.textHigh)),
           if (q.changePct != 0) ...[
             const SizedBox(width: 8),

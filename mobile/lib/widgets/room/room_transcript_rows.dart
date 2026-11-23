@@ -23,6 +23,8 @@
 ///   5. `NOT HEARD` for a withheld analyst.
 library;
 
+import 'package:ami_trade/features/markets/market.dart';
+import 'package:ami_trade/features/markets/money.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/room_board.dart';
@@ -48,7 +50,7 @@ String? firstBoldSpan(String content) {
 
 /// The Trader's level triple. Mirrors `room_runner._LEVEL_PATTERNS`; a partial
 /// match yields nothing, because two thirds of a setup is not a setup.
-String? levelTriple(String content) {
+String? levelTriple(String content, {AppMarket market = AppMarket.us}) {
   double? grab(String name) {
     final m = RegExp('$name[^0-9\\-]{0,12}\\\$?\\s*([0-9]+(?:\\.[0-9]+)?)',
             caseSensitive: false)
@@ -60,8 +62,8 @@ String? levelTriple(String content) {
   final stop = grab('stop');
   final target = grab('target');
   if (entry == null || stop == null || target == null) return null;
-  return '\$${entry.toStringAsFixed(2)} → \$${target.toStringAsFixed(2)} '
-      'stop \$${stop.toStringAsFixed(2)}';
+  String m(double v) => formatMoney(v, market: market, grouped: false);
+  return '${m(entry)} → ${m(target)} stop ${m(stop)}';
 }
 
 /// The row's one-line gist, by the ranked sources above. Returns null when
@@ -74,12 +76,12 @@ String? levelTriple(String content) {
 /// (first sentence of `voice.content`) is a presentation choice, not another
 /// quotable-source rank, and mixing the two here would blur why each one
 /// exists.
-String? gistFor(RoomVoice voice) {
+String? gistFor(RoomVoice voice, {AppMarket market = AppMarket.us}) {
   if (voice.withheld) return null;
   if (voice.headline != null) return voice.headline;
   final bold = firstBoldSpan(voice.content);
   if (bold != null) return bold;
-  return levelTriple(voice.content);
+  return levelTriple(voice.content, market: market);
 }
 
 /// `voice.content`'s first sentence, verbatim up to and including its first
@@ -98,13 +100,14 @@ String firstSentence(String content) {
 /// empty contribution. Anything with content but no [gistFor] match (verdict
 /// prose, DEF189) falls back to [firstSentence] instead of being folded into
 /// the same `NO RESPONSE` branch the copy-paste bug used to render for both.
-String collapsedLabel(AppLocalizations l, RoomVoice voice) {
+String collapsedLabel(AppLocalizations l, RoomVoice voice,
+    {AppMarket market = AppMarket.us}) {
   if (voice.withheld) return l.roomRowNotHeard;
   // DEF507 — AMI's scripted standing guidance is not a gist of the desk's
   // call: quoting its bold span or level triple here would read as the desk's
   // own read. The row says what it is instead.
   if (voice.scripted && voice.content.isNotEmpty) return l.roomScriptedLabel;
-  final gist = gistFor(voice);
+  final gist = gistFor(voice, market: market);
   if (gist != null) return gist;
   if (voice.content.isEmpty) return l.roomRowNoResponse;
   return firstSentence(voice.content);
@@ -114,6 +117,7 @@ class RoomTranscriptRows extends StatefulWidget {
   const RoomTranscriptRows({
     super.key,
     required this.voices,
+    this.market = AppMarket.us,
     this.expandedAgentId,
     this.highlightAgentId,
     this.withheldDetail = const {},
@@ -121,6 +125,9 @@ class RoomTranscriptRows extends StatefulWidget {
   });
 
   final List<RoomVoice> voices;
+
+  /// CR282 - the market the quoted level prices print in.
+  final AppMarket market;
 
   /// CR278 (WP-36): long-press on a row opens "Report this response" for that
   /// agent. Null (the Journal replay) leaves the rows as they were.
@@ -194,6 +201,7 @@ class _RoomTranscriptRowsState extends State<RoomTranscriptRows> {
             for (final v in byPhase[phase]!)
               widget.withheldDetail[v.agentId] ??
                   TranscriptRow(
+                    market: widget.market,
                     voice: v,
                     expanded: _expanded.contains(v.agentId),
                     highlighted: widget.highlightAgentId == v.agentId,
@@ -238,6 +246,7 @@ class TranscriptRow extends StatelessWidget {
     super.key,
     required this.voice,
     required this.expanded,
+    this.market = AppMarket.us,
     this.highlighted = false,
     this.onToggle,
     this.onLongPress,
@@ -245,6 +254,7 @@ class TranscriptRow extends StatelessWidget {
 
   final RoomVoice voice;
   final bool expanded;
+  final AppMarket market;
   final bool highlighted;
   final VoidCallback? onToggle;
   final VoidCallback? onLongPress;
@@ -253,8 +263,8 @@ class TranscriptRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final agent = agentById(voice.agentId);
-    final gist = gistFor(voice);
-    final label = collapsedLabel(l, voice);
+    final gist = gistFor(voice, market: market);
+    final label = collapsedLabel(l, voice, market: market);
     final hasReadableText =
         !voice.withheld && (gist != null || voice.content.isNotEmpty);
     final marked = !voice.withheld && hasAmiAnnotation(voice.content);

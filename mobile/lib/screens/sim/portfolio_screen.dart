@@ -25,6 +25,8 @@ library;
 
 import 'dart:math' as math;
 
+import 'package:ami_trade/features/markets/market.dart';
+import 'package:ami_trade/features/markets/money.dart';
 import 'package:ami_trade/features/tour/ami_tour_overlay.dart';
 import 'package:ami_trade/features/tour/portfolio_tour.dart';
 import 'package:ami_trade/features/nav/ami_tab.dart';
@@ -279,6 +281,7 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
               children: [
                 _paneRoot(ScreenIds.portfolioPositionsPane, _PositionsTab(
                   holdings: p.holdings,
+                  market: p.market,
                   // CR170 — a user whose only activity is a resting order has
                   // traded; telling them otherwise is a hint that contradicts
                   // the Orders tab beside it.
@@ -321,9 +324,10 @@ class _ValueCard extends StatelessWidget {
     final pnl = portfolio.totalPnl;
     final pnlPct = portfolio.pnlPct;
     final accent = pnl >= 0 ? AmiColors.hexGreen : AmiColors.hexRed;
-    final fmt = NumberFormat('#,##0.00');
+    final market = portfolio.market;
+    String money(num v) => formatMoney(v, market: market);
     final pnlText = _isolateNumeric(
-      '${pnl >= 0 ? '+' : ''}\$${fmt.format(pnl)} '
+      '${formatMoney(pnl, market: market, signed: true)} '
       '(${pnlPct >= 0 ? '+' : ''}${pnlPct.toStringAsFixed(2)}%)',
     );
     return ValueCard(
@@ -337,7 +341,7 @@ class _ValueCard extends StatelessWidget {
         tween: Tween<double>(end: portfolio.totalValue),
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeOutCubic,
-        builder: (context, value, _) => Text('\$${fmt.format(value)}',
+        builder: (context, value, _) => Text(money(value),
             maxLines: 1,
             style: AmiTypography.statBig.copyWith(color: AmiColors.textHigh)),
       ),
@@ -370,7 +374,7 @@ class _ValueCard extends StatelessWidget {
             const SizedBox(width: 6),
             Flexible(
               child: Text(
-                '\$${fmt.format(portfolio.currentCash)}',
+                money(portfolio.currentCash),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.end,
@@ -392,7 +396,7 @@ class _ValueCard extends StatelessWidget {
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
-                  '\$${fmt.format(portfolio.cashCommitted)}',
+                  money(portfolio.cashCommitted),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: AmiTypography.caption
@@ -405,7 +409,7 @@ class _ValueCard extends StatelessWidget {
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
-                  '\$${fmt.format(portfolio.cashAvailable)}',
+                  money(portfolio.cashAvailable),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.end,
@@ -425,7 +429,7 @@ class _ValueCard extends StatelessWidget {
             const SizedBox(height: AmiSpacing.xs),
             Text(
               AppLocalizations.of(context).portfolioOverCommitted(
-                fmt.format(portfolio.cashAvailable.abs()),
+                money(portfolio.cashAvailable.abs()),
               ),
               style:
                   AmiTypography.caption.copyWith(color: AmiColors.hexAmber),
@@ -819,17 +823,18 @@ class _HoldingCard extends StatelessWidget {
     final pct =
         h.avgCost == 0 ? 0.0 : ((h.mark - h.avgCost) / h.avgCost) * 100;
     final accent = pnl >= 0 ? AmiColors.hexGreen : AmiColors.hexRed;
-    final fmt = NumberFormat('#,##0.00');
+    final market = marketForTicker(h.ticker);
 
     return PositionCard(
       ticker: h.ticker,
-      subtitle: '${h.quantity.toStringAsFixed(0)} sh · \$${fmt.format(h.avgCost)}',
+      subtitle:
+          '${h.quantity.toStringAsFixed(0)} sh · ${formatMoney(h.avgCost, market: market)}',
       pctChange: pct,
       stopLabel: h.stop == null
           ? null
-          : '${l.tradeTicketLabelStop} \$${fmt.format(h.stop)}',
+          : '${l.tradeTicketLabelStop} ${formatMoney(h.stop!, market: market)}',
       detailBuilder: (context) =>
-          _detail(context, h, l, fmt, accent, pnl),
+          _detail(context, h, l, market, accent, pnl),
     );
   }
 
@@ -837,7 +842,7 @@ class _HoldingCard extends StatelessWidget {
     BuildContext context,
     SimHolding h,
     AppLocalizations l,
-    NumberFormat fmt,
+    AppMarket market,
     Color accent,
     double pnl,
   ) {
@@ -853,8 +858,8 @@ class _HoldingCard extends StatelessWidget {
       ),
       Text(
         _isolateNumeric(
-          '\$${fmt.format(h.mark)} · \$${fmt.format(h.value)} · '
-          '${pnl >= 0 ? '+' : ''}\$${fmt.format(pnl)}',
+          '${formatMoney(h.mark, market: market)} · ${formatMoney(h.value, market: market)} · '
+          '${formatMoney(pnl, market: market, signed: true)}',
         ),
         style: AmiTypography.labelMono.copyWith(color: accent, fontSize: 12),
       ),
@@ -865,14 +870,14 @@ class _HoldingCard extends StatelessWidget {
       if (h.stop != null)
         Text(
           _isolateNumeric(
-            '${l.tradeTicketLabelStop} \$${fmt.format(h.stop)} — ${away(h.stop!)}',
+            '${l.tradeTicketLabelStop} ${formatMoney(h.stop!, market: market)} — ${away(h.stop!)}',
           ),
           style: AmiTypography.caption.copyWith(color: AmiColors.hexAmber),
         ),
       if (h.target != null)
         Text(
           _isolateNumeric(
-            '${l.tradeTicketLabelTarget} \$${fmt.format(h.target)} — ${away(h.target!)}',
+            '${l.tradeTicketLabelTarget} ${formatMoney(h.target!, market: market)} — ${away(h.target!)}',
           ),
           style: AmiTypography.caption.copyWith(color: AmiColors.hexGreen),
         ),
@@ -967,7 +972,11 @@ class _PositionsTab extends StatelessWidget {
     required this.hasOptions,
     required this.sharesCommitted,
     required this.onTradeTicket,
+    this.market = AppMarket.us,
   });
+
+  /// CR282 - the book's market (equity curve readout).
+  final AppMarket market;
 
   final List<SimHolding> holdings;
   final bool hasRestingOrders;
@@ -1000,7 +1009,7 @@ class _PositionsTab extends StatelessWidget {
               children: [
                 // CR109 slice 1 — the equity curve. Training-portfolio only,
                 // additive: no game surface, no new nav destination.
-                const PortfolioEquityChart(),
+                PortfolioEquityChart(market: market),
                 const _SectorAllocationSection(),
                 const PortfolioHealthCard(),
                 // Below the book, above holdings: a short is a live position
@@ -1559,7 +1568,7 @@ class _WatchlistRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final priceText = entry.price == null
         ? '—'
-        : NumberFormat.simpleCurrency(decimalDigits: 2).format(entry.price);
+        : formatMoney(entry.price!, market: marketForTicker(entry.ticker));
     final dayChangePct = entry.dayChangePct;
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
@@ -1780,6 +1789,9 @@ class _HistoryTabState extends ConsumerState<_HistoryTab> {
     final lost = settled.length - won;
     final hitRate = settled.isEmpty ? 0.0 : won / settled.length * 100;
     final net = settled.fold<double>(0, (s, t) => s + t.realisedPnl);
+    // CR282 - one book's trades share a market; the first settled trade names it.
+    final netMarket =
+        settled.isEmpty ? AppMarket.us : marketForTicker(settled.first.ticker);
 
     final dateFmt = DateFormat('d MMM');
     final fromDate = (visible.last.closedAt ?? visible.last.openedAt);
@@ -1795,7 +1807,7 @@ class _HistoryTabState extends ConsumerState<_HistoryTab> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _ClosedTradeSummary(
-                    won: won, lost: lost, hitRate: hitRate, net: net),
+                    won: won, lost: lost, hitRate: hitRate, net: net, market: netMarket),
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
@@ -1877,7 +1889,10 @@ class _ClosedTradeSummary extends StatelessWidget {
     required this.lost,
     required this.hitRate,
     required this.net,
+    required this.market,
   });
+
+  final AppMarket market;
 
   final int won;
   final int lost;
@@ -1890,9 +1905,8 @@ class _ClosedTradeSummary extends StatelessWidget {
     final total = won + lost;
     final wonFlex = total == 0 ? 1 : won;
     final lostFlex = total == 0 ? 1 : lost;
-    final fmt = NumberFormat('#,##0.00');
     final netText =
-        _isolateNumeric('${net >= 0 ? '+' : ''}\$${fmt.format(net)}');
+        _isolateNumeric(formatMoney(net, market: market, signed: true));
     return Container(
       padding: const EdgeInsets.all(AmiSpacing.m),
       decoration: BoxDecoration(

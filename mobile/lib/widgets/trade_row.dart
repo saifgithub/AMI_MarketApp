@@ -5,10 +5,11 @@
 /// Detail screen (filtered to one ticker).
 library;
 
+import 'package:ami_trade/features/markets/market.dart';
+import 'package:ami_trade/features/markets/money.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class TradeRow extends StatelessWidget {
   const TradeRow({super.key, required this.trade});
@@ -26,7 +27,7 @@ class TradeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fmt = NumberFormat('#,##0.00');
+    final market = marketForTicker(trade.ticker);
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.all(AmiSpacing.s),
@@ -52,16 +53,16 @@ class TradeRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${trade.side.toUpperCase()} ${trade.quantity.toStringAsFixed(0)} ${trade.ticker} @ \$${fmt.format(trade.entryPrice)}',
+                  '${trade.side.toUpperCase()} ${trade.quantity.toStringAsFixed(0)} ${trade.ticker} @ ${formatMoney(trade.entryPrice, market: market)}',
                   style: AmiTypography.body,
                 ),
                 const SizedBox(height: 2),
                 Text(
                   [
-                    if (trade.stop != null) 'stop \$${fmt.format(trade.stop)}',
-                    if (trade.target != null) 'target \$${fmt.format(trade.target)}',
+                    if (trade.stop != null) 'stop ${formatMoney(trade.stop!, market: market)}',
+                    if (trade.target != null) 'target ${formatMoney(trade.target!, market: market)}',
                     if (trade.closedPrice != null)
-                      'closed \$${fmt.format(trade.closedPrice)}',
+                      'closed ${formatMoney(trade.closedPrice!, market: market)}',
                   ].join(' • '),
                   style: AmiTypography.caption,
                 ),
@@ -76,7 +77,7 @@ class TradeRow extends StatelessWidget {
           // (DEF311's shape, removed rather than guarded against).
           if (!trade.isOpen && trade.realisedPnl != 0)
             Text(
-              '${trade.realisedPnl >= 0 ? '+' : ''}\$${fmt.format(trade.realisedPnl)}',
+              formatMoney(trade.realisedPnl, market: market, signed: true),
               style: AmiTypography.labelMono.copyWith(color: _accent),
             ),
         ],

@@ -18,6 +18,8 @@
 /// (`streetComparisonEnabledProvider`); `RoomBoard` applies it.
 library;
 
+import 'package:ami_trade/features/markets/market.dart';
+import 'package:ami_trade/features/markets/money.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/room.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -28,7 +30,12 @@ class RoomStreetCard extends StatelessWidget {
     super.key,
     required this.comparison,
     required this.roomCallLabel,
+    required this.ticker,
   });
+
+  /// CR282 - the stock the street target belongs to; its market sets the
+  /// currency the target is printed in.
+  final String ticker;
 
   final StreetComparison comparison;
 
@@ -74,7 +81,8 @@ class RoomStreetCard extends StatelessWidget {
             if (c.targetMean != null)
               _StreetRow(
                 label: l.roomStreetMeanTargetLabel,
-                value: '\$${c.targetMean!.toStringAsFixed(2)}',
+                value: formatMoney(c.targetMean!,
+                    market: marketForTicker(ticker), grouped: false),
                 lockLtr: true,
               ),
             _StreetRow(label: l.roomStreetRoomCallLabel, value: roomCallLabel),

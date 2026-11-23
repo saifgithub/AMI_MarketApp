@@ -15,9 +15,13 @@ void main() {
   test('fill toast renders a clean dollar sign in every locale', () async {
     for (final code in ['en', 'ar', 'ms']) {
       final l = await AppLocalizations.delegate.load(Locale(code));
-      final text = l.tradeTicketFilled('BUY', '1', 'NFLX', '69.85');
+      // CR282 - the money arrives pre-formatted; the ARB no longer owns the `$`.
+      final text = l.tradeTicketFilled('BUY', '1', 'NFLX', r'$69.85');
       expect(text, contains(r'$69.85'), reason: code);
       expect(text, isNot(contains(r'\')), reason: '$code: stray backslash');
+      final my = l.tradeTicketFilled('BUY', '100', '1155.KL', 'RM9.50');
+      expect(my, contains('RM9.50'), reason: code);
+      expect(my, isNot(contains(r'$')), reason: '$code: stray dollar sign');
     }
   });
 

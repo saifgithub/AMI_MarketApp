@@ -2,6 +2,7 @@
 /// Mirrors backend/app/api/sim.py + schemas/trade.py.
 library;
 
+import 'package:ami_trade/features/markets/market.dart';
 import 'package:ami_trade/models/sharia.dart';
 import 'package:ami_trade/models/sim_resting_order.dart';
 
@@ -415,6 +416,7 @@ class SimPortfolio {
     this.shorts = const [],
     this.closedShorts = const [],
     this.options = const [],
+    this.currency,
   }) : _cashAvailable = cashAvailable;
 
   final String userId;
@@ -424,6 +426,13 @@ class SimPortfolio {
   final List<SimHolding> holdings;
   final double totalValue;
   final double drawdownPct;
+
+  /// CR282 - the book's ISO currency as the server states it (`USD`, `MYR`).
+  /// Null on every payload that predates the MYR book, which reads as USD.
+  final String? currency;
+
+  /// The market this book's money is printed in.
+  AppMarket get market => AppMarket.fromCurrencyCode(currency);
   // Truthful leaf provider name from the backend — what actually
   // served the most recent quote, not a stack name. Possible values:
   // "yfinance" / "yahoo" (live), "mock_walk" (deterministic walk),
@@ -517,6 +526,7 @@ class SimPortfolio {
       totalValue: (j['total_value'] as num).toDouble(),
       drawdownPct: (j['drawdown_pct'] as num).toDouble(),
       priceSource: (j['price_source'] as String?) ?? 'mock_walk',
+      currency: j['currency'] as String?,
       cashCommitted: (j['cash_committed'] as num?)?.toDouble() ?? 0,
       // Read the server's own figure when present; the fallback exists only
       // for a backend that predates CR170 §6, where the book is empty anyway.

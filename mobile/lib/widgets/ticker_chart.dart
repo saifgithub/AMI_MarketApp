@@ -16,6 +16,8 @@ library;
 
 import 'dart:ui' as ui;
 
+import 'package:ami_trade/features/markets/market.dart';
+import 'package:ami_trade/features/markets/money.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/services/api/friendly_error.dart';
@@ -118,6 +120,7 @@ class _TickerChartState extends ConsumerState<TickerChart> {
                         label: l.tickerDetailChartNoHistory);
                   }
                   return _ChartBody(
+                    market: marketForTicker(widget.ticker),
                     history: history,
                     chartType: _chartTypeFor(_period),
                     dragX: _dragX,
@@ -305,6 +308,7 @@ class _ChartNotice extends StatelessWidget {
 
 class _ChartBody extends StatelessWidget {
   const _ChartBody({
+    required this.market,
     required this.history,
     required this.chartType,
     required this.dragX,
@@ -312,6 +316,7 @@ class _ChartBody extends StatelessWidget {
     required this.onDragEnd,
   });
 
+  final AppMarket market;
   final SimHistory history;
   final _ChartType chartType;
   final double? dragX;
@@ -348,6 +353,7 @@ class _ChartBody extends StatelessWidget {
                   width: constraints.maxWidth,
                   child: CustomPaint(
                     painter: _PricePainter(
+                      market: market,
                       candles: history.candles,
                       chartType: chartType,
                       dragX: dragX,
@@ -394,11 +400,13 @@ int _nearestIndex(double dragX, int count, double width) {
 
 class _PricePainter extends CustomPainter {
   _PricePainter({
+    required this.market,
     required this.candles,
     required this.chartType,
     required this.dragX,
   });
 
+  final AppMarket market;
   final List<SimCandle> candles;
   final _ChartType chartType;
   final double? dragX;
@@ -516,7 +524,7 @@ class _PricePainter extends CustomPainter {
     final i = _nearestIndex(x, candles.length, size.width);
     final c = candles[i];
     final readout = '${DateFormat('MMM d').format(c.dateTime.toLocal())} · '
-        '\$${c.c.toStringAsFixed(2)}';
+        '${formatMoney(c.c, market: market, grouped: false)}';
     final tp = TextPainter(
       text: TextSpan(
         text: readout,
