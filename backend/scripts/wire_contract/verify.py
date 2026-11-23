@@ -150,6 +150,9 @@ def main() -> int:
                   f"{r['missing_and_unemittable']}")
         if r.get("unsatisfied_alt_groups"):
             print(f"        no alternative satisfied: {r['unsatisfied_alt_groups']}")
+        for u in r.get("unsatisfied_flat_fallbacks", []):
+            print(f"        neither nested '{u['nested_key']}' nor the flat "
+                  f"{u['flat_class']} keys sent: {u['flat_missing']}")
     for r, n in nested_fails:
         ok = False
         print(f"  FAIL  {n['class']} via {n['via']}: {n['missing_and_unemittable']}")

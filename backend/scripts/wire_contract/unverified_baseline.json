@@ -1,10 +1,5 @@
 {
   "_comment": "ISS002/CR208 \u2014 surfaces with no observable response during the backend suite. DEF367. This list is meant to SHRINK: a new entry fails the gate, and removing one is the celebration. Do not add an entry to get a build past the gate.",
-  "count": 4,
-  "unverified": [
-    "GET /v1/games/cadences -> GameCadenceInfo",
-    "GET /v1/games/record/prs -> GamePersonalRecord",
-    "GET /v1/games/record/prs -> GamePersonalRecord",
-    "POST /v1/games/runs/$runId/trade/quote -> GameTradeQuote"
-  ]
+  "count": 0,
+  "unverified": []
 }

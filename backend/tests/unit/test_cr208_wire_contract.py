@@ -364,27 +364,29 @@ def test_the_ratchet_counts_duplicate_surface_ids_separately():
     # annotation would pass over a function that still returns a set.
     loaded = verify._load_baseline()
     assert isinstance(loaded, Counter)
-    assert loaded[sid] == 2, (
-        "the live baseline has lost the duplicate; if that was intentional the "
-        "count changed and this guard should be updated deliberately"
-    )
 
 
-def test_the_baseline_holds_the_duplicate_twice():
-    """The measured shape this guards. If discovery ever collapses the two call
-    sites into one, this reds and the baseline should lose an entry — which is
-    a real change to what the gate covers, not a formatting detail."""
+def test_the_duplicate_call_sites_are_both_discovered():
+    """The measured shape the multiset guard above exists for. `gamesRecordPrs`
+    parses `GamePersonalRecord` from the same route at two call sites. If
+    discovery ever collapses them into one the Counter arithmetic is no longer
+    exercised by a real surface — a change to what the gate covers, not a
+    formatting detail. (The baseline used to hold this twice; DEF367 drained it,
+    so the live pair count is the thing to pin now.)"""
+    from discover_pairs import discover
+
+    sites = [p for p in discover()
+             if p.dart_method == "gamesRecordPrs" and p.dart_class == "GamePersonalRecord"]
+    assert len(sites) == 2
+
+
+def test_the_baseline_count_is_the_multiset_size():
     import json as _json
-    from pathlib import Path as _Path
 
-    baseline = _json.loads(
-        (_WC / "unverified_baseline.json").read_text()
-    )["unverified"]
-    assert baseline.count("GET /v1/games/record/prs -> GamePersonalRecord") == 2
-    assert len(baseline) == _json.loads(
-        (_WC / "unverified_baseline.json").read_text()
-    )["count"], "the stated count must be the multiset size, not the unique count"
-    assert _Path(_WC / "unverified_baseline.json").exists()
+    data = _json.loads((_WC / "unverified_baseline.json").read_text())
+    assert len(data["unverified"]) == data["count"], (
+        "the stated count must be the multiset size, not the unique count"
+    )
 
 
 def test_an_empty_capture_is_refused_not_read_as_82_blind_spots(tmp_path, monkeypatch, capsys):

@@ -28,6 +28,42 @@ _ALT_GROUP_RE = re.compile(
 )
 _MAP_FROMJSON_RE = re.compile(r"\.map\(\s*\([^)]*\)\s*=>\s*(\w+)\.fromJson")
 
+# DEF367 — a read that is "nested OR flat":
+#   final nested = j['next_field'];
+#   ... nested is Map<String, dynamic>
+#       ? GameFieldSummary.fromJson(nested)
+#       : (j['field_id'] != null ? GameFieldSummary.fromJson(j) : null)
+# (or the same with `j['next_field']` inline). The server satisfies the client by
+# sending EITHER the nested key OR the keys the flat parse of `j` itself reads, so
+# the nested key must not be a hard requirement and the flat class's keys are the
+# alternative. `guard` is whatever sits between the `:` and the flat `fromJson(j)`
+# (typically a `j['field_id'] != null ?` test) — its keys belong to the flat side.
+_NESTED_OR_FLAT_VAR_RE = re.compile(
+    r"final\s+(\w+)\s*=\s*j\['(\w+)'\]\s*;"
+    r".*?\b\1\s+is\s+Map<String,\s*dynamic>\s*\?\s*(\w+)\.fromJson\(\s*\1\s*\)"
+    r"\s*:(?P<guard>[^;]{0,200}?)\b\3\.fromJson\(\s*j\s*\)",
+    re.DOTALL,
+)
+_NESTED_OR_FLAT_INLINE_RE = re.compile(
+    r"j\['(\w+)'\]\s+is\s+Map<String,\s*dynamic>\s*\?\s*(\w+)\.fromJson\(\s*j\['\1'\]"
+    r"[^)]*\)\s*:(?P<guard>[^;]{0,200}?)\b\2\.fromJson\(\s*j\s*\)",
+    re.DOTALL,
+)
+
+# DEF367 — a nullable static helper that falls back through several keys:
+#   static bool? _willQueue(Map<String, dynamic> j) {
+#     final explicit = j['will_queue'] as bool?;
+#     if (explicit != null) return explicit;
+#     final open = j['market_open'] as bool?;
+#     ...
+# The first key that is non-null wins, so every key it reads is an alternative to
+# the others, exactly like `j['a'] ?? j['b']`. The early return on `!= null` is what
+# distinguishes this from a helper that genuinely needs all of its keys.
+_HELPER_RE = re.compile(
+    r"static\s+\w+\?\s+\w+\(\s*Map<String,\s*dynamic>\s+j\s*\)\s*\{"
+)
+_EARLY_RETURN_RE = re.compile(r"if\s*\(\s*\w+\s*!=\s*null\s*\)\s*return\b")
+
 
 @dataclass
 class ClassContract:
@@ -36,6 +72,63 @@ class ClassContract:
     required_keys: set[str] = field(default_factory=set)  # each must appear
     alt_groups: list[set[str]] = field(default_factory=list)  # >=1 must appear
     nested_lists: dict[str, str] = field(default_factory=dict)  # wire key -> nested class
+    # nested-or-flat reads: the nested wire key is satisfied by sending it, OR by
+    # sending the keys `flat_class`'s own parse reads (+ `guard_keys`).
+    flat_fallbacks: list["FlatFallback"] = field(default_factory=list)
+
+
+@dataclass
+class FlatFallback:
+    nested_key: str
+    flat_class: str
+    guard_keys: set[str] = field(default_factory=set)
+
+
+def _brace_body(text: str, open_idx: int) -> str:
+    depth = 0
+    for i in range(open_idx, len(text)):
+        if text[i] == "{":
+            depth += 1
+        elif text[i] == "}":
+            depth -= 1
+            if depth == 0:
+                return text[open_idx : i + 1]
+    return text[open_idx:]
+
+
+def _helper_alt_groups(body: str) -> list[set[str]]:
+    groups: list[set[str]] = []
+    for m in _HELPER_RE.finditer(body):
+        helper = _brace_body(body, m.end() - 1)
+        keys = set(_KEY_RE.findall(helper))
+        if len(keys) >= 2 and _EARLY_RETURN_RE.search(helper):
+            groups.append(keys)
+    return groups
+
+
+def _flat_fallbacks(body: str) -> list[FlatFallback]:
+    out: list[FlatFallback] = []
+    for m in _NESTED_OR_FLAT_VAR_RE.finditer(body):
+        out.append(FlatFallback(m.group(2), m.group(3),
+                                set(_KEY_RE.findall(m.group("guard")))))
+    for m in _NESTED_OR_FLAT_INLINE_RE.finditer(body):
+        out.append(FlatFallback(m.group(1), m.group(2),
+                                set(_KEY_RE.findall(m.group("guard")))))
+    return out
+
+
+_COMMENT_LINE_RE = re.compile(r"^[ \t]*//.*$", re.MULTILINE)
+
+
+def _strip_comment_lines(text: str) -> str:
+    """Blank out whole-line `//` and `///` comments.
+
+    DEF367 — the slice for one factory runs to the NEXT factory, so it swallows the
+    next class's doc comment. `GameTradeResult`'s says "This read `j['status']` and
+    defaulted to 'filled'", which made `GameTradeQuote` appear to require `status`.
+    Only whole-line comments are removed, so a `//` inside a string literal is safe.
+    """
+    return _COMMENT_LINE_RE.sub("", text)
 
 
 def _all_model_files() -> list[Path]:
@@ -60,7 +153,7 @@ _INDEX: dict[str, ClassContract] | None = None
 def _build_index() -> dict[str, ClassContract]:
     idx: dict[str, ClassContract] = {}
     for path in _all_model_files():
-        text = path.read_text()
+        text = _strip_comment_lines(path.read_text())
         for cls, body in _slice_by_factory(text).items():
             alt_groups = []
             covered_by_alt: set[str] = set()
@@ -68,6 +161,12 @@ def _build_index() -> dict[str, ClassContract]:
                 keys = set(re.findall(r"j\['(\w+)'\]", m.group(0)))
                 alt_groups.append(keys)
                 covered_by_alt |= keys
+            for keys in _helper_alt_groups(body):
+                alt_groups.append(keys)
+                covered_by_alt |= keys
+            flat = _flat_fallbacks(body)
+            for ff in flat:
+                covered_by_alt |= {ff.nested_key} | ff.guard_keys
             all_keys = set(_KEY_RE.findall(body))
             required = all_keys - covered_by_alt
             nested: dict[str, str] = {}
@@ -82,6 +181,7 @@ def _build_index() -> dict[str, ClassContract]:
                 required_keys=required,
                 alt_groups=alt_groups,
                 nested_lists=nested,
+                flat_fallbacks=flat,
             )
     return idx
 

@@ -7,7 +7,7 @@ JSON body to compare against the keys `api_client.dart` reads. Every
 directly (with an injected `now`), so the HTTP boundary — router, auth, the
 dict the handler returns — was never observed.
 
-Driven here, and now verified (PASS):
+Driven here, and verified (PASS):
 
   GET  /v1/games/runs                      -> GameRunSummary
   GET  /v1/games/runs/$runId/orders        -> GameQueuedOrder
@@ -15,22 +15,24 @@ Driven here, and now verified (PASS):
   GET  /v1/games/runs/$runId/arc           -> GameArc
   GET  /v1/games/desks                     -> GameDeskProfile
   GET  /v1/games/record                    -> GameRecord
+  GET  /v1/games/cadences                  -> GameCadenceInfo
+  GET  /v1/games/record/prs                -> GamePersonalRecord
+  POST /v1/games/runs/$runId/trade/quote   -> GameTradeQuote
 
-Deliberately NOT driven, because the wire check cannot honestly pass them and
-driving them would turn an UNVERIFIED baseline entry into a hard FAIL (a FAIL
-is never ratcheted). Each is a real client/server disagreement or an extractor
-limitation, written up on DEF367 rather than papered over here:
+The last three were held back by the wire-contract EXTRACTOR, not by the routes:
+driving them first turned each into a false hard FAIL because the extractor read a
+Dart fallback as a hard requirement. It now understands the three patterns
+(`test_def367_extractor_rules.py`), each with a negative case:
 
-  GET  /v1/games/cadences                  FAIL  `next_field` (client accepts flat too)
-  POST /v1/games/runs/$runId/trade/quote   FAIL  `will_queue` (client falls back to `market_open`)
+  cadences     `GameCadenceInfo` reads `next_field` if it is a Map, else parses the
+               flat row itself; the server sends the flat form.
+  quote        `GameTradeQuote` reads `will_queue`, falling back to `market_open`
+               (the inverse), and the server sends `market_open`.
+  record/prs   `gamesRecordPrs` reshapes the category-keyed object client-side; the
+               check follows the adapter's own reads (`wire_contract/adapters.py`).
 
-  GET  /v1/games/record/prs                UNVERIFIED  (driven below, still unverified) the server
-       sends a category-keyed object; the client's `prs` list branch never matches and
-       `kind`/`value`/`cadence` are synthesised by the `gamesRecordPrs` adapter.
-
-Also found re-checking the cadences route: the client reads the entrant count from
-`GameFieldSummary.entrant_count` (flat cadence object), the server sends `queue_count`,
-so `games_home_screen` / `games_close_screen` always show 0 entrants. Not fixed here.
+DEF529 added the `entrant_count` the client reads on the flat cadence object (the
+server had sent only `queue_count`, so the home and close screens showed 0 entrants).
 
 DEF527 fixed the five real disagreements (enter, run detail, trade, restart,
 close) and those routes ARE driven at the bottom of this file.
@@ -365,15 +367,9 @@ def test_close_withholds_the_near_miss_where_the_fence_says(
 
 # ── DEF367 tail — the three routes the first pass left unobserved ────────────
 #
-# `GET /record/prs` is driven here, empty and populated, and the shape
-# `gamesRecordPrs` adapts from is pinned. It stays UNVERIFIED in the baseline:
-# the client's list read (`data['prs']`) never matches the category-keyed object
-# the server sends, and the scalar read sees `GamePersonalRecord`'s `kind` /
-# `value` / `cadence` only as keys the adapter synthesises client-side.
-#
-# `GET /cadences` and `POST .../trade/quote` are deliberately NOT driven (see
-# the module docstring): observing them flips each from UNVERIFIED to a hard
-# FAIL (`next_field` / `will_queue`), which the ratchet does not absorb.
+# `GET /record/prs` is driven empty and populated; `GET /cadences` and
+# `POST .../trade/quote` carry the keys the client's fallback reads are satisfied
+# by, so each assertion below pins the spelling the SERVER sends.
 
 
 def test_personal_records_empty_board_is_an_object_of_nulls(client: TestClient) -> None:
@@ -411,3 +407,60 @@ def test_personal_records_populated_for_a_settled_run(client: TestClient) -> Non
     assert prs["longest_hold_days"]["days"] == 4
     for category in ("best_alpha", "best_drawdown_control"):
         assert prs[category] is None or prs[category]["entry_id"]
+
+
+def test_cadences_sends_the_flat_field_the_client_parses(
+    client: TestClient, frozen_clock,
+) -> None:
+    """`GameCadenceInfo.fromJson` takes the next field FLAT from the cadence
+    object (`field_id`, dates, `entrant_count`) — the server never nests it."""
+    _user_id, headers = _new_user()
+
+    cadences = _get(client, "/v1/games/cadences", headers)
+
+    assert [c["cadence"] for c in cadences][0] == "week"
+    for c in cadences:
+        assert "next_field" not in c
+        for key in (
+            "field_id", "state", "entry_opens_at", "locks_at", "starts_on",
+            "ends_on", "queue_count", "entrant_count", "deadline", "already_held",
+        ):
+            assert key in c, (c["cadence"], key)
+        assert c["already_held"] is False
+
+
+def test_cadences_reports_the_cadence_the_player_already_holds(
+    client: TestClient, frozen_clock,
+) -> None:
+    _user_id, headers = _new_user()
+    _enter(client, headers)
+
+    by_cadence = {c["cadence"]: c for c in _get(client, "/v1/games/cadences", headers)}
+
+    assert by_cadence["week"]["already_held"] is True
+    assert by_cadence["week"]["entrant_count"] == 1
+
+
+def test_trade_quote_sends_market_open_for_the_queue_caveat(
+    client: TestClient, frozen_clock,
+) -> None:
+    """`GameTradeQuote` derives `willQueue` from `will_queue`, else from the
+    inverse of `market_open`. The server sends `market_open` (never `will_queue`),
+    and at the frozen Sunday-night instant the market is shut."""
+    _user_id, headers = _new_user()
+    run_id = _enter(client, headers)
+
+    r = client.post(
+        f"/v1/games/runs/{run_id}/trade/quote",
+        json={"ticker": "AAPL", "side": "buy", "quantity": 5},
+        headers=headers,
+    )
+
+    assert r.status_code == 200, r.text
+    quote = r.json()
+    assert quote["market_open"] is False
+    assert "will_queue" not in quote
+    assert quote["ticker"] == "AAPL" and quote["side"] == "buy"
+    for key in ("quantity", "price", "notional", "estimated_fee", "book_percentage",
+                "price_source"):
+        assert key in quote, key
