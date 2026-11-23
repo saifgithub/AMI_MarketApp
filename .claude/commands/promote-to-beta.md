@@ -199,6 +199,7 @@ rsync -az --delete \
   --exclude='audit/' \
   --exclude='reports/' \
   --exclude='backtest_results/' \
+  --exclude='/logs/' \
   "$BETA_WT"/ \
   ami-beta:~/ami_trade/
 ```
