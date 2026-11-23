@@ -59,6 +59,7 @@ from dataclasses import dataclass
 
 from app.core.config import settings
 from app.core.logging import logger
+from app.trading_math.markets import yahoo_symbol
 
 #: §4's table. Ordered ascending by threshold; the first row whose upper bound
 #: the observation is under wins. Four tiers, not a curve — see the module
@@ -145,7 +146,7 @@ def _fetch_info(ticker: str) -> dict:
     try:
         import yfinance as yf
 
-        return yf.Ticker(ticker.replace(".", "-")).info or {}
+        return yf.Ticker(yahoo_symbol(ticker)).info or {}
     except Exception:
         logger.warning("short_borrow_info_fetch_failed", ticker=ticker)
         return {}

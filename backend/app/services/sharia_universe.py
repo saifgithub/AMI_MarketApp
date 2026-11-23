@@ -62,6 +62,7 @@ from app.core.logging import logger
 from app.db import get_session
 from app.db.models import ShariaUniverseSnapshotRow
 from app.schemas.sharia import ShariaStatus, ShariaVerdict
+from app.trading_math.markets import accepted_without_reference
 
 # ── Provenance constants ────────────────────────────────────────────────────
 STANDARD = "AAOIFI"
@@ -225,7 +226,7 @@ def parse_holdings_csv(text: str) -> tuple[frozenset, date | None]:
         if len(row) <= ticker_col:
             continue
         raw = row[ticker_col].strip().strip('"').upper()
-        if _TICKER_RE.match(raw):
+        if _TICKER_RE.match(raw) or accepted_without_reference(raw):
             tickers.add(raw)
         if date_col is not None and as_of is None and len(row) > date_col:
             as_of = _parse_date(row[date_col].strip().strip('"'))

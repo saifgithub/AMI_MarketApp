@@ -77,6 +77,7 @@ _EXCHANGE_NAMES: dict[str, str] = {
     "AMX": "NYSE American",
     "PCX": "NYSE Arca",
     "BTS": "Cboe BZX",
+    "KLS": "Bursa Malaysia",  # CR282 — Yahoo's code for Bursa (.KL)
 }
 
 _yf_convention_checked = False

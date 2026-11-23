@@ -43,6 +43,7 @@ from app.core.logging import logger
 from app.db import get_session
 from app.db.models import TickerReferenceRow
 from app.schemas.tickers import TickerSuggestion
+from app.trading_math.markets import accepted_without_reference
 
 # ── Parsing ──────────────────────────────────────────────────────────────────
 
@@ -506,6 +507,8 @@ def require_ticker_exists(session, ticker: str) -> None:
     ticker = ticker.upper().strip()
     if lookup_ticker(session, ticker) is not None:
         return
+    if accepted_without_reference(ticker):
+        return  # CR282: Bursa code, flag on — no reference list yet, shape only
     candidates = suggest_closest(session, ticker, limit=1)
     suggestion = None
     if candidates:

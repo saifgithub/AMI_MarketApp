@@ -55,6 +55,7 @@ from app.schemas.liquidity import (
     LiquidityVerdict,
 )
 from app.services.sharia_universe import latest_snapshot as latest_sharia_snapshot
+from app.trading_math.markets import yahoo_symbol
 
 # ── Provenance ──────────────────────────────────────────────────────────────
 SOURCE = "AMI sector/industry classification (yfinance)"
@@ -357,7 +358,7 @@ def _yf_info(ticker: str) -> dict:
     # keys them with a hyphen (BF-B). Normalise for the lookup ONLY — the caller
     # still keys results by the original symbol, so the stored set matches what the
     # sim/parent-set proposes (DEF108: BF.B / Brown-Forman was silently unscreened).
-    return yf.Ticker(ticker.upper().replace(".", "-")).info or {}
+    return yf.Ticker(yahoo_symbol(ticker)).info or {}
 
 
 def _num_or_none(v: object) -> float | None:
