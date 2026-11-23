@@ -1,4 +1,4 @@
-# Counsel brief for the Malaysian lawyer: three narrow questions (CR267, 2026-11-20)
+# Counsel brief for the Malaysian lawyer: four narrow questions (CR267, 2026-11-20)
 
 Prepared 2026-11-20 for the founder to send to Malaysian counsel. It states facts and questions only. It contains no legal conclusions. Every web source was checked on 2026-11-20. Where a source is a law-firm summary and not the official text, it says so, and counsel should read the official text.
 
@@ -115,6 +115,35 @@ Prepared 2026-11-20 for the founder to send to Malaysian counsel. It states fact
 If Beta testers in Saudi Arabia are enrolled, the Saudi Personal Data Protection Law and SDAIA's Transfer Regulations (amended 1 September 2024) restrict transfers abroad and require a risk assessment (SDAIA guideline, February 2025); we have only law-firm summaries and ask counsel only to say whether a Gulf user in the Beta changes the answer above (https://insightplus.bakermckenzie.com/bm/data-technology/saudi-arabia-updates-data-transfer-regulations-and-introduces-the-first-set-of-standard-contractual-clauses, https://www.clydeco.com/en/insights/2025/03/update-on-saudi-arabia-risk-assessment-guidelines; checked 2026-11-20, primary text not read).
 
 ---
+
+## Question 4. Is the Room "investment advice" under CMSA 2007? (added 2026-11-23, CR282)
+
+### Facts
+
+1. The Room is AMI Trade's core feature. A simulated desk of AMI analysts debates one named stock, and a Chief Investment Officer rules APPROVE or PASS on a proposed simulated trade, sized against the user's own stated mandate. Trades run in a simulated portfolio with virtual money. No order reaches a real broker; the only broker link is an optional Alpaca paper account. Every verdict carries "Educational simulation. Not investment advice."
+2. Today the Room covers US-listed stocks. CR282 adds Bursa Malaysia stocks, built behind a switch and kept off for testers until this question is answered.
+3. Paid plans unlock more Rooms (Trader $14.99, Floor Manager $34.99 a month). The Beta is free.
+4. The company is Malaysia-based and users include Malaysian residents.
+
+### What we read (no conclusion drawn)
+
+1. CMSA 2007 (Act 671, consolidated to P.U.(A) 473/2025): Schedule 2 Part 2 item 5 defines investment advice as "carrying on a business of advising others concerning securities ... or, as part of a business, issuing or promulgating analyses or reports concerning securities"; s.58(1) requires a CMSL for a regulated activity; s.58(4) penalties. Schedule 3 exemptions (items 5 and 6: newspapers and information services, incidental, no consideration) do not obviously fit. https://www.sc.com.my/regulation/acts/capital-markets-and-services-act-2007
+2. SC Guidance Note on Provision of Investment Advice (SC-GN/1-2020 R2-2024, revised 18 Jul 2024), para 2.2: an opinion "likely to induce" a buy, sell or hold on a particular instrument is likely advising; fee-based subscription points to "carrying on a business"; a disclaimer "does not relieve" the licence requirement. Para 3.7: educating "as opposed to advising" is unlikely to need a licence. https://www.sc.com.my/regulation/guidance-notes-and-guiding-principles
+3. SC finfluencer guidance release, 18 Jul 2024: https://www.sc.com.my/resources/media/media-release/sc-issues-guidance-for-finfluencers
+
+### Questions
+
+1. Do the Room's per-stock APPROVE/PASS verdicts on a simulated trade fall within "advising others concerning securities", given the simulation-only design and paid plans? Does it differ for US-listed versus Bursa-listed stocks?
+2. If yes or uncertain: which design changes would bring it within para 3.7 (education)? For example, verdicts graded against the user's own written thesis rather than issued as a recommendation, no verdict on a named stock outside a lesson, or verdicts only on delayed or historical data.
+3. Does the same answer cover the Concierge chat, which can discuss named stocks?
+
+### What we do meanwhile
+
+Bursa stays off for testers (CR282 ruling 3). The US Room continues on Alpha and in the Beta plan unchanged unless you advise otherwise.
+
+### What the answer would change
+
+Whether CR282 ships to users, and possibly how the Room presents its verdict in every market.
 
 ## Out of scope for this brief
 
