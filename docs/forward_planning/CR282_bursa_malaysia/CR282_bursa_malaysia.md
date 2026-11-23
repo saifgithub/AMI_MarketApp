@@ -47,7 +47,8 @@ The decision log places Bursa Malaysia in Phase 2 ("US equities only at MVP. GCC
 
 1. **CMSA 2007 / SC Guidance Note on investment advice** — counsel brief Question 4. Applies to the Room in every market, not only Bursa.
 2. **Bursa market-data licence** for showing delayed prices in an app (Yahoo terms are not a Bursa licence; HKEX requires a licence even for delayed data). Action for Saiful: ask Bursa data sales (distribution is via ICE).
-3. To confirm against Bursa primary text (bursamalaysia.com blocks automated fetches): tick table, auction times, clearing tariff, 2027 holiday notice. SC list file format and reuse terms.
+3. **SC list reuse permission.** The SC site disclaimer bars reproducing or storing its content "in another site or retrieval system" without prior written permission. We store stock codes only. Ask the SC for written permission before the flag goes on for users (lane D, 2026-11-24).
+4. To confirm against Bursa primary text (bursamalaysia.com blocks automated fetches): tick table, auction times, clearing tariff, 2027 holiday notice. SC list file format and reuse terms.
 
 ## Build plan (phase 1, all behind `MARKET_BURSA_ENABLED`, default off)
 
@@ -62,3 +63,9 @@ The decision log places Bursa Malaysia in Phase 2 ("US equities only at MVP. GCC
 ## Acceptance (phase 1)
 
 On Alpha with the flag on: search `1155.KL`, convene a Room whose stored record shows MYR, FBM KLCI and every unavailable desk input named; buy 100 units into the MYR book with Bursa fees; a 150-unit order is refused with the board-lot reason; the Shariah verdict cites the SC list and its as-of date; a Bursa holiday shows the market closed. With the flag off, nothing changes (full suite + UAT). Off in Beta builds until counsel Question 4 and the data licence are answered.
+
+## Lane log
+
+1. **Lane A** (market registry) merged `aff7a6d3`, suite 9539/0.
+2. **Lane B** (calendar, sessions, holiday table 2026–2027) merged `58d0f56f`, suite 9589/0. 2027 observed days derived (Awal Muharram observed Tue 8 Jun 2027). The resting-order sweep's US-only gate went to lane C.
+3. **Lane D** (SC Shariah list) merged 2026-11-24. The SC list is a 41-page bilingual PDF read from the stable index page (`SHARIA_SC_LIST_URL`). The 29 May 2026 list has 886 compliant securities out of 1,099. A `.KL` stock absent from the list resolves SCREENED_OUT: the list classifies every Main/ACE/LEAP security, so absence means reviewed and non-compliant. Islamic REITs/ETFs (separate SC files) are over-blocked for now. The SC methodology changed in Nov 2025 to a single 5% business-activity benchmark; the financial ratios stay below 33%. **New dependency: `pypdf`** (pure Python, BSD), in `pyproject.toml` and `uv.lock`. Follow-ups: the 5-digit ACE/LEAP codes (e.g. `03068`) fail lane A's `^[0-9]{4}[A-Z]?\.KL$`, to fix after lane C; the first real list release on Fri 27 Nov 2026 must be checked once it is ingested.
