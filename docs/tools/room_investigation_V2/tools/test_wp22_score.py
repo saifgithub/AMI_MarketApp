@@ -736,5 +736,96 @@ class CodeGraderPlumbingTests(unittest.TestCase):
         self.assertIn("no card", text)
 
 
+def conf_row(ticker, risk, rep, terminal, conf, *, rest="yes"):
+    """A scored row whose terminal_vulnerability answer carries `conf`; the other five are sharp."""
+    answers = tuple(
+        QuestionAnswer(q, Answer(terminal if q is QuestionId.TERMINAL_VULNERABILITY else
+                                 ("no" if q is QuestionId.EVENT_RISK_WAIT else rest)),
+                       conf if q is QuestionId.TERMINAL_VULNERABILITY else 0.97, False)
+        for q in ALL_Q)
+    res = GraderResult(grader="deepinfra", grader_version="v", question_set_version=QUESTION_SET_VERSION,
+                       answers=answers, latency_ms=1)
+    return w.result_to_row(arm(ticker, risk, rep), "r", res, phrasing=None, model_root="x")
+
+
+class DeepInfraRoomGraderToolTests(unittest.TestCase):
+    ARGS = dict(grader="deepinfra_room", jev_version=None, model="deepseek-ai/DeepSeek-V4-Flash",
+                max_usd=5.0, max_calls=300, price_in=None, price_out=None, slot="vllm",
+                trade_action="buy")
+
+    def setup(self, **kw):
+        from app.core.config import settings
+        prior = settings.llm_prices_json
+        self.addCleanup(setattr, settings, "llm_prices_json", prior)
+        return w.setup_grader(SimpleNamespace(**{**self.ARGS, **kw}), {"DEEPINFRA_API_KEY": SENTINEL})
+
+    def test_it_builds_the_production_grader_without_leaking_the_key(self):
+        setup = self.setup()
+        g = setup.factory(None)
+        self.assertEqual((g.name, setup.kind), ("deepinfra", "deepinfra_room"))
+        self.assertIn("avg5", g.version)
+        self.assertEqual(setup.guard.fallback_calls, 13)
+        self.assertNotIn(SENTINEL, json.dumps(setup.describe) + setup.label)
+
+    def test_it_needs_the_trade_action_and_a_pinned_model(self):
+        for kw in ({"trade_action": None}, {"trade_action": " "}, {"model": "x/latest"}):
+            with self.assertRaises(ValueError, msg=str(kw)):
+                self.setup(**kw)
+
+    def test_missing_key_names_the_key_only(self):
+        rc, out, err = run_main(score_argv("--grader", "deepinfra_room", "--trade-action", "buy"), {})
+        self.assertEqual((rc, err.strip()), (2, "bakeoff.env missing DEEPINFRA_API_KEY"))
+
+    def test_the_wording_test_is_refused_for_it(self):
+        rc, _o, err = run_main(["wording", "--runs", "x", "--out", "y", "--grader", "deepinfra_room",
+                                "--trade-action", "buy"], {"DEEPINFRA_API_KEY": SENTINEL, "WP22_DSN": "x"})
+        self.assertEqual(rc, 2)
+        self.assertIn("averages the phrasings itself", err)
+
+
+class FitTests(unittest.TestCase):
+    def rows(self):
+        out = []
+        for t in "ABCD":
+            out += [conf_row(t, 5, 1, "no", 0.95), conf_row(t, 5, 2, "no", 0.95)]
+        out += [conf_row("E", 5, 1, "no", 0.6), conf_row("E", 5, 2, "yes", 0.9)]
+        return out
+
+    def test_a_cut_that_closes_the_shaky_approval_removes_the_rep_disagreement(self):
+        base = w.fit_metrics(self.rows(), None, 0.0)
+        cut = w.fit_metrics(self.rows(), None, 0.65)
+        self.assertEqual((base["pairs"], base["rep_disagree"], base["contested"]), (5, 1, 0))
+        self.assertEqual((cut["rep_disagree"], cut["contested"], cut["approve"]), (0, 1, 8))
+
+    def test_the_choice_is_the_lowest_cut_within_the_contested_cap(self):
+        table = [w.fit_metrics(self.rows(), None, c) for c in w.FIT_GRID]
+        chosen = w.choose_cut(table, 0.20)
+        self.assertEqual((chosen["cut"], chosen["cap_unmet"]), (0.65, False))
+
+    def test_when_no_cut_fits_under_the_cap_the_placeholder_stays(self):
+        table = [{"cut": c, "contested_share": 0.5, "rep_disagree_rate": 0.1} for c in w.FIT_GRID]
+        chosen = w.choose_cut(table, 0.20)
+        self.assertEqual((chosen["cut"], chosen["cap_unmet"]), (0.0, True))
+
+    def test_the_command_prints_a_policy_json_the_backend_accepts(self):
+        import tempfile
+        from app.services.room_decision_rule import parse_policy_json
+        with tempfile.TemporaryDirectory() as d:
+            sp = Path(d) / "scores.jsonl"
+            sp.write_text("\n".join(json.dumps(r) for r in self.rows()), encoding="utf-8")
+            rc, out, _err = run_main(["fit", "--scores", str(sp), "--out", str(Path(d) / "fit.json")], {})
+            self.assertEqual(rc, 0)
+            line = next(x for x in out.splitlines() if x.startswith("ROOM_CODED_RULE_POLICY_JSON="))
+            policy = parse_policy_json(line.split("=", 1)[1])
+            self.assertEqual(policy["deepinfra"].close_below_confidence, 0.65)
+            self.assertEqual(json.loads((Path(d) / "fit.json").read_text())["chosen"]["cut"], 0.65)
+
+    def test_fit_never_reads_consensus(self):
+        a = self.rows()
+        b = [{**r, "street_rating": "sell", "street_stance": "sell"} for r in a]
+        self.assertEqual([w.fit_metrics(a, None, c) for c in w.FIT_GRID],
+                         [w.fit_metrics(b, None, c) for c in w.FIT_GRID])
+
+
 if __name__ == "__main__":
     unittest.main()

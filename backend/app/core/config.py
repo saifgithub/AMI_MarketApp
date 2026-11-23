@@ -1566,6 +1566,41 @@ class Settings(BaseSettings):
     room_grader: str = ""
     room_coded_rule_policy_json: str = "{}"
 
+    # CR267 WP-23 gate S3 (Saiful, 2026-11-23) — the coded rule's grader is the hosted
+    # DeepInfra `deepseek-ai/DeepSeek-V4-Flash` at temperature 0 (`ROOM_GRADER=deepinfra`).
+    # It is called straight over HTTP by the grader, NOT through the gateway: the desks
+    # stay on-prem and `LLM_PROVIDER_ALLOWLIST` is untouched. The model id is pinned (an
+    # alias such as "latest" is refused) and rides in the grader version, so a model
+    # change re-keys Rooms. Key absent while `ROOM_GRADER=deepinfra` with the rule on
+    # refuses boot (CR040): never a silent default verdict.
+    room_grader_deepinfra_base_url: str = "https://api.deepinfra.com/v1/openai"
+    room_grader_deepinfra_model: str = "deepseek-ai/DeepSeek-V4-Flash"
+    room_grader_deepinfra_api_key: str = ""
+    # Per grader call (one question, one phrasing). The five phrasing calls of a fragile
+    # question run concurrently, so a Room's grading is bounded by a few multiples of this.
+    room_grader_deepinfra_timeout_s: float = Field(default=30.0, ge=5.0, le=120.0)
+
+    @model_validator(mode="after")
+    def _deepinfra_grader_is_configured(self) -> "Settings":
+        if not (self.room_coded_rule_enabled and self.room_grader.strip() == "deepinfra"):
+            return self
+        problems: list[str] = []
+        if not self.room_grader_deepinfra_api_key.strip():
+            problems.append("ROOM_GRADER_DEEPINFRA_API_KEY is empty")
+        if not self.room_grader_deepinfra_base_url.strip():
+            problems.append("ROOM_GRADER_DEEPINFRA_BASE_URL is empty")
+        model = self.room_grader_deepinfra_model.strip()
+        if not model or model.lower().endswith("latest"):
+            problems.append(
+                "ROOM_GRADER_DEEPINFRA_MODEL must be a pinned model id, never empty or 'latest'"
+            )
+        if problems:
+            raise ValueError(
+                "ROOM_CODED_RULE_ENABLED with ROOM_GRADER=deepinfra needs a working grader: "
+                + "; ".join(problems)
+            )
+        return self
+
     @field_validator("room_coded_rule_policy_json")
     @classmethod
     def _coded_rule_policy_wellformed(cls, v: str) -> str:

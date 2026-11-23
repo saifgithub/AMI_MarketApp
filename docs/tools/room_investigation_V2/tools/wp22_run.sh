@@ -25,8 +25,9 @@ case "$GRADER" in
   onprem)    ALLOW=vllm;;
   jev)       ALLOW=mock;     VLLM=;;
   deepinfra|cheapllm) ALLOW=vllm_fallback; VLLM=;;
+  deepinfra_room) ALLOW=mock; VLLM=;;   # production grader: calls DeepInfra directly, never through the gateway
   code)      ALLOW=mock;     VLLM=;;   # plain code over cards: no model, no key, no network
-  *) echo "unknown --grader $GRADER (onprem|jev|deepinfra|cheapllm|code)"; exit 1;;
+  *) echo "unknown --grader $GRADER (onprem|jev|deepinfra|cheapllm|code|deepinfra_room)"; exit 1;;
 esac
 if [ "$GRADER" != onprem ] && [ "$GRADER" != code ]; then
   case "$GRADER" in jev) KEYNAME=JEV_API_KEY;; cheapllm) KEYNAME=CHEAPLLM_API_KEY;; *) KEYNAME=DEEPINFRA_API_KEY;; esac
