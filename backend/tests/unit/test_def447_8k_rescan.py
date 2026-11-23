@@ -156,6 +156,35 @@ def test_a_document_fetch_failure_exits_nonzero_and_logs_an_error(logged) -> Non
     assert _items() == [(_CAT_ACC, "extracted")]
 
 
+def test_a_scanned_ticker_dropped_from_the_sec_map_is_rescanned_by_stored_cik(logged, monkeypatch) -> None:
+    """2026-11-23: QRVO, ROKU, WBD left SEC's ticker map (corporate actions) and
+    the nightly failed on `no_cik` — which it would have done every night."""
+    assert rescan.run(["--only", "CAT"], client=_Sec(_submissions())) == 0
+    monkeypatch.setattr(rescan.ingest, "fetch_json", _map_without_cat(rescan.ingest.fetch_json))
+    later = _Sec(_submissions(with_new=True))
+    assert rescan.run([], client=later) == 0
+    assert _SUBMISSIONS_URL in later.urls
+    assert len(_items()) == 2 and _scans() == 2
+    warned = [e for e in logged if e[1] == "edgar_8k_rescan_left_sec_map"]
+    assert warned and warned[0][2]["tickers"] == [f"CAT (CIK {_CAT_CIK})"]
+    assert not [e for e in logged if e[0] == "error"]
+
+
+def test_a_never_scanned_ticker_missing_from_the_map_still_fails(logged, monkeypatch) -> None:
+    monkeypatch.setattr(rescan.ingest, "fetch_json", _map_without_cat(rescan.ingest.fetch_json))
+    assert rescan.run(["--only", "CAT"], client=_Sec(_submissions())) == 1
+    errors = [e for e in logged if e[0] == "error"]
+    assert errors[0][2]["failures"]["no_cik"] == ["CAT"]
+
+
+def _map_without_cat(real):
+    def fetch(client, url):
+        if url == _MAP_URL:
+            return ("ok", {"0": {"cik_str": 1, "ticker": "OTHER", "title": "OTHER"}})
+        return real(client, url)
+    return fetch
+
+
 def test_a_ticker_map_failure_exits_nonzero_and_writes_nothing(logged) -> None:
     assert rescan.run(["--only", "CAT"], client=_Sec(_submissions(), ticker_map_status=500)) == 1
     assert _items() == [] and _scans() == 0

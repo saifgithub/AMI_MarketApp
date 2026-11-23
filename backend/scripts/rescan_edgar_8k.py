@@ -16,9 +16,12 @@ error, not a quiet success: the first-ever ingest is `ingest_edgar_8k.py`.
 
 Degrades loudly (CR040): the exit code is non-zero, and an ERROR is logged
 naming each ticker/filing, when the SEC ticker map cannot be fetched, any
-ticker has no CIK / a failed or unreadable index, any filing text could not be
+ticker never scanned before has no CIK / a failed or unreadable index, any filing text could not be
 fetched, or a ticker raised. Filings whose text fetched but did not parse
 (`unextracted`) are a WARNING and retried nightly; they do not fail the run.
+Nor does an already-scanned ticker that SEC has dropped from its ticker map
+(delisted/merged): it is re-scanned under its stored CIK and named in a
+`left_sec_map` WARNING, since it would otherwise fail every night forever.
 
 SEC fair use is inherited from the ingest: 0.25 s between requests, one retry
 after back-off on 403/429/5xx. The default User-Agent names the product and a
@@ -60,6 +63,18 @@ FAILURE_KINDS = ("no_cik", "submissions_failed", "index_unreadable", FETCH_FAILE
 def scanned_tickers() -> list[str]:
     with get_session() as session:
         return sorted(set(session.execute(select(Edgar8kScanRow.ticker)).scalars().all()))
+
+
+def stored_ciks() -> dict[str, int]:
+    """The CIK each ticker was last scanned under. SEC drops a ticker from
+    `company_tickers.json` when it is delisted or merged away (QRVO, ROKU, WBD
+    on 2026-11-23), but the CIK's submissions index stays served — so a ticker
+    we already scanned is still re-scannable, and must not fail every night."""
+    with get_session() as session:
+        rows = session.execute(
+            select(Edgar8kScanRow.ticker, Edgar8kScanRow.cik).order_by(Edgar8kScanRow.scanned_at)
+        ).all()
+    return {ticker: cik for ticker, cik in rows}
 
 
 def run(argv: list[str] | None = None, *, client: httpx.Client | None = None) -> int:
@@ -132,11 +147,18 @@ def _scan_all(client: httpx.Client, tickers: list[str], *, since, args) -> int:
         if entry.get("ticker") and entry.get("cik_str") is not None
     }
 
+    known = stored_ciks()
     tally = ingest.Tally()
+    left_sec_map: list[str] = []
     crashed: list[str] = []
     for i, ticker in enumerate(tickers, 1):
         prefix = f"[{i}/{len(tickers)}] {ticker}"
         cik = cik_by_ticker.get(ticker)
+        if cik is None and ticker in known:
+            cik = known[ticker]
+            left_sec_map.append(f"{ticker} (CIK {cik})")
+            print(f"{prefix}: NOT in SEC ticker map (delisted/merged?) — scanning stored CIK {cik}",
+                  flush=True)
         if cik is None:
             tally.tickers["no_cik"] += 1
             tally.named["no_cik"].append(ticker)
@@ -166,6 +188,11 @@ def _scan_all(client: httpx.Client, tickers: list[str], *, since, args) -> int:
         if names:
             print(f"[{kind}] {', '.join(names)}", flush=True)
 
+    if left_sec_map:
+        print(f"[left_sec_map] {', '.join(left_sec_map)}", flush=True)
+        logger.warning("edgar_8k_rescan_left_sec_map", tickers=left_sec_map,
+                       note="ticker no longer in SEC company_tickers.json; re-scanned under its "
+                            "stored CIK. Check whether the app should still offer it")
     if tally.named[UNEXTRACTED]:
         logger.warning("edgar_8k_rescan_unextracted", filings=tally.named[UNEXTRACTED],
                        note="document fetched but no Item 5.02 section parsed; retried next run")
