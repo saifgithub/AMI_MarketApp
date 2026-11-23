@@ -329,3 +329,8 @@ Found: two users have duplicate training portfolios created 40 ms apart on 2026-
     2. DEF367: WIP on `lane/def367-extractor` (`75c7dd03`), stopped mid-task, untested. Resume with a fresh Sonnet worker in its own worktree from that branch; the brief is the one in this session (extractor rules for `a ?? b`, nested-or-flat, `gamesRecordPrs` adapter; drive cadences + quote; shrink baseline; full suite with EXIT).
     3. DEF447: first nightly rescan was due 2026-11-23 04:30Z. Check: `ssh melehost 'tail -6 ~/ami_trade/logs/def447_8k_rescan.log; grep -c FAILED ~/ami_trade/logs/def447_8k_rescan.log'`. Clean ⇒ flip the DEF447 row to fixed, regenerate, tracker "done".
     4. Waiting on Saiful: S3 grader pick (recommend DeepInfra), S6 counsel, S7 release go, S4 last. WP-49: Saiful is creating the Beta app in the company Play Console, package `ai.agenticmarketintel.trade`; developer page icon/header in `marketing/users/assets/play_developer_page/`.
+
+### 22. 2026-11-23 15:11 +03 — DEF447 nightly read; restart 18:05
+
+1. DEF447 first nightly (04:30Z): ingest, filings and text all 0 failures, but rc=1 on `no_cik` for QRVO, ROKU, WBD. All three are absent from SEC `company_tickers.json` (corporate actions), so it would fail every night. DEF447 stays open.
+2. Next: `rescan_edgar_8k.py` puts an already-scanned ticker that has left the SEC map in a non-failing, named bucket, with a test and the full suite; flip DEF447 after the next clean nightly. Then the DEF367 fresh worker, then deploy #22 (entry 21).
