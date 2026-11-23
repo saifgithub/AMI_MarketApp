@@ -92,7 +92,15 @@ from app.services.sharia_universe import default_halal_universe
 from app.trading_math.quote_fillability import is_fillable, refusal_reason
 from app.trading_math.market_calendar import session_close_on_or_after as market_session_close
 from app.trading_math.market_hours import session_close_on_or_after
-from app.trading_math.markets import Market, market_for
+from app.trading_math.bursa_rules import (
+    MarketRuleViolation,
+    bursa_fees,
+    check_board_lot,
+    check_price_limit,
+    check_tick,
+    reference_close_from_quote,
+)
+from app.trading_math.markets import Market, market_enabled, market_for, spec_for
 from app.trading_math.order_pricing import (
     LotBracket,
     blended_bracket,
@@ -464,6 +472,11 @@ class SubmitResult:
     # trade confirmation reads this field; nothing derives it from the cash
     # delta, which a concurrent bracket sweep could move underneath a client.
     toll_charged: float | None = None
+    # CR282 — which book the order touched, and (MY only) the itemised Bursa
+    # fees behind `toll_charged`. `fees` is None on every US result.
+    market: str = "US"
+    currency: str = "USD"
+    fees: dict | None = None
 
 
 GAME_QUOTE_UNAVAILABLE_REASON = (
@@ -539,6 +552,11 @@ class PreviewResult:
     # block" — these two rules are explicitly SKIPPED, not evaluated against
     # a fabricated or foreign-denominated number, and the response says so.
     unmeasured_rules: list[dict] = field(default_factory=list)
+    # CR282 — the book's market/currency and, on the MYR book, the itemised fee
+    # estimate for this order. `fees` is None for US previews.
+    market: str = "US"
+    currency: str = "USD"
+    fees: dict | None = None
 
 
 @dataclass
@@ -553,6 +571,82 @@ class OutcomeUpdate:
 
 
 _STARTING_CAPITAL = 10_000.0
+
+# CR282 lane C — the MYR book. Saiful 2026-11-23: starting capital RM50,000.
+_MY_STARTING_CAPITAL = 50_000.0
+
+#: Portfolio `kind` per market. The US book keeps the original "training" kind so
+#: every `kind == "training"` lookup in the app stays a US-only, single-row read;
+#: the MYR book is a distinct kind, never a second "training" row.
+_BOOK_KIND: dict[Market, str] = {Market.US: "training", Market.MY: "training_my"}
+_TRAINING_KINDS = frozenset(_BOOK_KIND.values())
+
+
+def book_kind(market: Market) -> str:
+    return _BOOK_KIND[market]
+
+
+def _starting_capital_for(market: Market) -> float:
+    return _MY_STARTING_CAPITAL if market is Market.MY else _STARTING_CAPITAL
+
+
+def _money(market: Market) -> str:
+    """Currency prefix for refusal copy: `$` for US, `RM` for Bursa."""
+    return spec_for(market).currency_symbol
+
+
+def _market_of_kind(kind: str) -> Market:
+    return Market.MY if kind == _BOOK_KIND[Market.MY] else Market.US
+
+
+def _require_market_enabled(market: Market) -> None:
+    if not market_enabled(market):
+        raise MarketRuleViolation(
+            "market_disabled",
+            f"{spec_for(market).exchange_label} is not available yet.",
+            market,
+        )
+
+
+def _static_market_checks(
+    market: Market, *, quantity: float, limit_price: float | None,
+    trigger_price: float | None,
+) -> None:
+    """Order-shape rules that need no portfolio and no quote. US has none, so
+    this is a no-op there (fractional quantity and any price are allowed)."""
+    if market is Market.US:
+        return
+    _require_market_enabled(market)
+    check_board_lot(quantity, market)
+    check_tick(limit_price, "limit price")
+    check_tick(trigger_price, "stop price")
+
+
+def _held_in(portfolio: Portfolio, ticker: str) -> float:
+    return next((float(h.quantity) for h in portfolio.holdings if h.ticker == ticker), 0.0)
+
+
+def _dynamic_market_checks(
+    market: Market, *, side: Side, held: float, order_type: OrderType,
+    limit_price: float | None, trigger_price: float | None, quote,
+) -> None:
+    """Rules that need the book's holding and the quote. Short selling is
+    refused here from `MarketSpec.shorts_supported`; the +/-30% price limit is
+    measured against the previous close implied by the quote."""
+    if market is Market.US:
+        return
+    spec = spec_for(market)
+    if side == Side.SELL and held <= 1e-9 and not spec.shorts_supported:
+        raise MarketRuleViolation(
+            "shorts_unsupported",
+            f"short selling is not available for {spec.exchange_label} — "
+            f"you can only sell shares you hold.",
+            market,
+        )
+    reference = reference_close_from_quote(quote.price, quote.change_pct)
+    check_price_limit(limit_price, reference, "limit price")
+    if order_type == OrderType.STOP_LIMIT:
+        check_price_limit(trigger_price, reference, "stop price")
 
 
 def _portfolio_from_row(row: SimPortfolioRow) -> Portfolio:
@@ -693,7 +787,7 @@ def _blend_option_source(equity_source: str, option_marks) -> str:
     return equity_source
 
 
-def training_trade_scope(user_id: UUID):
+def training_trade_scope(user_id: UUID, market: Market = Market.US):
     """A WHERE clause pinning a `sim_trades` query to a user's TRAINING
     ledger — DEF269.
 
@@ -716,11 +810,26 @@ def training_trade_scope(user_id: UUID):
     Returns no rows when the user has no training portfolio, which is the
     correct answer (they have no training trades) rather than a crash or a
     silent fall-through to everything.
+
+    CR282 — `market` picks the book: the default is the US book, so every
+    existing caller is unchanged; the MYR book's ledger is only ever reached by
+    passing `Market.MY`, which is what keeps ringgit trades out of USD readers.
     """
     return SimTradeRow.portfolio_id.in_(
         select(SimPortfolioRow.id).where(
             SimPortfolioRow.user_id == user_id,
-            SimPortfolioRow.kind == "training",
+            SimPortfolioRow.kind == _BOOK_KIND[market],
+        )
+    )
+
+
+def any_training_trade_scope(user_id: UUID):
+    """Every training-lane trade of the user, in BOTH books — for a lookup by
+    trade id (manual close), where the caller does not yet know the market."""
+    return SimTradeRow.portfolio_id.in_(
+        select(SimPortfolioRow.id).where(
+            SimPortfolioRow.user_id == user_id,
+            SimPortfolioRow.kind.in_(sorted(_TRAINING_KINDS)),
         )
     )
 
@@ -960,12 +1069,18 @@ class SimEngine:
 
     def _load_portfolio_row(
         self, s, user_id: UUID, *, kind: str = "training", run_id: UUID | None = None,
+        market: Market | None = None,
     ) -> SimPortfolioRow | None:
         """CR109 slice 2: `kind`/`run_id` default to the TRAINING portfolio
         (`kind="training"`, `run_id=None`) so every existing caller —
         `reset_portfolio`, `evaluate_outcomes`, `manual_close`, `submit`,
         all of them — keeps its current behaviour untouched. Only the game
-        trade path passes `kind="game"` + a real `run_id`."""
+        trade path passes `kind="game"` + a real `run_id`.
+
+        CR282: `market=Market.MY` selects the user's MYR book (`kind="training_my"`);
+        omitted or `Market.US` is the original behaviour."""
+        if market is not None and kind == "training":
+            kind = _BOOK_KIND[market]
         stmt = select(SimPortfolioRow).where(
             SimPortfolioRow.user_id == user_id,
             SimPortfolioRow.kind == kind,
@@ -998,12 +1113,26 @@ class SimEngine:
 
     def ensure_portfolio(
         self, user_id: UUID, *, kind: str = "training", run_id: UUID | None = None,
+        market: Market | None = None,
     ) -> Portfolio:
         """CR109 slice 2: defaulted `kind`/`run_id` — see
         `_load_portfolio_row`'s docstring. `ensure_portfolio(user_id,
         kind="game", run_id=<run>)` lazy-creates that run's own $10k
         AMI Cash game portfolio the first time it's touched, exactly like
-        the training portfolio always has."""
+        the training portfolio always has.
+
+        CR282: `market=Market.MY` lazy-creates the user's ringgit book
+        (RM50,000, `kind="training_my"`) on first touch; the US book is never
+        affected. A disabled market refuses to create its book at all."""
+        if market is not None and kind == "training":
+            kind = _BOOK_KIND[market]
+        book_market = _market_of_kind(kind)
+        if book_market is not Market.US and not market_enabled(book_market):
+            raise MarketRuleViolation(
+                "market_disabled",
+                f"{spec_for(book_market).exchange_label} is not available yet.",
+                book_market,
+            )
         with get_session() as s:
             row = self._load_portfolio_row(s, user_id, kind=kind, run_id=run_id)
             if row is None:
@@ -1012,9 +1141,13 @@ class SimEngine:
                     user_id=user_id,
                     kind=kind,
                     run_id=run_id,
-                    name="Main" if kind == "training" else "Game Run",
-                    starting_capital=_STARTING_CAPITAL,
-                    current_cash=_STARTING_CAPITAL,
+                    name=(
+                        "Bursa" if kind == _BOOK_KIND[Market.MY]
+                        else "Main" if kind == "training" else "Game Run"
+                    ),
+                    market=book_market.value,
+                    starting_capital=_starting_capital_for(book_market),
+                    current_cash=_starting_capital_for(book_market),
                     created_at=datetime.now(timezone.utc),
                 )
                 try:
@@ -1034,9 +1167,11 @@ class SimEngine:
                     row = winner
             return _portfolio_from_row(row)
 
-    def reset_portfolio(self, user_id: UUID) -> Portfolio:
+    def reset_portfolio(
+        self, user_id: UUID, market: Market = Market.US,
+    ) -> Portfolio:
         with get_session() as s:
-            existing = self._load_portfolio_row(s, user_id)
+            existing = self._load_portfolio_row(s, user_id, market=market)
             if existing is not None:
                 s.execute(
                     delete(SimTradeRow).where(SimTradeRow.portfolio_id == existing.id)
@@ -1087,18 +1222,19 @@ class SimEngine:
                 )
                 s.delete(existing)
                 s.flush()
-        return self.ensure_portfolio(user_id)
+        return self.ensure_portfolio(user_id, market=market)
 
-    def total_value(self, user_id: UUID) -> float:
-        p = self.ensure_portfolio(user_id)
+    def total_value(self, user_id: UUID, market: Market = Market.US) -> float:
+        p = self.ensure_portfolio(user_id, market=market)
         return p.total_value(self.current_marks(_marked_tickers(p)))
 
-    def current_drawdown_pct(self, user_id: UUID) -> float:
-        p = self.ensure_portfolio(user_id)
+    def current_drawdown_pct(self, user_id: UUID, market: Market = Market.US) -> float:
+        p = self.ensure_portfolio(user_id, market=market)
         return p.total_drawdown_pct(self.current_marks(_marked_tickers(p)))
 
     def portfolio_marks_snapshot(
         self, user_id: UUID, *, kind: str = "training", run_id: UUID | None = None,
+        market: Market | None = None,
     ) -> tuple[Portfolio, dict[str, float], float, float, str]:
         """One-fetch snapshot: (portfolio, marks, total_value, drawdown_pct, price_source).
 
@@ -1117,7 +1253,7 @@ class SimEngine:
         (`portfolio_nav_daily.run_game_nav_snapshot_tick`) passes
         `kind="game"` + a run's own `run_id`.
         """
-        p = self.ensure_portfolio(user_id, kind=kind, run_id=run_id)
+        p = self.ensure_portfolio(user_id, kind=kind, run_id=run_id, market=market)
         # CR109 Amendment G — a short's ticker must be marked too, or its leg
         # falls back to `entry_price` and the position reads as permanently
         # flat: no P&L on the run screen, none in the daily NAV row, and a
@@ -1179,9 +1315,10 @@ class SimEngine:
         status: TradeStatus | None = None,
         limit: int | None = None,
         offset: int = 0,
+        market: Market = Market.US,
     ) -> list[SimTrade]:
         with get_session() as s:
-            stmt = select(SimTradeRow).where(training_trade_scope(user_id))
+            stmt = select(SimTradeRow).where(training_trade_scope(user_id, market))
             if status is not None:
                 stmt = stmt.where(SimTradeRow.status == status)
             # CR120 Phase 3: `id` tiebreaker because `opened_at` defaults to
@@ -1195,7 +1332,10 @@ class SimEngine:
             rows = s.execute(stmt).scalars().all()
             return [SimTrade.from_row(r) for r in rows]
 
-    def count_trades(self, user_id: UUID, *, status: TradeStatus | None = None) -> int:
+    def count_trades(
+        self, user_id: UUID, *, status: TradeStatus | None = None,
+        market: Market = Market.US,
+    ) -> int:
         """Ledger size under the exact scope+filter `list_trades` reads —
         CR120 Phase 3's `total`. Reuses `training_trade_scope` so the count
         and the list structurally cannot disagree on lane (DEF269: a
@@ -1204,14 +1344,15 @@ class SimEngine:
             stmt = (
                 select(func.count())
                 .select_from(SimTradeRow)
-                .where(training_trade_scope(user_id))
+                .where(training_trade_scope(user_id, market))
             )
             if status is not None:
                 stmt = stmt.where(SimTradeRow.status == status)
             return int(s.execute(stmt).scalar_one())
 
     def _risk_limit_context(
-        self, user_id: UUID, *, portfolio_value: float, quotes: dict[str, float]
+        self, user_id: UUID, *, portfolio_value: float, quotes: dict[str, float],
+        market: Market = Market.US,
     ) -> tuple[datetime | None, list[datetime], float]:
         """CR101-BE2: the trade-history context `check_mandate_compliance` needs
         for the post-loss cooldown, over-trading brake, and total open-risk cap
@@ -1223,7 +1364,7 @@ class SimEngine:
         execution carries its own stop), not per aggregated holding — a ticker
         bought twice at different stops sums both legs correctly.
         """
-        trades = self.list_trades(user_id)
+        trades = self.list_trades(user_id, market=market)
         last_loss_closed_at = max(
             (t.closed_at for t in trades if t.status == "lost" and t.closed_at is not None),
             default=None,
@@ -1282,7 +1423,8 @@ class SimEngine:
         The proposed ticker is priced alongside the holdings (DEF149) so the
         sector cap can value a first-time buy of a name not already held.
         """
-        portfolio_value = self.total_value(user_id)
+        market = market_for(ticker)
+        portfolio_value = self.total_value(user_id, market)
         # CR171 §6 — the SHORT tickers must be priced too, or gross
         # concentration values an existing short at zero and the cap passes a
         # position it should refuse.
@@ -1290,19 +1432,20 @@ class SimEngine:
         last_loss_closed_at, trade_open_timestamps, existing_open_risk = (
             self._risk_limit_context(
                 user_id, portfolio_value=portfolio_value, quotes=quotes,
+                market=market,
             )
         )
         return ComplianceContext(
             portfolio_value=portfolio_value,
             quotes=quotes,
-            drawdown_pct=self.current_drawdown_pct(user_id),
+            drawdown_pct=self.current_drawdown_pct(user_id, market),
             last_loss_closed_at=last_loss_closed_at,
             trade_open_timestamps=trade_open_timestamps,
             existing_open_risk_pct=existing_open_risk,
         )
 
     def position_brackets(
-        self, user_id: UUID,
+        self, user_id: UUID, market: Market = Market.US,
     ) -> dict[str, tuple[float | None, float | None]]:
         """CR189 — every held ticker's position bracket, in ONE query.
 
@@ -1316,7 +1459,7 @@ class SimEngine:
         with get_session() as s:
             rows = s.execute(
                 select(SimTradeRow)
-                .where(training_trade_scope(user_id))
+                .where(training_trade_scope(user_id, market))
                 .order_by(SimTradeRow.opened_at.asc())
             ).scalars().all()
 
@@ -1348,7 +1491,7 @@ class SimEngine:
         with get_session() as s:
             rows = s.execute(
                 select(SimTradeRow)
-                .where(training_trade_scope(user_id))
+                .where(training_trade_scope(user_id, market_for(ticker)))
                 .where(SimTradeRow.ticker == ticker)
                 .order_by(SimTradeRow.opened_at.asc())
             ).scalars().all()
@@ -1372,7 +1515,7 @@ class SimEngine:
         with get_session() as s:
             rows = s.execute(
                 select(SimTradeRow)
-                .where(training_trade_scope(user_id))
+                .where(training_trade_scope(user_id, market_for(ticker)))
                 .where(SimTradeRow.ticker == ticker)
                 .order_by(SimTradeRow.opened_at.asc())
             ).scalars().all()
@@ -1433,8 +1576,13 @@ class SimEngine:
         classification_universe: object | None = None,
         locale_allowed_universe: set[str] | None = None,
     ) -> SubmitResult:
-        portfolio = self.ensure_portfolio(user_id)
         ticker = ticker.upper().strip()
+        market = market_for(ticker)
+        _static_market_checks(
+            market, quantity=quantity, limit_price=limit_price,
+            trigger_price=trigger_price,
+        )
+        portfolio = self.ensure_portfolio(user_id, market=market)
 
         # One purchase per verdict (bug ce7146c8). When the trade is being
         # placed off a Convene the Room verdict, prevent a duplicate caused
@@ -1495,6 +1643,11 @@ class SimEngine:
             )
 
         mark = open_quote.price
+        _dynamic_market_checks(
+            market, side=side, held=_held_in(portfolio, ticker),
+            order_type=order_type, limit_price=limit_price,
+            trigger_price=trigger_price, quote=open_quote,
+        )
         # CR170 §3 — the P10/DEF153 ternary is GONE. It read
         # `mark if order_type == MARKET else (limit_price or mark)`, which made
         # `order_type` decide a price: a "limit order" filled instantly at
@@ -1615,6 +1768,26 @@ class SimEngine:
                 compliance=compliance,
             )
 
+        if market is not Market.US:
+            fees = bursa_fees(fill_price * quantity)
+            return self._execute_fill(
+                user_id=user_id,
+                portfolio=portfolio,
+                ticker=ticker,
+                side=side,
+                quantity=quantity,
+                fill_price=fill_price,
+                compliance=compliance,
+                stop=stop,
+                target=target,
+                horizon_days=horizon_days,
+                verdict_ref=verdict_ref,
+                kind=book_kind(market),
+                fee=fees.total,
+                toll=fees.total,
+                price_source=open_quote.source,
+                fee_detail=fees.to_json(),
+            )
         toll = _training_toll_for(fill_price * quantity)
         return self._execute_fill(
             user_id=user_id,
@@ -1653,6 +1826,7 @@ class SimEngine:
         toll: float | None = None,
         now: datetime | None = None,
         price_source: str | None = None,
+        fee_detail: dict | None = None,
     ) -> SubmitResult:
         """The mechanics shared by every fill path: cash/holdings check, the
         fill, the holding update and the trade row.
@@ -1727,7 +1901,8 @@ class SimEngine:
         # liquidates everything, at market, and trips the post-stop-out cooldown
         # that blocks the user's next buy. That is DEF312's consequence arriving
         # by arithmetic instead of by typing, so it is a refusal, not a warning.
-        if side == Side.BUY and kind == "training" and held_now is not None:
+        money = _money(_market_of_kind(kind))
+        if side == Side.BUY and kind in _TRAINING_KINDS and held_now is not None:
             blend_stop, blend_target = self.position_bracket(
                 user_id, ticker,
                 extra=LotBracket(
@@ -1751,8 +1926,8 @@ class SimEngine:
                         passed=False,
                         violations=[
                             f"adding these shares would move your {name} for all "
-                            f"{held_after:g} {ticker} to ${level:.2f}, which is on "
-                            f"the wrong side of the ${fill_price:.2f} market — the "
+                            f"{held_after:g} {ticker} to {money}{level:.2f}, which is on "
+                            f"the wrong side of the {money}{fill_price:.2f} market — the "
                             f"position would be closed on the next sweep"
                         ],
                         blocked_by=None,
@@ -1783,8 +1958,8 @@ class SimEngine:
                 fail = ComplianceResult(
                     passed=False,
                     violations=[
-                        f"insufficient cash: need ${total_cost:.2f}, "
-                        f"have ${portfolio.current_cash:.2f}"
+                        f"insufficient cash: need {money}{total_cost:.2f}, "
+                        f"have {money}{portfolio.current_cash:.2f}"
                     ],
                     blocked_by=None,
                 )
@@ -1918,10 +2093,14 @@ class SimEngine:
             qty=quantity,
             fill=fill_price,
         )
+        book_market = _market_of_kind(kind)
         return SubmitResult(
             accepted=True, trade=trade,
             compliance=compliance, portfolio_snapshot=portfolio,
             toll_charged=toll,
+            market=book_market.value,
+            currency=spec_for(book_market).currency,
+            fees=fee_detail,
         )
 
     # ── Resting-order book (CR170) ────────────────────────────────────────
@@ -1959,7 +2138,7 @@ class SimEngine:
         expires_at = resting_order_expiry(tif, placed_at, ticker)
         order_id = uuid4()
         with get_session() as s:
-            p_row = self._load_portfolio_row(s, user_id)
+            p_row = self._load_portfolio_row(s, user_id, market=market_for(ticker))
             assert p_row is not None
             row = SimRestingOrderRow(
                 id=order_id,
@@ -2033,7 +2212,8 @@ class SimEngine:
         farmable edge here and is not at submit time.
         """
         user_id = order.user_id
-        portfolio = self.ensure_portfolio(user_id)
+        market = market_for(order.ticker)
+        portfolio = self.ensure_portfolio(user_id, market=market)
         # CR222 §3 — NO pre-registration fields, and that is a real, stated
         # consequence rather than an oversight: `sim_resting_orders` carries no
         # column for a thesis, so with `TRAINING_PREREGISTRATION_REQUIRED` on a
@@ -2104,6 +2284,26 @@ class SimEngine:
             return SubmitResult(
                 accepted=False, trade=None,
                 compliance=compliance, portfolio_snapshot=portfolio,
+            )
+        if market is not Market.US:
+            fees = bursa_fees(resting_fill_price * order.quantity)
+            return self._execute_fill(
+                user_id=user_id,
+                portfolio=portfolio,
+                ticker=order.ticker,
+                side=order.side,
+                quantity=order.quantity,
+                fill_price=resting_fill_price,
+                compliance=compliance,
+                stop=order.stop,
+                target=order.target,
+                horizon_days=order.horizon_days,
+                verdict_ref=order.verdict_ref,
+                kind=book_kind(market),
+                fee=fees.total,
+                toll=fees.total,
+                price_source=mark_source,
+                fee_detail=fees.to_json(),
             )
         toll = _training_toll_for(resting_fill_price * order.quantity)
         return self._execute_fill(
@@ -2599,8 +2799,13 @@ class SimEngine:
         rather than silently previewing a bracket the ticket would refuse
         to submit.
         """
-        portfolio = self.ensure_portfolio(user_id)
         ticker = ticker.upper().strip()
+        market = market_for(ticker)
+        _static_market_checks(
+            market, quantity=quantity, limit_price=limit_price,
+            trigger_price=trigger_price,
+        )
+        portfolio = self.ensure_portfolio(user_id, market=market)
 
         if verdict_ref is not None:
             existing_trade_id = self._existing_trade_for_verdict(user_id, verdict_ref)
@@ -2627,6 +2832,12 @@ class SimEngine:
 
         quote = self.current_quote(ticker)
         mark = quote.price
+        if account_snapshot is None:
+            _dynamic_market_checks(
+                market, side=side, held=_held_in(portfolio, ticker),
+                order_type=order_type, limit_price=limit_price,
+                trigger_price=trigger_price, quote=quote,
+            )
         # CR233-BE round 2 (MAJOR-1 fix) — `committed_price_for()` is the
         # SAME helper `submit()` calls below, so preview and submit price a
         # non-market order identically: `mark` when it would fill at once
@@ -2799,6 +3010,8 @@ class SimEngine:
 
         notional = fill_price * quantity
         held = sizing_held
+        preview_fees = bursa_fees(notional) if market is not Market.US else None
+        money = _money(market)
 
         accepted = compliance.passed
         # CR233 round-2 gap closure — `_execute_fill`'s DEF312/DEF377
@@ -2826,13 +3039,14 @@ class SimEngine:
                     )
         if accepted:
             if side == Side.BUY:
-                if notional > sizing_cash + 1e-6:
+                need = notional + (preview_fees.total if preview_fees else 0.0)
+                if need > sizing_cash + 1e-6:
                     accepted = False
                     compliance = ComplianceResult(
                         passed=False,
                         violations=[
-                            f"insufficient cash: need ${notional:.2f}, "
-                            f"have ${sizing_cash:.2f}"
+                            f"insufficient cash: need {money}{need:.2f}, "
+                            f"have {money}{sizing_cash:.2f}"
                         ],
                         blocked_by=None,
                     )
@@ -2856,6 +3070,9 @@ class SimEngine:
             held_quantity=held,
             price_source=quote.source,
             unmeasured_rules=unmeasured_rules,
+            market=market.value,
+            currency=spec_for(market).currency,
+            fees=preview_fees.to_json() if preview_fees else None,
         )
 
     def _cover_short_fill(
@@ -4271,7 +4488,9 @@ class SimEngine:
 
     # ── Outcomes ───────────────────────────────────────────────────────
 
-    def evaluate_outcomes(self, user_id: UUID) -> list[OutcomeUpdate]:
+    def evaluate_outcomes(
+        self, user_id: UUID, market: Market = Market.US,
+    ) -> list[OutcomeUpdate]:
         """Check open trades against stop/target, and liquidate the ones that hit.
 
         A hit closes the position for real — the holding is reduced or removed
@@ -4279,6 +4498,11 @@ class SimEngine:
         used to stamp `realised_pnl` and leave the shares on the books, so a
         stopped-out position stayed in the portfolio, in `total_value`, and in
         the sector concentration `check_mandate_compliance` hard-REJECTs on.
+
+        CR282: `market` picks the book swept (US by default). The MYR book is
+        swept only when the caller passes `Market.MY`, which the resting-order
+        sweep does inside Bursa sessions; a Bursa bracket close pays the same
+        Bursa fees a manual sell does.
         """
         updates: list[OutcomeUpdate] = []
         # DEF305 — tickers this pass declined to price. Collected rather than
@@ -4300,13 +4524,13 @@ class SimEngine:
             # not grow a second notion of "how much of this lot is left".
             all_rows = s.execute(
                 select(SimTradeRow)
-                .where(training_trade_scope(user_id))
+                .where(training_trade_scope(user_id, market))
                 .order_by(SimTradeRow.opened_at.asc())
             ).scalars().all()
             lot_open = _open_quantity_by_lot(all_rows)
             rows = [r for r in all_rows if r.status == "open"]
             # Once, not per trade: N trades must sell against one live row.
-            p_row = self._load_portfolio_row(s, user_id)
+            p_row = self._load_portfolio_row(s, user_id, market=market)
             live_lots: dict[str, list[tuple[SimTradeRow, float]]] = defaultdict(list)
             for t in rows:
                 side = t.side
@@ -4470,23 +4694,36 @@ class SimEngine:
             if p_row is not None else min(float(t.quantity), lot_left)
         )
         t.realised_pnl = round((price - float(t.entry_price)) * sold, 2)
+        self._charge_exit_fee(p_row, t, price * sold)
         updates.append(OutcomeUpdate(
             trade_id=t.id, new_status=new_status,  # type: ignore[arg-type]
             closed_price=price, realised_pnl=float(t.realised_pnl),
         ))
 
+    @staticmethod
+    def _charge_exit_fee(p_row, t: SimTradeRow, sold_notional: float) -> None:
+        """CR282 — a Bursa exit (bracket or manual close) pays the Bursa fee
+        schedule, debited from the MYR book and added to the closed lot's
+        `toll_charged`. A no-op on the US book, which charges nothing on these
+        exits today."""
+        if p_row is None or p_row.kind != _BOOK_KIND[Market.MY] or sold_notional <= 0:
+            return
+        fees = bursa_fees(sold_notional)
+        p_row.current_cash = round(float(p_row.current_cash) - fees.total, 2)
+        t.toll_charged = round(float(t.toll_charged or 0.0) + fees.total, 2)
+
     def manual_close(self, user_id: UUID, trade_id: UUID) -> SimTrade | None:
         with get_session() as s:
             row = s.execute(
                 select(SimTradeRow).where(
-                    training_trade_scope(user_id),
+                    any_training_trade_scope(user_id),
                     SimTradeRow.id == trade_id,
                     SimTradeRow.status == "open",
                 )
             ).scalar_one_or_none()
             if row is None:
                 return None
-            p_row = self._load_portfolio_row(s, user_id)
+            p_row = self._load_portfolio_row(s, user_id, market=market_for(row.ticker))
             # DEF316 — the same gate as `evaluate_outcomes`, for the same
             # reason, and this is the path that actually left the residue:
             # pre-DEF269 this reached across lanes and stamped three GAME buy
@@ -4521,6 +4758,7 @@ class SimEngine:
                 if p_row is not None else float(row.quantity)
             )
             row.realised_pnl = round((price - float(row.entry_price)) * sold, 2)
+            self._charge_exit_fee(p_row, row, price * sold)
             s.flush()
             return SimTrade.from_row(row)
 

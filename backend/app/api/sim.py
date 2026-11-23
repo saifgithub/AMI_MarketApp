@@ -52,6 +52,7 @@ from app.services.sim_engine import (
     SimEngine,
     SimTrade,
     UnpriceableError,
+    book_kind,
     get_sim_engine,
 )
 from app.services.sim_resting_orders import (
@@ -73,6 +74,8 @@ from app.services.ticker_reference import (
 from app.api.dependencies import get_current_user
 from app.db import get_session
 from app.db.models import SimPortfolioRow, User
+from app.trading_math.bursa_rules import MarketRuleViolation
+from app.trading_math.markets import Market, market_enabled, spec_for
 
 
 router = APIRouter(prefix="/v1/sim", tags=["sim"])
@@ -81,6 +84,48 @@ router = APIRouter(prefix="/v1/sim", tags=["sim"])
 def _own(current_user: User, user_id: UUID) -> None:
     if current_user.id != user_id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
+
+
+def _ccy(ticker: str) -> str:
+    """Currency prefix for copy about a ticker: `$` for US, `RM` for Bursa."""
+    from app.trading_math.markets import market_for
+
+    return spec_for(market_for(ticker)).currency_symbol
+
+
+def _market_param(market: str) -> Market:
+    """CR282 — the `market` query parameter ('US' default | 'MY'). An unknown
+    value or a market whose flag is off is a 422, never a silent fall back to US
+    (which would show dollars where the caller asked for ringgit)."""
+    try:
+        m = Market((market or "US").upper())
+    except ValueError:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY, f"unknown market: {market!r}",
+        ) from None
+    if not market_enabled(m):
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            f"{spec_for(m).exchange_label} is not available yet.",
+        )
+    return m
+
+
+async def _engine_call(fn, /, *args, **kwargs):
+    """`asyncio.to_thread` that maps a market's own order-rule refusal to a 422."""
+    try:
+        return await asyncio.to_thread(fn, *args, **kwargs)
+    except MarketRuleViolation as exc:
+        raise _market_rule_422(exc) from exc
+
+
+def _market_rule_422(exc: MarketRuleViolation) -> HTTPException:
+    """CR282 — a market's own order rule (board lot, tick, price limit, shorts)
+    as a 4xx the client can render: a machine `code` plus the sentence."""
+    return HTTPException(
+        status.HTTP_422_UNPROCESSABLE_ENTITY,
+        detail={"code": exc.code, "message": str(exc), "market": exc.market.value},
+    )
 
 
 def _require_ticker_or_422(ticker: str) -> None:
@@ -389,6 +434,10 @@ class PortfolioSnapshot(BaseModel):
     # build if a Dart model reads a key no route sends.
     options: list[OptionLegOut] = Field(default_factory=list)
 
+    # CR282 — which book this is. 'US'/'USD' unless the caller asked for 'MY'.
+    market: str = "US"
+    currency: str = "USD"
+
 
 class NavPointOut(BaseModel):
     """One `portfolio_nav_daily` row. `price_source` rides on every point
@@ -462,6 +511,11 @@ class PreviewTradeResponse(BaseModel):
     # "disclose, don't block" ruling. Empty on the AMI path. See
     # `SimEngine.preview`'s docstring and `docs/defect/DEF419_per_account_mandate_check.md`.
     unmeasured_rules: list[dict] = Field(default_factory=list)
+    # CR282 — the book this order would touch, and (Bursa only) the itemised fee
+    # estimate; `fees` is null for US.
+    market: str = "US"
+    currency: str = "USD"
+    fees: dict | None = None
 
 
 def _short_out(row, mark: float | None) -> ShortPositionOut:
@@ -552,8 +606,12 @@ async def get_portfolio(
     user_id: UUID,
     current_user: User = Depends(get_current_user),
     sim: SimEngine = Depends(get_sim_engine),
+    market: str = Query("US"),
 ) -> PortfolioSnapshot:
     _own(current_user, user_id)
+    book = _market_param(market)
+    if book is not Market.US:
+        return await _get_market_portfolio(user_id, book, sim)
     # DEF120 D1/D3: one to_thread hop around a single-fetch snapshot, not
     # four independent sync calls each parking the event loop for its own
     # quote pass.
@@ -617,6 +675,50 @@ async def get_portfolio(
     )
 
 
+async def _get_market_portfolio(
+    user_id: UUID, book: Market, sim: SimEngine,
+) -> PortfolioSnapshot:
+    """CR282 — the non-US book's snapshot (the MYR book). No shorts, no options
+    (the market has neither), and the resting-order commitment is scoped to this
+    book's own orders."""
+    p, marks, total_value, drawdown_pct, price_source = await asyncio.to_thread(
+        sim.portfolio_marks_snapshot, user_id, market=book,
+    )
+    commitment = await asyncio.to_thread(commitment_for, user_id, book)
+    brackets = await asyncio.to_thread(sim.position_brackets, user_id, book)
+    return PortfolioSnapshot(
+        user_id=user_id,
+        portfolio_id=p.id,
+        starting_capital=p.starting_capital,
+        current_cash=p.current_cash,
+        holdings=[
+            {
+                "ticker": h.ticker,
+                "quantity": h.quantity,
+                "avg_cost": h.avg_cost,
+                "mark": marks.get(h.ticker, h.avg_cost),
+                "value": marks.get(h.ticker, h.avg_cost) * h.quantity,
+                "unrealised_pnl": round(
+                    (marks.get(h.ticker, h.avg_cost) - h.avg_cost) * h.quantity, 2,
+                ),
+                "opened_at": h.opened_at.isoformat(),
+                "stop": brackets.get(h.ticker, (None, None))[0],
+                "target": brackets.get(h.ticker, (None, None))[1],
+            }
+            for h in p.holdings
+        ],
+        total_value=total_value,
+        drawdown_pct=drawdown_pct,
+        price_source=price_source,
+        cash_committed=commitment.cash_committed,
+        cash_available=round(p.current_cash - commitment.cash_committed, 2),
+        resting_order_count=commitment.resting_order_count,
+        shares_committed=commitment.shares_committed,
+        market=book.value,
+        currency=spec_for(book).currency,
+    )
+
+
 @router.get("/portfolio/{user_id}/history", response_model=PortfolioHistoryResponse)
 def get_portfolio_history(
     user_id: UUID,
@@ -651,14 +753,14 @@ def get_portfolio_history(
     )
 
 
-def _enforce_reset_cooldown_sync(user_id: UUID) -> None:
+def _enforce_reset_cooldown_sync(user_id: UUID, book: Market = Market.US) -> None:
     """The 24h reset-cooldown read (blocking DB session), run via
     `asyncio.to_thread` so it never executes on the event loop (DEF200)."""
     with get_session() as s:
         row = s.execute(
             select(SimPortfolioRow).where(
                 SimPortfolioRow.user_id == user_id,
-                SimPortfolioRow.kind == "training",
+                SimPortfolioRow.kind == book_kind(book),
             )
         ).scalar_one_or_none()
         if row is not None:
@@ -681,8 +783,10 @@ async def reset_portfolio(
     user_id: UUID,
     current_user: User = Depends(get_current_user),
     sim: SimEngine = Depends(get_sim_engine),
+    market: str = Query("US"),
 ) -> PortfolioSnapshot:
     _own(current_user, user_id)
+    book = _market_param(market)
     # CR004: 24h cooldown. Reset recreates the portfolio, so its
     # created_at IS the last-reset time — no extra column needed.
     # CR109 slice 2: scoped to kind="training" — a user can now also hold
@@ -690,9 +794,11 @@ async def reset_portfolio(
     # training-only concept (`reset_portfolio()` itself is untouched by
     # this CR). Without this scope, a user holding both would make this
     # query raise MultipleResultsFound the moment they also had a game run.
-    await asyncio.to_thread(_enforce_reset_cooldown_sync, user_id)
-    await asyncio.to_thread(sim.reset_portfolio, user_id)
-    return await get_portfolio(user_id, current_user=current_user, sim=sim)
+    await asyncio.to_thread(_enforce_reset_cooldown_sync, user_id, book)
+    await asyncio.to_thread(sim.reset_portfolio, user_id, book)
+    return await get_portfolio(
+        user_id, current_user=current_user, sim=sim, market=book.value,
+    )
 
 
 @router.post("/preview", response_model=PreviewTradeResponse)
@@ -720,7 +826,7 @@ async def preview_trade(
     classification_universe = await default_classification_universe_async()
     # DEF120 D1: sim.preview() reaches SimEngine.current_quote synchronously
     # (mark, compliance quotes) — off the event loop via to_thread.
-    pv = await asyncio.to_thread(
+    pv = await _engine_call(
         sim.preview,
         user_id=req.user_id,
         ticker=req.ticker,
@@ -764,6 +870,9 @@ async def preview_trade(
         held_quantity=pv.held_quantity,
         price_source=pv.price_source,
         unmeasured_rules=pv.unmeasured_rules,
+        market=pv.market,
+        currency=pv.currency,
+        fees=pv.fees,
     )
 
 
@@ -791,7 +900,7 @@ async def submit_trade(
     # via to_thread. The Session is created, used, and closed entirely
     # inside submit()'s body, so it never crosses a thread boundary; only
     # the whole synchronous call is handed to the worker thread.
-    result = await asyncio.to_thread(
+    result = await _engine_call(
         sim.submit,
         user_id=req.user_id,
         ticker=req.ticker,
@@ -888,7 +997,7 @@ async def submit_trade(
         mandate_version=mandate.version,
     )
 
-    return {
+    payload = {
         "ok": True,
         "resting": False,
         "trade": trade.to_json(),
@@ -899,6 +1008,13 @@ async def submit_trade(
         # underneath a client between the fill and the next snapshot.
         "toll_charged": result.toll_charged,
     }
+    if result.market != Market.US.value:
+        # CR282 — a Bursa fill names its currency and itemises its fees; the US
+        # response shape is untouched.
+        payload["market"] = result.market
+        payload["currency"] = result.currency
+        payload["fees"] = result.fees
+    return payload
 
 
 @router.get("/orders/{user_id}")
@@ -980,7 +1096,7 @@ def _compliance_json(compliance) -> dict:
     }
 
 
-@router.get("/trades/{user_id}", response_model=TradeListResponse)
+@router.get("/trades/{user_id}", response_model=None)
 def list_trades(
     user_id: UUID,
     status_filter: str | None = None,
@@ -995,7 +1111,8 @@ def list_trades(
     offset: int = Query(0, ge=0),
     current_user: User = Depends(get_current_user),
     sim: SimEngine = Depends(get_sim_engine),
-) -> TradeListResponse:
+    market: str = Query("US"),
+) -> dict:
     """Training-lane trade ledger, newest first.
 
     Pages are LEDGER order (`opened_at DESC, id DESC`), not the History tab's
@@ -1004,19 +1121,26 @@ def list_trades(
     ledger, unchanged from pre-CR120 behavior.
     """
     _own(current_user, user_id)
+    book = _market_param(market)
     trades = sim.list_trades(
         user_id, status=status_filter, limit=limit, offset=offset,  # type: ignore[arg-type]
+        market=book,
     )
     # Unpaginated reads (the app's every-refresh path) already hold the full
     # ledger — len() keeps that hot path at one query.
     total = (
         len(trades)
         if limit is None and offset == 0
-        else sim.count_trades(user_id, status=status_filter)  # type: ignore[arg-type]
+        else sim.count_trades(user_id, status=status_filter, market=book)  # type: ignore[arg-type]
     )
-    return TradeListResponse(
+    payload = TradeListResponse(
         trades=[t.to_json() for t in trades], total=total, limit=limit, offset=offset,
-    )
+    ).model_dump()
+    if book is not Market.US:
+        # CR282 — the US ledger keeps its exact pre-CR282 key set.
+        payload["market"] = book.value
+        payload["currency"] = spec_for(book).currency
+    return payload
 
 
 def _journal_closed_trades_sync(sim: SimEngine, user_id: UUID, updates: list) -> None:
@@ -1111,8 +1235,8 @@ def _journal_manual_close_sync(user_id: UUID, closed: SimTrade) -> None:
             user_id=user_id,
             entry_type=EntryType.SIM_TRADE,
             reference_id=closed.id,
-            title=f"Closed {closed.ticker} (MANUAL) — ${closed.realised_pnl:+.2f}",
-            summary=f"Closed at ${closed.closed_price:.2f}.",
+            title=f"Closed {closed.ticker} (MANUAL) — {_ccy(closed.ticker)}{closed.realised_pnl:+.2f}",
+            summary=f"Closed at {_ccy(closed.ticker)}{closed.closed_price:.2f}.",
             ticker=closed.ticker,
             tags=["sim_trade", "closed", "manual"],
             outcome=Outcome.WIN if closed.realised_pnl >= 0 else Outcome.LOSS,
