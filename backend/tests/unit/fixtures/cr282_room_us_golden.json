@@ -1,0 +1,720 @@
+{
+ "corpus": {
+  "forward_catalyst": "7e2435f7d20a70e2a1443f5bf06b95c85032663e753b6b93b48ef99b0e20ef48",
+  "forward_catalyst_late": "10fc32b6b316e0c66f76d6b43da34c80154f10e3647eac384404a85a27044815",
+  "holdings_none": "743e2b5f4b00f73d086eee295198d7f367d5dd2d18edd83224831367344b8841",
+  "risk_officer/r1": "5afab83c2ad24720ab97e582d4e4e490b63219c354d46f70c507fe3818fec583",
+  "risk_officer/r3": "d1e1381242ffd30767fc86dd5efeada0b51a557e1e101c7e2b30ed6bf0ab30f3",
+  "risk_officer/r5": "7acff7cfba0c3a68e8a2f2c4b23a643ee3179e9c251fdaafdfd9d13711be378c",
+  "room/r1/aggressive_debator": "fb0c870d394c751052f6480b7fd36c4d0afa03c2cb4291a7af31f0f60d6f051a",
+  "room/r1/bear_researcher": "a1784316adaefc2469e90311aec418e4bb3ef02a69c56c4984fa3bbfd4f5196a",
+  "room/r1/bull_researcher": "c0546e8a331e7ddf0bafdfc55f632ba924773208b467a1db48a9874b0e2941b4",
+  "room/r1/conservative_debator": "da5e261fcc430745a6e769cc6c654bc9a0a96d991be9d78d9668c7f12abbf937",
+  "room/r1/fundamentals_analyst": "a02e0e244a8a84173f70190f7b41be3e81aa16a3a58b512fe66d203a96041b32",
+  "room/r1/market_analyst": "b6edfad4b8ceaae8ddb842983cc0b63efe0303fc079554aa163dea5954c7b0e1",
+  "room/r1/neutral_debator": "0ea9bd92e174a2b535b8dd103a30996e9a3c9a139e29589fc9bc2bbdd8d93bc3",
+  "room/r1/news_analyst": "1d0b116937f45eee5b1c4a87e13e54b40c5aaabe2134dc2f9ffe76690e6691fb",
+  "room/r1/portfolio_manager": "89ebe686690860e5565823bb81982d6ecab94a75b1cc06a126a4e2b757d754ce",
+  "room/r1/research_manager": "51b81f273ee5f4ffa7300630b47f6ebf05a06df2c27916338ddb10d822517327",
+  "room/r1/social_media_analyst": "cd3bc345d30774037acc1a62ee5d867305ab31dc4355bbd626d1755715be6a1c",
+  "room/r1/trader": "cd8234bc18b11529e5420b4cac8688cb2d64d7e0bc016a6fdff9f4fe6574fc97",
+  "room/r3/aggressive_debator": "1f45a3f5349288b8128e0596d6a74bca203ecf254207cd8dc561c280fe963f7b",
+  "room/r3/bear_researcher": "edeed7807ffd9eefc7dfd36a9986e4868aa6ccfac7382d6c52f44053cbf12368",
+  "room/r3/bull_researcher": "a808390d12074ab4a174b8475a8f95f18a37b2925a2c8355483cec5cfe16b66b",
+  "room/r3/conservative_debator": "084d811db4d11568be461fec4d378bce4bd8c34912611a62ca438e721d689c72",
+  "room/r3/fundamentals_analyst": "19b0c171d88553d1a26f791b88b4874caeb3ea0c702de5c573ed322b6fd1c89b",
+  "room/r3/market_analyst": "bffd314a2785b8dc566595f4be80589fa2e3898301054d551beb78b7a52f5f81",
+  "room/r3/neutral_debator": "318df9a8fb4ab87a29ac68149c36f73ba1a74ce27d7d0a0b1a776fca829e0397",
+  "room/r3/news_analyst": "98d00dc27a4efec80b3196245d32fedae8e1db2eb23270def9f375c2c2855eeb",
+  "room/r3/portfolio_manager": "dc59b91a9f5c166b3c01c1cc98a579264412d129ff118331951ad2ee8b811934",
+  "room/r3/research_manager": "99ee60756ce98dd8d05ba047434ba2bf26ba569abaa8bc0939908dfee2b1eb7e",
+  "room/r3/social_media_analyst": "b6a0047239189b90c266d4c6592f943e5823f270c8a995c9dafbc5ffd9c25516",
+  "room/r3/trader": "3f28bab98bb9b6ff1075ea617fe32472c63056609627378c88b1e113d0d09fa0",
+  "room/r5/aggressive_debator": "9bcde2ff79e95cf7d82901b3f81216102fef8ccfa33c0b2458c7cd96ff0bcd3e",
+  "room/r5/bear_researcher": "f167af28379b39e45b4ed3d0d6f36e68045193f6277ee32bf2d38f7d5a4da340",
+  "room/r5/bull_researcher": "c6eb1a0b6a3023267c8055f352c104228311b6798bb1ce41f554d85e336ffd58",
+  "room/r5/conservative_debator": "448090868dfd2b31d746fcb5111dcac479bab44dee062efa69eb89947d136000",
+  "room/r5/fundamentals_analyst": "e5bfd8f2d6ecc2d76398a15686840c175a31e64e4dbf5da9d6837569b4694117",
+  "room/r5/market_analyst": "4bb16a89febf6e892d3f71d5529b491974f3d9dbf0a515cd412e848a8c7631a6",
+  "room/r5/neutral_debator": "f9cb77d5e8ade0f955d71fdb8531f41e2341ea87a2e76f565a45d83fc89872f1",
+  "room/r5/news_analyst": "3ff28c67b4af23a6441d6aa5f2174740b1c20f3d2c72fb326bae83c5a2973527",
+  "room/r5/portfolio_manager": "227e3425b9071c64ad4a8efa11ef3fef8a4bf897e7146b37a321060d78aae8c3",
+  "room/r5/research_manager": "835d3da7db21ae1125186a3d5a879c7720a8591addb7ca8b24585d1c28be7373",
+  "room/r5/social_media_analyst": "1bd1a64851d97aded9cbb6502d677d4b83f97ea1ec71b3fc92a8f0d892184aeb",
+  "room/r5/trader": "1b3048bd1673091beb86410f0b5b7e5b4eb7c448838349b93c253ec37e11f724",
+  "room_cards/aggressive_debator": "f807a60977caab0d173bf84ee32ad711d17a1208d9a4d3b0376547a1c54e8f10",
+  "room_cards/bear_researcher": "a28431b1eab472c3e731f88fad8a00997be00bed878ccf2cbbf2738b08c23dcd",
+  "room_cards/bull_researcher": "8c4524e83aff4b4016f543105b66759a6d8374835cbca46bdea4699a7c7bdee2",
+  "room_cards/conservative_debator": "942503ed90828a407fead71a754232522edf469d52dc5177b5a96f035ca76a20",
+  "room_cards/fundamentals_analyst": "e843f2825398faa0707ee683650e9061c86c1b9bc6d5dfb1dd31da7c651ff85c",
+  "room_cards/market_analyst": "12c26e583274bc2e22f9824d905b7ba56c85175c308e031ef87bcb8bb6cf689d",
+  "room_cards/neutral_debator": "92864f473624e3f158453fbc23cc6286be65831deef94e0027a4ace87eec6fdf",
+  "room_cards/news_analyst": "d7e88204dfbc8ee858402bb018214f983a5e5662d2a225942004729dc7a3dae1",
+  "room_cards/portfolio_manager": "1d35dc2f1a3eb31241f531b60bb24adf85a49963bcce6af647f7093c07c67881",
+  "room_cards/research_manager": "9e464f8b96c2923093cd40592521547bc3043140c74e810be2d4e32026dcc805",
+  "room_cards/social_media_analyst": "fe007654d8d8f046480a76a39ea3cac59d0a836bb0a73807da13a5a7405b4d68",
+  "room_cards/trader": "f633c01d4994480eeadf2f752142673e1b91521dabf6537ec4ea147400fd08da",
+  "sheet/aggressive_debator": "b64499c0ef72fb052f7fe5d7576fbde2586d940efc869cfeaf78e4fd16b2f3c6",
+  "sheet/bear_researcher": "b64499c0ef72fb052f7fe5d7576fbde2586d940efc869cfeaf78e4fd16b2f3c6",
+  "sheet/bull_researcher": "b64499c0ef72fb052f7fe5d7576fbde2586d940efc869cfeaf78e4fd16b2f3c6",
+  "sheet/concierge": "b64499c0ef72fb052f7fe5d7576fbde2586d940efc869cfeaf78e4fd16b2f3c6",
+  "sheet/conservative_debator": "b999ea03bc7db42b26425f125a6597559650f6917ae50bc6ae92c956e6b24c80",
+  "sheet/full": "b64499c0ef72fb052f7fe5d7576fbde2586d940efc869cfeaf78e4fd16b2f3c6",
+  "sheet/fundamentals_analyst": "07ba011415ea911c9e5ffea90273882e26970aad56827c19efc03b13dc0d31e8",
+  "sheet/market_analyst": "244f1ed4c34ff380e952dd6da2f8f687b6d953752822d616b31919031410532c",
+  "sheet/neutral_debator": "b64499c0ef72fb052f7fe5d7576fbde2586d940efc869cfeaf78e4fd16b2f3c6",
+  "sheet/news_analyst": "e65196cc67c03ba86f02e42e07e465eaabfa932e13bcaab1c10bf0b2210dfee0",
+  "sheet/portfolio_manager": "b64499c0ef72fb052f7fe5d7576fbde2586d940efc869cfeaf78e4fd16b2f3c6",
+  "sheet/research_manager": "b64499c0ef72fb052f7fe5d7576fbde2586d940efc869cfeaf78e4fd16b2f3c6",
+  "sheet/risk_officer": "13303397695267c9a555240408a31106a3620986036837bfa8f329329e2c8c64",
+  "sheet/social_media_analyst": "70f010657e5db3ee7a521d870c9ded932cf4ac9b551b5158a6cc399ea4c1900d",
+  "sheet/trader": "4d48e8aaff68553bb861723482518cae1266c469d68f7a2f734f7df3e1f4a70d",
+  "trader_regex": "56dd1cf034b10f5c773523a10d7613ff37b58e5491fb5477500d8980d2d344d1"
+ },
+ "prompt_versions": {
+  "aggressive_debator": "501f1910f567",
+  "bear_researcher": "beaccfd6c1e5",
+  "bull_researcher": "2009f764b655",
+  "concierge": null,
+  "conservative_debator": "416be117f941",
+  "fundamentals_analyst": "4ed961c6f39c",
+  "market_analyst": "5008b70794a5",
+  "neutral_debator": "14947d30bd83",
+  "news_analyst": "7c92bdea116b",
+  "portfolio_manager": "c3905319330b",
+  "research_manager": "7cedeabd6cae",
+  "risk_officer": null,
+  "social_media_analyst": "8b6d9349b85b",
+  "trader": "c9b3bb54f094"
+ },
+ "prompt_versions_flags_on": {
+  "aggressive_debator": "ac49b8895182",
+  "bear_researcher": "4f5c9216585e",
+  "bull_researcher": "664d4575ff15",
+  "concierge": null,
+  "conservative_debator": "707d07d86fd5",
+  "fundamentals_analyst": "e8d8f93ff430",
+  "market_analyst": "5008b70794a5",
+  "neutral_debator": "07d84373525d",
+  "news_analyst": "df9c764f3e52",
+  "portfolio_manager": "68ce5fdb85a5",
+  "research_manager": "3e1c3ad0e0d4",
+  "risk_officer": null,
+  "social_media_analyst": "8b6d9349b85b",
+  "trader": "18d186d25c2b"
+ },
+ "sheet": {
+  "analyst_opinion_count": 37,
+  "analyst_rating": "STRONGSENT",
+  "analyst_rating_score": 3.7,
+  "analyst_rating_split": {
+   "buy": 14,
+   "hold": 8,
+   "sell": 1,
+   "strong_buy": 9,
+   "strong_sell": 0
+  },
+  "analyst_rating_split_history": [
+   {
+    "buy": 15,
+    "hold": 8,
+    "period": "-1m",
+    "sell": 1,
+    "strong_buy": 8,
+    "strong_sell": 0
+   }
+  ],
+  "analyst_tape": [
+   {
+    "action": "up",
+    "current_pt": 300.0,
+    "date": "2026-11-10",
+    "firm": "Fake & Co",
+    "from_grade": "Hold",
+    "prior_pt": 280.0,
+    "pt_action": "Raises",
+    "to_grade": "Buy"
+   }
+  ],
+  "analyst_target_high": 611.25,
+  "analyst_target_low": 122.75,
+  "analyst_target_median": 355.75,
+  "analyst_target_price": 488.12,
+  "atr14": 4.21,
+  "base_price": 271.83,
+  "bear_catalyst": "any miss on forward guide, or sector-wide re-rating event",
+  "bear_invalidator": "next two quarters both beat AND raise",
+  "bear_quant": "a 10-point multiple compression = ~20% downside",
+  "bear_risk": "multiple compression if growth decelerates \u2014 49x is sensitive",
+  "bear_size": 2,
+  "beta": 1.93,
+  "bollinger_lower": 411.55,
+  "bollinger_upper": 455.11,
+  "bollinger_width_pct": 9.9,
+  "breakout": 888.99,
+  "bull_evidence": "consensus has under-modelled the next 4 quarters of guidance",
+  "bull_falsifier": "next quarter's guide is reset lower by 10%+",
+  "bull_missing": "supply-chain commentary that suggests upside to FY guide",
+  "bull_size": 4,
+  "bull_thesis": "NVDA's revenue growth (23.61%) and profit margin (41.29%) justify a premium multiple",
+  "buyback_pace": "PACESENT",
+  "buyback_price": {
+   "__cr237__": "BuybackPrice",
+   "v": {
+    "avg_price": 187.4,
+    "dollars": 91000000000.0,
+    "period_end": {
+     "__cr237__": "date",
+     "v": "2025-09-30"
+    },
+    "period_start": {
+     "__cr237__": "date",
+     "v": "2024-10-01"
+    },
+    "quarters": 4,
+    "shares": 486000000.0
+   }
+  },
+  "buyback_quarterly": [
+   3000,
+   2000,
+   1654,
+   1000
+  ],
+  "buyback_quarterly_basis": [
+   "BBQ1SENT",
+   "BBQ2SENT",
+   "BBQ3SENT",
+   "BBQ4SENT"
+  ],
+  "buyback_ttm": 7654,
+  "buyback_yield": 8.9,
+  "capex_history": [
+   1000,
+   1010,
+   1020
+  ],
+  "capex_ttm": 6543,
+  "capital_return_pct_fcf": 63,
+  "capital_return_ttm": 10871,
+  "cashflow_ttm_basis": "CFBASISSENT",
+  "catalyst": "\"HEADLINESENT\" (PUBSENT, 10d ago) \u2014 sentiment: SENTIMENTSENT \u2014 SUMMARYSENT",
+  "catalyst_on_ticker": false,
+  "change_52w_pct": 27.4,
+  "change_52w_sp500_pct": 11.9,
+  "current_ratio": 3.19,
+  "day_change_pct": -1.77,
+  "debt_to_equity": 1.47,
+  "dividend_growth": {
+   "__cr237__": "DividendGrowth",
+   "v": {
+    "cagr_pct": 4.089993648377299,
+    "comparisons": 4,
+    "first_year": 2021,
+    "last_year": 2025,
+    "partial_year": null,
+    "payments_per_year": {
+     "__cr237__": "tuple",
+     "v": [
+      {
+       "__cr237__": "tuple",
+       "v": [
+        2021,
+        4
+       ]
+      },
+      {
+       "__cr237__": "tuple",
+       "v": [
+        2022,
+        4
+       ]
+      },
+      {
+       "__cr237__": "tuple",
+       "v": [
+        2023,
+        4
+       ]
+      },
+      {
+       "__cr237__": "tuple",
+       "v": [
+        2024,
+        4
+       ]
+      },
+      {
+       "__cr237__": "tuple",
+       "v": [
+        2025,
+        4
+       ]
+      }
+     ]
+    },
+    "raised_years": 4,
+    "rate_by_year": {
+     "__cr237__": "tuple",
+     "v": [
+      {
+       "__cr237__": "tuple",
+       "v": [
+        2021,
+        0.23
+       ]
+      },
+      {
+       "__cr237__": "tuple",
+       "v": [
+        2022,
+        0.24000000000000002
+       ]
+      },
+      {
+       "__cr237__": "tuple",
+       "v": [
+        2023,
+        0.25
+       ]
+      },
+      {
+       "__cr237__": "tuple",
+       "v": [
+        2024,
+        0.26
+       ]
+      },
+      {
+       "__cr237__": "tuple",
+       "v": [
+        2025,
+        0.27
+       ]
+      }
+     ]
+    },
+    "specials": {
+     "__cr237__": "tuple",
+     "v": []
+    },
+    "total_by_year": {
+     "__cr237__": "tuple",
+     "v": [
+      {
+       "__cr237__": "tuple",
+       "v": [
+        2021,
+        0.92
+       ]
+      },
+      {
+       "__cr237__": "tuple",
+       "v": [
+        2022,
+        0.9600000000000001
+       ]
+      },
+      {
+       "__cr237__": "tuple",
+       "v": [
+        2023,
+        1.0
+       ]
+      },
+      {
+       "__cr237__": "tuple",
+       "v": [
+        2024,
+        1.04
+       ]
+      },
+      {
+       "__cr237__": "tuple",
+       "v": [
+        2025,
+        1.08
+       ]
+      }
+     ]
+    },
+    "truncated_by_gap": false
+   }
+  },
+  "dividend_rate": 2.64,
+  "dividend_yield": 1.63,
+  "dividends_paid_ttm": 3217,
+  "downside": 18,
+  "edgar_8k_flag_lines": [
+   "8-K Friday-after-close filings (180d): none filed Friday at/after 4:00 pm ET between 2026-05-27 and 2026-11-23.",
+   "8-K Item 4.01 (change of auditor) (180d): none filed between 2026-05-27 and 2026-11-23.",
+   "8-K Item 4.02 (non-reliance on prior financials) (180d): none filed between 2026-05-27 and 2026-11-23."
+  ],
+  "edgar_8k_item_402_block": null,
+  "eps_revisions_current": 9.87,
+  "eps_revisions_direction": "REVDIRSENT",
+  "eps_revisions_pct": 12.3,
+  "eps_revisions_window_days": 45,
+  "ev_to_ebitda": "19.42",
+  "ex_dividend_date": "2026-10-17",
+  "exchange_name": "EXCHNAMESENT",
+  "executive_change_state": "unscanned",
+  "fcf_conversion_pct": [
+   45,
+   52,
+   61
+  ],
+  "fcf_history": [
+   3210,
+   3120,
+   3030
+  ],
+  "fcf_history_years": [
+   "2019",
+   "2018",
+   "2017"
+  ],
+  "fcf_yield": 3.87,
+  "field_state": {
+   "analyst_opinion_count": "live",
+   "analyst_rating": "live",
+   "analyst_rating_score": "live",
+   "analyst_rating_split": "live",
+   "analyst_rating_split_history": "live",
+   "analyst_tape": "live",
+   "analyst_target_high": "live",
+   "analyst_target_low": "live",
+   "analyst_target_median": "live",
+   "analyst_target_price": "live",
+   "base_price": "live",
+   "beta": "live",
+   "buyback_pace": "live",
+   "buyback_price": "live",
+   "buyback_quarterly": "live",
+   "buyback_quarterly_basis": "live",
+   "buyback_ttm": "live",
+   "buyback_yield": "live",
+   "capex_history": "live",
+   "capex_ttm": "live",
+   "capital_return_pct_fcf": "live",
+   "capital_return_ttm": "live",
+   "cashflow_ttm_basis": "live",
+   "change_52w_pct": "live",
+   "change_52w_sp500_pct": "live",
+   "cost_of_debt": "unavailable",
+   "current_ratio": "live",
+   "day_change_pct": "live",
+   "debt_maturity": "unavailable",
+   "debt_split": "unavailable",
+   "debt_to_equity": "live",
+   "dividend_growth": "live",
+   "dividend_rate": "live",
+   "dividend_yield": "live",
+   "dividends_paid_ttm": "live",
+   "edgar_8k_flags": "live",
+   "eps_revisions_current": "live",
+   "eps_revisions_direction": "live",
+   "eps_revisions_pct": "live",
+   "eps_revisions_window_days": "live",
+   "ev_to_ebitda": "live",
+   "ex_dividend_date": "live",
+   "exchange_name": "live",
+   "executive_change": "unavailable",
+   "fcf_conversion_pct": "live",
+   "fcf_history": "live",
+   "fcf_history_years": "live",
+   "fcf_yield": "live",
+   "float_liquidity": "live",
+   "float_shares": "live",
+   "forward_pe": "live",
+   "free_cash_flow": "live",
+   "free_cash_flow_ttm": "live",
+   "geographic_revenue": "unavailable",
+   "gross_margin": "live",
+   "gross_margin_trend_bps": "live",
+   "held_pct_insiders": "live",
+   "held_pct_institutions": "live",
+   "historical_ev_ebitda_median": "live",
+   "historical_ev_ebitda_window": "live",
+   "historical_ev_ebitda_years": "live",
+   "historical_pe_median": "live",
+   "historical_pe_window": "live",
+   "historical_pe_years": "live",
+   "industry": "live",
+   "insider_cluster": "live",
+   "insider_plan_tag": "live",
+   "insider_ratio": "live",
+   "interest_coverage": "live",
+   "interest_coverage_quarter": "live",
+   "interest_expense_quarter_usd_m": "live",
+   "long_name": "live",
+   "margin_trend_basis": "live",
+   "market_cap": "live",
+   "market_state": "live",
+   "net_cash": "live",
+   "net_margin_trend_bps": "live",
+   "news": "live",
+   "next_earnings": "live",
+   "operating_cash_flow_ttm": "live",
+   "operating_margin": "live",
+   "operating_margin_trend_bps": "live",
+   "payout_ratio": "live",
+   "pe": "live",
+   "peer_comparison": "unavailable",
+   "peg_basis": "live",
+   "peg_ratio": "live",
+   "price_to_sales": "live",
+   "price_vs_sma_200_pct": "live",
+   "profit_margin": "live",
+   "put_call": "live",
+   "quick_ratio": "live",
+   "recent_filings": "live",
+   "relative_strength_52w_pct": "live",
+   "return_on_assets": "live",
+   "return_on_equity": "live",
+   "rev_growth": "live",
+   "revenue_per_share": "live",
+   "revenue_ttm": "live",
+   "roe_history_pct": "live",
+   "roe_history_years": "live",
+   "roe_median_pct": "live",
+   "roic": "unavailable",
+   "run_date": "live",
+   "sbc": "unavailable",
+   "sector": "live",
+   "segment_revenue": "unavailable",
+   "shares_outstanding": "live",
+   "short_days_to_cover": "live",
+   "short_interest_date": "live",
+   "short_pct_float": "live",
+   "sma_200": "live",
+   "social": "live",
+   "surprise_actuals": "live",
+   "surprise_estimates": "live",
+   "surprise_pcts": "live",
+   "surprise_quarters": "live",
+   "technicals": "live",
+   "total_cash": "live",
+   "total_debt": "live",
+   "trailing_eps": "live",
+   "volume_avg_3m": "live",
+   "volume_today": "live",
+   "wacc": "live",
+   "wc_change_ttm": "live",
+   "wc_inventory_ttm": "live",
+   "wc_payables_ttm": "live",
+   "wc_receivables_ttm": "live",
+   "week52": "live"
+  },
+  "float_liquidity": {
+   "adv_reason": "the daily price-bar fetch failed or was too short",
+   "float_as_of": "2026-11-23",
+   "float_pct": 95.8,
+   "float_shares": 23138626220.0,
+   "shares_outstanding": 24147000000.0
+  },
+  "float_shares": 7531,
+  "forward_catalyst": "FOMC decision in 16 days",
+  "forward_pe": "12.34",
+  "free_cash_flow": 45678,
+  "free_cash_flow_ttm": 3333,
+  "gross_margin": 63.71,
+  "gross_margin_trend_bps": 1234,
+  "held_pct_insiders": 4.31,
+  "held_pct_institutions": 72.19,
+  "high": 402.9,
+  "historical_ev_ebitda_median": 11.3,
+  "historical_ev_ebitda_window": "EVWINDOWSENT",
+  "historical_ev_ebitda_years": 4,
+  "historical_mode": false,
+  "historical_pe_median": 15.7,
+  "historical_pe_window": "PEWINDOWSENT",
+  "historical_pe_years": 4,
+  "industry": "DRILLSENT",
+  "influencer_take": "most active in r/SUBSENT (1 of 44 subreddits in the sample)",
+  "insider_cluster_line": "Cluster buying: none \u2014 no cluster buying in the last 90 days (fewer than 3 distinct insiders with code-P open-market buys inside any 14-day window between 2026-08-25 and 2026-11-23).",
+  "insider_plan_tag_line": "Insider sales under Rule 10b5-1 plans (LIVE): of the 37 open-market sales in the window, 21 were pre-scheduled under Rule 10b5-1 plans (flag read from the Form 4's own 10b5-1 checkbox, never inferred), 16 discretionary, 0 unstated \u2014 a scheduled plan sale is not fresh conviction; a non-plan or unstated sale is the stronger signal.",
+  "insider_ratio_line": "Insider open-market buy/sell ratio (90d) (LIVE): 0 open-market buys vs 37 open-market sales filed between 2026-08-25 and 2026-11-23 (codes P/S only) \u2014 0.00 buys per sale, AMI-computed from the issuer's SEC Form 4/5 filings.",
+  "interest_coverage": 9.4,
+  "interest_coverage_quarter": "COVQUARTERSENT",
+  "interest_expense_quarter_usd_m": 87.6,
+  "is_growth": true,
+  "last_close": 444.22,
+  "long_name": "LONGNAMESENT",
+  "low": 155.4,
+  "macd_histogram": 1.11,
+  "macd_line": 3.321,
+  "macd_signal": 2.211,
+  "margin_trend_basis": "TRENDBASISSENT vs TRENDPRIORSENT",
+  "market_cap": 1234567,
+  "market_state": "REGULAR",
+  "mention_trend": "73,561 Reddit mentions over 33d, trend: SOCTRENDSENT",
+  "net_cash": 944,
+  "net_margin_trend_bps": 3456,
+  "news_headlines": [
+   {
+    "__cr237__": "LiveHeadline",
+    "v": {
+     "link": "LINKSENT",
+     "published_at": 1794609226,
+     "publisher": "PUBSENT",
+     "sentiment": "SENTIMENTSENT",
+     "source": "alpha_vantage",
+     "summary": "SUMMARYSENT",
+     "title": "HEADLINESENT"
+    }
+   },
+   {
+    "__cr237__": "LiveHeadline",
+    "v": {
+     "link": "LINKSENT",
+     "published_at": 1794609226,
+     "publisher": "PUBSENT",
+     "sentiment": "SENTIMENTSENT",
+     "source": "alpha_vantage",
+     "summary": "SUMMARYSENT",
+     "title": "HEADLINESENT"
+    }
+   }
+  ],
+  "next_earnings_date": "2026-09-30",
+  "next_earnings_eps_estimate": 4.44,
+  "next_earnings_interval": "54 days ago",
+  "next_earnings_quarter": "Q3",
+  "operating_cash_flow_ttm": 9876,
+  "operating_margin": 52.83,
+  "operating_margin_trend_bps": 2345,
+  "pattern": "buzz score 88/100, bullish 61% / bearish 29%",
+  "payout_ratio": 27.33,
+  "pe": "48.77",
+  "peer_comparison_unavailable_reason": "the company's SEC submissions could not be read, so its SIC is unknown this call",
+  "peg_basis": "PEGBASISSENT",
+  "peg_ratio": "2.15",
+  "period_candles": 63,
+  "price_to_sales": "7.31",
+  "price_vs_sma_200_pct": 12.6,
+  "profit_margin": 41.29,
+  "put_call_oi_baseline": {
+   "__cr237__": "app.services.ratio_baselines:RatioBaseline",
+   "v": {
+    "median": 0.65,
+    "n": 8,
+    "window_days": 90
+   }
+  },
+  "put_call_ratio": {
+   "__cr237__": "PutCallRatio",
+   "v": {
+    "call_open_interest": 13800,
+    "call_volume": 1480,
+    "chain_date": {
+     "__cr237__": "date",
+     "v": "2026-11-20"
+    },
+    "contracts": 640,
+    "expiries": 4,
+    "expiry_first": {
+     "__cr237__": "date",
+     "v": "2026-12-04"
+    },
+    "expiry_last": {
+     "__cr237__": "date",
+     "v": "2026-12-24"
+    },
+    "oi_ratio": 0.66,
+    "put_open_interest": 9100,
+    "put_volume": 1200,
+    "volume_ratio": 0.81
+   }
+  },
+  "put_call_volume_baseline": {
+   "__cr237__": "app.services.ratio_baselines:RatioBaseline",
+   "v": {
+    "median": 0.74,
+    "n": 8,
+    "window_days": 90
+   }
+  },
+  "quick_ratio": 2.71,
+  "recent_filings_items": [
+   {
+    "filed_date": "2026-11-02",
+    "form": "10-Q",
+    "label": "quarterly report"
+   }
+  ],
+  "relative_strength_52w_pct": 15.5,
+  "return_on_assets": 17.22,
+  "return_on_equity": 31.55,
+  "return_period_pct": 19.83,
+  "rev_growth": 23.61,
+  "revenue_per_share": 66.4401,
+  "revenue_ttm": 98765,
+  "roe_history_pct": [
+   35.7,
+   24.0,
+   33.1
+  ],
+  "roe_history_years": [
+   "2016",
+   "2015",
+   "2014"
+  ],
+  "roe_median_pct": 33.1,
+  "rsi": 57,
+  "rsi_tone": "TONESENT",
+  "run_date": "2026-11-23",
+  "sector": "ENERGYSENT",
+  "sentiment_score": "+0.42 (live Reddit sentiment, Adanos)",
+  "sentiment_split": "4,471 positive / 2,119 negative / 6,971 neutral \u2014 neutral is 51% of the classified sample",
+  "sentiment_tone": "bullish",
+  "shares_outstanding": 8642,
+  "short_days_to_cover": 4.7,
+  "short_interest_date": "2026-07-15",
+  "short_pct_float": 6.28,
+  "sma_200": 188.44,
+  "sma_long": 422.88,
+  "sma_short": 411.77,
+  "social_baselines": "sentiment score +0.42 vs trailing-90d median +0.45 (8 daily reads on file); mention volume 73561 vs trailing-90d median 54 (8 daily reads on file)",
+  "social_engagement": "1,234 distinct posts, 98,765 total upvotes",
+  "social_fetched_age": "fetched 2026-11-20 (3d ago)",
+  "subreddit_split": [
+   "r/SPLITSENT: 5,150 mentions, sentiment -0.37, buzz 66/100"
+  ],
+  "support": 333.11,
+  "surprise_actuals": [
+   5.55,
+   6.66
+  ],
+  "surprise_estimates": [
+   5.11,
+   6.22
+  ],
+  "surprise_pcts": [
+   8.6,
+   7.1
+  ],
+  "surprise_quarters": [
+   "SURQ1SENT",
+   "SURQ2SENT"
+  ],
+  "synth_lean": "constructive bull",
+  "ticker": "NVDA",
+  "total_cash": 55221,
+  "total_debt": 8901,
+  "trailing_eps": 7.7701,
+  "trend": "TRENDSENT",
+  "upside": 28,
+  "valuation_tone": "fairly priced relative to growth",
+  "volume_avg_3m": 88776655,
+  "volume_ratio": 1.47,
+  "volume_today": 44556677,
+  "volume_tone": "VOLSENT",
+  "wacc_beta": 1.93,
+  "wacc_estimate_pct": 13.1,
+  "wc_change_ttm": -800,
+  "wc_inventory_ttm": -400,
+  "wc_payables_ttm": 900,
+  "wc_receivables_ttm": -1600
+ }
+}
