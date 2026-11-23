@@ -10,6 +10,8 @@
 /// file lays out the chrome and routes around the COMING SOON placeholder.
 library;
 
+import 'package:ami_trade/features/markets/market.dart';
+import 'package:ami_trade/features/markets/money.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/price_alert.dart';
@@ -174,7 +176,8 @@ class _TickerDetailScreenState extends ConsumerState<TickerDetailScreen> {
                     runSpacing: AmiSpacing.s,
                     children: [
                       if (e.hasData)
-                        _EarningsPill(earnings: e)
+                        _EarningsPill(
+                          earnings: e, market: marketForTicker(ticker))
                       else
                         _EarningsStatusPill(
                           key: const Key('earningsStatusPill'),
@@ -182,7 +185,8 @@ class _TickerDetailScreenState extends ConsumerState<TickerDetailScreen> {
                         ),
                       // CR100/CR030 — hidden when both dividend
                       // fields are null (non-payer / no window).
-                      if (e.hasDividendData) _DividendChip(earnings: e),
+                      if (e.hasDividendData) _DividendChip(
+                          earnings: e, market: marketForTicker(ticker)),
                     ],
                   ),
                 ),
@@ -238,7 +242,7 @@ class _PositionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final fmt = NumberFormat('#,##0.00');
+    final market = marketForTicker(holding.ticker);
     final pnl = holding.unrealisedPnl;
     final pct = holding.avgCost == 0
         ? 0.0
@@ -259,7 +263,7 @@ class _PositionCard extends StatelessWidget {
           Text(l.tickerDetailValue,
               style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan)),
           const SizedBox(height: AmiSpacing.xs),
-          Text('\$${fmt.format(holding.value)}',
+          Text(formatMoney(holding.value, market: market),
               style: AmiTypography.statBig.copyWith(color: AmiColors.textHigh)),
           const SizedBox(height: AmiSpacing.m),
           _StatRow(
@@ -268,11 +272,11 @@ class _PositionCard extends StatelessWidget {
           ),
           _StatRow(
             label: l.tickerDetailAvgCost,
-            value: '\$${fmt.format(holding.avgCost)}',
+            value: formatMoney(holding.avgCost, market: market),
           ),
           _StatRow(
             label: l.tickerDetailMark,
-            value: '\$${fmt.format(holding.mark)}',
+            value: formatMoney(holding.mark, market: market),
           ),
           const Divider(height: 24, color: AmiColors.slate700),
           Row(
@@ -284,7 +288,7 @@ class _PositionCard extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                '${pnl >= 0 ? '+' : ''}\$${fmt.format(pnl)} '
+                '${formatMoney(pnl, market: market, signed: true)} '
                 '(${pct >= 0 ? '+' : ''}${pct.toStringAsFixed(2)}%)',
                 style: AmiTypography.statSmall.copyWith(color: accent),
               ),
@@ -310,7 +314,7 @@ class _WatchingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final fmt = NumberFormat('#,##0.00');
+    final market = marketForTicker(entry.ticker);
     final dayPct = entry.dayChangePct;
     final accent = (dayPct ?? 0) >= 0 ? AmiColors.hexGreen : AmiColors.hexRed;
     final addedFmt = DateFormat.yMMMd();
@@ -329,7 +333,9 @@ class _WatchingCard extends StatelessWidget {
               style: AmiTypography.labelMono.copyWith(color: AmiColors.hexAmber)),
           const SizedBox(height: AmiSpacing.xs),
           Text(
-            entry.price == null ? '—' : '\$${fmt.format(entry.price)}',
+            entry.price == null
+                ? '—'
+                : formatMoney(entry.price!, market: market),
             style: AmiTypography.statBig.copyWith(color: AmiColors.textHigh),
           ),
           if (dayPct != null) ...[
@@ -619,9 +625,10 @@ class _Chip extends StatelessWidget {
 /// Amber pill showing upcoming earnings within 90 days.
 /// Only rendered when SimEarnings.hasData is true.
 class _EarningsPill extends StatelessWidget {
-  const _EarningsPill({required this.earnings});
+  const _EarningsPill({required this.earnings, required this.market});
 
   final SimEarnings earnings;
+  final AppMarket market;
 
   @override
   Widget build(BuildContext context) {
@@ -661,7 +668,8 @@ class _EarningsPill extends StatelessWidget {
                   ),
                 if (eps != null)
                   Text(
-                    ' · ${l.tickerDetailNewsEpsEstimate('\$${eps.toStringAsFixed(2)}')}',
+                    ' · ${l.tickerDetailNewsEpsEstimate(
+                        formatMoney(eps, market: market, grouped: false))}',
                     style: AmiTypography.labelMono
                         .copyWith(color: AmiColors.textLow, fontSize: 11),
                   ),
@@ -732,9 +740,10 @@ class _EarningsStatusPill extends StatelessWidget {
 /// already checks `hasDividendData`; this widget renders whichever of the
 /// two fields is present (either alone is enough to show the chip).
 class _DividendChip extends StatelessWidget {
-  const _DividendChip({required this.earnings});
+  const _DividendChip({required this.earnings, required this.market});
 
   final SimEarnings earnings;
+  final AppMarket market;
 
   @override
   Widget build(BuildContext context) {
@@ -764,7 +773,8 @@ class _DividendChip extends StatelessWidget {
           if (dateStr != null && rate != null) const SizedBox(width: 6),
           if (rate != null)
             Text(
-              l.tickerDetailDividendRate('\$${rate.toStringAsFixed(2)}'),
+              l.tickerDetailDividendRate(
+                  formatMoney(rate, market: market, grouped: false)),
               style: AmiTypography.labelMono
                   .copyWith(color: AmiColors.textMed, fontSize: 11),
             ),
@@ -810,7 +820,7 @@ class _LotsSection extends ConsumerWidget {
                     style: AmiTypography.labelMono,
                   ),
                   const SizedBox(height: AmiSpacing.s),
-                  for (final lot in h.lots) _LotCard(lot: lot),
+                  for (final lot in h.lots) _LotCard(lot: lot, market: marketForTicker(ticker)),
                 ],
               ),
             ),
@@ -822,14 +832,14 @@ class _LotsSection extends ConsumerWidget {
 
 
 class _LotCard extends StatelessWidget {
-  const _LotCard({required this.lot});
+  const _LotCard({required this.lot, required this.market});
 
   final Lot lot;
+  final AppMarket market;
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final fmt = NumberFormat('#,##0.00');
     final entryFmt = DateFormat.yMMMd();
     DateTime? entryDate;
     try {
@@ -861,7 +871,7 @@ class _LotCard extends StatelessWidget {
                       entryDate == null
                           ? lot.entryDate
                           : entryFmt.format(entryDate),
-                      fmt.format(lot.entryPrice),
+                      formatMoney(lot.entryPrice, market: market),
                     ),
                     style: AmiTypography.caption,
                   ),
@@ -882,7 +892,7 @@ class _LotCard extends StatelessWidget {
               children: [
                 Text(
                   l.tickerDetailLotRealised(
-                    '${realised >= 0 ? '+' : ''}\$${fmt.format(realised)}',
+                    formatMoney(realised, market: market, signed: true),
                   ),
                   style: AmiTypography.labelMono
                       .copyWith(color: realisedAccent, fontSize: 11),
@@ -894,7 +904,7 @@ class _LotCard extends StatelessWidget {
                   unrealised == null
                       ? l.tickerDetailLotUnrealisedUnknown
                       : l.tickerDetailLotUnrealised(
-                          '${unrealised >= 0 ? '+' : ''}\$${fmt.format(unrealised)}',
+                          formatMoney(unrealised, market: market, signed: true),
                         ),
                   style: AmiTypography.labelMono.copyWith(
                     color: unrealised == null
@@ -994,16 +1004,17 @@ class _PriceAlertRow extends ConsumerWidget {
   final PriceAlert alert;
 
   String _label(AppLocalizations l) {
-    final price = alert.thresholdPrice.toStringAsFixed(2);
+    final price = formatMoney(alert.thresholdPrice,
+        market: marketForTicker(ticker), grouped: false);
     switch (alert.thresholdType) {
       case 'stop':
-        return '${l.priceAlertTypeStop} \$$price';
+        return '${l.priceAlertTypeStop} $price';
       case 'target':
-        return '${l.priceAlertTypeTarget} \$$price';
+        return '${l.priceAlertTypeTarget} $price';
       case 'manual_above':
-        return '${l.priceAlertTypeManualAbove} \$$price';
+        return '${l.priceAlertTypeManualAbove} $price';
       default:
-        return '${l.priceAlertTypeManualBelow} \$$price';
+        return '${l.priceAlertTypeManualBelow} $price';
     }
   }
 

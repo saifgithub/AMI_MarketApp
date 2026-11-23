@@ -17,6 +17,7 @@
 /// actioned, because "nothing outstanding" needs no permanent card.
 library;
 
+import 'package:ami_trade/features/markets/money.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/screens/floor/floor_providers.dart';
 import 'package:ami_trade/screens/floor/team_calls_data.dart';
@@ -28,7 +29,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-final _money = NumberFormat.currency(symbol: r'$', decimalDigits: 0);
 final _day = DateFormat.MMMd();
 
 class PortfolioAnswerCard extends ConsumerWidget {
@@ -61,7 +61,7 @@ class PortfolioAnswerCard extends ConsumerWidget {
       children: [
         FloorCardLabel(label: l.floorCardPortfolio, color: AmiColors.hexGreen),
         const SizedBox(height: 2),
-        Text(_money.format(p.totalValue),
+        Text(formatMoney(p.totalValue, market: p.market, decimals: 0),
             style: AmiTypography.statMid.copyWith(color: AmiColors.textHigh)),
         const SizedBox(height: 2),
         Text(
@@ -69,10 +69,10 @@ class PortfolioAnswerCard extends ConsumerWidget {
           // report on a portfolio that has never traded, and printing one
           // implies a measurement nobody made.
           untouched
-              ? l.floorCardPortfolioDayZero(_money.format(p.startingCapital))
+              ? l.floorCardPortfolioDayZero(formatMoney(p.startingCapital, market: p.market, decimals: 0))
               : l.floorCardPortfolioSummary(
                   '${p.pnlPct >= 0 ? '+' : ''}${p.pnlPct.toStringAsFixed(1)}%',
-                  _money.format(p.currentCash),
+                  formatMoney(p.currentCash, market: p.market, decimals: 0),
                   p.holdings.length,
                 ),
           maxLines: 2,

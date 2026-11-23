@@ -313,6 +313,21 @@ because of it.
 percentage cutoff for this constraint — AMI computes none; it reads a published list."""
 
 
+# CR282 lane D — the narration for a standard whose published list is the whole
+# classification of its market (SC Malaysia): there is no "not reviewed" state, because
+# the SC classifies every Main / ACE / LEAP security and absence from its list is the
+# classification. Said plainly so an agent never tells a user a name merely "wasn't
+# looked at".
+_LIST_STATES_NARRATION = """  The screen has exactly two outcomes and you must narrate whichever applies:
+    * PASSES — the name is on the published compliant list. Say it passes, and name the standard, \
+the source and the as-of date above.
+    * NOT ON THE LIST — the name is absent from the published compliant list. That is a real \
+exclusion under this standard: this mandate will not trade it. Do not call it "unreviewed" and do \
+not guess why; AMI reads the list and does not give reasons of its own.
+  Never quote a ratio, threshold or percentage cutoff for this constraint — AMI computes none; it \
+reads a published list."""
+
+
 def _locale_universe_narration(
     locale_allowed_universe: Any, ticker: str | None, locale: str
 ) -> str:
@@ -449,6 +464,11 @@ def _halal_narration(halal_universe: Any, ticker: str | None) -> str:
     narration cannot claim something the enforcement did not decide (DEF084-ROOM was
     exactly that contradiction, pointing the other way).
     """
+    # CR282 lane D: a `.KL` ticker is narrated from ITS market's standard (SC Malaysia),
+    # not the US one the shared object leads with. A no-op for US and for a bare set.
+    for_ticker = getattr(halal_universe, "for_ticker", None)
+    if callable(for_ticker) and ticker:
+        halal_universe = for_ticker(ticker)
     resolve = getattr(halal_universe, "resolve", None)
     if not callable(resolve):
         # No provenance attached — a bare set, or nothing. Degrade loudly (CR040):
@@ -480,7 +500,9 @@ def _halal_narration(halal_universe: Any, ticker: str | None) -> str:
         f"- HALAL constraint: AMI applies the {standard} Sharia standard as published in "
         f"{source}, as of {as_of}. AMI reads that published list — it does not issue its own "
         f"ruling and computes no financial ratio here.",
-        _THREE_STATES_NARRATION,
+        _LIST_STATES_NARRATION
+        if getattr(halal_universe, "absent_screened_out", False)
+        else _THREE_STATES_NARRATION,
     ]
     if ticker:
         lines.append(f"  This session's name: {probe.message()}")

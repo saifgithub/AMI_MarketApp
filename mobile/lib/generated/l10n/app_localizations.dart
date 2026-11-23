@@ -2173,7 +2173,7 @@ abstract class AppLocalizations {
   /// CR100/CR029: entry line on a cost-basis lot card. {date} is the formatted entry date, {price} is the formatted entry price (no $ sign, 2 decimals — the $ is in the string).
   ///
   /// In en, this message translates to:
-  /// **'Opened {date} @ \${price}'**
+  /// **'Opened {date} @ {price}'**
   String tickerDetailLotEntry(String date, String price);
 
   /// CR100/CR029: quantity line on a cost-basis lot card. {open} and {closed} are formatted share counts.
@@ -3281,18 +3281,18 @@ abstract class AppLocalizations {
   String shariaVerdictPass(
       String ticker, String standard, String source, String date);
 
-  /// CR069 Phase 1b. Shown on a REJECTED trade: the ticker is inside the parent index and absent from the compliant set, so it is a real exclusion under this standard and the trade is blocked. OBSERVANCE-SENSITIVE. Translator notes: (a) this is the ONLY one of the four verdict strings that reports a negative screen result — keep it clearly distinct from shariaVerdictUnknown, which reports NO ruling; conflating the two is the specific confusion CR069 design constraint 2 forbids; (b) attribute the exclusion to the named standard, not to AMI. {standard} and {source} arrive untranslated.
+  /// CR069 Phase 1b. Shown on a REJECTED trade: the ticker is inside the parent index and absent from the compliant set, so it is a real exclusion under this standard and the trade is blocked. OBSERVANCE-SENSITIVE. Translator notes: (a) this is the ONLY one of the four verdict strings that reports a negative screen result — keep it clearly distinct from shariaVerdictUnknown, which reports NO ruling; conflating the two is the specific confusion CR069 design constraint 2 forbids; (b) attribute the exclusion to the named standard, not to AMI. {standard} and {source} arrive untranslated. CR282 lane D: the hard-coded 'S&P 500' became the {coverage} placeholder — the backend verdict names the universe its standard covers ('the S&P 500' for the US standard, 'Bursa Malaysia' for the SC Malaysia list), so the US text is unchanged and a .KL ticker no longer reads 'S&P 500'. {coverage} is a backend-supplied proper name and arrives untranslated. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'{ticker} is in the S&P 500 but does not pass the {standard} screen ({source}, as of {date}), so this mandate won\'t trade it.'**
+  /// **'{ticker} is in {coverage} but does not pass the {standard} screen ({source}, as of {date}), so this mandate won\'t trade it.'**
   String shariaVerdictScreenedOut(
-      String ticker, String standard, String source, String date);
+      String ticker, String coverage, String standard, String source, String date);
 
-  /// CR069 Phase 1b. Shown on a SUCCESSFUL, PERMITTED trade (G3, resolved 2026-07-23: unknown permits, with the disclosure attached) when the ticker sits outside the parent index and the standard therefore never examined it. OBSERVANCE-SENSITIVE and the highest-risk string in this set. Translator notes: (a) this is NOT a rejection, NOT a warning, and NOT a statement that the trade was risky — the trade went through; (b) 'hasn't reviewed it' must NOT become 'not permitted', 'haram', 'non-compliant', 'doubtful' or 'mashbooh' — turning an absence of a ruling into a negative ruling is a false assurance in the direction nobody checks, and is exactly what CR069 design constraint 2 forbids; (c) 'AMI doesn't know' is deliberate humility and must survive. {standard} arrives untranslated.
+  /// CR069 Phase 1b. Shown on a SUCCESSFUL, PERMITTED trade (G3, resolved 2026-07-23: unknown permits, with the disclosure attached) when the ticker sits outside the parent index and the standard therefore never examined it. OBSERVANCE-SENSITIVE and the highest-risk string in this set. Translator notes: (a) this is NOT a rejection, NOT a warning, and NOT a statement that the trade was risky — the trade went through; (b) 'hasn't reviewed it' must NOT become 'not permitted', 'haram', 'non-compliant', 'doubtful' or 'mashbooh' — turning an absence of a ruling into a negative ruling is a false assurance in the direction nobody checks, and is exactly what CR069 design constraint 2 forbids; (c) 'AMI doesn't know' is deliberate humility and must survive. {standard} arrives untranslated. CR282 lane D: the hard-coded 'S&P 500' became the {coverage} placeholder — the backend verdict names the universe its standard covers ('the S&P 500' for the US standard, 'Bursa Malaysia' for the SC Malaysia list), so the US text is unchanged and a .KL ticker no longer reads 'S&P 500'. {coverage} is a backend-supplied proper name and arrives untranslated. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'{ticker} isn\'t in the S&P 500, so the {standard} screen AMI uses hasn\'t reviewed it. That\'s not a ruling either way — AMI doesn\'t know.'**
-  String shariaVerdictUnknown(String ticker, String standard);
+  /// **'{ticker} isn\'t in {coverage}, so the {standard} screen AMI uses hasn\'t reviewed it. That\'s not a ruling either way — AMI doesn\'t know.'**
+  String shariaVerdictUnknown(String ticker, String coverage, String standard);
 
   /// CR069 Phase 1b. Shown when the screen's source could not be refreshed or is stale beyond its window. The flag degrades LOUDLY (CR069 design constraint 3 / CR040): it pauses visibly rather than answering from a stale set. OBSERVANCE-SENSITIVE. Translator notes: (a) this reports an AMI-side data problem, not a verdict about any company — do not word it as a compliance outcome; (b) 'paused' means temporarily not enforcing, not 'disabled' or 'failed'. {date} is the last successful as-of stamp and may read 'unknown' when the screen never loaded.
   ///
@@ -4641,14 +4641,14 @@ abstract class AppLocalizations {
   /// Snackbar after a trade fills. {side}=BUY/SELL, {qty}=quantity, {ticker}=symbol, {price}=entry price formatted to 2dp.
   ///
   /// In en, this message translates to:
-  /// **'Filled: {side} {qty} {ticker} @ \${price}'**
+  /// **'Filled: {side} {qty} {ticker} @ {price}'**
   String tradeTicketFilled(
       String side, String qty, String ticker, String price);
 
   /// CR170 confirmation after placing an order that did NOT fill — it now waits for its price. Deliberately different in wording and colour from tradeTicketFilled: telling a user their order filled when it is still waiting is the failure this whole string exists to prevent. {price} is the price they named.
   ///
   /// In en, this message translates to:
-  /// **'Resting: {side} {ticker} at \${price}'**
+  /// **'Resting: {side} {ticker} at {price}'**
   String tradeTicketResting(String side, String ticker, String price);
 
   /// CR171 refusal shown on the trade ticket when a sell quantity is larger than the holding but the holding is not zero. Splitting one action into a close plus a short makes every realised-P&L figure computed off those rows wrong, so the order is refused rather than split. Offers the exact quantity that would close instead.
@@ -4672,13 +4672,13 @@ abstract class AppLocalizations {
   /// CR188/DEF312 refusal shown when a BUY carries a stop at or above the entry price. Such a stop is already through the market at purchase, so the bracket sweep liquidates the position on its next pass and the resulting stop-out also trips the post-stop-out cooldown. {stop} is the typed stop, 2dp.
   ///
   /// In en, this message translates to:
-  /// **'Your stop belongs below your entry — a falling price is what goes against you. At \${stop} it would fire straight away and close the position you just opened.'**
+  /// **'Your stop belongs below your entry — a falling price is what goes against you. At {stop} it would fire straight away and close the position you just opened.'**
   String tradeTicketRefuseLongStop(String stop);
 
   /// CR188/DEF312 refusal shown when a BUY carries a target at or below the entry price. The mirror of tradeTicketRefuseLongStop. {target} is the typed target, 2dp.
   ///
   /// In en, this message translates to:
-  /// **'Your target belongs above your entry — that is where the position makes money. At \${target} it would fire straight away and book a win the trade never made.'**
+  /// **'Your target belongs above your entry — that is where the position makes money. At {target} it would fire straight away and book a win the trade never made.'**
   String tradeTicketRefuseLongTarget(String target);
 
   /// CR188 informational line on the trade ticket when SELL is chosen for a ticker the user holds. Not a refusal — it states what this order does, because the quantity field alone never showed the user what they own.
@@ -4696,7 +4696,7 @@ abstract class AppLocalizations {
   /// CR189 acceptance 5 — pre-submit disclosure on the BUY ticket when adding shares to a held position moves its blended stop UP. Adding a lot with a higher stop raises the risk floor on shares the user already owns, and a control must not change quietly (CR040), so both numbers are named before the tap. Informational, never a refusal — a wrong-side blend is the server's submit-time refusal (acceptance 6). {qty} is the resulting total shares after the buy, {fromStop}/{toStop} arrive preformatted to two decimals. NEW key. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'This raises your stop on all {qty} {ticker} from \${fromStop} to \${toStop}.'**
+  /// **'This raises your stop on all {qty} {ticker} from {fromStop} to {toStop}.'**
   String tradeTicketNoticeRaisesStop(
       String qty, String ticker, String fromStop, String toStop);
 
@@ -4787,19 +4787,19 @@ abstract class AppLocalizations {
   /// CR170 live hint under the trade ticket for an order that waits for the price to come DOWN (a buy limit, or a sell stop). Says what this order will do — never how the simulator works.
   ///
   /// In en, this message translates to:
-  /// **'Waits until {ticker} falls to \${price}.'**
+  /// **'Waits until {ticker} falls to {price}.'**
   String tradeTicketHintRestsBelow(String ticker, String price);
 
   /// CR170 live hint under the trade ticket for an order that waits for the price to come UP (a sell limit, or a buy stop).
   ///
   /// In en, this message translates to:
-  /// **'Waits until {ticker} reaches \${price}.'**
+  /// **'Waits until {ticker} reaches {price}.'**
   String tradeTicketHintRestsAbove(String ticker, String price);
 
   /// CR170 live hint for a stop-limit order, which is two-phase. Stating both prices matters: if the price gaps past the limit the order can trigger and still never fill, which is the classic stop-limit surprise.
   ///
   /// In en, this message translates to:
-  /// **'Waits until {ticker} reaches \${trigger}, then becomes a limit order at \${limit}.'**
+  /// **'Waits until {ticker} reaches {trigger}, then becomes a limit order at {limit}.'**
   String tradeTicketHintRestsStopLimit(
       String ticker, String trigger, String limit);
 
@@ -4836,7 +4836,7 @@ abstract class AppLocalizations {
   /// CR170 confirm-dialog body before cancelling a waiting order. Names the order so the user cannot cancel the wrong one from a list.
   ///
   /// In en, this message translates to:
-  /// **'{side} {qty} {ticker} at \${price} will stop waiting and will not fill.'**
+  /// **'{side} {qty} {ticker} at {price} will stop waiting and will not fill.'**
   String restingOrderCancelBody(
       String side, String qty, String ticker, String price);
 
@@ -4939,25 +4939,25 @@ abstract class AppLocalizations {
   /// CR186 what a waiting order is waiting for, on the order card. Lowercase, follows the order-type tag. Used for a BUY LIMIT and a SELL STOP, which wait on the same comparison.
   ///
   /// In en, this message translates to:
-  /// **'waits for a fall to \${price}'**
+  /// **'waits for a fall to {price}'**
   String restingOrderWaitsForFall(String price);
 
   /// CR186 what a waiting order is waiting for, on the order card. Lowercase, follows the order-type tag. Used for a BUY STOP and a SELL LIMIT.
   ///
   /// In en, this message translates to:
-  /// **'waits for a rise to \${price}'**
+  /// **'waits for a rise to {price}'**
   String restingOrderWaitsForRise(String price);
 
   /// CR186 the second phase of a stop-limit, appended after the waits-for clause. This price is the one that decides whether the order ever fills, and it was previously invisible everywhere outside the trade ticket.
   ///
   /// In en, this message translates to:
-  /// **'then a limit at \${price}'**
+  /// **'then a limit at {price}'**
   String restingOrderThenLimit(String price);
 
   /// CR186 a stop-limit whose trigger has fired. It is no longer waiting for the trigger, so the card must stop describing it that way.
   ///
   /// In en, this message translates to:
-  /// **'triggered — now a limit at \${price}'**
+  /// **'triggered — now a limit at {price}'**
   String restingOrderTriggeredNowLimit(String price);
 
   /// CR186 when a waiting order dies. Always a market session close, never local midnight. {time} is a local clock time like '11:00 PM'.
@@ -7726,7 +7726,7 @@ abstract class AppLocalizations {
   /// CR170 §6. Shown when committed cash exceeds the balance — a real, reachable state, since resting orders commit nothing until they fill. Says exactly what happens rather than hiding the condition behind a zero. NEW key. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'Your resting orders commit \${amount} more than your balance holds. Whichever fills last will be refused.'**
+  /// **'Your resting orders commit {amount} more than your balance holds. Whichever fills last will be refused.'**
   String portfolioOverCommitted(String amount);
 
   /// CR170 §6. Shown under a holding when a resting sell order has already spoken for some of its shares. NEW key. retranslate:[ar,ms]

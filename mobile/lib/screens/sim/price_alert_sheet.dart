@@ -2,6 +2,7 @@
 /// point: creates the alert `price_alert_evaluator.py` fires on breach.
 library;
 
+import 'package:ami_trade/features/markets/market.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/state/price_alert_providers.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
@@ -108,7 +109,7 @@ class _PriceAlertSheetState extends ConsumerState<PriceAlertSheet> {
               style: AmiTypography.body.copyWith(color: AmiColors.textHigh),
               decoration: InputDecoration(
                 labelText: l.priceAlertSheetPriceLabel,
-                prefixText: '\$',
+                prefixText: marketForTicker(widget.ticker).symbol,
               ),
             ),
             if (controllerState.error != null) ...[

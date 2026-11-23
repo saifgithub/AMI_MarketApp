@@ -77,9 +77,10 @@ class ShariaVerdictBanner extends StatelessWidget {
       case ShariaStatus.pass:
         return l.shariaVerdictPass(v.ticker, v.standard, v.source, date);
       case ShariaStatus.screenedOut:
-        return l.shariaVerdictScreenedOut(v.ticker, v.standard, v.source, date);
+        return l.shariaVerdictScreenedOut(
+            v.ticker, v.coverage, v.standard, v.source, date);
       case ShariaStatus.unknown:
-        return l.shariaVerdictUnknown(v.ticker, v.standard);
+        return l.shariaVerdictUnknown(v.ticker, v.coverage, v.standard);
       case ShariaStatus.unavailable:
         return l.shariaVerdictPaused(date);
     }

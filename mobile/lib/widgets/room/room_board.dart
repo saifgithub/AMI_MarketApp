@@ -27,6 +27,8 @@
 /// outcome mark, and the BOARD|TRANSCRIPT toggle.
 library;
 
+import 'package:ami_trade/features/markets/market.dart';
+import 'package:ami_trade/features/markets/money.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/agent.dart';
 import 'package:ami_trade/models/room.dart';
@@ -196,6 +198,7 @@ class RoomBoard extends StatelessWidget {
                 padding: const EdgeInsets.only(top: AmiSpacing.m),
                 child: RoomStreetCard(
                   comparison: data.streetComparison!,
+                  ticker: data.ticker,
                   roomCallLabel: headingForOutcome(l, data),
                 ),
               );
@@ -723,17 +726,17 @@ class _LevelList extends StatelessWidget {
             ),
           BoardMetricRow(
             label: l.roomMetricEntry,
-            value: _money(data.entry),
+            value: _money(data.entry, data.ticker),
             accent: accent,
           ),
           BoardMetricRow(
             label: l.roomMetricStop,
-            value: _money(data.stop),
+            value: _money(data.stop, data.ticker),
             accent: accent,
           ),
           BoardMetricRow(
             label: l.roomMetricTarget,
-            value: _money(data.target),
+            value: _money(data.target, data.ticker),
             accent: accent,
           ),
           if (data.horizonDays != null)
@@ -748,7 +751,9 @@ class _LevelList extends StatelessWidget {
   }
 }
 
-String _money(double? v) => v == null ? '—' : '\$${v.toStringAsFixed(2)}';
+String _money(double? v, String ticker) => v == null
+    ? '—'
+    : formatMoney(v, market: marketForTicker(ticker), grouped: false);
 
 class BoardMetricRow extends StatelessWidget {
   const BoardMetricRow({
@@ -886,7 +891,7 @@ class _RibbonTrack extends StatelessWidget {
                   child: Column(
                     children: [
                       Text(
-                        _money(data.entry),
+                        _money(data.entry, data.ticker),
                         textAlign: TextAlign.center,
                         style: AmiTypography.statSmall
                             .copyWith(color: AmiColors.textHigh),
@@ -933,13 +938,13 @@ class _RibbonTrack extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _RibbonEnd(
-                price: _money(data.stop),
+                price: _money(data.stop, data.ticker),
                 label: l.roomMetricStop,
                 hollow: _derived('stop'),
                 align: CrossAxisAlignment.start,
               ),
               _RibbonEnd(
-                price: _money(data.target),
+                price: _money(data.target, data.ticker),
                 label: l.roomMetricTarget,
                 hollow: _derived('target'),
                 align: CrossAxisAlignment.end,

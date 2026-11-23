@@ -61,8 +61,13 @@ from app.core.config import settings
 from app.core.logging import logger
 from app.db import get_session
 from app.db.models import ShariaUniverseSnapshotRow
-from app.schemas.sharia import ShariaStatus, ShariaVerdict
-from app.trading_math.markets import accepted_without_reference
+from app.schemas.sharia import DEFAULT_COVERAGE, ShariaStatus, ShariaVerdict
+from app.trading_math.markets import (
+    Market,
+    accepted_without_reference,
+    market_enabled,
+    market_for,
+)
 
 # ── Provenance constants ────────────────────────────────────────────────────
 STANDARD = "AAOIFI"
@@ -148,6 +153,9 @@ class HalalUniverse(frozenset):
     standard: str
     source: str
     stale: bool
+    coverage: str
+    absent_screened_out: bool
+    companions: dict
 
     def __new__(
         cls,
@@ -158,6 +166,9 @@ class HalalUniverse(frozenset):
         standard: str = STANDARD,
         source: str = SOURCE,
         stale: bool = False,
+        coverage: str = DEFAULT_COVERAGE,
+        absent_screened_out: bool = False,
+        companions: dict | None = None,
     ) -> "HalalUniverse":
         obj = super().__new__(cls, (str(x).upper().strip() for x in compliant))
         obj.parent_index = frozenset(str(x).upper().strip() for x in parent_index)
@@ -165,16 +176,40 @@ class HalalUniverse(frozenset):
         obj.standard = standard
         obj.source = source
         obj.stale = stale
+        obj.coverage = coverage
+        # CR282 lane D: True for a standard whose published list is the whole
+        # classification of its market (SC Malaysia) — absence from the compliant list
+        # is then a real exclusion, not "never reviewed". False for the US standard,
+        # whose compliant set (SPUS) says nothing about names outside its parent index.
+        obj.absent_screened_out = absent_screened_out
+        # CR282 lane D: other markets' standards riding on this object, keyed by
+        # Market. The enforcement seams thread ONE `halal_universe`; a `.KL` ticker
+        # is routed to its market's universe by `resolve`/`for_ticker`, so no seam
+        # signature changes and every US path sees the exact object it always did.
+        obj.companions = dict(companions or {})
         return obj
+
+    def for_ticker(self, ticker: str) -> "HalalUniverse":
+        """The universe that screens this ticker's market — `self` for US (and for
+        any market with no companion attached, i.e. its flag is off)."""
+        if self.companions:
+            comp = self.companions.get(market_for(ticker))
+            if comp is not None:
+                return comp
+        return self
 
     def resolve(self, ticker: str) -> ShariaVerdict:
         """Resolve a ticker to one of the three states (+ the paused state)."""
         t = ticker.upper().strip()
+        if self.companions:
+            comp = self.companions.get(market_for(t))
+            if comp is not None:
+                return comp.resolve(t)
         if self.stale:
             status = ShariaStatus.UNAVAILABLE
         elif t in self:
             status = ShariaStatus.PASS
-        elif t in self.parent_index:
+        elif t in self.parent_index or self.absent_screened_out:
             status = ShariaStatus.SCREENED_OUT
         else:
             status = ShariaStatus.UNKNOWN
@@ -184,6 +219,7 @@ class HalalUniverse(frozenset):
             standard=self.standard,
             source=self.source,
             as_of=self.as_of,
+            coverage=self.coverage,
         )
 
 
@@ -366,7 +402,15 @@ class ShariaUniverseProvider:
         enabled: bool,
         fetcher=None,
         refetch_interval_s: float = _REFETCH_INTERVAL_S,
+        standard: str = STANDARD,
+        source: str = SOURCE,
+        coverage: str = DEFAULT_COVERAGE,
+        absent_screened_out: bool = False,
     ) -> None:
+        self._standard = standard
+        self._source = source
+        self._coverage = coverage
+        self._absent_screened_out = absent_screened_out
         self._compliant_url = compliant_url
         self._parent_url = parent_url
         self._staleness_days = staleness_days
@@ -381,7 +425,15 @@ class ShariaUniverseProvider:
 
     def _paused(self, as_of: date | None = None) -> HalalUniverse:
         """A loud-degrade universe — resolves everything to UNAVAILABLE."""
-        return HalalUniverse(frozenset(), as_of=as_of, stale=True)
+        return HalalUniverse(
+            frozenset(),
+            as_of=as_of,
+            stale=True,
+            standard=self._standard,
+            source=self._source,
+            coverage=self._coverage,
+            absent_screened_out=self._absent_screened_out,
+        )
 
     def _build(self, now: date | None = None) -> HalalUniverse:
         now = now or datetime.now(timezone.utc).date()
@@ -409,7 +461,15 @@ class ShariaUniverseProvider:
             parent=len(parent),
             as_of=as_of.isoformat() if as_of else None,
         )
-        return HalalUniverse(compliant, parent_index=parent, as_of=as_of)
+        return HalalUniverse(
+            compliant,
+            parent_index=parent,
+            as_of=as_of,
+            standard=self._standard,
+            source=self._source,
+            coverage=self._coverage,
+            absent_screened_out=self._absent_screened_out,
+        )
 
     def _refetch_due(self) -> bool:
         if self._last_attempt is None:
@@ -492,9 +552,80 @@ def get_sharia_universe_provider() -> ShariaUniverseProvider:
 
 
 def reset_sharia_universe_provider(provider: ShariaUniverseProvider | None = None) -> None:
-    """Test seam — swap or clear the singleton."""
-    global _provider
+    """Test seam — swap or clear the singleton (and the CR282 SC Malaysia one with it,
+    so a test that clears state starts both standards clean)."""
+    global _provider, _sc_provider, _combined
     _provider = provider
+    _sc_provider = None
+    _combined = None
+
+
+# ── CR282 lane D: the SC Malaysia standard (second market) ───────────────────
+
+_sc_provider: ShariaUniverseProvider | None = None
+_combined: tuple | None = None  # (us, sc, combined) — identity-keyed memo
+
+
+def _sc_snapshot_fetcher() -> tuple[frozenset, date | None, frozenset]:
+    """Local DB read of the latest SC_MALAYSIA snapshot (never a socket), the SC twin
+    of `_snapshot_fetcher`. `parent` holds the explicitly non-compliant names (the
+    booklet's Table 2) — informational: absence already means SCREENED_OUT."""
+    from app.services import sharia_sc_malaysia as sc
+
+    with get_session() as session:
+        row = latest_snapshot(session, sc.STANDARD_KEY)
+    if row is None:
+        raise ShariaSourceError(
+            "no SC Malaysia Shariah list snapshot stored yet — seed pending "
+            "(the refresh has not yet written a row)"
+        )
+    return frozenset(row.compliant), row.as_of, frozenset(row.parent)
+
+
+def get_sc_sharia_provider() -> ShariaUniverseProvider:
+    """Process-wide singleton for the SC Malaysia list. Its reader window is
+    `sharia_sc_staleness_days` (~200 d: the list is semi-annual), NOT the 30-day US
+    hold window. Absent / stale ⇒ paused universe ⇒ UNAVAILABLE for every `.KL`
+    ticker (CR040) — never a PASS."""
+    global _sc_provider
+    if _sc_provider is None:
+        from app.services import sharia_sc_malaysia as sc
+
+        _sc_provider = ShariaUniverseProvider(
+            compliant_url=settings.sharia_sc_list_url,
+            parent_url="",
+            staleness_days=settings.sharia_sc_staleness_days,
+            enabled=settings.sharia_screen_enabled,
+            fetcher=_sc_snapshot_fetcher,
+            refetch_interval_s=_ROW_READ_REFETCH_S,
+            standard=sc.STANDARD_LABEL,
+            source=sc.SOURCE,
+            coverage=sc.COVERAGE,
+            absent_screened_out=True,
+        )
+    return _sc_provider
+
+
+def _with_companions(us: HalalUniverse, sc_universe: HalalUniverse) -> HalalUniverse:
+    """`us` carrying the `.KL` universe. Memoised on the identity of both inputs so the
+    per-trade call does not re-copy ~700 tickers while the providers' caches hold."""
+    global _combined
+    memo = _combined
+    if memo is not None and memo[0] is us and memo[1] is sc_universe:
+        return memo[2]
+    combined = HalalUniverse(
+        us,
+        parent_index=us.parent_index,
+        as_of=us.as_of,
+        standard=us.standard,
+        source=us.source,
+        stale=us.stale,
+        coverage=us.coverage,
+        absent_screened_out=us.absent_screened_out,
+        companions={Market.MY: sc_universe},
+    )
+    _combined = (us, sc_universe, combined)
+    return combined
 
 
 def default_halal_universe() -> HalalUniverse:
@@ -506,8 +637,15 @@ def default_halal_universe() -> HalalUniverse:
 
     When the feature is disabled, the source has never been fetched (seed), or the
     held row has aged past its window, returns a paused universe so the halal flag
-    degrades loudly instead of enforcing a stale or placeholder set."""
-    return get_sharia_universe_provider().get()
+    degrades loudly instead of enforcing a stale or placeholder set.
+
+    CR282 lane D: with `MARKET_BURSA_ENABLED` on, the returned universe also carries the
+    SC Malaysia standard so a `.KL` ticker resolves against it; with the flag off this is
+    exactly the object the US provider returns, unchanged."""
+    us = get_sharia_universe_provider().get()
+    if not market_enabled(Market.MY):
+        return us
+    return _with_companions(us, get_sc_sharia_provider().get())
 
 
 async def default_halal_universe_async() -> HalalUniverse:
@@ -519,7 +657,7 @@ async def default_halal_universe_async() -> HalalUniverse:
     loop via `asyncio.to_thread` (the one uvicorn process serves every concurrent
     request, including in-flight Room streams). The network fetch happens only in
     the background refresh task."""
-    return await asyncio.to_thread(get_sharia_universe_provider().get)
+    return await asyncio.to_thread(default_halal_universe)
 
 
 # ── CR075: background refresh (the ONLY socket; degrade loudly on the refresher) ─
@@ -639,6 +777,130 @@ def run_sharia_refresh_tick(
         "sharia_refresh_stored",
         compliant=len(compliant),
         parent=len(parent),
+        as_of=as_of.isoformat() if as_of else None,
+        fetched_at=now.isoformat(),
+    )
+    return "stored"
+
+
+# ── CR282 lane D: SC Malaysia refresh (own cadence, only while the Bursa flag is on) ─
+
+# The SC publishes on the last Friday of May and November (and occasionally reissues the
+# following week — the 28 Nov 2025 list was "Updated 3 December 2025"). Inside a release
+# window the tick re-checks daily so a new list lands within a day; outside it, a stored
+# row up to a week old counts as current, so the other ~11 months cost ~4 fetches a month,
+# not 30. A list that never changes costs one 0.5 MB PDF a week.
+_SC_RELEASE_WINDOWS = ((5, 25, 6, 10), (11, 25, 12, 12))  # (m1, d1, m2, d2) inclusive
+_SC_SNAPSHOT_FRESH_OUTSIDE_WINDOW_S = 7 * 24 * 60 * 60
+
+
+# Its own counter: a US success must not reset (mask) a failing SC fetch, or vice versa.
+_consecutive_sc_refresh_failures = 0
+
+
+def consecutive_sc_refresh_failures() -> int:
+    return _consecutive_sc_refresh_failures
+
+
+def _record_sc_refresh_failure(exc: Exception) -> None:
+    global _consecutive_sc_refresh_failures
+    _consecutive_sc_refresh_failures += 1
+    logger.error(
+        "sharia_sc_refresh_failed",
+        error=str(exc),
+        consecutive_failures=_consecutive_sc_refresh_failures,
+    )
+    if _consecutive_sc_refresh_failures >= _REFRESH_FAILURE_LOUD_THRESHOLD:
+        logger.error(
+            "sharia_sc_refresh_failing_repeatedly",
+            consecutive_failures=_consecutive_sc_refresh_failures,
+            threshold=_REFRESH_FAILURE_LOUD_THRESHOLD,
+        )
+
+
+def _in_sc_release_window(today: date) -> bool:
+    for m1, d1, m2, d2 in _SC_RELEASE_WINDOWS:
+        if (today.month, today.day) >= (m1, d1) and (today.month, today.day) <= (m2, d2):
+            return True
+    return False
+
+
+def _sc_snapshot_is_fresh(row: ShariaUniverseSnapshotRow, now: datetime) -> bool:
+    fetched = row.fetched_at
+    if fetched.tzinfo is None:
+        fetched = fetched.replace(tzinfo=timezone.utc)
+    age = (now - fetched).total_seconds()
+    window = (
+        _SNAPSHOT_FRESH_WINDOW_S
+        if _in_sc_release_window(now.date())
+        else _SC_SNAPSHOT_FRESH_OUTSIDE_WINDOW_S
+    )
+    return age < window
+
+
+def run_sharia_sc_refresh_tick(
+    *,
+    fetcher=None,
+    now: datetime | None = None,
+    force: bool = False,
+    enabled: bool | None = None,
+) -> str:
+    """One SC Malaysia refresh cycle. Returns `disabled` | `skipped_fresh` | `stored` |
+    `fetch_failed`, like `run_sharia_refresh_tick`.
+
+    Runs only when the Sharia screen AND `MARKET_BURSA_ENABLED` are both on. `fetcher`
+    returns `(compliant, as_of, non_compliant, source_url)`. A failed fetch leaves the
+    held row untouched and bumps the SC's own consecutive-failure counter (CR040 on the
+    refresher); a list whose own effective date is past the SC window is logged as
+    lagging — the reader pauses on `sharia_sc_staleness_days` regardless."""
+    from app.services import sharia_sc_malaysia as sc
+
+    now = now or datetime.now(timezone.utc)
+    if enabled is None:
+        enabled = settings.sharia_screen_enabled and market_enabled(Market.MY)
+    if not enabled:
+        logger.info("sharia_sc_refresh_skipped_disabled")
+        return "disabled"
+
+    if not force:
+        with get_session() as session:
+            latest = latest_snapshot(session, sc.STANDARD_KEY)
+        if latest is not None and _sc_snapshot_is_fresh(latest, now):
+            logger.info(
+                "sharia_sc_refresh_skipped_fresh", fetched_at=latest.fetched_at.isoformat()
+            )
+            return "skipped_fresh"
+
+    try:
+        compliant, as_of, non_compliant, source_url = (fetcher or sc.network_sc_fetch)()
+    except Exception as exc:  # httpx.HTTPError, ShariaSourceError, anything
+        _record_sc_refresh_failure(exc)
+        return "fetch_failed"
+
+    with get_session() as session:
+        write_snapshot(
+            session,
+            standard=sc.STANDARD_KEY,
+            source_url=source_url or settings.sharia_sc_list_url,
+            parent_source_url="",
+            compliant=compliant,
+            as_of=as_of,
+            parent=non_compliant,
+            fetched_at=now,
+        )
+    global _consecutive_sc_refresh_failures
+    _consecutive_sc_refresh_failures = 0
+
+    if _is_stale(as_of, now.date(), settings.sharia_sc_staleness_days):
+        logger.warning(
+            "sharia_sc_source_lagging",
+            as_of=as_of.isoformat() if as_of else None,
+            max_age_days=settings.sharia_sc_staleness_days,
+        )
+    logger.info(
+        "sharia_sc_refresh_stored",
+        compliant=len(compliant),
+        non_compliant=len(non_compliant),
         as_of=as_of.isoformat() if as_of else None,
         fetched_at=now.isoformat(),
     )

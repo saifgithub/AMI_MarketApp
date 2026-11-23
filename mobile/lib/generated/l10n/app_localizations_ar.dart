@@ -1254,7 +1254,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String tickerDetailLotEntry(String date, String price) {
-    return 'فُتحت في $date بسعر \$$price';
+    return 'فُتحت في $date بسعر $price';
   }
 
   @override
@@ -1905,13 +1905,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String shariaVerdictScreenedOut(
-      String ticker, String standard, String source, String date) {
-    return '$ticker is in the S&P 500 but does not pass the $standard screen ($source, as of $date), so this mandate won\'t trade it.';
+      String ticker, String coverage, String standard, String source, String date) {
+    return '$ticker is in $coverage but does not pass the $standard screen ($source, as of $date), so this mandate won\'t trade it.';
   }
 
   @override
-  String shariaVerdictUnknown(String ticker, String standard) {
-    return '$ticker isn\'t in the S&P 500, so the $standard screen AMI uses hasn\'t reviewed it. That\'s not a ruling either way — AMI doesn\'t know.';
+  String shariaVerdictUnknown(String ticker, String coverage, String standard) {
+    return '$ticker isn\'t in $coverage, so the $standard screen AMI uses hasn\'t reviewed it. That\'s not a ruling either way — AMI doesn\'t know.';
   }
 
   @override
@@ -2747,12 +2747,12 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String tradeTicketFilled(
       String side, String qty, String ticker, String price) {
-    return 'تم التنفيذ: $side $qty $ticker بسعر \$$price';
+    return 'تم التنفيذ: $side $qty $ticker بسعر $price';
   }
 
   @override
   String tradeTicketResting(String side, String ticker, String price) {
-    return 'Resting: $side $ticker at \$$price';
+    return 'Resting: $side $ticker at $price';
   }
 
   @override
@@ -2770,12 +2770,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String tradeTicketRefuseLongStop(String stop) {
-    return 'Your stop belongs below your entry — a falling price is what goes against you. At \$$stop it would fire straight away and close the position you just opened.';
+    return 'Your stop belongs below your entry — a falling price is what goes against you. At $stop it would fire straight away and close the position you just opened.';
   }
 
   @override
   String tradeTicketRefuseLongTarget(String target) {
-    return 'Your target belongs above your entry — that is where the position makes money. At \$$target it would fire straight away and book a win the trade never made.';
+    return 'Your target belongs above your entry — that is where the position makes money. At $target it would fire straight away and book a win the trade never made.';
   }
 
   @override
@@ -2791,7 +2791,7 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String tradeTicketNoticeRaisesStop(
       String qty, String ticker, String fromStop, String toStop) {
-    return 'This raises your stop on all $qty $ticker from \$$fromStop to \$$toStop.';
+    return 'This raises your stop on all $qty $ticker from $fromStop to $toStop.';
   }
 
   @override
@@ -2839,18 +2839,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String tradeTicketHintRestsBelow(String ticker, String price) {
-    return 'Waits until $ticker falls to \$$price.';
+    return 'Waits until $ticker falls to $price.';
   }
 
   @override
   String tradeTicketHintRestsAbove(String ticker, String price) {
-    return 'Waits until $ticker reaches \$$price.';
+    return 'Waits until $ticker reaches $price.';
   }
 
   @override
   String tradeTicketHintRestsStopLimit(
       String ticker, String trigger, String limit) {
-    return 'Waits until $ticker reaches \$$trigger, then becomes a limit order at \$$limit.';
+    return 'Waits until $ticker reaches $trigger, then becomes a limit order at $limit.';
   }
 
   @override
@@ -2874,7 +2874,7 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String restingOrderCancelBody(
       String side, String qty, String ticker, String price) {
-    return '$side $qty $ticker at \$$price will stop waiting and will not fill.';
+    return '$side $qty $ticker at $price will stop waiting and will not fill.';
   }
 
   @override
@@ -2929,22 +2929,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String restingOrderWaitsForFall(String price) {
-    return 'waits for a fall to \$$price';
+    return 'waits for a fall to $price';
   }
 
   @override
   String restingOrderWaitsForRise(String price) {
-    return 'waits for a rise to \$$price';
+    return 'waits for a rise to $price';
   }
 
   @override
   String restingOrderThenLimit(String price) {
-    return 'then a limit at \$$price';
+    return 'then a limit at $price';
   }
 
   @override
   String restingOrderTriggeredNowLimit(String price) {
-    return 'triggered — now a limit at \$$price';
+    return 'triggered — now a limit at $price';
   }
 
   @override
@@ -4693,7 +4693,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String portfolioOverCommitted(String amount) {
-    return 'Your resting orders commit \$$amount more than your balance holds. Whichever fills last will be refused.';
+    return 'Your resting orders commit $amount more than your balance holds. Whichever fills last will be refused.';
   }
 
   @override

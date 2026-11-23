@@ -16,6 +16,8 @@
 /// portfolio in the app, which is the placeholder CR040 forbids.
 library;
 
+import 'package:ami_trade/features/markets/market.dart';
+import 'package:ami_trade/features/markets/money.dart';
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/sim_resting_order.dart';
 import 'package:ami_trade/features/sim/order_pricing.dart';
@@ -63,20 +65,22 @@ String? restingOrderIntentLine(AppLocalizations l, SimRestingOrder o) {
   if (!o.isLive) return null;
   final named = o.namedPrice;
   if (named == null) return null;
+  String m(double v) =>
+      formatMoney(v, market: marketForTicker(o.ticker), grouped: false);
 
   // A triggered stop-limit has stopped waiting for its trigger. Describing it
   // as still waiting for a price it already reached is the one sentence on this
   // card that would be actively false.
   if (o.state == RestingOrderState.triggered && o.limitPrice != null) {
-    return l.restingOrderTriggeredNowLimit(o.limitPrice!.toStringAsFixed(2));
+    return l.restingOrderTriggeredNowLimit(m(o.limitPrice!));
   }
 
   final waits = restsBelow(side: o.side, orderType: o.orderType)
-      ? l.restingOrderWaitsForFall(named.toStringAsFixed(2))
-      : l.restingOrderWaitsForRise(named.toStringAsFixed(2));
+      ? l.restingOrderWaitsForFall(m(named))
+      : l.restingOrderWaitsForRise(m(named));
 
   if (o.orderType == SimOrderType.stopLimit && o.limitPrice != null) {
-    return '$waits, ${l.restingOrderThenLimit(o.limitPrice!.toStringAsFixed(2))}';
+    return '$waits, ${l.restingOrderThenLimit(m(o.limitPrice!))}';
   }
   return waits;
 }
@@ -146,7 +150,8 @@ class _RestingOrderCard extends ConsumerWidget {
             order.side.toUpperCase(),
             order.quantity.toStringAsFixed(0),
             order.ticker,
-            (order.namedPrice ?? 0).toStringAsFixed(2),
+            formatMoney(order.namedPrice ?? 0,
+                market: marketForTicker(order.ticker), grouped: false),
           ),
           style: AmiTypography.body,
         ),
@@ -219,7 +224,7 @@ class _RestingOrderCard extends ConsumerWidget {
                   child: Text(
                     '${order.side.toUpperCase()} ${order.quantity.toStringAsFixed(0)} '
                     '${order.ticker}'
-                    '${named == null ? '' : ' @ \$${named.toStringAsFixed(2)}'}',
+                    '${named == null ? '' : ' @ ${formatMoney(named, market: marketForTicker(order.ticker), grouped: false)}'}',
                     style: AmiTypography.labelMono,
                   ),
                 ),
@@ -307,7 +312,7 @@ class _RestingOrderCard extends ConsumerWidget {
       final head = order.state == RestingOrderState.filled &&
               order.fillPrice != null
           ? '${restingOrderStateLabel(l, order.state)} @ '
-              '\$${order.fillPrice!.toStringAsFixed(2)}'
+              '${formatMoney(order.fillPrice!, market: marketForTicker(order.ticker), grouped: false)}'
           : restingOrderStateLabel(l, order.state);
       // CR186 — when it ended. A closed order with no date is a fact with no
       // place in time, and this group is headed RECENTLY CLOSED.
