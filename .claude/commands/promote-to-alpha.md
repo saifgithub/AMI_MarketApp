@@ -280,11 +280,12 @@ rsync -az --delete \
   --exclude='audit/' \
   --exclude='reports/' \
   --exclude='backtest_results/' \
+  --exclude='/logs/' \
   ./ \
   melehost:~/ami_trade/
 ```
 
-**`audit/`, `reports/` and `backtest_results/` MUST be excluded (DEF081, DEF276).** They are **melehost-generated
+**`audit/`, `reports/`, `backtest_results/` and `/logs/` MUST be excluded (DEF081, DEF276, DEF447).** `/logs/` holds the host cron logs (`infra/cron/*.cron`, e.g. the DEF447 8-K rescan) — anchored to the root so it never matches a source directory named `logs`. They are **melehost-generated
 runtime data not present in the Mac source** — `reports/` is the CR051 daily-usage
 analytics output, `audit/handshake/runs/*` are audit run histories. Without these two
 excludes, `--delete` wipes them off the host (134 files in the AT:R64 promote). They are

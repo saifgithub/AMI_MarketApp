@@ -377,6 +377,9 @@ def check_tree(host: str, remote: str, timeout: int,
         # DEF276 — bind-mounted `rw` into api-alpha, written by the container,
         # absent from the Mac. The rule: any `rw` bind mount is host-generated.
         "backtest_results/",
+        # DEF447 — host cron logs (`infra/cron/*.cron` append to ~/ami_trade/logs/).
+        # Anchored: only the root `logs/`, never a nested source dir of that name.
+        "/logs/",
         # DEF381 — the canonical Alpha credentials. `.env` above does NOT match
         # this: rsync's pattern is a filename, and the file that actually holds
         # the secrets is `infra/alpha.env`. Step 4 scps it to `~/ami_trade/.env`,

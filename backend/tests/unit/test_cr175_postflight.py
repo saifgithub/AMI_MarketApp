@@ -255,7 +255,7 @@ def test_tree_check_excludes_match_the_promotion_command() -> None:
     reports every such path as drift and stops being read."""
     cmd = (Path(__file__).resolve().parents[3]
            / ".claude" / "commands" / "promote-to-alpha.md").read_text()
-    for host_generated in ("audit/", "reports/", "backtest_results/"):
+    for host_generated in ("audit/", "reports/", "backtest_results/", "/logs/"):
         assert f"--exclude='{host_generated}'" in cmd, (
             f"{host_generated} missing from the promotion's rsync excludes — "
             "rsync --delete would destroy it on the box (DEF081/DEF276)"

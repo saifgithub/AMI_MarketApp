@@ -61,6 +61,7 @@ _NOT_SHIPPED_PREFIXES = (
     "audit/",
     "reports/",
     "backtest_results/",   # DEF276
+    "logs/",               # DEF447 host cron logs (rsync excludes the root /logs/)
     ".idea/",
     ".vscode/",
 )
