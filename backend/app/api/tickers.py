@@ -15,6 +15,7 @@ from fastapi import APIRouter, Query
 from app.db import get_session
 from app.schemas.tickers import TickerSuggestion, TickerValidateResponse
 from app.services.ticker_reference import lookup_ticker, suggest_closest
+from app.trading_math.markets import Market, accepted_without_reference, spec_for
 
 router = APIRouter(prefix="/v1/tickers", tags=["tickers"])
 
@@ -30,6 +31,12 @@ def validate_ticker(ticker: str = Query(..., min_length=1)) -> TickerValidateRes
                 exists=True,
                 company_name=row.company_name,
                 exchange=row.exchange,
+            )
+        if accepted_without_reference(normalized):
+            return TickerValidateResponse(
+                ticker=normalized,
+                exists=True,
+                exchange=spec_for(Market.MY).exchange_label,
             )
         candidates = suggest_closest(session, normalized, limit=1)
         suggestion = None

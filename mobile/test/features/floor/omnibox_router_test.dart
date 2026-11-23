@@ -66,4 +66,34 @@ void main() {
       expect(routeOmnibox('tell me about nvda').route, OmniboxRoute.concierge);
     }
   });
+
+  group('CR282 Bursa codes', () {
+    test('flag off: digits and .KL stay a Concierge question, as before', () {
+      for (final input in ['1155', '1155.KL', '5099a.kl']) {
+        expect(routeOmnibox(input).route, OmniboxRoute.concierge,
+            reason: input);
+        expect(routeOmnibox(input, bursaEnabled: false).route,
+            OmniboxRoute.concierge,
+            reason: input);
+      }
+    });
+
+    test('flag on: a Bursa code arms CONVENE as NNNN.KL', () {
+      for (final input in ['1155', '1155.KL', ' 1155.kl ', r'$1155']) {
+        final d = routeOmnibox(input, bursaEnabled: true);
+        expect(d.route, OmniboxRoute.convene, reason: input);
+        expect(d.ticker, '1155.KL', reason: input);
+      }
+      expect(routeOmnibox('5099a', bursaEnabled: true).ticker, '5099A.KL');
+    });
+
+    test('flag on: US tickers and non-codes are unchanged', () {
+      expect(routeOmnibox('AAPL', bursaEnabled: true).ticker, 'AAPL');
+      for (final input in ['115', '11555', '1155.US', '1155.KLX']) {
+        expect(routeOmnibox(input, bursaEnabled: true).route,
+            OmniboxRoute.concierge,
+            reason: input);
+      }
+    });
+  });
 }

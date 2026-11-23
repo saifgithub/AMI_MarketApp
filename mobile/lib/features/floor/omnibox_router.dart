@@ -18,11 +18,17 @@
 /// ticker picker, so typing is the accelerant and never the toll.
 library;
 
+import '../markets/bursa_flag.dart';
+
 /// US equities at MVP (D-002): 1–5 ASCII letters. Deliberately not a
 /// known-symbol list — the app carries no such list, and inventing one here
 /// would reject valid tickers it had never heard of, which is worse than
 /// convening on a word.
 final _tickerShape = RegExp(r'^[A-Za-z]{1,5}$');
+
+/// CR282: a Bursa code - four digits, optionally one trailing letter, with or
+/// without the `.KL` suffix. Only consulted when Bursa is switched on.
+final _bursaShape = RegExp(r'^[0-9]{4}[A-Za-z]?(\.[Kk][Ll])?$');
 
 enum OmniboxRoute {
   /// Ticker-shaped: arm the Room.
@@ -51,7 +57,7 @@ class OmniboxDecision {
   final String? text;
 }
 
-OmniboxDecision routeOmnibox(String raw) {
+OmniboxDecision routeOmnibox(String raw, {bool bursaEnabled = kBursaEnabled}) {
   // A leading `$` is how half the internet writes a ticker, and dropping it is
   // the difference between convening on AAPL and asking AMI about "$AAPL".
   final trimmed = raw.trim().replaceFirst(RegExp(r'^\$'), '').trim();
@@ -59,6 +65,11 @@ OmniboxDecision routeOmnibox(String raw) {
   if (_tickerShape.hasMatch(trimmed)) {
     return OmniboxDecision(OmniboxRoute.convene,
         ticker: trimmed.toUpperCase());
+  }
+  if (bursaEnabled && _bursaShape.hasMatch(trimmed)) {
+    final upper = trimmed.toUpperCase();
+    return OmniboxDecision(OmniboxRoute.convene,
+        ticker: upper.endsWith('.KL') ? upper : '$upper.KL');
   }
   // Note the fall-through: `HI` is ticker-shaped and will arm CONVENE. That is
   // the one predictable wrong answer, and it is why the CTA renames itself —

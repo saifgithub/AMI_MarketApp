@@ -58,6 +58,7 @@ from app.core.config import settings
 from app.core.logging import logger
 from app.services.asof_context import current_asof
 from app.trading_math.market_hours import is_us_market_open
+from app.trading_math.markets import Market, market_for
 
 
 # ── Interface ────────────────────────────────────────────────────────────
@@ -69,7 +70,23 @@ class Quote(NamedTuple):
     price: float
     source: str
     change_pct: float = 0.0      # vs previous close; 0.0 for mock/degraded
-    market_state: str = "CLOSED" # REGULAR | PRE | POST | CLOSED
+    market_state: str = "CLOSED" # REGULAR | PRE | POST | CLOSED | UNKNOWN (non-US, until its calendar lands)
+
+
+def _market_state_for(ticker: str) -> str:
+    """REGULAR | CLOSED for US (the CR109 calendar); UNKNOWN for any other market.
+
+    TODO(CR282 lane B): Bursa calendar + sessions. Until then a `.KL` quote says
+    UNKNOWN — never a fabricated OPEN/CLOSED. Clients treat anything but
+    PRE/POST/CLOSED as "no pill", so UNKNOWN renders as no state at all.
+    """
+    if market_for(ticker) is not Market.US:
+        return "UNKNOWN"
+    return (
+        "REGULAR"
+        if is_us_market_open(datetime.datetime.now(datetime.timezone.utc))
+        else "CLOSED"
+    )
 
 
 class Candle(NamedTuple):
@@ -915,11 +932,7 @@ class YfinanceProvider:
             price=float(price),
             source=self.name,
             change_pct=change_pct,
-            market_state=(
-                "REGULAR"
-                if is_us_market_open(datetime.datetime.now(datetime.timezone.utc))
-                else "CLOSED"
-            ),
+            market_state=_market_state_for(t),
         )
 
     def get_price(self, ticker: str) -> float | None:

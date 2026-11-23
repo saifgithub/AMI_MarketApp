@@ -383,6 +383,8 @@ services:
       BRIEF_CREDIT_COST: ${BRIEF_CREDIT_COST:-1}
       # CR278 (WP-36) — Beta free credits: spend() debits nothing, logged at boot.
       BETA_FREE_CREDITS: ${BETA_FREE_CREDITS:-false}
+      # CR282 — Bursa Malaysia (.KL) master switch; off = US-only, off in Beta.
+      MARKET_BURSA_ENABLED: ${MARKET_BURSA_ENABLED:-false}
       # CR239 / WP-38 — scoped device-UAT 503 switch; empty = off, inert outside alpha/staging.
       UAT_FAULT_INJECT: ${UAT_FAULT_INJECT:-}
       # CR035 ablation toggle — hides the Street consensus line from the

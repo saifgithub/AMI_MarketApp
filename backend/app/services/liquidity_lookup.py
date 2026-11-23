@@ -59,6 +59,7 @@ from concurrent.futures import TimeoutError as _FutureTimeoutError
 from threading import RLock
 
 from app.core.logging import logger
+from app.trading_math.markets import yahoo_symbol
 
 # 24h — Saiful's ruling, verbatim. Matches the daily classification refresh's
 # own cadence, so an on-demand read is never staler than the thing it stands in
@@ -138,7 +139,7 @@ def _yahoo_symbol(ticker: str) -> str:
     if "$" in t:
         base, series = t.split("$", 1)
         t = f"{base}-P{series}"
-    return t.replace(".", "-")
+    return yahoo_symbol(t)
 
 
 def _fetch_liquidity_info_uncached(ticker: str) -> dict[str, float] | None:

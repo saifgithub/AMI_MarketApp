@@ -31,7 +31,9 @@ from __future__ import annotations
 import math
 from typing import Annotated
 
-from pydantic import AfterValidator, BaseModel, ConfigDict, Field
+from pydantic import AfterValidator, BaseModel, BeforeValidator, ConfigDict, Field
+
+from app.trading_math.markets import market_for, spec_for
 
 # A paper account can legitimately hold a lot of names; 100 is far above any
 # real one while still bounding what a hostile client can push into a prompt.
@@ -51,12 +53,28 @@ FiniteFloat = Annotated[float, AfterValidator(_finite)]
 _SYMBOL_PATTERN = r"^[A-Z][A-Z0-9.\-]{0,9}$"
 
 
+def _us_only(v: object) -> object:
+    """Alpaca is a US-equities broker; refuse any other market by name (CR282)
+    rather than leaving it to fall out of the character-class pattern."""
+    if isinstance(v, str):
+        market = market_for(v)
+        if not spec_for(market).alpaca_supported:
+            raise ValueError(
+                f"Alpaca supports US equities only; {v.upper()} is on "
+                f"{spec_for(market).exchange_label}"
+            )
+    return v
+
+
+AlpacaSymbol = Annotated[str, BeforeValidator(_us_only), Field(pattern=_SYMBOL_PATTERN)]
+
+
 class AlpacaPositionIn(BaseModel):
     """One open paper position, as reported by the device."""
 
     model_config = ConfigDict(extra="forbid")
 
-    symbol: str = Field(pattern=_SYMBOL_PATTERN)
+    symbol: AlpacaSymbol
     qty: FiniteFloat
     market_value: FiniteFloat
     unrealized_pl: FiniteFloat
@@ -97,7 +115,7 @@ class AlpacaOrderLogIn(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    symbol: str = Field(pattern=_SYMBOL_PATTERN)
+    symbol: AlpacaSymbol
     side: str = Field(pattern=r"^(buy|sell)$")
     qty: FiniteFloat
     destination: str = Field(pattern=r"^(alpaca_only|both)$")
@@ -138,7 +156,7 @@ class AccountPositionIn(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    ticker: str = Field(pattern=_SYMBOL_PATTERN)
+    ticker: AlpacaSymbol
     qty: FiniteFloat = Field(ge=0)
     market_value: FiniteFloat = Field(ge=0)
 

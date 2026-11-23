@@ -823,6 +823,11 @@ class Settings(BaseSettings):
     # (CR040: a silent switch that stops charging is the failure to avoid).
     beta_free_credits: bool = False
 
+    # CR282 — Bursa Malaysia (`.KL` tickers, MYR book). Default false = today's
+    # US-only behaviour byte-for-byte; a `.KL` ticker is rejected wherever it was.
+    # Off in Beta builds until counsel answers the CMSA 2007 advice question.
+    market_bursa_enabled: bool = False
+
     # CR239 / WP-38 — device-UAT fault switch: JSON {"<user-uuid>": ["GET /v1/messages"]}.
     # Empty = off. Inert (logged as refused) outside local/dev/staging; malformed
     # JSON stops the boot. See app/services/uat_fault_inject.py.

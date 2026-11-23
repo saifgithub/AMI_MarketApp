@@ -328,6 +328,7 @@ _EXCHANGE_DISPLAY_NAMES: dict[str, str] = {
     "NYSE AMERICAN": "NYSE American",
     "NYSE ARCA": "NYSE Arca",
     "CBOE BZX": "Cboe BZX",
+    "BURSA MALAYSIA": "Bursa Malaysia",
 }
 
 

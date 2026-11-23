@@ -57,6 +57,12 @@ from app.services.ticker_reference import (
     require_ticker_exists,
     ticker_not_found_detail,
 )
+from app.trading_math.markets import (
+    MarketUnsupported,
+    market_enabled,
+    market_for,
+    spec_for,
+)
 from app.trading_math.option_strategy import StrategyLeg, strategy_metrics
 from app.trading_math.risk import drawdown_contribution
 
@@ -85,6 +91,19 @@ def _own(current_user: User, user_id: UUID) -> None:
 
 
 def _require_ticker(ticker: str) -> None:
+    # CR282: a market that is switched on but has no options book gets a named
+    # refusal. Switched off, it falls through to the ticker-not-found 422 below,
+    # exactly as before the flag existed.
+    market = market_for(ticker)
+    if market_enabled(market) and not spec_for(market).options_supported:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={
+                "code": "options_unsupported_market",
+                "market": market.value,
+                "reason": str(MarketUnsupported(market, "Options")),
+            },
+        )
     try:
         with get_session() as session:
             require_ticker_exists(session, ticker)
