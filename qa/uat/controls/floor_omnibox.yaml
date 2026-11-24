@@ -7,7 +7,7 @@ controls:
     target: "ami.screen.room"
     when: "text is ticker-shaped (1-5 letters) AND passes validateTicker; keyboard Go behaves exactly like the primary CTA"
     line: 205
-    note: "Free text (not ticker-shaped) -> OneOnOneScreen with the Concierge carrying the text (ami.screen.one_on_one); empty -> ConveneSheet picker (ami.screen.convene_sheet). Unknown ticker shows TickerNotFoundPanel and does NOT navigate. Tap outside dismisses the keyboard (line 210)."
+    note: "Free text (not ticker-shaped) -> OneOnOneScreen with the Concierge carrying the text (ami.screen.one_on_one); empty -> ConveneSheet picker (ami.screen.convene_sheet). Unknown ticker shows TickerNotFoundPanel and does NOT navigate. Tap outside dismisses the keyboard (line 210). CR283, AMI_BURSA builds only: a typed word is first resolved against both markets (a company name such as CIMB opens 1023.KL on MY); a 4-digit Bursa code always goes to Bursa; on MY with the lookup unreachable the box says it cannot look up names and convenes nothing. Store builds are unchanged."
   - label: "CONVENE THE ROOM · <TICKER>"
     kind: button
     expect: destructive
@@ -41,3 +41,17 @@ controls:
     state: "Box text is replaced with the suggested ticker; panel clears and CTA re-arms on it"
     when: "typed symbol unknown and a suggestion exists"
     line: 232
+  - label: "US / MY market chip"
+    kind: chip
+    expect: state
+    state: "The app-wide market flips between US and MY (the Portfolio US | BURSA switch follows); the chip label, the picker's one-tap suggestions and the ticker tape follow it"
+    when: "AMI_BURSA build only; absent from a store build. Semantics id ami.floor.market_chip"
+    line: 366
+    note: "CR283. Persisted per user, same setting as the Portfolio switch. Not a spend and not a navigation."
+  - label: "<market> line (Which market? chooser)"
+    kind: list_row
+    expect: destructive
+    target: "ami.screen.room"
+    when: "AMI_BURSA build only; the typed word is listed in both the US and Bursa markets. Semantics id ami.floor.market_choice.<ticker>"
+    line: 533
+    note: "CR283. Two lines, the active market first; CONVENE THE ROOM does nothing until one is tapped. Tapping validates the ticker, then opens the Room, which auto-convenes and spends a Room credit."

@@ -158,3 +158,55 @@ cases:
       - 'The line under it reads "<stake> to start" on an untouched book, or "<pnl> all-time · <cash> cash · <n> positions" with cash as $<amount>; a negative P&L reads -$<amount>'
       - 'In Bahasa Melayu and Arabic the $ is still a prefix and no amount reads RM: money on a US book is dollars whatever the phone language'
     notes: 'CR282 lane F1 (2026-11-24): the card prints through the one money formatter (formatMoney, features/markets/money.dart). The Floor card always shows the US book; Bursa has no Floor card in phase 1, so there is no Bursa Floor case. The executor asserts the English run; the Malay and Arabic repeat is a visual check.'
+
+  - id: UAT-FLOOR-013
+    title: With Bursa on, the Floor search box has a US / MY chip and a company name resolves to the active market's code
+    layer: device
+    plans: [floor_pass]
+    preconditions:
+      - 'A build with AMI_BURSA on (internal TestFlight / Play build; store builds keep it off)'
+      - 'Alpha with MARKET_BURSA_ENABLED=true'
+    steps:
+      - 'Open the Floor. Read the search box: note the small US / MY chip inside it. Tap the chip, then open the Portfolio tab and read its US | BURSA switch, then return to the Floor'
+      - 'With the chip on MY, type CIMB and read the button; tap it'
+      - 'Back on the Floor, type maybank and tap the button'
+      - 'Switch the chip to US; type AAPL and read the button; then type 1023 and read the button'
+      - 'Open the Convene picker (empty box, tap CONVENE THE ROOM) with the chip on MY'
+    expected:
+      - 'The chip reads US by default and flips to MY on a tap; the Portfolio switch shows the same market (one setting, either control moves both)'
+      - 'On MY the button reads CONVENE THE ROOM · CIMB · 1023 and the Room opens on 1023.KL; maybank opens the Room on 1155.KL'
+      - 'On US, AAPL reads CONVENE THE ROOM · AAPL; 1023 reads CONVENE THE ROOM · 1023.KL in either market (a number code always goes to Bursa)'
+      - 'On MY the picker offers .KL names as one-tap suggestions; on US it offers the US names'
+    notes: 'CR283 (2026-11-24). Convening spends a Room credit: use a funded account. With the build lacking AMI_BURSA the chip does not exist and the box behaves as before (UAT-FLOOR-003). The API half is UAT-PLAT-010.'
+
+  - id: UAT-FLOOR-014
+    title: A word listed in both markets shows a two-line chooser, never a silent pick
+    layer: device
+    plans: [floor_pass]
+    preconditions:
+      - 'A build with AMI_BURSA on; Alpha with MARKET_BURSA_ENABLED=true'
+    steps:
+      - 'With the chip on US, type a word that is both a US ticker and a Bursa short name (try TM: Toyota on the US side, Telekom Malaysia on Bursa) and wait for the box to settle'
+      - 'Read the two lines under the box; tap the Bursa line'
+      - 'Switch the chip to MY, type the same word again and read the order of the two lines'
+    expected:
+      - 'Under the box a "Which market?" heading and two lines appear, one per market, each with its ticker, company name and US or MY tag; the CONVENE THE ROOM button names no ticker and does nothing until a line is tapped'
+      - 'Tapping the Bursa line opens the Room on that .KL ticker'
+      - 'The active market''s line is listed first, so the order flips with the chip'
+    notes: 'CR283 (2026-11-24). TM is an UNVERIFIED example of a word in both markets (the Yahoo probe could not be re-run when this case was written); if it lists in only one market, note the word used that does. The single-market and lookup-down paths are in UAT-FLOOR-013 and UAT-FLOOR-015.'
+
+  - id: UAT-FLOOR-015
+    title: With Bursa on and the name lookup unreachable, MY mode says so and US mode keeps working
+    layer: manual
+    plans: [floor_pass]
+    preconditions:
+      - 'A build with AMI_BURSA on; Alpha reachable but its name source (Yahoo search) blocked or the resolve route failing'
+    steps:
+      - 'With the chip on MY, type CIMB and read under the box; tap the button'
+      - 'Type 1023 and tap the button'
+      - 'Switch the chip to US, type AAPL and tap the button'
+    expected:
+      - 'On MY, CIMB shows "Can''t look up names right now — use the 4-digit code." under the box and the button convenes nothing'
+      - '1023 still opens the Room on 1023.KL (a code needs no lookup)'
+      - 'On US, AAPL opens the Room on AAPL exactly as with Bursa off (today''s ticker-shape rule)'
+    notes: 'CR283 (2026-11-24). Needs the failure to be induced on the server, so it is a by-hand case; the logic is pinned by the widget tests (mobile/test/widgets/floor/cr283_omnibox_market_test.dart) and the 503 by the backend unit tests.'

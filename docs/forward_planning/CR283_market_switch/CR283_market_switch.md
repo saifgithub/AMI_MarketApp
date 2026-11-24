@@ -52,3 +52,4 @@ Measured state at filing:
 ## Log
 
 1. 2026-11-24 — filed; worker briefed (Sonnet, own worktree).
+2. 2026-11-24 — built on branch `cr283-market-switch`. Backend: `services/ticker_resolve.py` + `GET /v1/tickers/resolve` (6h in-process cache, 503 on upstream failure, never cached). Mobile: `lookupName` / `isNameQuery` in `omnibox_router.dart`; `FloorOmnibox` takes `market` (null = Bursa off = no chip, no lookup); `activeBourseProvider`, the Convene picker's suggestions and the empty trade ticket's quantity follow `selectedMarketProvider`. Decisions: a word resolves to each market's top Yahoo hit; a failed leg in either market counts as "down" (one match proves nothing while the other is unreachable); no match in either market falls back to today's rule. Chip / chooser Semantics ids `ami.floor.market_chip`, `ami.floor.market_choice.<ticker>`. UAT: UAT-PLAT-010 (api), UAT-FLOOR-013/014 (device, skip-with-reason executors), UAT-FLOOR-015 (manual).
