@@ -561,10 +561,87 @@ def test_a_changed_mandate_is_a_new_room_and_the_same_inputs_are_banked(seed, tr
 
 
 @pytest.mark.uat("UAT-ROOM-033")
-def test_bursa_room_refused_before_any_spend_while_the_switch_is_off(seed):
-    u = fund(seed, "trader", 150)
-    status, _, events, body = stream_room(u, "1155.KL")
-    assert status == 422 and events == [], "a .KL ticker must be refused before any spend"
-    assert body["detail"]["exists"] is False, body
-    assert balance(seed, u) == 150, "a refused Bursa Room must not charge"
+def test_bursa_room_pre_spend_checks_match_the_switch_state(seed, bursa_on):
+    """Switch off: a .KL Room is refused as an unknown ticker before any spend.
+    Switch on: a .KL Room is allowed, and convening one spends LLM credits, which is
+    UAT-ROOM-034's device job. Here only the pre-spend wall is asserted: a trader
+    holding 5 credits (under the 8 price) is stopped by the credit check, not by the
+    ticker check, so the ticker passed the existence guard and nothing ran."""
+    if not bursa_on:
+        u = fund(seed, "trader", 150)
+        status, _, events, body = stream_room(u, "1155.KL")
+        assert status == 422 and events == [], "a .KL ticker must be refused before any spend"
+        assert body["detail"]["exists"] is False, body
+        assert balance(seed, u) == 150, "a refused Bursa Room must not charge"
+        assert room_runs(u) == []
+        return
+
+    u = fund(seed, "trader", 5)
+    status, headers, events, body = stream_room(u, "1155.KL")
+    assert status == 402 and events == [], (
+        f"with Bursa on a .KL Room must reach the credit check, got {status} {body}"
+    )
+    assert body["detail"]["code"] == "insufficient_credits", body
+    assert body["detail"]["balance"] == 5, body
+    assert "x-room-run-id" not in headers
+    assert balance(seed, u) == 5, "a refused Room must not touch the balance"
     assert room_runs(u) == []
+
+
+CODED_QUESTIONS = {
+    "bear_objection_answered", "catalyst_in_horizon", "terminal_vulnerability",
+    "event_risk_wait", "thesis_material_directional", "trade_proposed",
+}
+CODED_OUTCOMES = {"APPROVE", "PASS", "CONTESTED", "UNAVAILABLE"}
+DECISION_UNAVAILABLE_PREFIX = "AMI could not compute a decision for this Room"
+
+
+@pytest.mark.uat("UAT-ROOM-035")
+@pytest.mark.llm
+def test_the_coded_decision_rule_computes_the_action_and_records_its_grader(seed, trader_run):
+    """CR267 WP-23. Shares the Trader's MSFT Room with UAT-ROOM-003/013/030 (no extra spend)."""
+    assert_clean_stream(trader_run)
+    run = get_run(trader_run)
+    verdict = run["verdict"]
+    if verdict["action"] == "NO_VERDICT":
+        pytest.skip("a desk was withheld, so the Room ended without a verdict and never reached the rule")
+    coded = verdict.get("coded_decision")
+    assert coded is not None, (
+        f"the verdict carries no coded_decision: ROOM_CODED_RULE_ENABLED is not on for this Room ({verdict['action']})"
+    )
+
+    outcome = coded["outcome"]
+    assert outcome in CODED_OUTCOMES, coded
+    assert coded["rule_version"], coded
+    assert coded["policy_version"] and f"rule={coded['rule_version']}" in coded["policy_version"], coded
+    assert coded["grader"] == "deepinfra", coded
+    assert "deepseek-ai/DeepSeek-V4-Flash" in (coded.get("grader_version") or ""), coded
+    assert "split2" in (coded.get("grader_version") or ""), coded
+    assert coded["policy_version"].startswith(f"deepinfra@{coded['grader_version']}"), coded
+
+    if coded.get("error") or outcome == "UNAVAILABLE":
+        assert outcome == "UNAVAILABLE", f"a grader error must end as decision unavailable: {coded}"
+        assert verdict["action"] == "PASS" and verdict["overridden_from_llm"] is True, verdict
+        assert verdict["reason"].startswith(DECISION_UNAVAILABLE_PREFIX), verdict["reason"]
+        assert trader_run.done["refunded"] is True, "a decision-unavailable Room must be refunded"
+        assert balance(seed, trader_run.user) == trader_run.start_balance
+        return
+
+    answers = {a["question"]: a for a in coded["answers"]}
+    assert set(answers) == CODED_QUESTIONS and len(coded["answers"]) == len(CODED_QUESTIONS), coded["answers"]
+    assert all(a["answer"] in ("yes", "no", "not_computable") for a in answers.values()), answers
+    assert coded["reasons"], "the rule must say why"
+
+    # the action is the rule's, not the CIO's: APPROVE only on an APPROVE outcome
+    # (the mandate floor may still turn it into REJECT), PASS for PASS and CONTESTED
+    if outcome == "APPROVE":
+        assert verdict["action"] in ("APPROVE", "REJECT"), verdict["action"]
+    else:
+        assert verdict["action"] == "PASS", (outcome, verdict["action"])
+    if outcome == "CONTESTED":
+        assert coded["close_questions"], "a contested call names what was too close to call"
+        assert set(coded["close_questions"]) <= CODED_QUESTIONS
+
+    # a CIO narration that contradicted the rule is replaced by the rule's own text
+    if coded.get("narration_overridden") and outcome != "APPROVE":
+        assert "AMI's decision rule" in verdict["reason"], verdict["reason"]

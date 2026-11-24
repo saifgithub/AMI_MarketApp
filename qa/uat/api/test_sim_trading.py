@@ -679,35 +679,84 @@ def test_option_routes_validate_and_enforce_ownership(trader, stranger, api):
         assert cheat.json()["accepted"] is False
 
 
-# ---------------------------------------------------------------- CR282 Bursa, switch off
-@pytest.mark.uat("UAT-SIM-035")
-def test_bursa_ticker_is_refused_while_the_switch_is_off(api, trader):
-    v = api.get("/v1/tickers/validate", params={"ticker": "1155.KL"}).json()
-    assert v["exists"] is False and v["ticker"] == "1155.KL"
+# ---------------------------------------------------------------- CR282 Bursa (both switch states)
+def _assert_us_preview_unchanged(trader):
+    pv = _preview(trader, "AAPL", quantity=1)
+    assert pv["market"] == "US" and pv["currency"] == "USD" and pv["fees"] is None, pv
 
+
+@pytest.mark.uat("UAT-SIM-035")
+def test_bursa_ticker_handling_matches_the_switch_state(api, trader, bursa_on):
+    v = api.get("/v1/tickers/validate", params={"ticker": "1155.KL"}).json()
+    assert v["ticker"] == "1155.KL"
     before = _snap(trader)
-    orders = (
-        {"side": "buy", "quantity": 100},
-        {"side": "buy", "quantity": 100, "order_type": "limit", "limit_price": 1.0},
-    )
-    for extra in orders:
-        for path in ("/v1/sim/preview", "/v1/sim/submit"):
-            r = trader.post(path, json={"user_id": trader.id, "ticker": "1155.KL", **extra})
-            assert r.status_code == 422, (path, extra, r.status_code, r.text)
-            assert r.json()["detail"]["exists"] is False, r.text
+
+    if not bursa_on:
+        assert v["exists"] is False
+        orders = (
+            {"side": "buy", "quantity": 100},
+            {"side": "buy", "quantity": 100, "order_type": "limit", "limit_price": 1.0},
+        )
+        for extra in orders:
+            for path in ("/v1/sim/preview", "/v1/sim/submit"):
+                r = trader.post(path, json={"user_id": trader.id, "ticker": "1155.KL", **extra})
+                assert r.status_code == 422, (path, extra, r.status_code, r.text)
+                assert r.json()["detail"]["exists"] is False, r.text
+        _assert_book_unchanged(before, _snap(trader))
+        return
+
+    assert v["exists"] is True and v["exchange"] == "Bursa Malaysia", v
+
+    pv = _preview(trader, "1155.KL", quantity=100)
+    assert pv["market"] == "MY" and pv["currency"] == "MYR", pv
+    fees = pv["fees"]
+    assert fees and fees["currency"] == "MYR", pv
+    for key in ("brokerage", "clearing", "stamp_duty", "total"):
+        assert fees[key] > 0, (key, fees)
+    assert abs(fees["total"] - (fees["brokerage"] + fees["clearing"] + fees["stamp_duty"])) <= 0.015, fees
+
+    broken_lot = trader.post("/v1/sim/preview", json={
+        "user_id": trader.id, "ticker": "1155.KL", "side": "buy", "quantity": 150})
+    assert broken_lot.status_code == 422, broken_lot.text
+    assert broken_lot.json()["detail"]["code"] == "board_lot", broken_lot.text
+
+    # 1.234 is off every Bursa tick grid (0.005 below RM1, 0.01 from RM1, 0.02 from RM10);
+    # the tick rule runs before any quote or price-limit check, so it needs no live price.
+    off_grid = {"user_id": trader.id, "ticker": "1155.KL", "side": "buy", "quantity": 100,
+                "order_type": "limit", "limit_price": 1.234}
+    for path in ("/v1/sim/preview", "/v1/sim/submit"):
+        r = trader.post(path, json=off_grid)
+        assert r.status_code == 422, (path, r.status_code, r.text)
+        assert r.json()["detail"]["code"] == "tick_size", r.text
+    refused_lot = trader.post("/v1/sim/submit", json={
+        "user_id": trader.id, "ticker": "1155.KL", "side": "buy", "quantity": 150})
+    assert refused_lot.status_code == 422 and refused_lot.json()["detail"]["code"] == "board_lot", refused_lot.text
+
     _assert_book_unchanged(before, _snap(trader))
+    _assert_us_preview_unchanged(trader)
 
 
 @pytest.mark.uat("UAT-SIM-036")
-def test_myr_book_unreachable_and_us_book_answers_as_before(trader):
+def test_myr_book_matches_the_switch_state_and_us_book_answers_as_before(trader, bursa_on):
     uid = trader.id
-    for r in (
-        trader.get(f"/v1/sim/portfolio/{uid}", params={"market": "MY"}),
-        trader.get(f"/v1/sim/trades/{uid}", params={"market": "MY"}),
-        trader.post(f"/v1/sim/portfolio/{uid}/reset", params={"market": "MY"}),
-    ):
-        assert r.status_code == 422, (str(r.request.url), r.status_code, r.text)
-        assert "not available" in str(r.json()["detail"]), r.text
+    if bursa_on:
+        my = trader.get(f"/v1/sim/portfolio/{uid}", params={"market": "MY"})
+        assert my.status_code == 200, my.text
+        book = my.json()
+        assert book["market"] == "MY" and book["currency"] == "MYR", book
+        assert book["starting_capital"] == 50000, book
+        assert book["holdings"] == [], "no Bursa order has been filled for this user"
+        ledger = trader.get(f"/v1/sim/trades/{uid}", params={"market": "MY"})
+        assert ledger.status_code == 200, ledger.text
+        # market=MY reset is not exercised: it would consume the MYR book's reset cooldown
+    else:
+        for r in (
+            trader.get(f"/v1/sim/portfolio/{uid}", params={"market": "MY"}),
+            trader.get(f"/v1/sim/trades/{uid}", params={"market": "MY"}),
+            trader.post(f"/v1/sim/portfolio/{uid}/reset", params={"market": "MY"}),
+        ):
+            assert r.status_code == 422, (str(r.request.url), r.status_code, r.text)
+            assert "not available" in str(r.json()["detail"]), r.text
     bad = trader.get(f"/v1/sim/portfolio/{uid}", params={"market": "XX"})
     assert bad.status_code == 422 and "unknown market" in str(bad.json()["detail"]), bad.text
 
@@ -725,5 +774,4 @@ def test_myr_book_unreachable_and_us_book_answers_as_before(trader):
         "the US ledger must keep its pre-CR282 key set"
     )
 
-    pv = _preview(trader, "AAPL", quantity=1)
-    assert pv["market"] == "US" and pv["currency"] == "USD" and pv["fees"] is None, pv
+    _assert_us_preview_unchanged(trader)

@@ -88,7 +88,7 @@ def test_invalid_trades_refused(seed):
 
 
 @pytest.mark.uat("UAT-GAME-007")
-def test_bursa_ticker_refused_in_games_and_nothing_queued(seed):
+def test_bursa_ticker_refused_in_games_and_nothing_queued(seed, bursa_on):
     u = seed.user(plan="floor_pass")
     run_id = u.post("/v1/games/enter", json={}).json()["run_id"]
     trade = f"/v1/games/runs/{run_id}/trade"
@@ -99,8 +99,11 @@ def test_bursa_ticker_refused_in_games_and_nothing_queued(seed):
         r = u.post(path, json=body)
         assert r.status_code == 422, (path, r.status_code, r.text)
         detail = r.json()["detail"]
-        # switch off (Alpha): the ticker-not-found detail; switch on: the MarketNotInGamesError text
-        assert (isinstance(detail, dict) and detail.get("exists") is False) or "not available in Games" in str(detail), r.text
+        if bursa_on:
+            # the ticker is real now, so the refusal is Games' own: US equities only (Bursa in Games is phase 2)
+            assert isinstance(detail, str) and "not available in Games" in detail, r.text
+        else:
+            assert isinstance(detail, dict) and detail.get("exists") is False, r.text
     orders = u.get(f"/v1/games/runs/{run_id}/orders")
     assert orders.status_code == 200
     body = orders.json()

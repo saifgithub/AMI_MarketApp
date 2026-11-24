@@ -98,6 +98,6 @@ cases:
       - 'Enter the weekly run; POST /v1/games/runs/{run_id}/trade/quote and POST /v1/games/runs/{run_id}/trade for 1155.KL'
       - 'GET the run''s orders'
     expected:
-      - 'Both answer 422 and nothing is queued. With the Bursa switch off (Alpha) the refusal is the ticker-not-found detail; with it on it is the MarketNotInGamesError text "... is not available in Games - Games trade US equities only"'
+      - 'Both answer 422 and nothing is queued in both switch states. Switch off: the refusal is the ticker-not-found detail (exists false). Switch on (Alpha since 2026-11-24): the ticker is real, so the refusal is the MarketNotInGamesError text "... is not available in Games - Games trade US equities only"'
       - 'The run''s order list is empty'
-    notes: 'CR282 phase 1 (2026-11-24), backend/app/api/games.py maps MarketNotInGamesError to 422 and games_service refuses any non-US ticker (Games run on the US calendar only; Bursa in Games is phase 2). On Alpha only the switch-off refusal is reachable; the MarketNotInGamesError wording is pinned by the backend unit tests.'
+    notes: 'CR282 phase 1 (2026-11-24), backend/app/api/games.py maps MarketNotInGamesError to 422 and games_service refuses any non-US ticker (Games run on the US calendar only; Bursa in Games is phase 2). The executor reads the switch state once per run and asserts the matching wording.'

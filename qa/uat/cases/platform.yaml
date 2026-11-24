@@ -118,13 +118,14 @@ cases:
       - 'An error from a request that never reached the server shows no Ref line'
 
   - id: UAT-PLAT-009
-    title: With the Bursa master switch off the server stays ready and no Bursa ticker is accepted
+    title: With the Bursa master switch off or on, the server stays ready and 1155.KL validates to match the switch
     layer: api
     plans: [anon]
     steps:
-      - 'GET /v1/health and GET /v1/ready (the Sharia refresh loop in backend/app/main.py now also runs the SC Malaysia list tick, which does nothing while MARKET_BURSA_ENABLED is off)'
-      - 'GET /v1/tickers/validate?ticker=1155.KL'
+      - 'GET /v1/health and GET /v1/ready (the Sharia refresh loop in backend/app/main.py also runs the SC Malaysia list tick, which does nothing while MARKET_BURSA_ENABLED is off)'
+      - 'GET /v1/tickers/validate?ticker=1155.KL (the switch state is read once per run from this same call)'
     expected:
-      - 'Health is ok and /v1/ready is ready with no failed probes: the new SC tick adds no error and no probe'
-      - '1155.KL is not accepted: exists is false (Bursa codes are accepted on shape only once the switch is on)'
-    notes: 'CR282 phase 1 (2026-11-24). Alpha runs with MARKET_BURSA_ENABLED unset (docker-compose default false), so this is the "flag off, nothing changes" half of the CR282 acceptance. The flag-on half is UAT-SIM-037 and UAT-ROOM-034.'
+      - 'Health is ok and /v1/ready is ready with no failed probes in both states: the SC tick adds no error and no probe'
+      - 'Switch off: 1155.KL is not accepted, exists is false'
+      - 'Switch on: 1155.KL is accepted, exists is true and exchange is "Bursa Malaysia"'
+    notes: 'CR282 phase 1 (2026-11-24). Alpha has run with MARKET_BURSA_ENABLED=true since 2026-11-24 (Saiful''s ruling; the SC Shariah list is ingested), so the switch-on branch is the one that runs there; the switch-off branch is the "flag off, nothing changes" half of the CR282 acceptance and runs against any backend with the switch off. The device half is UAT-SIM-037 and UAT-ROOM-034.'

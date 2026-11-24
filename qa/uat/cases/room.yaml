@@ -513,26 +513,27 @@ cases:
     notes: DEF507. Alpha run 1dec3be0 (CR267 WP-14, all desks down) rendered eight scripted turns as the desks' own calls; that run predates the fix, so its turns carry no mark. The server sends scripted:true on agent_token and agent_done and stores it on the transcript entry; the backend guard is test_def507_scripted_turn_marked.py and the app guard is def507_scripted_turn_label_test.dart. The Arabic and Malay strings are English placeholders until translated.
 
   - id: UAT-ROOM-033
-    title: A Room on a Bursa (.KL) ticker is refused before any spend while the Bursa switch is off
+    title: A Room on a Bursa (.KL) ticker is refused before any spend while the Bursa switch is off, and reaches the credit check (no spend) when it is on
     layer: api
     plans: [trader]
     steps:
-      - 'Fund a trader with 150 credits; POST /v1/room/stream for 1155.KL'
+      - 'Switch off: fund a trader with 150 credits; POST /v1/room/stream for 1155.KL'
+      - 'Switch on: fund a trader with 5 credits (under the 8-credit Room price); POST /v1/room/stream for 1155.KL. A real Room on 1155.KL is not convened here: that spends LLM credits and is UAT-ROOM-034''s job'
       - 'Read the balance and the user''s Room runs'
     expected:
-      - 'The stream is refused with 422 (ticker not found, exists false) and carries no SSE events'
-      - 'The balance is still 150 and the user has no Room run'
-    notes: 'CR282 phase 1 (2026-11-24), backend/app/api/room.py. The refusal comes from the existence guard that runs before credits are touched (CR128). No LLM spend.'
+      - 'Switch off: the stream is refused with 422 (ticker not found, exists false) and carries no SSE events; the balance is still 150 and the user has no Room run'
+      - 'Switch on: the stream is refused with 402 insufficient_credits (the ticker passed the existence guard, so the refusal is the credit wall, not "ticker not found") and carries no SSE events and no X-Room-Run-Id; the balance is still 5 and the user has no Room run'
+    notes: 'CR282 phase 1 (2026-11-24), backend/app/api/room.py. The existence guard runs before credits are touched (CR128). No LLM spend in either state. Alpha has had the switch on since 2026-11-24; the executor reads the switch state once per run. The switch-on branch deliberately stops at the credit wall; the Room itself is UAT-ROOM-034 (device).'
 
   - id: UAT-ROOM-034
     title: With Bursa on, a Room on a .KL stock shows RM, FBM KLCI and names every unavailable desk input
     layer: device
-    status: blocked
-    blocked_on: 'AMI_BURSA is off in every store build and MARKET_BURSA_ENABLED is off on Alpha (CR282 gate). Run once on an AMI_BURSA=true build against a backend with the switch on; spends LLM credits; not release-blocking.'
     llm: true
     plans: [trader]
     preconditions:
-      - 'An AMI_BURSA=true build, a backend with MARKET_BURSA_ENABLED=true, and Room credits'
+      - 'Build 0.1.0+130 or later (TestFlight internal or Play internal), which has AMI_BURSA on; store builds keep it off'
+      - 'Alpha with MARKET_BURSA_ENABLED=true (on since 2026-11-24)'
+      - 'Room credits'
     steps:
       - 'On the Floor convene the Room on 1155.KL; wait for the verdict'
       - 'Read the Fundamentals Analyst, Macro & Events and Flow & Positioning rows, then the Chief Investment Officer verdict card'
@@ -540,4 +541,22 @@ cases:
       - 'Prices and sizes read RM, never $; the relative-strength comparison is against the FBM KLCI, not the S&P 500'
       - 'Each desk that would have shown a US filings input says "not available for this market (Bursa Malaysia filings are not yet ingested)" instead of staying silent'
       - 'The verdict card quotes entry, stop and target in RM; the Room is stored with currency MYR'
-    notes: 'CR282 lane E. Titles follow CR160 (Chief Investment Officer, Risk Officer, Execution Desk).'
+    notes: 'CR282 lane E. Titles follow CR160 (Chief Investment Officer, Risk Officer, Execution Desk). Active since 2026-11-24: the backend precondition is met on Alpha, so this needs a run on build 0.1.0+130 or later (not release-blocking; a store build cannot run it). The API pre-spend half is UAT-ROOM-033.'
+
+  - id: UAT-ROOM-035
+    title: With the coded decision rule on, the verdict action is computed from the grader's answers and the record names the grader, rule and policy
+    layer: api
+    plans: [trader]
+    llm: true
+    preconditions:
+      - 'A Trader user holding 150 credits who has convened one Room on MSFT (the same Room as UAT-ROOM-003/013/030; no extra spend); the backend runs with ROOM_CODED_RULE_ENABLED=true and ROOM_GRADER=deepinfra'
+    steps:
+      - 'GET /v1/room/{run_id} for the stored run and read verdict.coded_decision'
+    expected:
+      - 'The stored run has a verdict whose coded_decision outcome is APPROVE, PASS, CONTESTED or UNAVAILABLE; a run with no coded_decision fails loudly (the rule did not run), and a Room that ended NO_VERDICT because a desk was withheld is skipped, never counted as evidence'
+      - 'The record carries rule_version, a policy_version that embeds that rule_version, grader "deepinfra", a grader_version naming deepseek-ai/DeepSeek-V4-Flash and split2'
+      - 'Unless the grader failed, all six questions are answered (bear_objection_answered, catalyst_in_horizon, terminal_vulnerability, event_risk_wait, thesis_material_directional, trade_proposed), each yes, no or not_computable, and the rule gives its reasons'
+      - 'The verdict action follows the computed outcome: PASS for PASS and CONTESTED; APPROVE for APPROVE (the deterministic mandate floor may still turn it into REJECT). A CONTESTED outcome names the close questions'
+      - 'When the Chief Investment Officer''s narration contradicted the computed action (narration_overridden true) and the outcome is not APPROVE, the shown reason is the rule''s own text ("AMI''s decision rule ...")'
+      - 'If the grader failed (coded_decision.error set) the outcome is UNAVAILABLE, the verdict is the decision-unavailable PASS (overridden_from_llm true, reason starting "AMI could not compute a decision for this Room"), the Room is refunded and the balance is back to 150'
+    notes: 'CR267 WP-23 (deploy #25, 2026-11-24): ROOM_CODED_RULE_ENABLED=true and ROOM_GRADER=deepinfra on Alpha (DeepInfra is the grader only; the Room desks stay on-prem). Record shape: backend/app/schemas/room.py CodedDecisionRecord, written by room_runner._coded_record. The grader_version string carries the model, temperature, averaged questions and the split-close rule, so changing any of them changes it and the policy version. A real-model Room cannot be forced to a given outcome, so which branch runs depends on the Room; the rule itself is pinned by the backend unit tests.'

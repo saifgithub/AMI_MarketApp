@@ -48,3 +48,18 @@ def seed(admin, run_id):
     failures = s.close()
     if failures:
         pytest.fail("UAT teardown left live users unsuspended:\n" + "\n".join(failures))
+
+
+@pytest.fixture(scope="session")
+def bursa_on(api) -> bool:
+    """CR282: is MARKET_BURSA_ENABLED on in the backend under test? Read once per
+    session from the endpoint a client uses: with the switch on a well-formed
+    Bursa code validates (`exists` true), with it off no `.KL` code does. The Bursa
+    cases assert the matching behaviour for whichever state this reports, so a flag
+    flip never turns them into false failures and never hides a regression behind
+    a skip."""
+    r = api.get("/v1/tickers/validate", params={"ticker": "1155.KL"})
+    assert r.status_code == 200, f"cannot read the Bursa switch state: {r.status_code} {r.text}"
+    body = r.json()
+    assert body["ticker"] == "1155.KL", body
+    return bool(body["exists"])
