@@ -7330,9 +7330,13 @@
   "@settingsComplianceLongOnlyExplainBody": {
     "description": "DEF494 — body of the explanation sheet for the 'Long-only' mandate toggle (was hard-coded English). DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review."
   },
-  "settingsComplianceLiquidOnlyExplainBody": "Only tickers with sufficient average daily volume to enter and exit cleanly. Filters out micro-caps and thinly-traded names where a market order can move the price against you.",
+  "settingsComplianceLiquidOnlyExplainBody": "Only stocks with at least $500M market cap and $1M traded a day, so you can enter and exit cleanly. Filters out micro-caps and thinly-traded names where a market order can move the price against you.",
   "@settingsComplianceLiquidOnlyExplainBody": {
-    "description": "DEF494 — body of the explanation sheet for the 'Liquid-only' mandate toggle (was hard-coded English). DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review."
+    "description": "DEF494 — body of the explanation sheet for the 'Liquid-only' mandate toggle. Names the US floors (market cap and average daily traded value, from backend/app/schemas/liquidity.py). CR282: now states the floors; EN reworded, ar/ms hand-drafted by Claude. retranslate:[ar,ms]"
+  },
+  "settingsComplianceLiquidOnlyExplainBursa": "On Bursa Malaysia: at least RM300M market cap and RM250k traded a day.",
+  "@settingsComplianceLiquidOnlyExplainBursa": {
+    "description": "CR282. Second line under the Liquid-only explanation, shown only when the Bursa flag is on: the Bursa Malaysia floors in ringgit. NEW key. retranslate:[ar,ms]"
   },
   "roomFlipHeading": "CHANGED FROM {previous} TO {current}",
   "@roomFlipHeading": {

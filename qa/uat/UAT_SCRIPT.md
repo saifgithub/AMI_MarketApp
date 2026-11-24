@@ -4,14 +4,14 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**322 cases** — 205 api, 25 device, 92 manual; 20 blocked.
+**323 cases** — 205 api, 25 device, 93 manual; 20 blocked.
 
 ## Areas
 
 1. [Platform, version gate & UAT seeding](#platform) — 9 cases
 2. [Authentication, sessions & account identity](#auth) — 32 cases
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 20 cases
-4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 32 cases
+4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 33 cases
 5. [Floor tab & home shell](#floor) — 12 cases
 6. [Convene the Room](#room) — 34 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
@@ -3945,6 +3945,22 @@ _Manual (iPhone checklist) · plans: floor_pass_
 2. The Plan row shows the plan name (Floor Pass), never the raw id floor_pass; the Language list shows System / Follow system in the chosen language
 3. Tapping a compliance label (e.g. Long-only) opens an explanation in the chosen language
 4. The Q&A library row reads "Ask AMI" in all three languages; nowhere does the app say "AI Coach" or "the AI"
+
+#### UAT-MAND-041 — The Liquid-only explanation states the liquidity floors
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Steps**
+1. Settings > COMPLIANCE: tap the label Liquid-only (not the switch) to open its explanation
+2. On a Bursa build (AMI_BURSA on), open the same explanation again
+
+**Expected**
+1. The explanation reads: Only stocks with at least $500M market cap and $1M traded a day, so you can enter and exit cleanly. Filters out micro-caps and thinly-traded names where a market order can move the price against you. (CR282; the US floors in backend/app/schemas/liquidity.py)
+2. A store build shows only that text; a Bursa build adds a second line: On Bursa Malaysia: at least RM300M market cap and RM250k traded a day.
+3. In Arabic and Bahasa Melayu the same figures appear in the chosen language
+4. The Liquid-only switch is still the only control: no field to change a floor
+
+> CR282, 2026-11-24. EN copy changed from "sufficient average daily volume" to the numbers; ar/ms drafted by Claude, flagged retranslate. The Bursa line is behind the AMI_BURSA dart-define.
 
 #### UAT-FLOOR-003 — Bottom navigation shows the right tabs in the right order
 

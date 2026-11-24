@@ -426,3 +426,17 @@ cases:
       - 'Every entry in sector_breaches lists KO among its tickers, and sector_cap_breach is true exactly when sector_breaches is not empty (a ticker the sector map does not classify never breaches)'
       - 'At the Day Trader values neither breach flag is true'
     notes: 'DEF514, 2026-11-21. Backs UAT-MAND-031 expected 4 (the Settings disclosure reads these fields). The audit keeps its earlier fields unchanged (UAT-MAND-020).'
+
+  - id: UAT-MAND-041
+    title: The Liquid-only explanation states the liquidity floors
+    layer: manual
+    plans: [floor_pass]
+    steps:
+      - 'Settings > COMPLIANCE: tap the label Liquid-only (not the switch) to open its explanation'
+      - 'On a Bursa build (AMI_BURSA on), open the same explanation again'
+    expected:
+      - 'The explanation reads: Only stocks with at least $500M market cap and $1M traded a day, so you can enter and exit cleanly. Filters out micro-caps and thinly-traded names where a market order can move the price against you. (CR282; the US floors in backend/app/schemas/liquidity.py)'
+      - 'A store build shows only that text; a Bursa build adds a second line: On Bursa Malaysia: at least RM300M market cap and RM250k traded a day.'
+      - 'In Arabic and Bahasa Melayu the same figures appear in the chosen language'
+      - 'The Liquid-only switch is still the only control: no field to change a floor'
+    notes: 'CR282, 2026-11-24. EN copy changed from "sufficient average daily volume" to the numbers; ar/ms drafted by Claude, flagged retranslate. The Bursa line is behind the AMI_BURSA dart-define.'

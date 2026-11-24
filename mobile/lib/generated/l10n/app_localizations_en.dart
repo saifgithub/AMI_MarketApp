@@ -5862,7 +5862,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsComplianceLiquidOnlyExplainBody =>
-      'Only tickers with sufficient average daily volume to enter and exit cleanly. Filters out micro-caps and thinly-traded names where a market order can move the price against you.';
+      'Only stocks with at least \$500M market cap and \$1M traded a day, so you can enter and exit cleanly. Filters out micro-caps and thinly-traded names where a market order can move the price against you.';
+
+  @override
+  String get settingsComplianceLiquidOnlyExplainBursa =>
+      'On Bursa Malaysia: at least RM300M market cap and RM250k traded a day.';
 
   @override
   String roomFlipHeading(String previous, String current) {
