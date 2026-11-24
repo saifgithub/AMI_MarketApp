@@ -37,6 +37,7 @@ import 'package:ami_trade/services/alpaca/alpaca_credential_store.dart';
 import 'package:ami_trade/screens/settings/day_trader_disclosure_dialog.dart';
 import 'package:ami_trade/screens/settings/risk_limits_section.dart';
 import 'package:ami_trade/state/alpaca_providers.dart';
+import 'package:ami_trade/state/bursa_providers.dart';
 import 'package:ami_trade/state/me_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
@@ -1062,40 +1063,43 @@ class _AdsPrivacySectionState extends ConsumerState<_AdsPrivacySection> {
 
 
 class _ComplianceExplanation {
-  const _ComplianceExplanation({required this.title, required this.body});
+  const _ComplianceExplanation(
+      {required this.title, required this.body, this.extra});
   final String title;
   final String body;
+  final String? extra;
 }
 
 
-class _ComplianceToggles extends StatelessWidget {
+class _ComplianceToggles extends ConsumerWidget {
   const _ComplianceToggles({required this.value, required this.onChanged});
   final ComplianceFlags value;
   final ValueChanged<ComplianceFlags> onChanged;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
+    final bursa = ref.watch(bursaEnabledProvider);
     return Column(
       children: [
-        _row(context, 'halal', l.settingsComplianceHalal, value.halal,
+        _row(context, bursa, 'halal', l.settingsComplianceHalal, value.halal,
             (v) => onChanged(value.copyWith(halal: v)),
             subtitle: l.settingsComplianceHalalSubtitle),
-        _row(context, 'esgLite', l.settingsComplianceEsgLite, value.esgLite,
+        _row(context, bursa, 'esgLite', l.settingsComplianceEsgLite, value.esgLite,
             (v) => onChanged(value.copyWith(esgLite: v))),
-        _row(context, 'tag', l.settingsComplianceTAG, value.noTobaccoAlcoholGambling,
+        _row(context, bursa, 'tag', l.settingsComplianceTAG, value.noTobaccoAlcoholGambling,
             (v) => onChanged(value.copyWith(noTobaccoAlcoholGambling: v))),
-        _row(context, 'fossil', l.settingsComplianceFossil, value.noFossilFuels,
+        _row(context, bursa, 'fossil', l.settingsComplianceFossil, value.noFossilFuels,
             (v) => onChanged(value.copyWith(noFossilFuels: v))),
-        _row(context, 'longOnly', l.settingsComplianceLongOnly, value.longOnly,
+        _row(context, bursa, 'longOnly', l.settingsComplianceLongOnly, value.longOnly,
             (v) => onChanged(value.copyWith(longOnly: v))),
-        _row(context, 'liquidOnly', l.settingsComplianceLiquidOnly, value.liquidOnly,
+        _row(context, bursa, 'liquidOnly', l.settingsComplianceLiquidOnly, value.liquidOnly,
             (v) => onChanged(value.copyWith(liquidOnly: v))),
       ],
     );
   }
 
-  Widget _row(BuildContext context, String key, String label, bool v,
+  Widget _row(BuildContext context, bool bursa, String key, String label, bool v,
       ValueChanged<bool> onChanged, {String? subtitle}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
@@ -1103,7 +1107,7 @@ class _ComplianceToggles extends StatelessWidget {
         children: [
           Expanded(
             child: InkWell(
-              onTap: () => _showExplanation(context, key),
+              onTap: () => _showExplanation(context, key, bursa),
               borderRadius: BorderRadius.circular(4),
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8),
@@ -1148,7 +1152,8 @@ class _ComplianceToggles extends StatelessWidget {
   /// Every explanation resolves from the ARB, so each reader gets their own
   /// language. `halal` (CR069 Phase 1b) and `esgLite` (DEF339) are the
   /// values-sensitive ones; the other four moved with DEF494.
-  _ComplianceExplanation? _explanationFor(BuildContext context, String key) {
+  _ComplianceExplanation? _explanationFor(
+      BuildContext context, String key, bool bursa) {
     final l = AppLocalizations.of(context);
     switch (key) {
       case 'halal':
@@ -1180,13 +1185,14 @@ class _ComplianceToggles extends StatelessWidget {
         return _ComplianceExplanation(
           title: l.settingsComplianceLiquidOnly,
           body: l.settingsComplianceLiquidOnlyExplainBody,
+          extra: bursa ? l.settingsComplianceLiquidOnlyExplainBursa : null,
         );
     }
     return null;
   }
 
-  void _showExplanation(BuildContext context, String key) {
-    final explain = _explanationFor(context, key);
+  void _showExplanation(BuildContext context, String key, bool bursa) {
+    final explain = _explanationFor(context, key, bursa);
     if (explain == null) return;
     showModalBottomSheet<void>(
       context: context,
@@ -1220,6 +1226,13 @@ class _ComplianceToggles extends StatelessWidget {
                 explain.body,
                 style: AmiTypography.body.copyWith(color: AmiColors.textMed),
               ),
+              if (explain.extra != null) ...[
+                const SizedBox(height: AmiSpacing.s),
+                Text(
+                  explain.extra!,
+                  style: AmiTypography.body.copyWith(color: AmiColors.textMed),
+                ),
+              ],
             ],
           ),
         );

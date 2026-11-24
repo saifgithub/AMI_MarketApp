@@ -5862,7 +5862,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsComplianceLiquidOnlyExplainBody =>
-      'رموز ذات حجم تداول يومي متوسط كافٍ للدخول والخروج بسلاسة فقط. يستبعد الأسهم الصغيرة جدًا وقليلة التداول حيث قد يحرّك أمر السوق السعر ضدك.';
+      'فقط الأسهم التي لا تقل قيمتها السوقية عن 500 مليون دولار ويبلغ حجم تداولها 1 مليون دولار على الأقل يوميًا، لتدخل وتخرج بسلاسة. يستبعد الأسهم الصغيرة جدًا وقليلة التداول حيث قد يحرّك أمر السوق السعر ضدك.';
+
+  @override
+  String get settingsComplianceLiquidOnlyExplainBursa =>
+      'في بورصة ماليزيا: قيمة سوقية لا تقل عن 300 مليون رينغيت وتداول يومي لا يقل عن 250 ألف رينغيت.';
 
   @override
   String roomFlipHeading(String previous, String current) {

@@ -9728,11 +9728,17 @@ abstract class AppLocalizations {
   /// **'No short selling, no inverse ETFs, no put options used as standalone bets. You can still hedge with protective puts against a long position you already hold.'**
   String get settingsComplianceLongOnlyExplainBody;
 
-  /// DEF494 — body of the explanation sheet for the 'Liquid-only' mandate toggle (was hard-coded English). DRAFT ar/ms supplied by Claude (DEF494), awaiting translator review.
+  /// DEF494 — body of the explanation sheet for the 'Liquid-only' mandate toggle. Names the US floors (market cap and average daily traded value, from backend/app/schemas/liquidity.py). CR282: now states the floors; EN reworded, ar/ms hand-drafted by Claude. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'Only tickers with sufficient average daily volume to enter and exit cleanly. Filters out micro-caps and thinly-traded names where a market order can move the price against you.'**
+  /// **'Only stocks with at least \$500M market cap and \$1M traded a day, so you can enter and exit cleanly. Filters out micro-caps and thinly-traded names where a market order can move the price against you.'**
   String get settingsComplianceLiquidOnlyExplainBody;
+
+  /// CR282. Second line under the Liquid-only explanation, shown only when the Bursa flag is on: the Bursa Malaysia floors in ringgit. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'On Bursa Malaysia: at least RM300M market cap and RM250k traded a day.'**
+  String get settingsComplianceLiquidOnlyExplainBursa;
 
   /// CR267 WP-25. Heading on the Verdict Board card shown only when this Room's call differs from the user's previous Room on the same name. {previous} and {current} are the verdict action tokens as the wire sends them (APPROVE / PASS / REJECT ...), the same vocabulary the Journal titles use. Mono uppercase. NEW key. retranslate:[ar,ms]
   ///

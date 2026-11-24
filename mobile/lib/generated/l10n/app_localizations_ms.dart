@@ -5874,7 +5874,11 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get settingsComplianceLiquidOnlyExplainBody =>
-      'Hanya ticker dengan purata volum harian yang mencukupi untuk masuk dan keluar dengan bersih. Menapis saham kap mikro dan nama yang jarang didagangkan di mana pesanan pasaran boleh menggerakkan harga melawan anda.';
+      'Hanya saham dengan permodalan pasaran sekurang-kurangnya \$500 juta dan nilai dagangan sekurang-kurangnya \$1 juta sehari, supaya anda boleh masuk dan keluar dengan bersih. Menapis saham kap mikro dan nama yang jarang didagangkan di mana pesanan pasaran boleh menggerakkan harga melawan anda.';
+
+  @override
+  String get settingsComplianceLiquidOnlyExplainBursa =>
+      'Di Bursa Malaysia: permodalan pasaran sekurang-kurangnya RM300 juta dan nilai dagangan sekurang-kurangnya RM250 ribu sehari.';
 
   @override
   String roomFlipHeading(String previous, String current) {
