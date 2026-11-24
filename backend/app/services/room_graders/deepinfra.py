@@ -24,6 +24,7 @@ averaging, so changing either re-keys the policy version.
 from __future__ import annotations
 
 import asyncio
+import random
 import contextlib
 import contextvars
 from typing import Any, AsyncIterator, Callable, Sequence
@@ -52,6 +53,19 @@ AVERAGED_QUESTIONS: tuple[QuestionId, ...] = (
 )
 PHRASING_COUNT = 5
 MAX_CONCURRENT_CALLS = 8
+
+# DeepInfra sheds load with HTTP 429 "engine_overloaded" (and 503). Measured on
+# the first WP-23 fit run, 2026-11-24: 14 of 50 Rooms lost one of their 13
+# calls to it, and one lost call makes the whole Room "decision unavailable".
+# Overload is retried with jittered backoff; any other failure is not.
+OVERLOAD_RETRIES = 3
+OVERLOAD_BACKOFF_S = 1.0
+_OVERLOAD_MARKERS = ("HTTP 429", "HTTP 503", "engine_overloaded", "Model busy")
+
+
+def is_overload(exc: BaseException) -> bool:
+    text = str(exc)
+    return any(m in text for m in _OVERLOAD_MARKERS)
 CLOSE_BAND = 0.2
 
 _PROVIDER_NAME = "room_grader_deepinfra"
@@ -190,15 +204,23 @@ class DeepInfraGrader(HostedLLMGrader):
         gate = asyncio.Semaphore(MAX_CONCURRENT_CALLS)
 
         async def vote(q: Question, phrasing: int | None) -> QuestionAnswer:
-            async with gate:
-                try:
-                    return await asyncio.wait_for(
-                        self._grade_question(q, rendered, tally, phrasing), self._timeout_s,
-                    )
-                except asyncio.TimeoutError:
-                    raise _CallFailed(
-                        f"{q.id.value}: call timed out after {self._timeout_s:g}s"
-                    ) from None
+            attempt = 0
+            while True:
+                async with gate:
+                    try:
+                        return await asyncio.wait_for(
+                            self._grade_question(q, rendered, tally, phrasing), self._timeout_s,
+                        )
+                    except asyncio.TimeoutError:
+                        raise _CallFailed(
+                            f"{q.id.value}: call timed out after {self._timeout_s:g}s"
+                        ) from None
+                    except _CallFailed as exc:
+                        if attempt >= OVERLOAD_RETRIES or not is_overload(exc):
+                            raise
+                attempt += 1
+                tally["overload_retries"] = tally.get("overload_retries", 0) + 1
+                await asyncio.sleep(OVERLOAD_BACKOFF_S * (2 ** (attempt - 1)) * (0.5 + random.random()))
 
         plan: list[tuple[Question, list[asyncio.Task]]] = []
         tasks: list[asyncio.Task] = []

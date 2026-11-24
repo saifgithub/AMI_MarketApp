@@ -334,6 +334,51 @@ def test_a_slow_call_times_out_into_an_error_not_a_verdict():
     assert rule.decide(res, 3).outcome is rule.Outcome.UNAVAILABLE
 
 
+@pytest.fixture(autouse=True)
+def _no_overload_backoff(monkeypatch):
+    from app.services.room_graders import deepinfra as di
+
+    monkeypatch.setattr(di, "OVERLOAD_BACKOFF_S", 0.0)
+
+
+def test_a_transient_overload_is_retried_and_the_grade_succeeds():
+    """2026-11-24 fit run: 14 of 50 Rooms lost a call to HTTP 429
+    engine_overloaded, and one lost call is a whole Room unavailable."""
+    class BusyOnce(Wire):
+        hit = False
+
+        async def __call__(self, request):
+            body = json.loads(request.content)
+            if _asked(body) == (Q.BEAR_OBJECTION_ANSWERED, 2) and not BusyOnce.hit:
+                BusyOnce.hit = True
+                self.bodies.append(body)
+                return httpx.Response(429, text='{"error":{"code":"engine_overloaded","message":"Model busy, retry later"}}')
+            return await super().__call__(request)
+
+    wire = BusyOnce()
+    res = make_grader(wire).grade(transcript())
+    assert not res.error, res.error
+    assert len(res.answers) == len(load_question_set().questions)
+    assert wire.asked().count((Q.BEAR_OBJECTION_ANSWERED, 2)) == 2
+
+
+def test_a_persistent_overload_still_fails_after_bounded_retries():
+    from app.services.room_graders import deepinfra as di
+
+    wire = Wire(status=429)
+    res = make_grader(wire).grade(transcript())
+    assert res.error and rule.decide(res, 3).outcome is rule.Outcome.UNAVAILABLE
+    per_call = max(wire.asked().count(k) for k in set(wire.asked()))
+    assert per_call == di.OVERLOAD_RETRIES + 1
+
+
+def test_a_non_overload_error_is_not_retried():
+    wire = Wire(status=500)
+    res = make_grader(wire).grade(transcript())
+    assert res.error
+    assert max(wire.asked().count(k) for k in set(wire.asked())) == 1
+
+
 def test_one_failing_phrasing_fails_the_whole_grade():
     class OneBad(Wire):
         async def __call__(self, request):
