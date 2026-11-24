@@ -328,7 +328,8 @@ def policy_settings() -> dict[str, Any]:
 #: Bumped when the way a Bursa sheet is rendered or built changes in a way a frozen
 #: `.KL` sheet cannot absorb (DEF533). It is part of the variant for `.KL` only, so
 #: a new Room rebuilds the day's sheet and re-keys the bank; US keys are untouched.
-MY_SHEET_REVISION = 3
+#: 4 = the Malay Mail news feed (CR282 lane E2) changed the News sheet.
+MY_SHEET_REVISION = 4
 
 
 def sheet_variant(
@@ -340,6 +341,12 @@ def sheet_variant(
     variant = f"news={news_state}|social={social_state}|market={'withheld' if market_withheld else 'present'}"
     if ticker and market_for(ticker) is Market.MY:
         variant += f"|my_rev={MY_SHEET_REVISION}"
+        # CR282 lane E2 — the Malay Mail feed changes the News sheet, so a Room built
+        # while it is on must not reuse one banked while it was off (or the reverse).
+        from app.core.config import settings
+
+        if settings.my_news_rss_enabled:
+            variant += "|my_news=on"
     return variant
 
 

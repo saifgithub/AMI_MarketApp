@@ -213,7 +213,7 @@ from app.services.entitlements import (
 from app.services.tier_policy import pick_tier
 from app.services.sim_engine import get_sim_engine
 from app.services.verdict_outcomes import bank_verdict_outcome
-from app.services import opendosm_cpi
+from app.services import my_news_rss, opendosm_cpi
 from app.services.room_market import (
     NOT_AVAILABLE_FOR_MARKET,
     localize_money,
@@ -2049,6 +2049,7 @@ def _stamp_my_macro(
             "do not state a meeting date"
         )
     profile["macro_cpi_line"] = opendosm_cpi.cpi_line(opendosm_cpi.fetch_cpi())
+    profile["my_news_rss"] = my_news_rss.status()
 
 
 def _profile_for_ticker(

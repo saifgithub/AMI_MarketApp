@@ -389,6 +389,8 @@ services:
       WACC_MY_RISK_FREE_PCT: ${WACC_MY_RISK_FREE_PCT:-3.9}
       WACC_MY_ERP_PCT: ${WACC_MY_ERP_PCT:-6.0}
       OPENDOSM_CPI_ENABLED: ${OPENDOSM_CPI_ENABLED:-false}
+      # CR282 lane E2 — Malay Mail Money RSS as a Bursa Room news source; off unless set.
+      MY_NEWS_RSS_ENABLED: ${MY_NEWS_RSS_ENABLED:-false}
       # CR239 / WP-38 — scoped device-UAT 503 switch; empty = off, inert outside alpha/staging.
       UAT_FAULT_INJECT: ${UAT_FAULT_INJECT:-}
       # CR035 ablation toggle — hides the Street consensus line from the
