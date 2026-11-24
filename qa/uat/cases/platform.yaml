@@ -116,3 +116,15 @@ cases:
       - 'TRY AGAIN that fails again shows the NEW id, not the first one, and an error cached before the screen opened still shows its Ref (DEF526)'
       - 'The same id is found in the backend log lines and the http_audit row of the failed request, and in the stored bug report (trace_ids, visible in the admin console)'
       - 'An error from a request that never reached the server shows no Ref line'
+
+  - id: UAT-PLAT-009
+    title: With the Bursa master switch off the server stays ready and no Bursa ticker is accepted
+    layer: api
+    plans: [anon]
+    steps:
+      - 'GET /v1/health and GET /v1/ready (the Sharia refresh loop in backend/app/main.py now also runs the SC Malaysia list tick, which does nothing while MARKET_BURSA_ENABLED is off)'
+      - 'GET /v1/tickers/validate?ticker=1155.KL'
+    expected:
+      - 'Health is ok and /v1/ready is ready with no failed probes: the new SC tick adds no error and no probe'
+      - '1155.KL is not accepted: exists is false (Bursa codes are accepted on shape only once the switch is on)'
+    notes: 'CR282 phase 1 (2026-11-24). Alpha runs with MARKET_BURSA_ENABLED unset (docker-compose default false), so this is the "flag off, nothing changes" half of the CR282 acceptance. The flag-on half is UAT-SIM-037 and UAT-ROOM-034.'

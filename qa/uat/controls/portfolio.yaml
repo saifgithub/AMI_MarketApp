@@ -102,3 +102,23 @@ controls:
     line: 1992
     when: "History tab with transactions"
     note: "Switches the bottom nav to YOU with the Journal segment selected (not a pushed page). Target id is the Journal segment of the YOU screen."
+  - label: "US"
+    kind: chip
+    expect: state
+    state: "Portfolio shows the US book in dollars; the choice is remembered per user"
+    line: 432
+    when: "AMI_BURSA build only (CR282); the switch is absent from a store build"
+    note: "Segment of the US | BURSA market switch under the header. Not in the accessibility tree of a store build, so the crawler never sees it there."
+  - label: "BURSA"
+    kind: chip
+    expect: state
+    state: "Portfolio, orders and history switch to the MYR book (RM prefix); the choice is remembered per user"
+    line: 432
+    when: "AMI_BURSA build only (CR282)"
+    note: "A Bursa book nothing has touched yet shows the empty state below instead of zeroes."
+  - label: "NEW BURSA TRADE"
+    kind: button
+    expect: navigate
+    target: "ami.screen.trade_ticket_sheet"
+    line: 248
+    when: "AMI_BURSA build, BURSA selected, Bursa book untouched"

@@ -677,3 +677,53 @@ def test_option_routes_validate_and_enforce_ownership(trader, stranger, api):
     assert cheat.status_code in (200, 422)
     if cheat.status_code == 200:
         assert cheat.json()["accepted"] is False
+
+
+# ---------------------------------------------------------------- CR282 Bursa, switch off
+@pytest.mark.uat("UAT-SIM-035")
+def test_bursa_ticker_is_refused_while_the_switch_is_off(api, trader):
+    v = api.get("/v1/tickers/validate", params={"ticker": "1155.KL"}).json()
+    assert v["exists"] is False and v["ticker"] == "1155.KL"
+
+    before = _snap(trader)
+    orders = (
+        {"side": "buy", "quantity": 100},
+        {"side": "buy", "quantity": 100, "order_type": "limit", "limit_price": 1.0},
+    )
+    for extra in orders:
+        for path in ("/v1/sim/preview", "/v1/sim/submit"):
+            r = trader.post(path, json={"user_id": trader.id, "ticker": "1155.KL", **extra})
+            assert r.status_code == 422, (path, extra, r.status_code, r.text)
+            assert r.json()["detail"]["exists"] is False, r.text
+    _assert_book_unchanged(before, _snap(trader))
+
+
+@pytest.mark.uat("UAT-SIM-036")
+def test_myr_book_unreachable_and_us_book_answers_as_before(trader):
+    uid = trader.id
+    for r in (
+        trader.get(f"/v1/sim/portfolio/{uid}", params={"market": "MY"}),
+        trader.get(f"/v1/sim/trades/{uid}", params={"market": "MY"}),
+        trader.post(f"/v1/sim/portfolio/{uid}/reset", params={"market": "MY"}),
+    ):
+        assert r.status_code == 422, (str(r.request.url), r.status_code, r.text)
+        assert "not available" in str(r.json()["detail"]), r.text
+    bad = trader.get(f"/v1/sim/portfolio/{uid}", params={"market": "XX"})
+    assert bad.status_code == 422 and "unknown market" in str(bad.json()["detail"]), bad.text
+
+    default = _snap(trader)
+    explicit = trader.get(f"/v1/sim/portfolio/{uid}", params={"market": "US"})
+    assert explicit.status_code == 200, explicit.text
+    for book in (default, explicit.json()):
+        assert book["market"] == "US" and book["currency"] == "USD"
+    assert explicit.json()["current_cash"] == default["current_cash"]
+    assert explicit.json()["holdings"] == default["holdings"]
+
+    ledger = trader.get(f"/v1/sim/trades/{uid}")
+    assert ledger.status_code == 200, ledger.text
+    assert "market" not in ledger.json() and "currency" not in ledger.json(), (
+        "the US ledger must keep its pre-CR282 key set"
+    )
+
+    pv = _preview(trader, "AAPL", quantity=1)
+    assert pv["market"] == "US" and pv["currency"] == "USD" and pv["fees"] is None, pv

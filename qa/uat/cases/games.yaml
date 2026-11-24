@@ -89,3 +89,15 @@ cases:
     expected:
       - 'From Home the run screen opens, showing the holdings and queued orders (DEF474)'
       - 'From the run screen the ticket closes back to that same run screen'
+
+  - id: UAT-GAME-007
+    title: A Bursa (.KL) ticker is refused in a Games quote and trade, and nothing is queued
+    layer: api
+    plans: [floor_pass]
+    steps:
+      - 'Enter the weekly run; POST /v1/games/runs/{run_id}/trade/quote and POST /v1/games/runs/{run_id}/trade for 1155.KL'
+      - 'GET the run''s orders'
+    expected:
+      - 'Both answer 422 and nothing is queued. With the Bursa switch off (Alpha) the refusal is the ticker-not-found detail; with it on it is the MarketNotInGamesError text "... is not available in Games - Games trade US equities only"'
+      - 'The run''s order list is empty'
+    notes: 'CR282 phase 1 (2026-11-24), backend/app/api/games.py maps MarketNotInGamesError to 422 and games_service refuses any non-US ticker (Games run on the US calendar only; Bursa in Games is phase 2). On Alpha only the switch-off refusal is reachable; the MarketNotInGamesError wording is pinned by the backend unit tests.'

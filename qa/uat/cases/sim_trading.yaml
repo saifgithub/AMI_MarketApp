@@ -378,6 +378,8 @@ cases:
     expected:
       - 'The ticket confirms "Filled: BUY 1 <ticker> @ $<price>"'
       - 'Portfolio cash is lower by about the fill price and the holding is listed with "1 sh" (or its quantity rises by one)'
+      - 'Money reads the same in every language and on a Malay-language phone: the $ is always a prefix, and a negative amount (a position showing a loss) reads -$12.00, never $-12.00 and never RM'
+    notes: 'CR282 lane F1 (2026-11-24): one formatter for all app money, by the ticker''s market. The executor asserts the confirmation reads @ $<price> with no $- ; the negative-amount reading on Portfolio is a visual check from the run screenshots (a one-share buy is rarely a loss at once).'
 
   - id: UAT-SIM-029
     title: An order that breaks the single-name cap is refused with a visible reason and moves no cash
@@ -456,3 +458,52 @@ cases:
     expected:
       - 'STOP and TARGET move to about 6% below and 13% above the limit price (4.70 and 5.65), SUBMIT stays enabled and no stop-above-entry refusal appears (DEF504)'
       - 'Your own STOP is left exactly as typed while the untouched TARGET keeps following the limit price'
+
+  - id: UAT-SIM-035
+    title: A Bursa (.KL) ticker is not accepted and no order can be placed on it while the Bursa switch is off
+    layer: api
+    plans: [trader]
+    steps:
+      - 'GET /v1/tickers/validate?ticker=1155.KL'
+      - 'POST /v1/sim/preview and POST /v1/sim/submit for 1155.KL (a market order, then a resting limit order)'
+      - 'Read the portfolio before and after'
+    expected:
+      - 'validate says exists false for 1155.KL'
+      - 'Both routes answer 422 with the ticker-not-found detail (exists false), exactly as for any unknown ticker: no new error shape'
+      - 'Cash, holdings and the resting-order count are unchanged'
+    notes: 'CR282 phase 1 (2026-11-24), backend/app/api/tickers.py and sim.py. Switch off on Alpha.'
+
+  - id: UAT-SIM-036
+    title: The MYR book is unreachable while the switch is off, and the US book answers as before
+    layer: api
+    plans: [trader]
+    steps:
+      - 'GET /v1/sim/portfolio/{user_id}?market=MY, GET /v1/sim/trades/{user_id}?market=MY, POST /v1/sim/portfolio/{user_id}/reset?market=MY, and GET the portfolio with market=XX'
+      - 'GET the portfolio with no market and with market=US; GET the trade ledger with no market'
+      - 'POST /v1/sim/preview for a US ticker (AAPL, 1 share)'
+    expected:
+      - 'Every market=MY call answers 422 "... is not available yet." and market=XX answers 422 "unknown market": never a silent fall back to the US book, and the reset consumes no cooldown'
+      - 'The portfolio is the US book either way: market "US" and currency "USD", with identical cash and holdings'
+      - 'The trade ledger keeps its exact pre-CR282 keys: no market and no currency key'
+      - 'The US preview still answers 200 with market "US", currency "USD" and fees null (no Bursa fee estimate on a US order)'
+    notes: 'CR282 phase 1 (2026-11-24), backend/app/api/sim.py. PortfolioSnapshot gained currency and market fields (always USD / US for the US book); the preview response gained market, currency and fees (US, USD, null). The Bursa book itself is exercised by UAT-SIM-037.'
+
+  - id: UAT-SIM-037
+    title: With Bursa on, a board-lot order fills in the MYR book with itemised fees and a broken lot is refused
+    layer: device
+    status: blocked
+    blocked_on: 'AMI_BURSA is off in every store build and MARKET_BURSA_ENABLED is off on Alpha (CR282: off until counsel Question 4 and the data licence are answered). Run this once on a build made with --dart-define=AMI_BURSA=true against a backend with the switch on; not release-blocking.'
+    plans: [floor_pass]
+    preconditions:
+      - 'An AMI_BURSA=true build and a backend with MARKET_BURSA_ENABLED=true'
+    steps:
+      - 'Portfolio: tap BURSA in the US | BURSA switch; read the empty state; tap NEW BURSA TRADE'
+      - 'Enter 1155.KL; read the quantity field and the fee estimate; buy 100'
+      - 'Open a new Bursa ticket, enter 1155.KL and quantity 150'
+      - 'Switch back to US'
+    expected:
+      - 'The BURSA tab shows "Your Bursa book starts with RM50,000. Place your first Bursa trade to begin." and the quantity starts at 100 with the amber hint "Bursa trades in board lots of 100"'
+      - 'The ticket lists ESTIMATED FEES (Brokerage, Clearing, Stamp duty, Total fees) in RM; the fill reads "Filled: BUY 100 1155.KL @ RM<price>" and cash drops by the price plus fees'
+      - 'A quantity of 150 shows the board-lot hint and SUBMIT TRADE stays disabled; the minus and plus buttons step by 100'
+      - 'Switching to US shows the dollar book untouched, and every amount there still reads $'
+    notes: 'CR282 phase 1 acceptance (docs/forward_planning/CR282_bursa_malaysia/CR282_bursa_malaysia.md). Fee figures are UNVERIFIED research figures per that doc; do not assert amounts.'

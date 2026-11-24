@@ -162,3 +162,16 @@ controls:
     line: 2134
     when: "valid ticker and quantity, not submitting, no local refusal, no pending notice"
     note: "Places a simulated order (AMI SIM), a paper order at Alpaca (ALPACA PAPER) or both. Label reads OPEN SHORT when the sell would open a short, and SUBMITTING... while in flight."
+  - label: "Reduce quantity by <lot>"
+    kind: icon
+    expect: state
+    state: "Quantity steps down by one board lot (100 shares), never below one lot"
+    line: 2118
+    when: "AMI_BURSA build and a .KL ticker entered (CR282)"
+    note: "Tooltip text. A quantity that is not a multiple of the board lot shows the amber 'Bursa trades in board lots of 100' hint and SUBMIT TRADE stays disabled."
+  - label: "Increase quantity by <lot>"
+    kind: icon
+    expect: state
+    state: "Quantity steps up by one board lot (100 shares)"
+    line: 2162
+    when: "AMI_BURSA build and a .KL ticker entered (CR282)"
