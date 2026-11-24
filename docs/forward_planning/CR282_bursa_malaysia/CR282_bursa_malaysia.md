@@ -121,3 +121,5 @@ Closes the "Malay Mail / Bernama news feed" item deferred in Lane E.
 ## Counsel ruling (2026-11-24)
 
 Saiful, relaying counsel: "On all 3, since these are internal testers, counsel says we are covered." The three are counsel brief Question 4 (CMSA investment advice), Question 5 (Bursa market data via Yahoo) and Question 6 (SC Shariah-list reuse), plus the Malay Mail / Bernama news permission. Scope confirmed by Saiful the same day: **internal groups only** (TestFlight internal group, Play internal track). Nothing changes in the builds: `--bursa` stays internal-only and is still refused on Beta and store builds (`test_cr282_bursa_build_containment.py`). Before Bursa reaches Beta (external) testers or the store, all four reopen.
+
+Same day, Saiful: **"alpha is internal"**, confirmed as every alpha-channel build (internal and external testing groups). `--bursa` is now allowed on any alpha-channel build and refused only on `--channel beta` and `--production` (`build_testflight.sh`, `build_playstore.sh`; pinned by `test_cr282_bursa_build_containment.py`). The four items reopen before Bursa reaches Beta or the store.

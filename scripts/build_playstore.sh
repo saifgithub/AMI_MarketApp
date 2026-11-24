@@ -184,12 +184,15 @@ while [[ $# -gt 0 ]]; do
 done
 
 # CR282 ruling 3 (Saiful 2026-11-23): Bursa is built and tested on Alpha and stays
-# off for testers until counsel answers the CMSA question. --bursa therefore
-# compiles AMI_BURSA=true into INTERNAL builds only; any other target refuses.
-if [[ "$DO_BURSA" -eq 1 && ( "$DO_INTERNAL_ONLY" -ne 1 || "$DO_PRODUCTION" -eq 1 || "${CHANNEL:-alpha}" == "beta" ) ]]; then
-  echo "✗ --bursa is for INTERNAL Alpha builds only (CR282 ruling 3)." >&2
-  echo "  Bursa stays off for testers until counsel rules (S6 Question 4)." >&2
-  echo "  Use:  $(basename "$0") --internal-only --bursa" >&2
+# off for external testers until counsel answers the CMSA question. Counsel,
+# 2026-11-24: internal testers are covered, and Saiful: "alpha is internal"
+# (every alpha-channel build, internal or external testing groups). --bursa
+# therefore compiles AMI_BURSA=true into alpha-channel builds only; Beta and
+# production refuse.
+if [[ "$DO_BURSA" -eq 1 && ( "$DO_PRODUCTION" -eq 1 || "${CHANNEL:-alpha}" == "beta" ) ]]; then
+  echo "✗ --bursa is for Alpha-channel builds only (CR282 ruling 3; counsel 2026-11-24)." >&2
+  echo "  Bursa stays off for Beta and store users until counsel rules for external testers." >&2
+  echo "  Use:  $(basename "$0") --bursa   (alpha channel, not --production / --channel beta)" >&2
   exit 1
 fi
 

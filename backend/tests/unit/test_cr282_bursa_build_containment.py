@@ -1,7 +1,8 @@
-"""CR282 ruling 3 — `--bursa` compiles AMI_BURSA=true into INTERNAL builds only.
+"""CR282 ruling 3 — `--bursa` compiles AMI_BURSA=true into Alpha-channel builds only.
 
-Bursa is built and tested on Alpha and stays off for testers until counsel
-answers the CMSA investment-advice question (S6 Question 4). The build scripts
+Counsel (2026-11-24, via Saiful): internal testers are covered; Saiful: "alpha is
+internal", so every alpha-channel build may carry Bursa (internal or external
+testing groups). Beta-channel and production builds still refuse it. The build scripts
 are the one place a tester-facing binary could get the switch, so the refusal
 is driven through the real iOS script (same harness as DEF296) and pinned in
 the Android script's source.
@@ -18,7 +19,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 _IOS = _REPO_ROOT / "scripts" / "build_testflight.sh"
 _ANDROID = _REPO_ROOT / "scripts" / "build_playstore.sh"
 _PUBSPEC = _REPO_ROOT / "mobile" / "pubspec.yaml"
-_REFUSAL = "--bursa is for INTERNAL Alpha builds only"
+_REFUSAL = "--bursa is for Alpha-channel builds only"
 _INERT = ("--no-bump", "--no-commit", "--no-upload")
 
 
@@ -50,10 +51,9 @@ def run(tmp_path):
     return _run
 
 
-def test_bursa_without_internal_only_is_refused(run) -> None:
+def test_an_external_alpha_bursa_build_passes_this_gate(run) -> None:
     proc = run("--bursa")
-    assert proc.returncode == 1
-    assert _REFUSAL in proc.stderr, proc.stderr
+    assert _REFUSAL not in proc.stderr, proc.stderr
 
 
 def test_bursa_on_a_production_build_is_refused(run) -> None:
