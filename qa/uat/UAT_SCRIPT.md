@@ -1496,10 +1496,11 @@ _Device (automated, Appium) · plans: trader · uses LLM_
 
 **Expected**
 1. Prices and sizes read RM, never $; the relative-strength comparison is against the FBM KLCI, not the S&P 500
-2. Each desk that would have shown a US filings input says "not available for this market (Bursa Malaysia filings are not yet ingested)" instead of staying silent
-3. The verdict card quotes entry, stop and target in RM; the Room is stored with currency MYR
+2. Each desk that would have shown a US filings input says "not available for this market (Bursa Malaysia filings are not yet ingested)" instead of staying silent; the Fundamentals Analyst's turn always ends with an AMI note naming peer comparison, filed-statement detail and the filings index as not available for this market
+3. A negative amount reads with the sign first (-RM15,433M), in the desk text and in any fact-check note, never "$-15,433M"
+4. An APPROVE verdict card quotes entry, stop and target in RM; a PASS or HOLD carries none, exactly as for a US name (a PASS needs only narration), so none is not a failure; the Room is stored with currency MYR
 
-> CR282 lane E. Titles follow CR160 (Chief Investment Officer, Risk Officer, Execution Desk). Active since 2026-11-24: the backend precondition is met on Alpha, so this needs a run on build 0.1.0+130 or later (not release-blocking; a store build cannot run it). The API pre-spend half is UAT-ROOM-033.
+> CR282 lane E; DEF533 (build 130 run found US framing on a .KL Room: S&P label, no Fundamentals dark-input line, "$-" in a fact-check note; fixed on the backend, so re-run on the same build after the deploy). Titles follow CR160 (Chief Investment Officer, Risk Officer, Execution Desk). Active since 2026-11-24: the backend precondition is met on Alpha, so this needs a run on build 0.1.0+130 or later (not release-blocking; a store build cannot run it). The API pre-spend half is UAT-ROOM-033.
 
 <a id="one-on-one"></a>
 ## 1-on-1 agent chat

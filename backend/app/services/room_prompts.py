@@ -74,6 +74,7 @@ from app.services.edgar_8k import EXEC_CHANGE_LABEL, executive_change_line
 from app.services.analyst_targets import analyst_split_line, analyst_tape_line
 from app.services.street_view_blind import blind_profile
 from app.services.room_market import (
+    MY_BENCHMARK_NAME,
     is_my,
     localize_money,
     my_dark_lines,
@@ -2743,6 +2744,15 @@ def _historical_mode_line(profile: dict[str, Any], lane: frozenset[str]) -> str 
     )
 
 
+def _benchmark_kw(profile: dict[str, Any]) -> dict[str, str]:
+    """The index the relative-strength legs were measured against (DEF533). A Bursa
+    sheet's legs are only ever the FBM KLCI's, so it is named even on a sheet frozen
+    before `benchmark_name` was carried; US keeps the renderer's own default."""
+    if is_my(profile):
+        return {"index_name": profile.get("benchmark_name") or MY_BENCHMARK_NAME}
+    return {"index_name": profile["benchmark_name"]} if profile.get("benchmark_name") else {}
+
+
 def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) -> str:
     """A compact ticker fact-sheet the agent can quote from.
 
@@ -3546,7 +3556,7 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                 if _is("change_52w_sp500_pct", "live") else None,
                 profile.get("relative_strength_52w_pct")
                 if _is("relative_strength_52w_pct", "live") else None,
-                **({"index_name": profile["benchmark_name"]} if profile.get("benchmark_name") else {}),
+                **_benchmark_kw(profile),
             ),
             liquidity_line(
                 profile.get("volume_today") if _is("volume_today", "live") else None,

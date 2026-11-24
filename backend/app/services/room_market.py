@@ -24,7 +24,12 @@ NOT_AVAILABLE_FOR_MARKET = (
     "not available for this market (Bursa Malaysia filings are not yet ingested)"
 )
 
-_DOLLAR_AMOUNT_RE = re.compile(r"\$(?=\d)")
+#: The index a Bursa name's relative strength is measured against (`^KLSE`).
+MY_BENCHMARK_NAME = "FBM KLCI"
+
+# `$-15,433M` is how the US formatters write a negative amount; it localises to
+# `-RM15,433M`, the sign before the symbol.
+_DOLLAR_AMOUNT_RE = re.compile(r"\$(-?)(?=\d)")
 
 
 def market_of_profile(profile: dict[str, Any] | None) -> Market:
@@ -41,13 +46,15 @@ def is_my(profile: dict[str, Any] | None) -> bool:
 def localize_money(text: str, market: Market) -> str:
     """Render the dollar-shaped amounts in `text` in the market's currency.
 
-    A `$` directly before a digit is an amount, whatever the formatter that
-    wrote it; a `$` anywhere else (a cashtag in a headline) is left alone. US is
-    returned unchanged — the same object, not a copy.
+    A `$` directly before a digit (or before a minus and a digit) is an amount,
+    whatever the formatter that wrote it; a `$` anywhere else (a cashtag in a
+    headline) is left alone. A negative amount moves its sign in front of the
+    symbol. US is returned unchanged — the same object, not a copy.
     """
     if market is Market.US:
         return text
-    return _DOLLAR_AMOUNT_RE.sub(spec_for(market).currency_symbol, text)
+    symbol = spec_for(market).currency_symbol
+    return _DOLLAR_AMOUNT_RE.sub(lambda m: f"{m.group(1)}{symbol}", text)
 
 
 def ticker_market(ticker: str | None) -> Market:
@@ -114,3 +121,16 @@ def my_dark_lines(*, news: bool, fundamentals: bool, social: bool) -> list[str]:
     if social:
         out.append(na_line("Put/call ratio", "Bursa single-stock options do not exist in this app"))
     return out
+
+
+def my_fundamentals_footer() -> str:
+    """The Fundamentals desk's turn names its SEC-dark inputs by construction (DEF533).
+
+    The sheet and the base prompt both name them, but a model is free to leave
+    them out of its own text; a prompt instruction is not a control, so the
+    runner appends this one line to every Bursa Fundamentals turn.
+    """
+    return (
+        "[AMI note: peer comparison, filed-statement detail and the filings index are "
+        f"{NOT_AVAILABLE_FOR_MARKET}; this read does not include them.]"
+    )

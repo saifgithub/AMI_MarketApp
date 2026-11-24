@@ -29,6 +29,7 @@ from app.core.time import relative_day_phrase
 from app.schemas import AgentId
 from app.services import edgar_tags
 from app.services.market_data import get_market_data_provider
+from app.services.room_market import MY_BENCHMARK_NAME
 from app.services.wacc import EQUITY_RISK_PREMIUM_PCT, RISK_FREE_RATE_PCT
 from app.trading_math.markets import Market, market_enabled, market_for, spec_for, yahoo_symbol
 from app.trading_math.valuation import (
@@ -858,7 +859,7 @@ def _apply_my_benchmark(out: dict[str, Any], ticker: str) -> None:
     out["change_52w_pct"] = own
     out["change_52w_sp500_pct"] = bench
     out["relative_strength_52w_pct"] = round(own - bench, 1)
-    out["benchmark_name"] = "FBM KLCI"
+    out["benchmark_name"] = MY_BENCHMARK_NAME
 
 
 def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
