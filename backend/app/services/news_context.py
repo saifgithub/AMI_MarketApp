@@ -21,6 +21,13 @@ Vantage's version preferred on a collision since it carries a sentiment tag)
 and sorted by recency. Either source alone still works — Alpha Vantage isn't
 a hard dependency, and a Yahoo outage doesn't take Alpha Vantage down with it.
 
+A third source serves Bursa (`.KL`) names only (CR282 lane E2): Malay Mail's
+public Money RSS, behind `MY_NEWS_RSS_ENABLED` (default off) — see
+`my_news_rss.py`. Items that name the company join the same merge, de-dup and
+cap as the two above; up to two market-wide items (Bursa Malaysia / FBM KLCI /
+ringgit) are then added beside the cap, publisher-labelled as market context, and
+only when company news survived the recency floor. A US ticker never reaches it.
+
 Both sources: never raise, return nothing on any failure.
 
   - Room runner pulls this once per Convene and overlays the real top
@@ -43,7 +50,9 @@ import httpx
 from app.core.config import settings
 from app.core.logging import logger
 from app.services.prompt_safety import sanitize_for_prompt
+from app.services import my_news_rss
 from app.services.market_data import NewsItem, get_market_data_provider
+from app.trading_math.markets import Market, market_for
 
 # CR147 B.2 / CR179 Leg 3 — 3 → 5. Three headlines was the News Analyst's
 # ENTIRE payload, and its assembled sheet measured 1,342 chars against ~4,000
@@ -141,7 +150,7 @@ class LiveHeadline(NamedTuple):
     publisher: str
     published_at: int  # Unix epoch seconds, 0 if unknown
     sentiment: str | None
-    source: str  # "yfinance" | "alpha_vantage"
+    source: str  # "yfinance" | "alpha_vantage" | "malaymail_rss"
     # CR147 B.2 — the provider's own abstract. A headline is frequently not
     # enough to know what happened: BAC's top item reads "New Study Reveals
     # Strongest State Economies", and only the summary says it is a CNBC
@@ -423,7 +432,22 @@ def fetch_live_news(ticker: str, limit: int = DEFAULT_HEADLINE_LIMIT) -> list[Li
             logger.warn("news_context_fetch_error", source="alpha_vantage", ticker=ticker, error=str(exc)[:200])
             av_items = []
 
-    merged = _merge_headlines(av_items, yahoo_items, limit=limit)
+    # CR282 lane E2 — a Bursa name also reads Malay Mail's Money feed. Company
+    # items join the one merge below (same cap, same de-dup, same recency sort);
+    # market-wide items are added after it, beside the cap, as market context.
+    my_company: list[LiveHeadline] = []
+    my_market: list[LiveHeadline] = []
+    if market_for(ticker) is Market.MY and settings.my_news_rss_enabled:
+        try:
+            found = my_news_rss.items_for(ticker)
+        except Exception as exc:
+            logger.warn("news_context_fetch_error", source="malaymail_rss", ticker=ticker, error=str(exc)[:200])
+            found = None
+        if found is not None:
+            my_company = [_my_headline(i, my_news_rss.ATTRIBUTION) for i in found.company]
+            my_market = [_my_headline(i, my_news_rss.MARKET_ATTRIBUTION) for i in found.market]
+
+    merged = _merge_headlines(av_items, yahoo_items, my_company, limit=limit)
     now = datetime.now(timezone.utc).timestamp()
     recent = [item for item in merged if _within_recency_floor(item, now=now)]
     if len(recent) < len(merged):
@@ -437,7 +461,22 @@ def fetch_live_news(ticker: str, limit: int = DEFAULT_HEADLINE_LIMIT) -> list[Li
             kept=len(recent),
             floor_days=_NEWS_RECENCY_FLOOR_DAYS,
         )
+    if recent and my_market:
+        # Market context rides only with company news: on its own it is not news
+        # about this company, so it must not flip the feed LIVE (and be charged).
+        seen = {h.title.strip().lower() for h in recent}
+        recent += [
+            h for h in my_market
+            if h.title.strip().lower() not in seen and _within_recency_floor(h, now=now)
+        ]
     return recent or None
+
+
+def _my_headline(item: my_news_rss.FeedItem, publisher: str) -> LiveHeadline:
+    return LiveHeadline(
+        title=item.title, link=item.link, publisher=publisher,
+        published_at=item.published_at, sentiment=None, source=my_news_rss.SOURCE_LABEL,
+    )
 
 
 class NewsFeed(NamedTuple):
@@ -612,6 +651,11 @@ def headline_is_on_ticker(
     add noise — it manufactures the exact false attribution this function
     exists to prevent.
     """
+    if item.source == my_news_rss.SOURCE_LABEL and item.publisher == my_news_rss.ATTRIBUTION:
+        # Matched against this company's own names by `my_news_rss.match_items`
+        # (whole-word, suffix-stripped); the press often uses a name the
+        # registered long name does not lead with (Maybank / Malayan Banking).
+        return True
     haystack = f"{item.title or ''} {getattr(item, 'summary', '') or ''}".upper()
     return any(
         re.search(rf"\b{re.escape(tok)}\b", haystack)

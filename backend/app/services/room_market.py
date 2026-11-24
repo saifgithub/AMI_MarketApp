@@ -144,6 +144,31 @@ NOT_AVAILABLE_NO_BURSA_POSITIONING = (
 )
 
 
+def my_news_rss_note(state: str | None) -> str | None:
+    """The Malay Mail feed's line for a Bursa News turn (CR282 lane E2).
+
+    `state` is `profile["my_news_rss"]`, stamped from `my_news_rss.status()`:
+    off, unavailable this call, or live. A sheet that carries no state says nothing.
+    """
+    if state == "off":
+        return (
+            "[AMI note: the Malay Mail Bursa news feed is not enabled on this "
+            "deployment; this read does not include it.]"
+        )
+    if state == "unavailable":
+        return (
+            "[AMI note: the Malay Mail Bursa news feed is unavailable this call; "
+            "this read does not include it.]"
+        )
+    if state == "live":
+        return (
+            "[AMI note: headlines credited to Malay Mail are headline, link and date "
+            "only; those marked market-wide are market context, not news about this "
+            "company.]"
+        )
+    return None
+
+
 def my_desk_footer(agent_id: AgentId, profile: dict[str, Any] | None) -> str | None:
     """The coded AMI note a Bursa desk's turn always ends with (DEF535).
 
@@ -181,10 +206,12 @@ def my_desk_footer(agent_id: AgentId, profile: dict[str, Any] | None) -> str | N
             FILINGS_LABEL, EXEC_CHANGE_LABEL, INSIDER_RATIO_LABEL,
             INSIDER_PLAN_TAG_LABEL, CLUSTER_BUY_LABEL, EIGHT_K_FLAGS_LABEL,
         )
-        return (
+        note = (
             f"[AMI note: {'; '.join(labels)} are {NOT_AVAILABLE_FOR_MARKET}; "
             "this read does not include them.]"
         )
+        rss = my_news_rss_note((profile or {}).get("my_news_rss"))
+        return f"{note}\n\n{rss}" if rss else note
     if agent_id is AgentId.SOCIAL_MEDIA_ANALYST:
         return (
             f"[AMI note: the put/call ratio is {NOT_AVAILABLE_NO_BURSA_POSITIONING}; "

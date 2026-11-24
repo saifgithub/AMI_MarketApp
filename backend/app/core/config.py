@@ -843,6 +843,13 @@ class Settings(BaseSettings):
     # Default off: when off the sheet says the CPI is not fetched, never a number.
     opendosm_cpi_enabled: bool = False
 
+    # CR282 lane E2 — Malay Mail's public Money RSS as a Bursa Room's second news
+    # source (`services/my_news_rss.py`): headline + link + date only, attributed
+    # "Malay Mail". Default off in code; on only by env. Bernama's terms bar
+    # reproduction without express consent and Malay Mail asserts copyright, so
+    # permission is being requested; this switch is how the feed is turned off.
+    my_news_rss_enabled: bool = False
+
     # CR239 / WP-38 — device-UAT fault switch: JSON {"<user-uuid>": ["GET /v1/messages"]}.
     # Empty = off. Inert (logged as refused) outside local/dev/staging; malformed
     # JSON stops the boot. See app/services/uat_fault_inject.py.
