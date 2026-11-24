@@ -116,8 +116,11 @@ def p_yes_from_logprobs(content: Any) -> float | None:
 
 
 def _json_field(text: str, field: str) -> Any:
+    body = text.strip()
+    if body.startswith("```"):
+        body = body.strip("`").removeprefix("json").strip()
     try:
-        obj = json.loads(text.strip())
+        obj = json.loads(body)
     except ValueError:
         return None
     return obj.get(field) if isinstance(obj, dict) else None
@@ -136,6 +139,7 @@ class HostedLLMGrader:
         phrasing: int | None = None,
         use_logprobs: bool = True,
         max_tokens: int = 64,
+        extra_request_overrides: dict[str, Any] | None = None,
     ) -> None:
         if not slot or not slot.strip():
             raise ValueError("HostedLLMGrader needs an explicit provider slot")
@@ -146,6 +150,7 @@ class HostedLLMGrader:
         self._phrasing = phrasing
         self._use_logprobs = use_logprobs
         self._max_tokens = max_tokens
+        self._extra_overrides = dict(extra_request_overrides or {})
 
     def _gw(self) -> Any:
         return self._gateway or get_llm_gateway()
@@ -153,7 +158,7 @@ class HostedLLMGrader:
     async def _ask(
         self, system: str, user: str, constraint: OutputConstraint, *, logprobs: bool
     ) -> tuple[str, dict[str, Any]]:
-        overrides: dict[str, Any] = {"temperature": 0}
+        overrides: dict[str, Any] = {"temperature": 0, **self._extra_overrides}
         if logprobs:
             overrides.update({"logprobs": True, "top_logprobs": 5})
         meta: dict[str, Any] = {"request_overrides": overrides}

@@ -681,6 +681,10 @@ services:
       ROOM_GRADER_DEEPINFRA_MODEL: ${ROOM_GRADER_DEEPINFRA_MODEL:-deepseek-ai/DeepSeek-V4-Flash}
       ROOM_GRADER_DEEPINFRA_API_KEY: ${ROOM_GRADER_DEEPINFRA_API_KEY:-}
       ROOM_GRADER_DEEPINFRA_TIMEOUT_S: ${ROOM_GRADER_DEEPINFRA_TIMEOUT_S:-30.0}
+      # CR267 WP-23 — ROOM_GRADER=ling: the on-prem grader, through the gateway's
+      # vllm_fallback slot (VLLM_FALLBACK_BASE_URL / _MODEL, KIND must be vllm). Thinking
+      # is switched off per call. Nothing changes until ROOM_GRADER names it.
+      ROOM_GRADER_LING_TIMEOUT_S: ${ROOM_GRADER_LING_TIMEOUT_S:-60.0}
       # CR222 §3 — pre-registration on the training trade ticket, and whether
       # it also binds long_horizon mandates. See
       # Settings.training_preregistration_required /

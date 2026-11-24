@@ -1646,6 +1646,45 @@ class Settings(BaseSettings):
             )
         return self
 
+    # CR267 WP-23 — `ROOM_GRADER=ling`: the on-prem grader (Saiful 2026-11-25, "Ling, after a
+    # fit run"). It has no endpoint settings of its own: it calls the gateway's `vllm_fallback`
+    # slot (`VLLM_FALLBACK_BASE_URL` / `VLLM_FALLBACK_MODEL`), so the pinned model in the grader
+    # version is whatever that slot serves. Thinking is switched off per call by the grader
+    # itself (see `room_graders/ling.py`). Timeout is per grader call, as for DeepInfra, but
+    # on-prem Ling is slower and shares a GPU with failover traffic.
+    room_grader_ling_timeout_s: float = Field(default=60.0, ge=5.0, le=300.0)
+
+    @model_validator(mode="after")
+    def _ling_grader_is_configured(self) -> "Settings":
+        if not (self.room_coded_rule_enabled and self.room_grader.strip() == "ling"):
+            return self
+        from app.core.llm_allowlist import normalize_allowlist
+
+        problems: list[str] = []
+        if not self.vllm_fallback_base_url.strip():
+            problems.append("VLLM_FALLBACK_BASE_URL is empty (the grader calls the vllm_fallback slot)")
+        model = self.vllm_fallback_model.strip()
+        if not model or model.lower().endswith("latest"):
+            problems.append(
+                "VLLM_FALLBACK_MODEL must be a pinned model id, never empty or 'latest'"
+            )
+        if self.vllm_fallback_kind != "vllm":
+            problems.append(
+                "VLLM_FALLBACK_KIND must be 'vllm' (the grader switches thinking off with a "
+                "vLLM chat-template field)"
+            )
+        allow = normalize_allowlist(self.llm_provider_allowlist)
+        if allow and "vllm_fallback" not in allow:
+            problems.append(
+                "LLM_PROVIDER_ALLOWLIST does not include vllm_fallback, so the slot is never registered"
+            )
+        if problems:
+            raise ValueError(
+                "ROOM_CODED_RULE_ENABLED with ROOM_GRADER=ling needs a working grader: "
+                + "; ".join(problems)
+            )
+        return self
+
     @field_validator("room_coded_rule_policy_json")
     @classmethod
     def _coded_rule_policy_wellformed(cls, v: str) -> str:
