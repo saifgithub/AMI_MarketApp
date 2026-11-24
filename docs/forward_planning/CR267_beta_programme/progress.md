@@ -378,3 +378,10 @@ Found: two users have duplicate training portfolios created 40 ms apart on 2026-
 3. Deploy #27 `alpha-2026-11-24-5` = `c8d1df02`: suite 9780/0, local gate PASS, UAT OVERRIDE ruled by Saiful (15 device cases pending: 11 from deploy #26 + FLOOR-007/008/013/014), postflight PASS. Changed API cases 48 passed incl. UAT-PLAT-010; UAT-SIM-020 failed again pre-market (06:31 ET, empty chain); re-run 17:52 +03.
 4. Both-market words measured on Alpha: "british american" (BTI / 4162.KL), "AXIS" (AXS / 5106.KL); TM does not match Telekom on Yahoo. UAT-FLOOR-014 now uses them.
 5. Build 0.1.0+132 (internal, Bursa on): TestFlight + Play internal; tester APK verified (signer fd26b6be…f6e6b2, CR283 code present) and staged. MC lifted the booking pause: AMI-DL-25 (Android) and AMI-DL-26 (iPhone) booked, 14 cases each.
+
+### 29. 2026-11-24 — device runs on 132; DEF535–537; deploy #28; ONB-043 ruling
+
+1. AMI-DL-26 (iPhone, 132): 12/14. AMI-DL-25 (Android, 132): 13/14. Both in the ledger. Confirmed on phones: DEF532 (Bursa close journaled in RM), DEF531 (no "+-$0.00"), DEF534 (separators), CR283 search (CIMB → 1023, maybank → 1155, chooser order follows the chip).
+2. Filed and fixed: DEF535 (a Bursa Room did not name FBM KLCI on the iPhone run; Macro and Flow described the gaps in their own words; now coded notes on all three desks, `.KL` bank variant my_rev=3), DEF536 (the chooser's lookup was keyed on text only, so a chip flip stranded it), DEF537 (a break-even closed trade hid Realised P&L). Case wording: SIM-029 needs a cap below 100%; SIM-037 reads a used Bursa book; FLOOR-014 uses measured both-market words.
+3. Deploy #28 `alpha-2026-11-24-6` = `2b0da90e`: suite 9798/0, local gate PASS, UAT override (standing go: stale device cases, no area gaps), postflight PASS.
+4. Ruling (Saiful 2026-11-24): UAT-ONB-043 runs by the Android tester clearing app data (Settings > Apps > Clear storage), last in its run.
