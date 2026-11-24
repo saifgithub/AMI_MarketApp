@@ -328,7 +328,7 @@ def policy_settings() -> dict[str, Any]:
 #: Bumped when the way a Bursa sheet is rendered or built changes in a way a frozen
 #: `.KL` sheet cannot absorb (DEF533). It is part of the variant for `.KL` only, so
 #: a new Room rebuilds the day's sheet and re-keys the bank; US keys are untouched.
-MY_SHEET_REVISION = 2
+MY_SHEET_REVISION = 3
 
 
 def sheet_variant(

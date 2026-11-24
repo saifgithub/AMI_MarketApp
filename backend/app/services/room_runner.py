@@ -218,7 +218,7 @@ from app.services.room_market import (
     NOT_AVAILABLE_FOR_MARKET,
     localize_money,
     market_of_profile,
-    my_fundamentals_footer,
+    my_desk_footer,
 )
 from app.trading_math import bnm_calendar
 from app.trading_math.markets import Market, market_for, spec_for
@@ -11383,13 +11383,10 @@ async def _compute_agent_text(
     # own threaded sheet — a missing/empty one makes the checker a no-op,
     # never a strike (unknowable is not unverifiable).
     text = annotate_sheet_mismatches(text, profile)
-    if (
-        agent_id is AgentId.FUNDAMENTALS_ANALYST
-        and market_of_profile(profile) is Market.MY
-        and not _output_guard_withholds(text)
-    ):
-        # DEF533 — a Bursa Fundamentals turn always names what is dark for the market.
-        text = f"{text}\n\n{my_fundamentals_footer()}"
+    desk_footer = my_desk_footer(agent_id, profile)
+    if desk_footer and not _output_guard_withholds(text):
+        # DEF533/DEF535 — a Bursa desk's turn always carries its coded market note.
+        text = f"{text}\n\n{desk_footer}"
     return text, geom_sig, envelope, envelope_parsed, data_gaps
 
 

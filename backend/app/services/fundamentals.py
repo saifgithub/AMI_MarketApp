@@ -2504,10 +2504,13 @@ def relative_strength_line(
     if ticker_pct is None or index_pct is None or spread_pct is None:
         return None
     verb = "ahead of" if spread_pct >= 0 else "behind"
+    # DEF535 — a named non-default index is repeated in the spread, so the figure a
+    # model quotes ("+11.4pp ahead of ...") carries the name; US keeps "the index".
+    tail = "the index" if index_name == "S&P 500" else f"the {index_name}"
     return _labelled(
         "Relative strength, 52w", live,
         [f"{ticker_pct:+.1f}% vs {index_name} {index_pct:+.1f}% — "
-         f"{abs(spread_pct)}pp {verb} the index"],
+         f"{abs(spread_pct)}pp {verb} {tail}"],
     )
 
 

@@ -17,6 +17,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from app.schemas import AgentId
 from app.trading_math.markets import Market, market_for, spec_for
 
 #: The one phrase every dark input uses, so a reader (and a test) can find them all.
@@ -134,3 +135,59 @@ def my_fundamentals_footer() -> str:
         "[AMI note: peer comparison, filed-statement detail and the filings index are "
         f"{NOT_AVAILABLE_FOR_MARKET}; this read does not include them.]"
     )
+
+
+#: A Bursa options or positioning feed is not ingested, so Flow & Positioning has no
+#: put/call read. A data gap, not a filings gap, so it does not use the filings phrase.
+NOT_AVAILABLE_NO_BURSA_POSITIONING = (
+    "not available for this market (no Bursa options or positioning feed is ingested)"
+)
+
+
+def my_desk_footer(agent_id: AgentId, profile: dict[str, Any] | None) -> str | None:
+    """The coded AMI note a Bursa desk's turn always ends with (DEF535).
+
+    DEF533 appended one to Fundamentals only; the other desks described the Bursa
+    gaps in their own words or left the benchmark unnamed. A prompt instruction is
+    not a control (CR038), so each desk that has a Bursa-specific fact gets a line
+    appended by code. A desk with nothing market-specific to disclose gets None.
+    """
+    if not is_my(profile):
+        return None
+    if agent_id is AgentId.FUNDAMENTALS_ANALYST:
+        return my_fundamentals_footer()
+    if agent_id is AgentId.MARKET_ANALYST:
+        state = (profile or {}).get("field_state") or {}
+        if state.get("relative_strength_52w_pct") == "live":
+            return (
+                f"[AMI note: the 52-week relative strength on this sheet is measured against "
+                f"the {MY_BENCHMARK_NAME}, Bursa Malaysia's index, not the S&P 500.]"
+            )
+        return (
+            f"[AMI note: 52-week relative strength against the {MY_BENCHMARK_NAME} is not "
+            "available this call; this read does not include it.]"
+        )
+    if agent_id is AgentId.NEWS_ANALYST:
+        from app.services.edgar_8k import EXEC_CHANGE_LABEL
+        from app.services.edgar_filings_feed import FEED_LABEL as FILINGS_LABEL
+        from app.services.edgar_forensics import (
+            CLUSTER_BUY_LABEL,
+            EIGHT_K_FLAGS_LABEL,
+            INSIDER_PLAN_TAG_LABEL,
+            INSIDER_RATIO_LABEL,
+        )
+
+        labels = (
+            FILINGS_LABEL, EXEC_CHANGE_LABEL, INSIDER_RATIO_LABEL,
+            INSIDER_PLAN_TAG_LABEL, CLUSTER_BUY_LABEL, EIGHT_K_FLAGS_LABEL,
+        )
+        return (
+            f"[AMI note: {'; '.join(labels)} are {NOT_AVAILABLE_FOR_MARKET}; "
+            "this read does not include them.]"
+        )
+    if agent_id is AgentId.SOCIAL_MEDIA_ANALYST:
+        return (
+            f"[AMI note: the put/call ratio is {NOT_AVAILABLE_NO_BURSA_POSITIONING}; "
+            "this read does not include it.]"
+        )
+    return None
