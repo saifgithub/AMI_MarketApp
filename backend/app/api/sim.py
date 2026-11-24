@@ -35,13 +35,11 @@ from app.core.config import settings
 from app.schemas.alpaca import AccountSnapshotIn
 from app.schemas.classification import ClassificationVerdict
 from app.schemas.company_profile import CompanyProfileResponse, InsiderResponse
-from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
 from app.schemas.liquidity import LiquidityVerdict
 from app.schemas.sharia import ShariaVerdict
 from app.schemas.trade import OrderType, Side
 from app.services.company_profile import get_company_profile
 from app.services.edgar_ownership import get_insider_activity
-from app.services.journal_store import get_journal_store
 from app.services.mandate_store import resolve_mandate
 from app.services.market_data import VALID_PERIODS
 from app.services.portfolio_nav_daily import nav_history, twr_pct_for_window
@@ -61,10 +59,11 @@ from app.services.sim_resting_orders import (
     sweep_resting_orders,
 )
 from app.services.sim_trade_effects import (
-    PREREGISTRATION_PAYLOAD_KEY,
     apply_post_fill_effects,
+    closed_trade_payload as _closed_trade_payload,
+    journal_bracket_closes,
+    journal_manual_close,
     record_compliance_block,
-    registered_preregistration,
 )
 from app.services.ticker_reference import (
     TickerNotFoundError,
@@ -84,13 +83,6 @@ router = APIRouter(prefix="/v1/sim", tags=["sim"])
 def _own(current_user: User, user_id: UUID) -> None:
     if current_user.id != user_id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
-
-
-def _ccy(ticker: str) -> str:
-    """Currency prefix for copy about a ticker: `$` for US, `RM` for Bursa."""
-    from app.trading_math.markets import market_for
-
-    return spec_for(market_for(ticker)).currency_symbol
 
 
 def _market_param(market: str) -> Market:
@@ -158,41 +150,6 @@ def _require_ticker_shape_or_422(ticker: str) -> str:
             detail=f"not a valid ticker symbol: {ticker!r}",
         )
     return sym
-
-
-def _closed_trade_payload(
-    *,
-    user_id: UUID,
-    trade,
-    closed_price: float | None,
-    realised_pnl: float,
-    status: str,
-) -> dict:
-    """CR222 §3 — the close entry's payload: the trade, the realised outcome,
-    and the registration the position was opened with.
-
-    ONE builder for both close paths (`evaluate_trades`' bracket sweep and
-    `close_trade`'s manual exit) because the two are the same event to a
-    reader: the position ended and here is how against what was expected.
-    Two builders would diverge on the first change, which is the DEF098 shape
-    this codebase keeps meeting.
-
-    `outcome` is a fresh block rather than fields merged into `trade`: the
-    trade JSON is a shipped shape the client parses, and adding keys to it
-    would put a new fact where an old parser will not look for it.
-    """
-    payload: dict = {
-        "trade": trade.to_json(),
-        "outcome": {
-            "status": status,
-            "closed_price": closed_price,
-            "realised_pnl": realised_pnl,
-        },
-    }
-    registered = registered_preregistration(user_id, trade.id)
-    if registered is not None:
-        payload[PREREGISTRATION_PAYLOAD_KEY] = registered
-    return payload
 
 
 class SubmitTradeRequest(BaseModel):
@@ -1146,44 +1103,6 @@ def list_trades(
     return payload
 
 
-def _journal_closed_trades_sync(sim: SimEngine, user_id: UUID, updates: list) -> None:
-    """Write one Journal entry per bracket-closed trade (blocking DB I/O), run
-    via `asyncio.to_thread` so the evaluate route never holds the event loop
-    on it (DEF200)."""
-    store = get_journal_store()
-    trades_by_id = {t.id: t for t in sim.list_trades(user_id)}
-    for u in updates:
-        t = trades_by_id.get(u.trade_id)
-        if not t:
-            continue
-        try:
-            store.append(JournalEntryCreate(
-                user_id=user_id,
-                entry_type=EntryType.SIM_TRADE,
-                reference_id=t.id,
-                title=f"Closed {t.ticker} ({u.new_status.upper()}) — ${u.realised_pnl:+.2f}",
-                summary=(
-                    f"{'Target hit' if u.new_status == 'won' else 'Stop hit'} "
-                    f"at ${u.closed_price:.2f}."
-                ),
-                ticker=t.ticker,
-                tags=["sim_trade", "closed", u.new_status],
-                outcome=Outcome.WIN if u.new_status == "won" else Outcome.LOSS,
-                # CR222 §3 — the realised outcome sits beside what was
-                # registered on the way in, so a review reads thesis →
-                # invalidation → what happened without a join.
-                payload=_closed_trade_payload(
-                    user_id=user_id,
-                    trade=t,
-                    closed_price=u.closed_price,
-                    realised_pnl=u.realised_pnl,
-                    status=u.new_status,
-                ),
-            ))
-        except Exception:  # pragma: no cover
-            pass
-
-
 @router.post("/trades/{user_id}/evaluate")
 async def evaluate_trades(
     user_id: UUID,
@@ -1213,7 +1132,7 @@ async def evaluate_trades(
     )
     # For each closed trade, write a journal entry so the user sees the outcome
     if updates:
-        await asyncio.to_thread(_journal_closed_trades_sync, sim, user_id, updates)
+        await asyncio.to_thread(journal_bracket_closes, user_id, updates)
     return {
         "ok": True,
         "updates": [
@@ -1227,32 +1146,6 @@ async def evaluate_trades(
         ],
         "resting": resting_stats,
     }
-
-
-def _journal_manual_close_sync(user_id: UUID, closed: SimTrade) -> None:
-    """Write the Journal entry for a manual close (blocking DB I/O), run via
-    `asyncio.to_thread` (DEF200). Best-effort: a failed write never fails the
-    close."""
-    try:
-        get_journal_store().append(JournalEntryCreate(
-            user_id=user_id,
-            entry_type=EntryType.SIM_TRADE,
-            reference_id=closed.id,
-            title=f"Closed {closed.ticker} (MANUAL) — {_ccy(closed.ticker)}{closed.realised_pnl:+.2f}",
-            summary=f"Closed at {_ccy(closed.ticker)}{closed.closed_price:.2f}.",
-            ticker=closed.ticker,
-            tags=["sim_trade", "closed", "manual"],
-            outcome=Outcome.WIN if closed.realised_pnl >= 0 else Outcome.LOSS,
-            payload=_closed_trade_payload(
-                user_id=user_id,
-                trade=closed,
-                closed_price=closed.closed_price,
-                realised_pnl=closed.realised_pnl,
-                status="manual",
-            ),
-        ))
-    except Exception:  # pragma: no cover
-        pass
 
 
 class CloseRequest(BaseModel):
@@ -1288,7 +1181,7 @@ async def close_trade(
             status.HTTP_404_NOT_FOUND,
             "trade not found or already closed",
         )
-    await asyncio.to_thread(_journal_manual_close_sync, user_id, closed)
+    await asyncio.to_thread(journal_manual_close, user_id, closed)
     return {"ok": True, "trade": closed.to_json()}
 
 

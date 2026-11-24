@@ -100,7 +100,13 @@ from app.trading_math.bursa_rules import (
     check_tick,
     reference_close_from_quote,
 )
-from app.trading_math.markets import Market, market_enabled, market_for, spec_for
+from app.trading_math.markets import (
+    Market,
+    format_money,
+    market_enabled,
+    market_for,
+    spec_for,
+)
 from app.trading_math.order_pricing import (
     LotBracket,
     blended_bracket,
@@ -1528,6 +1534,48 @@ class SimEngine:
             trades = [SimTrade.from_row(r) for r in rows]
         return compute_lots_fifo(trades, current_price=current_price)
 
+    def sell_close_effect(
+        self, user_id: UUID, sell: SimTrade,
+    ) -> tuple[float, float, float] | None:
+        """DEF532 — what a filled long-closing SELL realised, from the FIFO ledger.
+
+        `(shares closed, realised P&L, shares still held)`, or None when the sell
+        closed nothing (a short open, or a ledger that cannot place it). It is the
+        difference between the lot picture with and without this sell, over the same
+        `compute_lots_fifo` the holding detail reads, so the journal and the lot
+        cards cannot disagree.
+        """
+        ticker = sell.ticker.upper().strip()
+        with get_session() as s:
+            rows = s.execute(
+                select(SimTradeRow)
+                .where(training_trade_scope(user_id, market_for(ticker)))
+                .where(SimTradeRow.ticker == ticker)
+                .order_by(SimTradeRow.opened_at.asc())
+            ).scalars().all()
+            trades = [SimTrade.from_row(r) for r in rows]
+        # The sell's own stored timestamp, not the in-memory one: the two can
+        # differ in tz-awareness and a mixed comparison raises.
+        stored = next((t for t in trades if t.id == sell.id), None)
+        if stored is None:
+            return None
+        upto = [t for t in trades if t.opened_at <= stored.opened_at]
+        after = compute_lots_fifo(upto)
+        before = compute_lots_fifo([t for t in upto if t.id != sell.id])
+        closed = sum(l.quantity_closed for l in after) - sum(
+            l.quantity_closed for l in before
+        )
+        if closed <= 1e-9:
+            return None
+        realised = sum(l.realised_pnl for l in after) - sum(
+            l.realised_pnl for l in before
+        )
+        return (
+            round(closed, 6),
+            round(realised, 2),
+            round(sum(l.quantity_open for l in after), 6),
+        )
+
     def option_lots(self, user_id: UUID, underlying: str | None = None) -> dict:
         """CR205 — the option half of `holding_lots`, keyed by `occ_symbol`.
 
@@ -1907,7 +1955,8 @@ class SimEngine:
         # liquidates everything, at market, and trips the post-stop-out cooldown
         # that blocks the user's next buy. That is DEF312's consequence arriving
         # by arithmetic instead of by typing, so it is a refusal, not a warning.
-        money = _money(_market_of_kind(kind))
+        book = _market_of_kind(kind)
+        money = _money(book)
         if side == Side.BUY and kind in _TRAINING_KINDS and held_now is not None:
             blend_stop, blend_target = self.position_bracket(
                 user_id, ticker,
@@ -1964,8 +2013,8 @@ class SimEngine:
                 fail = ComplianceResult(
                     passed=False,
                     violations=[
-                        f"insufficient cash: need {money}{total_cost:.2f}, "
-                        f"have {money}{portfolio.current_cash:.2f}"
+                        f"insufficient cash: need {format_money(total_cost, book)}, "
+                        f"have {format_money(portfolio.current_cash, book)}"
                     ],
                     blocked_by=None,
                 )
@@ -2597,8 +2646,8 @@ class SimEngine:
             posted = round(notional, 2)
             if posted + fee > portfolio.current_cash + 1e-6:
                 return refuse(
-                    f"insufficient cash to short: need ${posted + fee:.2f}, "
-                    f"have ${portfolio.current_cash:.2f}"
+                    f"insufficient cash to short: need {format_money(posted + fee)}, "
+                    f"have {format_money(portfolio.current_cash)}"
                 )
             with get_session() as s:
                 p_row = self._load_portfolio_row(s, user_id, kind="game", run_id=run_id)
@@ -3017,8 +3066,6 @@ class SimEngine:
         notional = fill_price * quantity
         held = sizing_held
         preview_fees = bursa_fees(notional) if market is not Market.US else None
-        money = _money(market)
-
         accepted = compliance.passed
         # CR233 round-2 gap closure — `_execute_fill`'s DEF312/DEF377
         # wrong-side-bracket refusal, run here too. `preview()` used to run
@@ -3051,8 +3098,8 @@ class SimEngine:
                     compliance = ComplianceResult(
                         passed=False,
                         violations=[
-                            f"insufficient cash: need {money}{need:.2f}, "
-                            f"have {money}{sizing_cash:.2f}"
+                            f"insufficient cash: need {format_money(need, market)}, "
+                            f"have {format_money(sizing_cash, market)}"
                         ],
                         blocked_by=None,
                     )
@@ -3217,7 +3264,7 @@ class SimEngine:
                     passed=False,
                     violations=[
                         f"insufficient cash to post margin on this short: need "
-                        f"${needed:.2f}, have ${portfolio.current_cash:.2f}"
+                        f"{format_money(needed)}, have {format_money(portfolio.current_cash)}"
                     ],
                     blocked_by=None,
                 ),
