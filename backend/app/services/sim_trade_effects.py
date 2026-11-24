@@ -36,6 +36,7 @@ regardless of which path produced the fill.
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from uuid import UUID
 
 from app.core.logging import logger
@@ -155,6 +156,19 @@ def _append_journal(
         pass
 
 
+def _as_utc_iso(iso: str | None) -> str | None:
+    """A ledger timestamp as a tz-aware ISO string. Lot dates come off stored rows
+    and can be naive (SQLite); a naive string reads as LOCAL time on the client,
+    so a UTC instant would show hours off. Naive means UTC here, as everywhere in
+    this ledger."""
+    if iso is None:
+        return None
+    dt = datetime.fromisoformat(iso)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.isoformat()
+
+
 def _journal_sell_close(user_id: UUID, sell: SimTrade) -> bool:
     """DEF532 — a SELL that closes shares writes a CLOSED entry, not an "Opened
     at" one. Since CR188 a sell order is the app's only manual exit, and the SELL
@@ -166,12 +180,17 @@ def _journal_sell_close(user_id: UUID, sell: SimTrade) -> bool:
     effect = get_sim_engine().sell_close_effect(user_id, sell)
     if effect is None:
         return False
-    closed_qty, realised, still_held = effect
+    closed_qty, realised, still_held, position_opened_at = effect
     market = market_for(sell.ticker)
     price = sell.entry_price
     closed_at = sell.opened_at.isoformat()
     trade_json = {
         **sell.to_json(),
+        # DEF540: `sell.opened_at` is when the SELL filled, i.e. the close time.
+        # The entry's "opened_at" is when the position was opened — the buy lot
+        # the sell drew from. If the ledger cannot say, leave it absent so the
+        # detail screen omits the row rather than showing the close time.
+        "opened_at": _as_utc_iso(position_opened_at),
         "status": "closed",
         "closed_at": closed_at,
         "closed_price": price,
