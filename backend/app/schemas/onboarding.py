@@ -72,6 +72,11 @@ class OnboardingSession(BaseModel):
     # Computed as we go
     risk_components_partial: dict[str, int] = Field(default_factory=dict)
 
+    # DEF539: the structured summary the readback text was rendered from,
+    # frozen when the readback is shown. The mandate is persisted from this,
+    # so what the user confirms and what is saved cannot diverge.
+    readback_summary: dict[str, Any] | None = None
+
     completed: bool = False
     claimed_user_id: UUID | None = None
 

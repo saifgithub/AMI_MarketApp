@@ -194,13 +194,28 @@ async def confirm_readback(
     # refused confirm used to persist completed=True/step=complete first,
     # stranding the session where every /answer 409s and the user can't retry.
     restart_authed = bool(req.restart and current_user is not None)
+    # DEF539: an authenticated caller (every install has an anonymous bearer
+    # identity) with NO mandate row yet gets the confirmed mandate persisted
+    # right here. It used to be persisted only at account claim, so a user who
+    # skipped the claim prompt was left on `get_or_default()` (Risk 3/5,
+    # drawdown 30%) while the compliance floor enforced it. An existing
+    # mandate is never clobbered without the explicit `restart` signal (DEF060).
+    persist = restart_authed
+    if current_user is not None and not restart_authed:
+        persist = await run_in_threadpool(get_mandate_store().get, current_user.id) is None
     try:
         mandate_dict = session_to_mandate_dict(
             session,
-            user_id=current_user.id if restart_authed else "anonymous-pending-claim",
+            user_id=current_user.id if persist else "anonymous-pending-claim",
         )
     except MissingMandateAnswerError as exc:
         raise HTTPException(status.HTTP_409_CONFLICT, str(exc)) from exc
+
+    applied: Mandate | None = None
+    if persist:
+        applied = await run_in_threadpool(
+            _upsert_mandate_sync, current_user.id, Mandate.model_validate(mandate_dict),
+        )
 
     session.completed = True
     session.current_step = ConversationStep.COMPLETE
@@ -211,18 +226,9 @@ async def confirm_readback(
             age_confirmation.stamp_user, current_user.id, session.age_confirmed_at,
         )
 
-    if restart_authed:
-        # Explicit + authenticated: replace the caller's current mandate
-        # outright. upsert() bumps the version and keeps prior rows for
-        # history/journal replay.
-        applied = await run_in_threadpool(
-            _upsert_mandate_sync, current_user.id, Mandate.model_validate(mandate_dict),
-        )
-        mandate_preview = applied.model_dump(mode="json")
-    else:
-        # In a real flow this is where account claim is offered; in V0 we
-        # just produce a mandate preview for the next screen.
-        mandate_preview = mandate_dict
+    # `mandate_preview` is what the client shows next: the stored row when one
+    # was written, otherwise the same dict that would be written at claim.
+    mandate_preview = applied.model_dump(mode="json") if applied else mandate_dict
 
     follow_up = Message(
         author=Author.CONCIERGE,
