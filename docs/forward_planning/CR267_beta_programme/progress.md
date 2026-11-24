@@ -341,3 +341,10 @@ Found: two users have duplicate training portfolios created 40 ms apart on 2026-
 2. Postflight tree check flagged `logs/` (host cron log). Real gap: the standard rsync `--delete` would wipe the DEF447 log every deploy. Fixed in `c41328ac` (rsync, postflight, tree gate, test). A dry-run with the fixed excludes showed no other drift.
 3. DEF367 done: worker's lane verified by git + 75 wire tests; merged `a835d735`; baseline 4 → 0. Test-only, rides deploy #23.
 4. Next: DEF447 closes after the 2026-11-24 04:30Z nightly reads clean. Then idle on Saiful's items (S3 grader pick, S6, S7, S4).
+
+### 24. 2026-11-24 — deploy #23 live (CR282 phase 1 code, flag off; WP-23 grader; DEF367)
+
+1. Deploy #23 `alpha-2026-11-24-1` = `bda0b21e`. Suite 9717 passed / 0 failed; local gate PASS; UAT gate OVERRIDE (16 stale device cases only, incl. new/re-versioned money-format cases; all area gaps cleared by new cases); migration `cr282a0b0c0d1` (sim_portfolios.market, backfilled US); postflight PASS; changed API set 67 passed; alpha-post PASS.
+2. Ships: S3 ruled DeepInfra and WP-23 grader wiring (flag off); DEF367 extractor rules (baseline 0); `/logs/` rsync exclude; CR282 Bursa phase 1 lanes A–F (`MARKET_BURSA_ENABLED` off on Alpha; `AMI_BURSA` off in store builds).
+3. Lesson: rsync excludes are now taken from the command file via `--exclude-from`; a hand-typed list missed `infra/beta.env` on deploy #22 (no file existed, so nothing leaked).
+4. Next: DEF447 close check (07:41 +03); CR282 flag-on acceptance on Alpha with an internal `AMI_BURSA` build; Saiful: WP-23 fit go (~$3), Bursa liquidity floors, counsel Q4, Bursa data licence + stock list, SC reuse permission.

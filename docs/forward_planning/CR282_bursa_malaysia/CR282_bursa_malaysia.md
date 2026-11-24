@@ -90,3 +90,9 @@ On Alpha with the flag on: search `1155.KL`, convene a Room whose stored record 
 7. **WACC.** `WACC_MY_RISK_FREE_PCT` 3.9 (10y MGS 3.864% on 16 Nov 2026) and `WACC_MY_ERP_PCT` 6.0 (approximate, not checked against a published table). Dated settings, named on the line; review by 2027-02-01.
 8. **The Room reads the MYR book** (holdings block, sector context, risk-limit context, valuation snapshot, bank digest) and keys on the MY trading day; US argument lists are unchanged.
 9. **Deferred.** Portfolio Health copy (`portfolio_rules.py`, "S&P 500" beta wording) and portfolio analytics for the MYR book (lane C deferred NAV/TWR); Malay Mail / Bernama news feed; Social (Reddit) is left to degrade on its own.
+
+## Deploy
+
+1. Phase 1 code (lanes A–F) live on Alpha in deploy #23 `alpha-2026-11-24-1` (`bda0b21e`) with `MARKET_BURSA_ENABLED` off. The UAT API cases UAT-PLAT-009, SIM-035, SIM-036, ROOM-033 and GAME-007 pass against Alpha, proving Bursa is dark there and US unchanged.
+2. Next: the flag-on acceptance run (UAT-SIM-037, ROOM-034, WATCH-017, JRNL-012) with the backend flag on in Alpha and an internal app build with `AMI_BURSA=true`.
+3. Open for Saiful before the flag goes on: the Bursa liquidity floors (lane E used the US floors at RM4.20/USD, which is strict for Bursa) and the Malaysian ERP of 6.0% (approximate).
