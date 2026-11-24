@@ -44,3 +44,24 @@ def estimate_wacc_pct(beta: float | None) -> float | None:
     if beta is None or not math.isfinite(beta) or beta <= 0:
         return None
     return round(RISK_FREE_RATE_PCT + beta * EQUITY_RISK_PREMIUM_PCT, 1)
+
+
+def my_inputs() -> tuple[float, float]:
+    """CR282 lane E — (risk-free %, equity risk premium %) for a Bursa name.
+
+    The 10-year MGS yield and a Malaysian ERP, both dated settings
+    (`WACC_MY_RISK_FREE_PCT`, `WACC_MY_ERP_PCT`; defaults and sources in
+    `core/config.py`) rather than fetched figures — no clean machine-readable
+    MGS source exists — and stated on the rendered line like the US constants.
+    """
+    from app.core.config import settings
+
+    return float(settings.wacc_my_risk_free_pct), float(settings.wacc_my_erp_pct)
+
+
+def estimate_wacc_pct_my(beta: float | None) -> float | None:
+    """The same CAPM, on the Malaysian inputs. Same None rule as `estimate_wacc_pct`."""
+    if beta is None or not math.isfinite(beta) or beta <= 0:
+        return None
+    risk_free, erp = my_inputs()
+    return round(risk_free + beta * erp, 1)

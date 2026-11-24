@@ -30,6 +30,7 @@ from app.schemas import AgentId
 from app.services import edgar_tags
 from app.services.market_data import get_market_data_provider
 from app.services.wacc import EQUITY_RISK_PREMIUM_PCT, RISK_FREE_RATE_PCT
+from app.trading_math.markets import Market, market_enabled, market_for, spec_for, yahoo_symbol
 from app.trading_math.valuation import (
     dividend_yield_pct,
     fcf_yield_pct,
@@ -59,6 +60,8 @@ _TICKER_BLOCKLIST: frozenset[str] = frozenset({
 })
 
 _TICKER_RE = re.compile(r"\$?([A-Z]{1,5})\b")
+# CR282 lane E: a Bursa code in prose (4-5 digits, optional letter, `.KL`), as `is_bursa_code` accepts.
+_BURSA_PROSE_RE = re.compile(r"\b[0-9]{4,5}[A-Z]?\.KL\b", re.IGNORECASE)
 
 # CR168 (folded into CR166) — yfinance's `exchange` is a venue CODE, not a name:
 # AAPL returns "NMS", not "NASDAQ". `Exchange: NMS` is jargon to the model, so an
@@ -769,6 +772,26 @@ def extract_tickers(text: str) -> list[str]:
         return []
     seen: set[str] = set()
     out: list[str] = []
+    if market_enabled(Market.MY):
+        # CR282 lane E: with Bursa on, `1155.KL` is one ticker. The US pattern would
+        # read its `KL` suffix as a symbol, so Bursa codes are lifted out first and
+        # merged back in first-mention order. Flag off: this block never runs.
+        found: list[tuple[int, str]] = [
+            (m.start(), m.group(0).upper()) for m in _BURSA_PROSE_RE.finditer(text)
+        ]
+        stripped = _BURSA_PROSE_RE.sub(lambda m: " " * len(m.group(0)), text)
+        found += [
+            (m.start(), m.group(1)) for m in _TICKER_RE.finditer(stripped)
+            if m.group(1) not in _TICKER_BLOCKLIST
+        ]
+        for _, sym in sorted(found):
+            if sym in seen:
+                continue
+            seen.add(sym)
+            out.append(sym)
+            if len(out) >= 3:
+                break
+        return out
     for m in _TICKER_RE.finditer(text):
         sym = m.group(1)
         if sym in _TICKER_BLOCKLIST:
@@ -802,6 +825,40 @@ def fetch_fundamentals(ticker: str, as_of: date | None = None) -> dict[str, Any]
     from app.services.edgar_pit import fetch_pit_fundamentals  # lazy: avoids cycle
 
     return fetch_pit_fundamentals(ticker, as_of)
+
+
+def _one_year_change_pct(symbol: str) -> float | None:
+    """First-to-last close change over a year of daily bars, in percent, or None."""
+    try:
+        import yfinance as yf
+
+        closes = yf.Ticker(yahoo_symbol(symbol)).history(period="1y")["Close"].dropna()
+        if len(closes) < 2 or float(closes.iloc[0]) <= 0:
+            return None
+        return round((float(closes.iloc[-1]) / float(closes.iloc[0]) - 1.0) * 100.0, 1)
+    except Exception as exc:  # noqa: BLE001 — a missing benchmark is absence, never a guess
+        logger.warn("benchmark_52w_unreadable", symbol=symbol, error=str(exc)[:200])
+        return None
+
+
+def _apply_my_benchmark(out: dict[str, Any], ticker: str) -> None:
+    """CR282 lane E — a Bursa name's relative strength is against the FBM KLCI.
+
+    Yahoo's `SandP52WeekChange` is the S&P 500's, so it is dropped here, and both
+    legs are recomputed from the same one-year daily-bar read of the stock and of
+    `^KLSE` (the registry's benchmark) so they cover the same window. Either leg
+    missing leaves the whole relative-strength line absent.
+    """
+    for key in ("change_52w_pct", "change_52w_sp500_pct", "relative_strength_52w_pct"):
+        out.pop(key, None)
+    own = _one_year_change_pct(ticker)
+    bench = _one_year_change_pct(spec_for(Market.MY).benchmark_ticker)
+    if own is None or bench is None:
+        return
+    out["change_52w_pct"] = own
+    out["change_52w_sp500_pct"] = bench
+    out["relative_strength_52w_pct"] = round(own - bench, 1)
+    out["benchmark_name"] = "FBM KLCI"
 
 
 def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
@@ -883,17 +940,19 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
         return None
 
     out: dict[str, Any] = {}
+    # CR282 lane E — three decimals on Bursa, where the tick is RM0.005 below RM1.00.
+    nd = 3 if market_for(ticker) is Market.MY else 2
     if price is not None:
-        out["base_price"] = round(price, 2)
-        out["low"] = round(price * 0.95, 2)
-        out["high"] = round(price * 1.05, 2)
-        out["support"] = round(price * 0.9, 2)
-        out["breakout"] = round(price * 1.03, 2)
+        out["base_price"] = round(price, nd)
+        out["low"] = round(price * 0.95, nd)
+        out["high"] = round(price * 1.05, nd)
+        out["support"] = round(price * 0.9, nd)
+        out["breakout"] = round(price * 1.03, nd)
     fifty_two_low = _num("fiftyTwoWeekLow")
     fifty_two_high = _num("fiftyTwoWeekHigh")
     if fifty_two_low is not None and fifty_two_high is not None:
-        out["low"] = round(fifty_two_low, 2)
-        out["high"] = round(fifty_two_high, 2)
+        out["low"] = round(fifty_two_low, nd)
+        out["high"] = round(fifty_two_high, nd)
         # DEF-audit D-c: only the REAL yfinance 52-week range earns the
         # "52-week range" label. When these fields are missing, low/high stay the
         # ±5% placeholder above (kept so the range tracks the live price) but the
@@ -1023,6 +1082,8 @@ def fetch_live_fundamentals(ticker: str) -> dict[str, Any] | None:
         out["change_52w_sp500_pct"] = round(change_52w_sp * 100, 1)
     if change_52w is not None and change_52w_sp is not None:
         out["relative_strength_52w_pct"] = round((change_52w - change_52w_sp) * 100, 1)
+    if market_for(ticker) is Market.MY:
+        _apply_my_benchmark(out, ticker)
 
     # ── CR150 — the Bear Researcher's quantified downside ──────────────────
     beta = _num("beta")
@@ -2157,6 +2218,8 @@ def wacc_estimate_line(
     beta: float | None,
     *,
     live: bool = True,
+    risk_free_pct: float | None = None,
+    erp_pct: float | None = None,
 ) -> str | None:
     """CR253 lane B(b) — the CAPM WACC estimate beside the ROIC it hurdles.
 
@@ -2173,6 +2236,14 @@ def wacc_estimate_line(
         "WACC estimate", live,
         [f"{wacc_pct}%"],
     )
+    if risk_free_pct is not None and erp_pct is not None:
+        # CR282 lane E — a Bursa name: the 10y MGS and the Malaysian ERP, named.
+        return (
+            f"{line} (CAPM): risk-free {risk_free_pct}% (10-year MGS, dated setting) + "
+            f"beta {beta} × equity risk premium {erp_pct}% (Malaysian ERP, dated setting). "
+            "AMI's own estimate, computed in code — a cost-of-equity proxy with no debt "
+            "weighting applied, so read it as an estimate, not a sourced hurdle rate."
+        )
     return (
         f"{line} (CAPM): risk-free {RISK_FREE_RATE_PCT}% + beta {beta} × "
         f"equity risk premium {EQUITY_RISK_PREMIUM_PCT}%. AMI's own estimate, "
@@ -2420,6 +2491,7 @@ def relative_strength_line(
     spread_pct: float | None,
     *,
     live: bool = True,
+    index_name: str = "S&P 500",
 ) -> str | None:
     """CR179 Leg 3 — 52-week performance against the index, free from `.info`.
 
@@ -2433,7 +2505,7 @@ def relative_strength_line(
     verb = "ahead of" if spread_pct >= 0 else "behind"
     return _labelled(
         "Relative strength, 52w", live,
-        [f"{ticker_pct:+.1f}% vs S&P 500 {index_pct:+.1f}% — "
+        [f"{ticker_pct:+.1f}% vs {index_name} {index_pct:+.1f}% — "
          f"{abs(spread_pct)}pp {verb} the index"],
     )
 

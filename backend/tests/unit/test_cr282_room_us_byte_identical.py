@@ -71,6 +71,7 @@ TICKER = "NVDA"
 DATE_RELATIVE_KEYS = frozenset({
     "run_date", "forward_catalyst", "next_earnings_interval", "news_headlines",
     "insider_ratio_line", "insider_cluster_line", "edgar_8k_flag_lines",
+    "float_liquidity", "social_fetched_age",
 })
 
 

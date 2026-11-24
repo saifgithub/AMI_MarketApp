@@ -73,6 +73,14 @@ from app.core.config import settings
 from app.services.edgar_8k import EXEC_CHANGE_LABEL, executive_change_line
 from app.services.analyst_targets import analyst_split_line, analyst_tape_line
 from app.services.street_view_blind import blind_profile
+from app.services.room_market import (
+    is_my,
+    localize_money,
+    my_dark_lines,
+    my_forward_catalyst_header,
+    my_header_bullet,
+)
+from app.trading_math.markets import Market, market_for
 from app.services.edgar_filings_feed import FEED_LABEL, MAX_FILINGS, WINDOW_DAYS, recent_filings_line
 from app.services.float_liquidity import (
     FEED_LABEL as FLOAT_LIQUIDITY_LABEL,
@@ -1224,7 +1232,13 @@ def trader_block_regex(*, ticker: str) -> str:
     mid-string, which is what makes an unbounded string a state the grammar can
     always extend forever.
     """
-    money = r"\$\d{1,6}\.\d{2}"
+    # CR282 lane E — a Bursa price is in ringgit and can carry three decimals
+    # (tick RM0.005 below RM1.00), which a two-decimal grammar could not express.
+    money = (
+        r"RM\d{1,6}\.\d{2,3}"
+        if market_for(ticker) is Market.MY
+        else r"\$\d{1,6}\.\d{2}"
+    )
     return (
         r"\[STANCE: (?:for|against|neutral|none) \| "
         r"CONVICTION: (?:low|medium|high) \| "
@@ -2035,6 +2049,10 @@ def build_room_messages(
     analyst's own-domain lens instead. Sequential phases (the default) keep the
     original line — it is load-bearing where each turn answers the last.
     """
+    # CR282 lane E — a Bursa Room is rendered in ringgit end to end; US is untouched.
+    room_market = market_for(ticker)
+    if room_market is not Market.US and portfolio_snapshot:
+        portfolio_snapshot = localize_money(portfolio_snapshot, room_market)
     base = build_agent_prompt(
         agent_id,
         mandate,
@@ -2366,7 +2384,7 @@ def build_room_messages(
     # must summarise would be worse, and ordering was never the control —
     # `enforce_safety_floor()` is. CR038 measured prompt-level instructions at
     # ~30%, so "it is last, therefore it wins" is exactly the belief P2 forbids.
-    system_prompt = base + room_addition
+    system_prompt = base + localize_money(room_addition, room_market)
     user_message = ChatMessage(role="user", content=f"Convene on {ticker}.")
     return system_prompt, [user_message]
 
@@ -2493,6 +2511,8 @@ def build_risk_officer_messages(
         f"Transcript so far:\n{_format_transcript(transcript)}\n"
         f"{build_risk_officer_instruction(rows)}"
     )
+    # CR282 lane E — the Bursa Room's risk prompt is in RM; US is returned as-is.
+    system_prompt = localize_money(system_prompt, market_for(ticker))
     return (
         system_prompt,
         [ChatMessage(role="user", content=f"Assess risk on {ticker}.")],
@@ -2763,6 +2783,9 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
     profile = blind_profile(profile)
     field_state: dict[str, Any] = profile.get("field_state") or {}
     lane = _lane_for(agent_id)
+    # CR282 lane E — only a Bursa sheet carries `market`; every `my` branch below
+    # is absent for US, so a US sheet renders exactly as it did before CR282.
+    my = is_my(profile)
 
     def _in_lane(domain: str) -> bool:
         return domain in lane
@@ -2815,6 +2838,8 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
         "below, never silently filled in — do NOT estimate, recall from "
         "training memory, or invent a number for it:"
     )
+    if my:
+        header_lines.append(my_header_bullet())
     if not _in_lane("fundamentals"):
         pass  # out of lane — named in the lane line below, not disclosed as absent
     elif fundamentals_any_live:
@@ -2910,7 +2935,7 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
     # CR221 I1 — the 8-K line is a free source with its own provenance key, so
     # its disclosure sits beside the feed's rather than inside it: the feed's
     # 7-day floor and paywall states say nothing about a filing.
-    if settings.room_executive_change_enabled and _in_lane("news") and not news_withheld_tenure:
+    if settings.room_executive_change_enabled and _in_lane("news") and not news_withheld_tenure and not my:
         if _is("executive_change", "live"):
             header_lines.append(
                 f"- {EXEC_CHANGE_LABEL}: LIVE, read from the issuer's own SEC 8-K "
@@ -2930,7 +2955,7 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
     # a "cite the filing, don't infer content" discipline this slots into.
     # Not gated on `news_withheld_tenure`/paid-feed state — this is a free
     # EDGAR read, independent of the news feed's own paywall/tenure gate.
-    if settings.room_recent_filings_enabled and (_in_lane("news") or _in_lane("fundamentals")):
+    if settings.room_recent_filings_enabled and (_in_lane("news") or _in_lane("fundamentals")) and not my:
         if _is("recent_filings", "live"):
             header_lines.append(
                 f"- {FEED_LABEL}: LIVE, read from the issuer's own SEC filings "
@@ -2962,7 +2987,7 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
     # Free SEC reads like the filings index above: not gated on the news
     # feed's paywall/tenure state. Every figure is AMI-computed in code and
     # the line states its window; each flag carries its own field_state key.
-    if settings.room_insider_ratio_enabled and _in_lane("news"):
+    if settings.room_insider_ratio_enabled and _in_lane("news") and not my:
         if _is("insider_ratio", "live"):
             header_lines.append(
                 f"- {INSIDER_RATIO_LABEL}: LIVE, AMI-computed from the issuer's "
@@ -2975,7 +3000,7 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                 f"- {INSIDER_RATIO_LABEL}: not available this call — do not "
                 "supply insider activity from memory."
             )
-    if settings.room_insider_plan_tag_enabled and _in_lane("news"):
+    if settings.room_insider_plan_tag_enabled and _in_lane("news") and not my:
         if _is("insider_plan_tag", "live"):
             header_lines.append(
                 f"- {INSIDER_PLAN_TAG_LABEL}: LIVE, read from each Form 4's own "
@@ -2987,7 +3012,7 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                 f"- {INSIDER_PLAN_TAG_LABEL}: not available this call — do not "
                 "supply a plan tag from memory."
             )
-    if settings.room_insider_cluster_enabled and _in_lane("news"):
+    if settings.room_insider_cluster_enabled and _in_lane("news") and not my:
         if _is("insider_cluster", "live"):
             header_lines.append(
                 f"- {CLUSTER_BUY_LABEL}: LIVE, a deterministic count — 3 or more "
@@ -2999,7 +3024,7 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                 f"- {CLUSTER_BUY_LABEL}: not available this call — do not supply "
                 "a cluster read from memory."
             )
-    if settings.room_edgar_8k_flags_enabled and _in_lane("news"):
+    if settings.room_edgar_8k_flags_enabled and _in_lane("news") and not my:
         if _is("edgar_8k_flags", "live"):
             header_lines.append(
                 f"- {EIGHT_K_FLAGS_LABEL}: LIVE, AMI-computed from the issuer's "
@@ -3055,6 +3080,7 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
     # body were both present for everyone.
     if _in_lane("news"):
         header_lines.append(
+            my_forward_catalyst_header() if my else
             "- Forward catalyst: the FOMC decision countdown below is REAL, "
             "from the Fed's published calendar."
         )
@@ -3137,7 +3163,7 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
         # path — past-dated sheet, mock mode, unresolvable basket — carries
         # its own reason string from the overlay, stated here, never a
         # fabricated median (CR040/CR104).
-        if settings.room_peer_comparison_enabled:
+        if settings.room_peer_comparison_enabled and not my:
             if _is("peer_comparison", "live"):
                 pc_line = peer_comparison_line(
                     profile.get("ticker"),
@@ -3339,6 +3365,8 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
             wacc_estimate_line(
                 profile.get("wacc_estimate_pct"),
                 profile.get("wacc_beta"),
+                risk_free_pct=profile.get("wacc_risk_free_pct"),
+                erp_pct=profile.get("wacc_erp_pct"),
             ) if (settings.room_wacc_enabled
                   and _is("wacc", "live")) else None,
             # CR219 R33 — EBIT / interest expense, the #1 arm request (21
@@ -3518,6 +3546,7 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                 if _is("change_52w_sp500_pct", "live") else None,
                 profile.get("relative_strength_52w_pct")
                 if _is("relative_strength_52w_pct", "live") else None,
+                **({"index_name": profile["benchmark_name"]} if profile.get("benchmark_name") else {}),
             ),
             liquidity_line(
                 profile.get("volume_today") if _is("volume_today", "live") else None,
@@ -3598,7 +3627,7 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
         # the same independence the 8-K line has from the news feed. A failed
         # fetch is stated with its reason, never silently blank (CR040), and
         # never estimated (CR104).
-        if settings.room_put_call_enabled:
+        if settings.room_put_call_enabled and not my:
             if _is("put_call", "live"):
                 pc_line = put_call_line(
                     profile.get("put_call_ratio"),
@@ -3654,7 +3683,7 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
     # renderer appends them verbatim (all figures AMI-computed in code; the
     # LLM never computes one). A non-live state degrades loudly with its
     # reason, never silently.
-    if _in_lane("news"):
+    if _in_lane("news") and not my:
         if settings.room_insider_ratio_enabled:
             if _is("insider_ratio", "live"):
                 lines.append(profile["insider_ratio_line"])
@@ -3691,6 +3720,15 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
                     profile.get("edgar_8k_flags_unavailable_reason")
                     or "the SEC filings index could not be read",
                 ))
+    if my:
+        # CR282 lane E — every SEC-fed input this desk's lanes would have shown
+        # is named as not available for this market, never dropped in silence.
+        lines.extend(my_dark_lines(
+            news=_in_lane("news"), fundamentals=_in_lane("fundamentals"),
+            social=_in_lane("social"),
+        ))
+        if _in_lane("news") and profile.get("macro_cpi_line"):
+            lines.append(profile["macro_cpi_line"])
     # CR151 Tier A — the asymmetry, from two numbers already on the sheet.
     # Rendered for the FULL-SHEET agents only, which is the reconciliation
     # CR151 asked for explicitly ("say so in CR145 Tier C's matrix rather than
@@ -3726,7 +3764,7 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
             + (f", consensus EPS est. ${profile['next_earnings_eps_estimate']}"
                if profile.get("next_earnings_eps_estimate") is not None else "")
         )
-    return "\n".join(lines)
+    return localize_money("\n".join(lines), Market.MY if my else Market.US)
 
 
 def _social_detail_lines(profile: dict[str, Any]) -> list[str]:
@@ -4305,7 +4343,8 @@ def _catalyst_line(profile: dict[str, Any]) -> str:
     if extra_headlines:
         extra = "; ".join(format_headline(h) for h in extra_headlines)
         line += f"; other recent coverage: {extra}"
-    line += f"; forward (REAL, Fed's published calendar): {profile.get('forward_catalyst')}"
+    calendar = "BNM's published calendar" if is_my(profile) else "Fed's published calendar"
+    line += f"; forward (REAL, {calendar}): {profile.get('forward_catalyst')}"
     return line
 
 

@@ -385,6 +385,10 @@ services:
       BETA_FREE_CREDITS: ${BETA_FREE_CREDITS:-false}
       # CR282 — Bursa Malaysia (.KL) master switch; off = US-only, off in Beta.
       MARKET_BURSA_ENABLED: ${MARKET_BURSA_ENABLED:-false}
+      # CR282 lane E — Bursa Room discount-rate inputs and the OpenDOSM CPI line.
+      WACC_MY_RISK_FREE_PCT: ${WACC_MY_RISK_FREE_PCT:-3.9}
+      WACC_MY_ERP_PCT: ${WACC_MY_ERP_PCT:-6.0}
+      OPENDOSM_CPI_ENABLED: ${OPENDOSM_CPI_ENABLED:-false}
       # CR239 / WP-38 — scoped device-UAT 503 switch; empty = off, inert outside alpha/staging.
       UAT_FAULT_INJECT: ${UAT_FAULT_INJECT:-}
       # CR035 ablation toggle — hides the Street consensus line from the

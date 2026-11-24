@@ -16,6 +16,7 @@ from uuid import UUID
 from app.agents.overlay_generator import generate_overlay
 from app.agents.safety_floor import append_safety_floor
 from app.schemas import AgentId, Mandate
+from app.trading_math.markets import Market, market_for
 
 # content/agents/ relative to this file: backend/app/services/ → ../../../content/agents
 CONTENT_AGENTS_DIR = (
@@ -23,9 +24,44 @@ CONTENT_AGENTS_DIR = (
 )
 
 
+_MARKET_BLOCK_RE = re.compile(
+    r"^<!-- market:(us|my) -->\n(.*?)^<!-- /market -->\n", re.DOTALL | re.MULTILINE
+)
+
+
+def _resolve_market_blocks(raw: str, market: Market) -> str:
+    """CR282 lane E — pick the block for `market`; the other market's block and every
+    marker line disappear. A file with no markers (every file but four) is returned
+    unchanged, and for US the result is the original text minus the marker lines, so
+    the US prompt — which the Room bank's policy version hashes — is byte-identical.
+    """
+    keep = market.value.lower()
+    return _MARKET_BLOCK_RE.sub(lambda m: m.group(2) if m.group(1) == keep else "", raw)
+
+
+# The Bursa Room's currency: dollar-shaped placeholders and the word "dollars" in a
+# base prompt become ringgit. Explicit tokens, not a blanket `$` rewrite.
+_MY_PLACEHOLDER_SUBS: tuple[tuple[str, str], ...] = (
+    ("${price}", "RM{price}"),
+    ('"$X by Y"', '"RM X by Y"'),
+    ("$LEVEL", "RM LEVEL"),
+    ("in $M", "in RM millions"),
+)
+
+
+def _localize_my(text: str) -> str:
+    for old, new in _MY_PLACEHOLDER_SUBS:
+        text = text.replace(old, new)
+    return re.sub(r"\bdollars\b", "ringgit", text)
+
+
 @lru_cache(maxsize=32)
-def load_base_prompt(agent_id: AgentId) -> str:
-    """Read content/agents/{agent_id}.md and return the body (frontmatter stripped)."""
+def load_base_prompt(agent_id: AgentId, market: Market = Market.US) -> str:
+    """Read content/agents/{agent_id}.md and return the body (frontmatter stripped).
+
+    `market` selects the `<!-- market:us|my -->` blocks (CR282 lane E); the default is
+    US, so every pre-CR282 caller gets exactly the text it always did.
+    """
     path = CONTENT_AGENTS_DIR / f"{agent_id.value}.md"
     if not path.exists():
         raise FileNotFoundError(
@@ -33,7 +69,8 @@ def load_base_prompt(agent_id: AgentId) -> str:
             f"Expected content/agents/{agent_id.value}.md."
         )
     raw = path.read_text(encoding="utf-8")
-    return _strip_frontmatter(raw)
+    body = _strip_frontmatter(_resolve_market_blocks(raw, market))
+    return _localize_my(body) if market is Market.MY else body
 
 
 def _strip_frontmatter(text: str) -> str:
@@ -95,7 +132,7 @@ def build_agent_prompt(
     exactly the belief failure-pattern P2 forbids. `enforce_safety_floor()` is
     the enforcement point.
     """
-    base = load_base_prompt(agent_id)
+    base = load_base_prompt(agent_id, market_for(ticker) if ticker else Market.US)
     overlay = generate_overlay(
         agent_id, mandate, halal_universe=halal_universe, ticker=ticker,
         classification_universe=classification_universe,

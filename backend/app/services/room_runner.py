@@ -213,7 +213,10 @@ from app.services.entitlements import (
 from app.services.tier_policy import pick_tier
 from app.services.sim_engine import get_sim_engine
 from app.services.verdict_outcomes import bank_verdict_outcome
-from app.trading_math.markets import Market, market_for
+from app.services import opendosm_cpi
+from app.services.room_market import NOT_AVAILABLE_FOR_MARKET, localize_money, market_of_profile
+from app.trading_math import bnm_calendar
+from app.trading_math.markets import Market, market_for, spec_for
 from app.trading_math.portfolio import shares_for_size
 from app.trading_math.risk import drawdown_contribution
 from app.trading_math.sizing import resolved_single_name_cap_pct, risk_debator_sizes
@@ -1305,10 +1308,16 @@ def _overlay_wacc(profile: dict[str, Any], field_state: dict[str, str]) -> None:
     every other overlay.
     """
     if field_state.get("beta") == LiveDataState.LIVE.value:
-        wacc_pct = wacc.estimate_wacc_pct(profile.get("beta"))
+        is_my_sheet = market_of_profile(profile) is Market.MY
+        wacc_pct = (
+            wacc.estimate_wacc_pct_my(profile.get("beta"))
+            if is_my_sheet else wacc.estimate_wacc_pct(profile.get("beta"))
+        )
         if wacc_pct is not None:
             profile["wacc_estimate_pct"] = wacc_pct
             profile["wacc_beta"] = profile["beta"]
+            if is_my_sheet:
+                profile["wacc_risk_free_pct"], profile["wacc_erp_pct"] = wacc.my_inputs()
             field_state["wacc"] = LiveDataState.LIVE.value
         else:
             field_state["wacc"] = LiveDataState.UNAVAILABLE.value
@@ -1988,6 +1997,51 @@ def _overlay_edgar_8k_flags(
     field_state["edgar_8k_flags"] = LiveDataState.LIVE.value
 
 
+def _mark_my_sec_dark(profile: dict[str, Any], field_state: dict[str, str]) -> None:
+    """CR282 lane E — record every EDGAR-sourced input of a Bursa sheet as
+    UNAVAILABLE, with no fetch. The renderer words them; this makes the state
+    machine agree (a `live` provenance for one of them would be a fabrication)."""
+    unavailable = LiveDataState.UNAVAILABLE.value
+    for key in (
+        "debt_maturity", "cost_of_debt", "executive_change", "dividend_growth",
+        "buyback_price", "recent_filings", "sbc", "roic", "insider_ratio",
+        "insider_plan_tag", "insider_cluster", "edgar_8k_flags",
+        "put_call", "peer_comparison",
+        *_FILING_DIMENSION_BLOCKS,
+    ):
+        field_state[key] = unavailable
+    profile["executive_change_state"] = "unscanned"
+    for reason_key in (
+        "insider_unavailable_reason", "edgar_8k_flags_unavailable_reason",
+        "put_call_unavailable_reason", "peer_comparison_unavailable_reason",
+    ):
+        profile[reason_key] = NOT_AVAILABLE_FOR_MARKET
+
+
+def _stamp_my_macro(
+    profile: dict[str, Any], field_state: dict[str, str], today: date,
+) -> None:
+    """CR282 lane E — the Bursa sheet's identity and its Macro & Events datum.
+
+    `profile["market"]` is the only switch every Bursa branch reads. The forward
+    catalyst is the BNM OPR with the countdown to the next MPC decision; past the
+    end of the MPC table that fact is unknowable, and the sheet says exactly that
+    instead of a stale countdown (CR040). The OpenDOSM CPI line rides beside it,
+    behind its own setting.
+    """
+    profile["market"] = Market.MY.value
+    try:
+        profile["forward_catalyst"] = bnm_calendar.opr_line(today)
+    except bnm_calendar.MpcTableExhausted as exc:
+        logger.error("bnm_mpc_table_exhausted", today=today.isoformat(), error=str(exc)[:200])
+        profile["forward_catalyst"] = (
+            f"BNM OPR {bnm_calendar.OPR_PCT:.2f}% as of {bnm_calendar.OPR_AS_OF.isoformat()}; the "
+            f"next MPC date is not in AMI's calendar (it ends {bnm_calendar.LAST_DATE.isoformat()}) — "
+            "do not state a meeting date"
+        )
+    profile["macro_cpi_line"] = opendosm_cpi.cpi_line(opendosm_cpi.fetch_cpi())
+
+
 def _profile_for_ticker(
     ticker: str,
     *,
@@ -2079,6 +2133,9 @@ def _profile_for_ticker(
         "downside": 18,
         "synth_lean": "constructive bull",
     }
+    is_my_sheet = market_for(ticker) is Market.MY
+    if is_my_sheet:
+        _stamp_my_macro(profile, field_state, today)
     # The clock is unconditionally live — there is no "unavailable" state for
     # today's date. Recorded explicitly rather than assumed, so the taint
     # guard (test_cr104_no_fabricated_numeric_reaches_room_prompt.py) sees a
@@ -2105,6 +2162,13 @@ def _profile_for_ticker(
         live = fetch_live_fundamentals(ticker)
     else:
         live = None
+    if is_my_sheet and live and not live.get("benchmark_name"):
+        # CR282 lane E — Yahoo's `SandP52WeekChange` is the S&P 500's. A Bursa
+        # sheet never carries it as the benchmark; absent the FBM KLCI legs the
+        # whole relative-strength read is dropped (degrade loudly, CR040).
+        live = {k: v for k, v in live.items() if k not in (
+            "change_52w_pct", "change_52w_sp500_pct", "relative_strength_52w_pct",
+        )}
     for f in _FUNDAMENTALS_NUMERIC_FIELDS:
         if live and f in live:
             profile[f] = live[f]
@@ -2134,7 +2198,12 @@ def _profile_for_ticker(
     # A2/D1/D2 — the filing's own columns; I1 — 8-K Item 5.02 text.
     # Attempted exactly when the fundamentals overlay above was attempted, so a
     # mock-data run never mixes real filed figures into a synthetic sheet.
-    if as_of is not None or settings.use_real_market_data:
+    if is_my_sheet:
+        # CR282 lane E — no SEC filer behind a `.KL` code: nothing is fetched, and
+        # every input that would have come from EDGAR is recorded UNAVAILABLE here
+        # and named "not available for this market" by the renderer.
+        _mark_my_sec_dark(profile, field_state)
+    elif as_of is not None or settings.use_real_market_data:
         _overlay_debt_structure(profile, field_state, ticker, today)
         _overlay_filing_dimensions(profile, field_state, ticker, today)
         _overlay_executive_change(profile, field_state, ticker, today)
@@ -2155,6 +2224,9 @@ def _profile_for_ticker(
     # the same treatment CR164's PIT dict gives consensus-derived fields.
     if as_of is None and settings.use_real_market_data:
         _overlay_analyst_targets(profile, field_state, ticker)
+    elif is_my_sheet:
+        for key in ("analyst_rating_split", "analyst_rating_split_history", "analyst_tape"):
+            field_state[key] = LiveDataState.UNAVAILABLE.value
     else:
         for key in ("analyst_rating_split", "analyst_rating_split_history", "analyst_tape"):
             field_state[key] = LiveDataState.UNAVAILABLE.value
@@ -2175,12 +2247,14 @@ def _profile_for_ticker(
 
     # CR247 Phase 1B — live-only by design (no historical options store);
     # the overlay itself records the right unavailable reason per path.
-    _overlay_put_call(profile, field_state, ticker, as_of)
+    if not is_my_sheet:
+        _overlay_put_call(profile, field_state, ticker, as_of)
 
     # CR247 Phase 1C — same-SIC peer basket, live-only by design (no
     # historical peer store); the overlay records the right unavailable
     # reason per path, same contract as the put/call overlay above.
-    _overlay_peer_comparison(profile, field_state, ticker, as_of)
+    if not is_my_sheet:
+        _overlay_peer_comparison(profile, field_state, ticker, as_of)
 
     technicals = None
     if settings.use_real_market_data:
@@ -2619,6 +2693,13 @@ def _stop_clause(
     return " — NO stop recorded (this position is unprotected)"
 
 
+def _market_kw(ticker: str) -> dict[str, Any]:
+    """CR282 lane E — `{"market": MY}` for a `.KL` ticker, `{}` for US, so every US
+    call into the sim engine keeps its pre-CR282 argument list."""
+    market = market_for(ticker)
+    return {} if market is Market.US else {"market": market}
+
+
 def _build_sim_holdings_block(user_id: UUID | None, ticker: str) -> str:
     """The user's REAL simulated holdings, rendered for EVERY Room agent (CR055).
 
@@ -2645,12 +2726,13 @@ def _build_sim_holdings_block(user_id: UUID | None, ticker: str) -> str:
             f"any BUY as opening a NEW position.\n"
             f"───"
         )
+    mkt = _market_kw(ticker)
     try:
         sim = get_sim_engine()
-        portfolio = sim.ensure_portfolio(user_id)
+        portfolio = sim.ensure_portfolio(user_id, **mkt)
         cash = portfolio.current_cash
-        total = sim.total_value(user_id)
-        open_trades = sim.list_trades(user_id, status="open")
+        total = sim.total_value(user_id, **mkt)
+        open_trades = sim.list_trades(user_id, status="open", **mkt)
         # Aggregate open trades per name (a name may have more than one open lot).
         agg: dict[str, list[float]] = {}
         # CR153/154/155/156 (deduped) — the per-lot stop, so the Room can see
@@ -2683,9 +2765,10 @@ def _build_sim_holdings_block(user_id: UUID | None, ticker: str) -> str:
             f"───"
         )
 
+    sym = spec_for(market_for(ticker)).currency_symbol
     lines = [
         _SIM_PORTFOLIO_HEADER,
-        f"Cash: ${cash:,.2f} | Portfolio value: ${total:,.2f}",
+        f"Cash: {sym}{cash:,.2f} | Portfolio value: {sym}{total:,.2f}",
     ]
     if not agg:
         lines.append(
@@ -2723,7 +2806,7 @@ def _build_sim_holdings_block(user_id: UUID | None, ticker: str) -> str:
 
 
 def _build_room_sector_context(
-    user_id: UUID | None,
+    user_id: UUID | None, market: Market = Market.US,
 ) -> tuple[list | None, dict[str, float], object | None, dict[str, float]]:
     """The user's sim holdings + marks + snapshot-backed sector resolver + computed
     sector weights (CR026), built once per run.
@@ -2755,7 +2838,9 @@ def _build_room_sector_context(
         return None, {}, None, {}
     try:
         sim = get_sim_engine()
-        portfolio = sim.ensure_portfolio(user_id)
+        portfolio = sim.ensure_portfolio(
+            user_id, **({} if market is Market.US else {"market": market}),
+        )
         holdings: list | None = list(portfolio.holdings)
     except Exception as exc:  # noqa: BLE001 — a holdings-read failure blocks loudly
         logger.warning(
@@ -2897,6 +2982,7 @@ def _build_room_option_candidates(
 
 def _build_room_risk_limit_context(
     user_id: UUID | None, *, portfolio_value: float, quotes: dict[str, float],
+    market: Market = Market.US,
 ) -> tuple[object, list | None, float | None]:
     """CR101-BE2 round 2: the same cooldown/over-trading/open-risk trade-history
     context `sim_engine.py` builds for its own `check_mandate_compliance` calls,
@@ -2918,6 +3004,7 @@ def _build_room_risk_limit_context(
         sim = get_sim_engine()
         return sim.risk_limit_context(
             user_id, portfolio_value=portfolio_value, quotes=quotes,
+            **({} if market is Market.US else {"market": market}),
         )
     except Exception as exc:  # noqa: BLE001 — degrade loudly (see docstring), never sink the run
         logger.warning("room_risk_limit_context_failed", user_id=str(user_id), error=str(exc)[:200])
@@ -4295,7 +4382,7 @@ _DIRECTIONAL_CLAIM_RES: tuple[tuple[re.Pattern[str], str], ...] = tuple(
             # the longest number in so the gate decides the whole match rather
             # than being negotiated around. (Verified: the naive form fired on
             # all 9 constructions it was written to stop.)
-            rf"\$\s*(?>{_LEVEL_NUMBER}){_NOT_A_PRICE_AFTER}",
+            rf"(?:\$|RM)\s*(?>{_LEVEL_NUMBER}){_NOT_A_PRICE_AFTER}",
             re.IGNORECASE,
         ),
         side,
@@ -6596,10 +6683,10 @@ async def _run_cio_step(
             "PASS" if verdict.action == VerdictAction.APPROVE
             else f"FAIL — {', '.join(verdict.violations)}"
         )
-        pm_text = _TEMPLATES[AgentId.PORTFOLIO_MANAGER][0].format(
+        pm_text = localize_money(_TEMPLATES[AgentId.PORTFOLIO_MANAGER][0].format(
             **formatter, verdict_action=verdict.action,
             verdict_rationale=verdict.reason, mandate_check=mandate_check,
-        )
+        ), market_for(ctx.ticker))
         async for ev in _typewriter(
             run_id, AgentId.PORTFOLIO_MANAGER, pm_text,
             char_delay_min, char_delay_max,
@@ -8183,6 +8270,7 @@ class RoomRunner:
         try:
             portfolio_value, current_drawdown_pct = await asyncio.to_thread(
                 get_sim_engine().valuation_snapshot, p.user_id,
+                *((market_for(p.ticker),) if market_for(p.ticker) is not Market.US else ()),
             )
         except Exception as exc:
             # Never fall back to run()'s $100k/0%-drawdown defaults — that IS
@@ -8467,8 +8555,9 @@ class RoomRunner:
             from app.services.overlay_store import get_overlay_store
 
             sim = get_sim_engine()
-            portfolio = sim.ensure_portfolio(user_id)
-            trades = sim.list_trades(user_id)
+            mkt = _market_kw(ticker)
+            portfolio = sim.ensure_portfolio(user_id, **mkt)
+            trades = sim.list_trades(user_id, **mkt)
             entries, _, _ = get_journal_store().list_for_user(
                 user_id, plan=effective_plan_for_user(user_id), ticker=ticker, limit=50,
             )
@@ -9416,7 +9505,10 @@ class RoomRunner:
         # CR026: sector-concentration inputs (holdings + marks + resolver + weights),
         # built once per run off the request path.
         sector_holdings, sector_marks, sector_map, sector_weights = (
-            await asyncio.to_thread(_build_room_sector_context, user_id)
+            await asyncio.to_thread(
+                _build_room_sector_context, user_id,
+                *((market_for(ticker),) if market_for(ticker) is not Market.US else ()),
+            )
         )
 
         # CR101-BE2 round 2: same trade-history context sim_engine.py's submit()/
@@ -9425,6 +9517,7 @@ class RoomRunner:
             await asyncio.to_thread(
                 _build_room_risk_limit_context,
                 user_id, portfolio_value=portfolio_value, quotes=sector_marks,
+                **_market_kw(ticker),
             )
         )
 
@@ -10253,21 +10346,26 @@ class RoomRunner:
             # CR237 ruling #2 — rebuild everything safety-relevant FRESH,
             # the same builders `run()` itself calls, off THIS user/ticker,
             # never off the original run's own stale numbers.
+            ticker = snapshot.get("ticker", run.ticker)
             portfolio_value, current_drawdown_pct = await asyncio.to_thread(
                 get_sim_engine().valuation_snapshot, user_id,
+                *((market_for(ticker),) if market_for(ticker) is not Market.US else ()),
             )
             halal = await default_halal_universe_async()
             classification = await default_classification_universe_async()
-            ticker = snapshot.get("ticker", run.ticker)
             sim_block = await asyncio.to_thread(_build_sim_holdings_block, user_id, ticker)
             portfolio_snapshot = _compose_portfolio_block(sim_block, None)
             sector_holdings, sector_marks, sector_map, sector_weights = (
-                await asyncio.to_thread(_build_room_sector_context, user_id)
+                await asyncio.to_thread(
+                    _build_room_sector_context, user_id,
+                    *((market_for(ticker),) if market_for(ticker) is not Market.US else ()),
+                )
             )
             risk_last_loss_closed_at, risk_trade_open_timestamps, risk_existing_open_risk_pct = (
                 await asyncio.to_thread(
                     _build_room_risk_limit_context,
                     user_id, portfolio_value=portfolio_value, quotes=sector_marks,
+                    **_market_kw(ticker),
                 )
             )
 
@@ -11988,7 +12086,7 @@ def _scripted_for(agent_id: AgentId, formatter: dict[str, Any]) -> str:
     tpl = _TEMPLATES[agent_id][0]
     # Some PM-only keys aren't in the formatter unless we pass them; for
     # the non-PM agents the template only references shared keys.
-    return tpl.format(**formatter)
+    return localize_money(tpl.format(**formatter), market_for(str(formatter.get("ticker", ""))))
 
 
 # ── CR077 second guard: prefix-cache observability ─────────────────────────

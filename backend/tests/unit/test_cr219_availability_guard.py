@@ -104,6 +104,16 @@ _REPO_ROOT = _FsPath(__file__).resolve().parents[3]
 _AGENTS_DIR = _REPO_ROOT / "content" / "agents"
 
 
+def _us_text(path) -> str:
+    """The file as a US Room receives it. CR282 lane E added `<!-- market:my -->` blocks
+    whose absence claims are about the Bursa sheet (checked in
+    `test_cr282_room_my.py`); this guard checks claims against the US sheet."""
+    from app.services.agent_prompts import _resolve_market_blocks
+    from app.trading_math.markets import Market
+
+    return _resolve_market_blocks(path.read_text(encoding="utf-8"), Market.US)
+
+
 # ──────────────────────────────────────────────────────────────────────────────
 # Rendered sheets, from the production renderer + the parity sentinels
 # ──────────────────────────────────────────────────────────────────────────────
@@ -827,7 +837,7 @@ def test_r10_every_denial_in_the_whole_file_is_examined(persona, sheets):
     category, or the named WP01 debt list. An unclassified one is red: it is a
     claim nobody has checked against what the agent actually receives."""
     path = _AGENTS_DIR / f"{persona}.md"
-    unexamined = _unexamined(persona, path.read_text(encoding="utf-8"))
+    unexamined = _unexamined(persona, _us_text(path))
     assert not unexamined, (
         f"CR219 R10: {persona}.md carries absence claims nobody has classified. "
         "Each must be added to _KNOWN_ABSENT (with collision markers proving it "
@@ -1557,7 +1567,7 @@ def test_red_fixture_1_a_false_denial_planted_in_voice_is_caught():
     """Red fixture 1 (proves R10 whole-file + R9 truth-check). A denial planted
     in `## Voice` — OUTSIDE the `## Inputs`→`## Output` slice the CR105 guard
     scanned — must still be caught as unexamined."""
-    real = (_AGENTS_DIR / "fundamentals_analyst.md").read_text(encoding="utf-8")
+    real = _us_text(_AGENTS_DIR / "fundamentals_analyst.md")
     planted = real.replace(
         "## Voice\n",
         "## Voice\n\nWe receive no margin data of any kind for this name.\n",

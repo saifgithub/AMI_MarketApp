@@ -1301,11 +1301,16 @@ class SimEngine:
         p = self.ensure_portfolio(user_id)
         return p.options, _option_marks_for_portfolio(p)
 
-    def valuation_snapshot(self, user_id: UUID) -> tuple[float, float]:
+    def valuation_snapshot(
+        self, user_id: UUID, market: Market | None = None,
+    ) -> tuple[float, float]:
         """(total_value, drawdown_pct) from a single marks fetch — see
         `portfolio_marks_snapshot`. Used where only the two numbers are
-        needed (e.g. `room.py`'s pre-trade mandate check)."""
-        _p, _marks, total_value, drawdown_pct, _source = self.portfolio_marks_snapshot(user_id)
+        needed (e.g. `room.py`'s pre-trade mandate check). CR282 lane E:
+        `market=Market.MY` values the MYR book (a `.KL` Room's own book)."""
+        _p, _marks, total_value, drawdown_pct, _source = self.portfolio_marks_snapshot(
+            user_id, market=market,
+        )
         return total_value, drawdown_pct
 
     def list_trades(
@@ -1383,7 +1388,8 @@ class SimEngine:
         return last_loss_closed_at, trade_open_timestamps, existing_open_risk_pct
 
     def risk_limit_context(
-        self, user_id: UUID, *, portfolio_value: float, quotes: dict[str, float]
+        self, user_id: UUID, *, portfolio_value: float, quotes: dict[str, float],
+        market: Market = Market.US,
     ) -> tuple[datetime | None, list[datetime], float]:
         """Public entry point to `_risk_limit_context` — for callers outside
         submit()/preview() that need the SAME cooldown/over-trading/open-risk
@@ -1393,7 +1399,7 @@ class SimEngine:
         of this, so three of the four new limits were silently off on the path the
         user actually watches — this method is what they now call instead."""
         return self._risk_limit_context(
-            user_id, portfolio_value=portfolio_value, quotes=quotes,
+            user_id, portfolio_value=portfolio_value, quotes=quotes, market=market,
         )
 
     def existing_open_risk_pct(

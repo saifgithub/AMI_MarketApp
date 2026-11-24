@@ -41,6 +41,7 @@ from app.services.market_data import (
 # Re-exported under the original private names so this module's internals and
 # any importers are unchanged; the computation is identical (Cutler's RSI).
 from app.trading_math.indicators import atr as _atr
+from app.trading_math.markets import Market, market_for
 from app.trading_math.indicators import bollinger_bands as _bollinger_bands
 from app.trading_math.indicators import macd as _macd
 from app.trading_math.indicators import rsi as _rsi
@@ -278,22 +279,25 @@ def compute_technicals(ticker: str) -> Technicals | None:
         )
         adv_as_of = datetime.fromtimestamp(candles[-1].t, tz=timezone.utc).date().isoformat()
 
+        # CR282 lane E — Bursa ticks are RM0.005 below RM1.00, so a two-decimal
+        # price would misstate a penny stock's level; US keeps two decimals.
+        nd = 3 if market_for(ticker) is Market.MY else 2
         return Technicals(
             rsi=round(rsi),
             rsi_tone=_rsi_tone(rsi),
             trend=trend,
             volume_tone=volume_tone,
-            support=round(support, 2),
-            breakout=round(breakout, 2),
+            support=round(support, nd),
+            breakout=round(breakout, nd),
             return_period_pct=return_period_pct,
             period_candles=len(closes),
-            price=round(price, 2),
-            sma_short=round(sma_short, 2),
-            sma_long=round(sma_long, 2),
+            price=round(price, nd),
+            sma_short=round(sma_short, nd),
+            sma_long=round(sma_long, nd),
             volume_ratio=volume_ratio,
-            atr14=round(atr14, 2) if atr14 is not None else None,
-            bollinger_upper=round(bb[1], 2) if bb is not None else None,
-            bollinger_lower=round(bb[2], 2) if bb is not None else None,
+            atr14=round(atr14, nd) if atr14 is not None else None,
+            bollinger_upper=round(bb[1], nd) if bb is not None else None,
+            bollinger_lower=round(bb[2], nd) if bb is not None else None,
             bollinger_width_pct=(
                 round((bb[1] - bb[2]) / bb[0] * 100, 1)
                 if bb is not None and bb[0] else None

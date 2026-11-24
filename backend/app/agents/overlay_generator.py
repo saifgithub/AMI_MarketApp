@@ -19,6 +19,7 @@ from app.schemas import (
     PrimaryGoal,
 )
 from app.schemas.liquidity import MICROCAP_FLOOR_USD_M as _MICROCAP_FLOOR_USD_M
+from app.schemas.liquidity import microcap_floor_m, money_symbol
 from app.trading_math.risk_limits import (
     resolved_max_open_positions,
     resolved_max_open_risk_pct,
@@ -272,7 +273,14 @@ def _compliance_block(
             "structure — this account trades shares only."
         )
     if c.liquid_only:
-        flags.append(f"- Liquid only. Avoid microcaps (< ${_MICROCAP_FLOOR_USD_M}M market cap) and illiquid names.")
+        if ticker and money_symbol(ticker) != "$":
+            # CR282 lane E — a Bursa name: the ringgit floor the safety floor enforces.
+            flags.append(
+                f"- Liquid only. Avoid microcaps (< {money_symbol(ticker)}{microcap_floor_m(ticker)}M "
+                "market cap) and illiquid names."
+            )
+        else:
+            flags.append(f"- Liquid only. Avoid microcaps (< ${_MICROCAP_FLOOR_USD_M}M market cap) and illiquid names.")
     if c.ticker_blocklist:
         flags.append(f"- Ticker blocklist (NEVER advocate): {', '.join(c.ticker_blocklist)}")
     else:

@@ -85,6 +85,37 @@ MICROCAP_FLOOR_USD_M = 500
 # `volume_avg_3m`, CR146 Tier B).
 ILLIQUID_AVG_DOLLAR_VOLUME_USD = 1_000_000
 
+# CR282 lane E — Bursa (`.KL`) floors, in RINGGIT: yfinance reports a `.KL` name's
+# market cap and price in MYR, so comparing them to the dollar floors above would
+# silently treat RM1,000M as a $1,000M name. The MYR equivalents are the dollar
+# floors converted at an ASSUMED RM4.20/USD (no FX feed — Saiful's ruling, one
+# book per currency): RM2,100M cap and RM4.2M/day. Deliberately a fixed, stated
+# assumption rather than a rate that drifts under a safety-floor rule; it is the
+# strict reading (most Bursa mid- and small-caps fall below it), so revisit with
+# real Bursa turnover data before Bursa is switched on for users.
+MICROCAP_FLOOR_MYR_M = 2_100
+ILLIQUID_AVG_DOLLAR_VOLUME_MYR = 4_200_000
+
+
+def _is_my(ticker: str) -> bool:
+    from app.trading_math.markets import Market, market_for
+
+    return market_for(ticker) is Market.MY
+
+
+def microcap_floor_m(ticker: str) -> int:
+    """The market-cap floor (millions, in the ticker's own currency)."""
+    return MICROCAP_FLOOR_MYR_M if _is_my(ticker) else MICROCAP_FLOOR_USD_M
+
+
+def illiquid_floor(ticker: str) -> int:
+    """The average daily traded-value floor, in the ticker's own currency."""
+    return ILLIQUID_AVG_DOLLAR_VOLUME_MYR if _is_my(ticker) else ILLIQUID_AVG_DOLLAR_VOLUME_USD
+
+
+def money_symbol(ticker: str) -> str:
+    return "RM" if _is_my(ticker) else "$"
+
 _SOURCE = "AMI sector/industry classification snapshot (yfinance market cap + average volume)"
 
 # DEF417 round 2 — the on-demand lookup's own source label, distinct from the
@@ -93,9 +124,9 @@ _SOURCE = "AMI sector/industry classification snapshot (yfinance market cap + av
 ON_DEMAND_SOURCE = "AMI on-demand liquidity lookup (yfinance, 24h cached)"
 
 
-def _cap_below_floor_str(cap_usd_m: float) -> str:
+def _cap_below_floor_str(cap_usd_m: float, sym: str = "$") -> str:
     """DEF525: rounding printed $499.6M as "$500M ... below AMI's $500M floor"; round down instead."""
-    return f"${math.floor(cap_usd_m):,}M"
+    return f"{sym}{math.floor(cap_usd_m):,}M"
 
 
 class LiquidityStatus(str, Enum):
@@ -177,28 +208,34 @@ class LiquidityVerdict(BaseModel):
         """User-facing line, AMI by name (never "the AI")."""
         t = self.ticker.upper()
         when = _as_of_str(self.as_of)
+        # CR282 lane E — a Bursa name is judged against the ringgit floors and
+        # reported in ringgit; for US these resolve to the dollar constants.
+        sym = money_symbol(t)
+        cap_floor = microcap_floor_m(t)
+        volume_floor = illiquid_floor(t)
         if self.status is LiquidityStatus.PERMITTED:
             cap = self.market_cap_usd_m
-            cap_str = f"${cap:,.0f}M market cap" if cap is not None else "known market cap"
+            cap_str = f"{sym}{cap:,.0f}M market cap" if cap is not None else "known market cap"
             return (
                 f"{t} clears AMI's liquidity filter ({cap_str}, as of {when}) — "
-                f"above the ${MICROCAP_FLOOR_USD_M}M microcap floor and trading "
+                f"above the {sym}{cap_floor}M microcap floor and trading "
                 "actively enough for this account."
             )
         if self.status is LiquidityStatus.EXCLUDED:
             reasons = []
-            if self.market_cap_usd_m is not None and self.market_cap_usd_m < MICROCAP_FLOOR_USD_M:
+            if self.market_cap_usd_m is not None and self.market_cap_usd_m < cap_floor:
                 reasons.append(
-                    f"{_cap_below_floor_str(self.market_cap_usd_m)} market cap is below AMI's "
-                    f"${MICROCAP_FLOOR_USD_M}M microcap floor"
+                    f"{_cap_below_floor_str(self.market_cap_usd_m, sym)} market cap is below AMI's "
+                    f"{sym}{cap_floor}M microcap floor"
                 )
             if (
                 self.avg_dollar_volume_usd is not None
-                and self.avg_dollar_volume_usd < ILLIQUID_AVG_DOLLAR_VOLUME_USD
+                and self.avg_dollar_volume_usd < volume_floor
             ):
                 reasons.append(
-                    f"average daily dollar volume of ${self.avg_dollar_volume_usd:,.0f} is "
-                    f"below AMI's ${ILLIQUID_AVG_DOLLAR_VOLUME_USD:,.0f} illiquidity floor"
+                    f"average daily {'dollar volume' if sym == '$' else 'traded value'} of "
+                    f"{sym}{self.avg_dollar_volume_usd:,.0f} is "
+                    f"below AMI's {sym}{volume_floor:,.0f} illiquidity floor"
                 )
             reason = "; ".join(reasons) or "it fails AMI's liquidity floor"
             return (
