@@ -4,30 +4,30 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**312 cases** — 200 api, 20 device, 92 manual; 16 blocked.
+**322 cases** — 205 api, 25 device, 92 manual; 20 blocked.
 
 ## Areas
 
-1. [Platform, version gate & UAT seeding](#platform) — 8 cases
+1. [Platform, version gate & UAT seeding](#platform) — 9 cases
 2. [Authentication, sessions & account identity](#auth) — 32 cases
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 20 cases
 4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 32 cases
-5. [Floor tab & home shell](#floor) — 11 cases
-6. [Convene the Room](#room) — 32 cases
+5. [Floor tab & home shell](#floor) — 12 cases
+6. [Convene the Room](#room) — 34 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
 8. [Brief Your Agent](#brief) — 18 cases
-9. [Sim trading & market data](#sim-trading) — 34 cases
+9. [Sim trading & market data](#sim-trading) — 37 cases
 10. [Portfolio health & sector analytics](#portfolio-health) — 15 cases
-11. [Watchlist & price alerts](#watchlist-alerts) — 16 cases
+11. [Watchlist & price alerts](#watchlist-alerts) — 17 cases
 12. [Lessons, quizzes, Agent Academy unlocks & glossary](#lessons) — 10 cases
 13. [Daily challenge & reminder](#daily-challenge) — 6 cases
-14. [Decision journal, trash & the You tab](#journal) — 11 cases
+14. [Decision journal, trash & the You tab](#journal) — 12 cases
 15. [Inbox, notification centre & push](#inbox-notifications) — 8 cases
 16. [Bug reports, AMI help library & telemetry](#support) — 17 cases
 17. [Billing, plans, credits & ads](#billing) — 12 cases
 18. [Alpaca paper account link](#alpaca) — 8 cases
 19. [Admin back-office & LLM status](#admin) — 6 cases
-20. [Games (dark-launched) & dev preview](#games) — 6 cases
+20. [Games (dark-launched) & dev preview](#games) — 7 cases
 21. [Every screen reached, every control pressed](#controls) — 1 cases
 
 <a id="platform"></a>
@@ -95,6 +95,20 @@ _API (automated, live Alpha) · plans: anon_
 3. The client-supplied X-Request-Id is ignored: the response carries a different, server-minted id (the id is the http_audit primary key and must never be client-chosen)
 
 > CR239 / WP-38. The live "grep the id in docker logs ami_api_alpha and find the http_audit row" half is run by Saiful on the rig.
+
+#### UAT-PLAT-009 — With the Bursa master switch off the server stays ready and no Bursa ticker is accepted
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. GET /v1/health and GET /v1/ready (the Sharia refresh loop in backend/app/main.py now also runs the SC Malaysia list tick, which does nothing while MARKET_BURSA_ENABLED is off)
+2. GET /v1/tickers/validate?ticker=1155.KL
+
+**Expected**
+1. Health is ok and /v1/ready is ready with no failed probes: the new SC tick adds no error and no probe
+2. 1155.KL is not accepted: exists is false (Bursa codes are accepted on shape only once the switch is on)
+
+> CR282 phase 1 (2026-11-24). Alpha runs with MARKET_BURSA_ENABLED unset (docker-compose default false), so this is the "flag off, nothing changes" half of the CR282 acceptance. The flag-on half is UAT-SIM-037 and UAT-ROOM-034.
 
 ### Device (automated, Appium)
 
@@ -1088,6 +1102,21 @@ _Device (automated, Appium) · plans: floor_pass_
 1. The MESSAGES inbox opens and the bottom bar (FLOOR / PORTFOLIO / LESSONS / YOU) is still on screen (DEF457)
 2. Back returns to the Floor
 
+#### UAT-FLOOR-012 — The Floor's SIM PORTFOLIO card prints the book value with a $ prefix and no decimals
+
+_Device (automated, Appium) · plans: floor_pass_
+
+**Steps**
+1. Open the Floor tab and read the SIM PORTFOLIO card (first card of the carousel)
+2. Repeat with the phone language set to Bahasa Melayu, then Arabic
+
+**Expected**
+1. The headline reads the book value as $<amount> (for example $100,000): a $ prefix, thousands separators, no cents
+2. The line under it reads "<stake> to start" on an untouched book, or "<pnl> all-time · <cash> cash · <n> positions" with cash as $<amount>; a negative P&L reads -$<amount>
+3. In Bahasa Melayu and Arabic the $ is still a prefix and no amount reads RM: money on a US book is dollars whatever the phone language
+
+> CR282 lane F1 (2026-11-24): the card prints through the one money formatter (formatMoney, features/markets/money.dart). The Floor card always shows the US book; Bursa has no Floor card in phase 1, so there is no Bursa Floor case. The executor asserts the English run; the Malay and Arabic repeat is a visual check.
+
 <a id="room"></a>
 ## Convene the Room
 
@@ -1372,6 +1401,20 @@ _API (automated, live Alpha) · plans: trader · uses LLM_
 
 > WP-24 (2026-11-20). One extra real Room run. The key is (user, ticker, mandate content, fact-sheet hash, policy version, model root, trading day); a new trading day or a new prompt/model changes it too but cannot be forced from the API, so those are covered by backend/tests/unit/test_cr267_wp24_room_bank.py.
 
+#### UAT-ROOM-033 — A Room on a Bursa (.KL) ticker is refused before any spend while the Bursa switch is off
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. Fund a trader with 150 credits; POST /v1/room/stream for 1155.KL
+2. Read the balance and the user's Room runs
+
+**Expected**
+1. The stream is refused with 422 (ticker not found, exists false) and carries no SSE events
+2. The balance is still 150 and the user has no Room run
+
+> CR282 phase 1 (2026-11-24), backend/app/api/room.py. The refusal comes from the existence guard that runs before credits are touched (CR128). No LLM spend.
+
 ### Device (automated, Appium)
 
 #### UAT-ROOM-016 — Convening the Room on AAPL streams to a CIO verdict card with a decision
@@ -1390,6 +1433,9 @@ _Device (automated, Appium) · plans: floor_pass · uses LLM_
 2. The credits actually charged are the price shown, plus at most the "up to" amount
 3. The Room opens on AAPL and streams desk by desk
 4. The run ends on a verdict card with a decision (BUY / SELL / HOLD style action), not an error or an empty card
+5. Any entry, stop or target the verdict card quotes reads $<price> with the $ in front, on an English and on a Malay-language phone, and never RM on a US ticker
+
+> CR282 lane F1 (2026-11-24): the verdict card and the existing-trade line use the one money formatter. The executor does not assert the format; read it from the run's verdict screenshot.
 
 #### UAT-ROOM-027 — After a Room a dismissible card asks if the verdict made sense, and a response can be reported
 
@@ -1412,6 +1458,24 @@ _Device (automated, Appium) · plans: floor_pass · uses LLM · **BLOCKED** — 
 4. The report sheet opens already titled "Problem with a response from <desk>", with the category set to Wrong data and a line naming the desk; closing it sends nothing
 
 > CR278 / WP-36. Pair with UAT-ROOM-025, which proves the stored answer.
+
+#### UAT-ROOM-034 — With Bursa on, a Room on a .KL stock shows RM, FBM KLCI and names every unavailable desk input
+
+_Device (automated, Appium) · plans: trader · uses LLM · **BLOCKED** — AMI_BURSA is off in every store build and MARKET_BURSA_ENABLED is off on Alpha (CR282 gate). Run once on an AMI_BURSA=true build against a backend with the switch on; spends LLM credits; not release-blocking._
+
+**Preconditions**
+1. An AMI_BURSA=true build, a backend with MARKET_BURSA_ENABLED=true, and Room credits
+
+**Steps**
+1. On the Floor convene the Room on 1155.KL; wait for the verdict
+2. Read the Fundamentals Analyst, Macro & Events and Flow & Positioning rows, then the Chief Investment Officer verdict card
+
+**Expected**
+1. Prices and sizes read RM, never $; the relative-strength comparison is against the FBM KLCI, not the S&P 500
+2. Each desk that would have shown a US filings input says "not available for this market (Bursa Malaysia filings are not yet ingested)" instead of staying silent
+3. The verdict card quotes entry, stop and target in RM; the Room is stored with currency MYR
+
+> CR282 lane E. Titles follow CR160 (Chief Investment Officer, Risk Officer, Execution Desk).
 
 <a id="one-on-one"></a>
 ## 1-on-1 agent chat
@@ -2066,6 +2130,39 @@ _API (automated, live Alpha) · plans: trader_
 2. Unknown ticker, bad direction, empty/invalid legs are 422
 3. A client-supplied premium is never honoured (422, or a not-accepted result)
 
+#### UAT-SIM-035 — A Bursa (.KL) ticker is not accepted and no order can be placed on it while the Bursa switch is off
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. GET /v1/tickers/validate?ticker=1155.KL
+2. POST /v1/sim/preview and POST /v1/sim/submit for 1155.KL (a market order, then a resting limit order)
+3. Read the portfolio before and after
+
+**Expected**
+1. validate says exists false for 1155.KL
+2. Both routes answer 422 with the ticker-not-found detail (exists false), exactly as for any unknown ticker: no new error shape
+3. Cash, holdings and the resting-order count are unchanged
+
+> CR282 phase 1 (2026-11-24), backend/app/api/tickers.py and sim.py. Switch off on Alpha.
+
+#### UAT-SIM-036 — The MYR book is unreachable while the switch is off, and the US book answers as before
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. GET /v1/sim/portfolio/{user_id}?market=MY, GET /v1/sim/trades/{user_id}?market=MY, POST /v1/sim/portfolio/{user_id}/reset?market=MY, and GET the portfolio with market=XX
+2. GET the portfolio with no market and with market=US; GET the trade ledger with no market
+3. POST /v1/sim/preview for a US ticker (AAPL, 1 share)
+
+**Expected**
+1. Every market=MY call answers 422 "... is not available yet." and market=XX answers 422 "unknown market": never a silent fall back to the US book, and the reset consumes no cooldown
+2. The portfolio is the US book either way: market "US" and currency "USD", with identical cash and holdings
+3. The trade ledger keeps its exact pre-CR282 keys: no market and no currency key
+4. The US preview still answers 200 with market "US", currency "USD" and fees null (no Bursa fee estimate on a US order)
+
+> CR282 phase 1 (2026-11-24), backend/app/api/sim.py. PortfolioSnapshot gained currency and market fields (always USD / US for the US book); the preview response gained market, currency and fees (US, USD, null). The Bursa book itself is exercised by UAT-SIM-037.
+
 ### Device (automated, Appium)
 
 #### UAT-SIM-028 — A one-share buy fills, appears as a holding and takes cash out of the portfolio
@@ -2079,6 +2176,9 @@ _Device (automated, Appium) · plans: floor_pass_
 **Expected**
 1. The ticket confirms "Filled: BUY 1 <ticker> @ $<price>"
 2. Portfolio cash is lower by about the fill price and the holding is listed with "1 sh" (or its quantity rises by one)
+3. Money reads the same in every language and on a Malay-language phone: the $ is always a prefix, and a negative amount (a position showing a loss) reads -$12.00, never $-12.00 and never RM
+
+> CR282 lane F1 (2026-11-24): one formatter for all app money, by the ticker's market. The executor asserts the confirmation reads @ $<price> with no $- ; the negative-amount reading on Portfolio is a visual check from the run screenshots (a one-share buy is rarely a loss at once).
 
 #### UAT-SIM-029 — An order that breaks the single-name cap is refused with a visible reason and moves no cash
 
@@ -2093,6 +2193,27 @@ _Device (automated, Appium) · plans: floor_pass_
 2. Portfolio cash and holdings are unchanged
 3. The refusal is not overridable from the ticket
 4. The fresh ticket opens clean: no SAFETY FLOOR banner above the empty ticker (DEF496)
+
+#### UAT-SIM-037 — With Bursa on, a board-lot order fills in the MYR book with itemised fees and a broken lot is refused
+
+_Device (automated, Appium) · plans: floor_pass · **BLOCKED** — AMI_BURSA is off in every store build and MARKET_BURSA_ENABLED is off on Alpha (CR282: off until counsel Question 4 and the data licence are answered). Run this once on a build made with --dart-define=AMI_BURSA=true against a backend with the switch on; not release-blocking._
+
+**Preconditions**
+1. An AMI_BURSA=true build and a backend with MARKET_BURSA_ENABLED=true
+
+**Steps**
+1. Portfolio: tap BURSA in the US | BURSA switch; read the empty state; tap NEW BURSA TRADE
+2. Enter 1155.KL; read the quantity field and the fee estimate; buy 100
+3. Open a new Bursa ticket, enter 1155.KL and quantity 150
+4. Switch back to US
+
+**Expected**
+1. The BURSA tab shows "Your Bursa book starts with RM50,000. Place your first Bursa trade to begin." and the quantity starts at 100 with the amber hint "Bursa trades in board lots of 100"
+2. The ticket lists ESTIMATED FEES (Brokerage, Clearing, Stamp duty, Total fees) in RM; the fill reads "Filled: BUY 100 1155.KL @ RM<price>" and cash drops by the price plus fees
+3. A quantity of 150 shows the board-lot hint and SUBMIT TRADE stays disabled; the minus and plus buttons step by 100
+4. Switching to US shows the dollar book untouched, and every amount there still reads $
+
+> CR282 phase 1 acceptance (docs/forward_planning/CR282_bursa_malaysia/CR282_bursa_malaysia.md). Fee figures are UNVERIFIED research figures per that doc; do not assert amounts.
 
 <a id="portfolio-health"></a>
 ## Portfolio health & sector analytics
@@ -2410,7 +2531,27 @@ _Device (automated, Appium) · plans: floor_pass_
 
 **Expected**
 1. PRICE ALERTS lists "Price falls below $<price>"
+2. The price field in the alert sheet carries a $ prefix for a US ticker, on an English and on a Malay-language phone
+3. After cancelling, the alert is gone
+
+> CR282 lane F1 (2026-11-24): the alert sheet's prefix comes from the ticker's market. The executor asserts the listed label reads "Price falls below $<price>"; the field prefix is a visual check from the run screenshots.
+
+#### UAT-WATCH-017 — With Bursa on, a price alert on a .KL stock takes its price in RM
+
+_Device (automated, Appium) · plans: floor_pass · **BLOCKED** — AMI_BURSA is off in every store build and MARKET_BURSA_ENABLED is off on Alpha (CR282 gate). Run once on an AMI_BURSA=true build against a backend with the switch on; not release-blocking._
+
+**Preconditions**
+1. An AMI_BURSA=true build, a backend with MARKET_BURSA_ENABLED=true, and a held Bursa position (UAT-SIM-037)
+
+**Steps**
+1. Portfolio > BURSA > the 1155.KL holding > PER-LOT DETAIL > ALERT; pick "Price falls below"
+2. Read the price field, enter a price, Create alert; then cancel it
+
+**Expected**
+1. The price field carries an RM prefix (not $), and PRICE ALERTS lists "Price falls below RM<price>"
 2. After cancelling, the alert is gone
+
+> CR282 lane F1: price_alert_sheet.dart takes its prefix from the ticker's market (marketForTicker).
 
 <a id="lessons"></a>
 ## Lessons, quizzes, Agent Academy unlocks & glossary
@@ -2737,6 +2878,25 @@ _Device (automated, Appium) · plans: floor_pass_
 **Expected**
 1. The filled buy is listed as a TRADE entry naming the ticker and price
 2. The refused order is listed as BLOCKED with its reason
+3. Opening a closed trade's entry shows Closed price as $<price> and Realised P&L as +$12.34 or -$12.34 (minus before the dollar sign, never $-12.34 and never RM)
+
+> CR282 lane F1 (2026-11-24): the journal detail rows use the one money formatter. The executor does not assert the format (the run's own buy is still open, so it has no Realised P&L row); read it from a closed trade's entry on the device.
+
+#### UAT-JRNL-012 — With Bursa on, a closed Bursa trade's journal entry reads its amounts in RM
+
+_Device (automated, Appium) · plans: floor_pass · **BLOCKED** — AMI_BURSA is off in every store build and MARKET_BURSA_ENABLED is off on Alpha (CR282 gate). Run once on an AMI_BURSA=true build against a backend with the switch on; not release-blocking._
+
+**Preconditions**
+1. An AMI_BURSA=true build, a backend with MARKET_BURSA_ENABLED=true, and a Bursa position closed by hand (UAT-SIM-037, then close it)
+
+**Steps**
+1. You > JOURNAL; open the closed 1155.KL trade entry
+
+**Expected**
+1. The title and summary read "Closed 1155.KL (MANUAL) — RM<amount>" and "Closed at RM<price>"
+2. Closed price and Realised P&L rows read RM<price> and +RM<amount> or -RM<amount>; a US trade entry beside it still reads $
+
+> CR282 lane C/F1: the journal text for a manual close takes its symbol from the ticker's market (backend/app/api/sim.py _ccy) and the detail rows from formatMoney. Bursa bracket closes are not journaled yet (CR282 lane C deferred item 6).
 
 <a id="inbox-notifications"></a>
 ## Inbox, notification centre & push
@@ -3346,6 +3506,20 @@ _API (automated, live Alpha) · plans: floor_pass_
 1. Each is 422
 2. The run has no queued orders afterwards
 
+#### UAT-GAME-007 — A Bursa (.KL) ticker is refused in a Games quote and trade, and nothing is queued
+
+_API (automated, live Alpha) · plans: floor_pass_
+
+**Steps**
+1. Enter the weekly run; POST /v1/games/runs/{run_id}/trade/quote and POST /v1/games/runs/{run_id}/trade for 1155.KL
+2. GET the run's orders
+
+**Expected**
+1. Both answer 422 and nothing is queued. With the Bursa switch off (Alpha) the refusal is the ticker-not-found detail; with it on it is the MarketNotInGamesError text "... is not available in Games - Games trade US equities only"
+2. The run's order list is empty
+
+> CR282 phase 1 (2026-11-24), backend/app/api/games.py maps MarketNotInGamesError to 422 and games_service refuses any non-US ticker (Games run on the US calendar only; Bursa in Games is phase 2). On Alpha only the switch-off refusal is reachable; the MarketNotInGamesError wording is pinned by the backend unit tests.
+
 <a id="controls"></a>
 ## Every screen reached, every control pressed
 
@@ -3356,6 +3530,7 @@ not a dead tap, and the effect matches the control-intent catalogue
 is reset. Credit-spending controls (Room, 1-on-1, Brief) are pressed once per
 crawl; real-money purchases are never pressed (crawler/never_press.json).
 2026-11-22 (build 129): Your Firm lays the 13 agent tiles out in desk bands (CR159; same tiles, taps and semantics ids, catalogue qa/uat/controls/your_firm.yaml already updated); Games responses now carry the keys the app reads (DEF527; a SELL stays a sell, restart passes commit as the query param). 8 + 12 new strings are seeded for AR/MS.
+2026-11-24 (CR282 phase 1, Bursa Malaysia): every Bursa control is behind the AMI_BURSA dart-define and is absent from a store build, so a store-build crawl sees no new control. The catalogue now describes them for the acceptance run on an AMI_BURSA build: the Portfolio US / BURSA switch and NEW BURSA TRADE (qa/uat/controls/portfolio.yaml) and the ticket's board-lot quantity steppers (qa/uat/controls/trade_ticket_sheet.yaml). Visible in store builds: every money amount is now printed through one formatter (a negative reads -$12.00, the $ stays a prefix in Arabic and Malay, the ticker tape and watchlist no longer use the phone's locale currency); the catalogue's control states do not quote amounts, so no entry changed for it. Line numbers re-derived for the new entries only.
 
 ### Device (automated, Appium)
 

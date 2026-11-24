@@ -559,3 +559,12 @@ def test_a_changed_mandate_is_a_new_room_and_the_same_inputs_are_banked(seed, tr
         assert headers["x-room-run-id"] == fresh.run_id
         assert headers.get("x-room-banked") == "true"
 
+
+@pytest.mark.uat("UAT-ROOM-033")
+def test_bursa_room_refused_before_any_spend_while_the_switch_is_off(seed):
+    u = fund(seed, "trader", 150)
+    status, _, events, body = stream_room(u, "1155.KL")
+    assert status == 422 and events == [], "a .KL ticker must be refused before any spend"
+    assert body["detail"]["exists"] is False, body
+    assert balance(seed, u) == 150, "a refused Bursa Room must not charge"
+    assert room_runs(u) == []

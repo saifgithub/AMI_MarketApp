@@ -118,6 +118,8 @@ cases:
     expected:
       - 'The filled buy is listed as a TRADE entry naming the ticker and price'
       - 'The refused order is listed as BLOCKED with its reason'
+      - 'Opening a closed trade''s entry shows Closed price as $<price> and Realised P&L as +$12.34 or -$12.34 (minus before the dollar sign, never $-12.34 and never RM)'
+    notes: 'CR282 lane F1 (2026-11-24): the journal detail rows use the one money formatter. The executor does not assert the format (the run''s own buy is still open, so it has no Realised P&L row); read it from a closed trade''s entry on the device.'
 
   - id: UAT-JRNL-009
     title: Entry detail outcome chips stay on-screen on a narrow phone with large text
@@ -153,3 +155,18 @@ cases:
       - 'The list tile carries "Changed from <PREVIOUS> to <NEW>: " and the first changed input, or the same-inputs / not-compared sentence (CR267 WP-25)'
       - 'The detail shows the same CHANGED FROM card as the Room verdict card'
 
+
+  - id: UAT-JRNL-012
+    title: With Bursa on, a closed Bursa trade's journal entry reads its amounts in RM
+    layer: device
+    status: blocked
+    blocked_on: 'AMI_BURSA is off in every store build and MARKET_BURSA_ENABLED is off on Alpha (CR282 gate). Run once on an AMI_BURSA=true build against a backend with the switch on; not release-blocking.'
+    plans: [floor_pass]
+    preconditions:
+      - 'An AMI_BURSA=true build, a backend with MARKET_BURSA_ENABLED=true, and a Bursa position closed by hand (UAT-SIM-037, then close it)'
+    steps:
+      - 'You > JOURNAL; open the closed 1155.KL trade entry'
+    expected:
+      - 'The title and summary read "Closed 1155.KL (MANUAL) — RM<amount>" and "Closed at RM<price>"'
+      - 'Closed price and Realised P&L rows read RM<price> and +RM<amount> or -RM<amount>; a US trade entry beside it still reads $'
+    notes: 'CR282 lane C/F1: the journal text for a manual close takes its symbol from the ticker''s market (backend/app/api/sim.py _ccy) and the detail rows from formatMoney. Bursa bracket closes are not journaled yet (CR282 lane C deferred item 6).'

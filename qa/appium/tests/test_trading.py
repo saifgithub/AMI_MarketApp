@@ -81,3 +81,4 @@ def test_fill_confirmation_reads_cleanly(driver, run_dir):
     assert f"@ ${price:,.2f}" in toast or f"@ ${price}" in toast, (
         f"the confirmation should read '@ ${price}', got {toast!r}"
     )
+    assert "$-" not in toast and "RM" not in toast, f"money must keep its $ prefix (CR282 F1), got {toast!r}"

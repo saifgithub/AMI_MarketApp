@@ -145,3 +145,16 @@ cases:
       - 'With no Room running, the Floor shows no rejoin banner'
       - 'With a Room still running, the Floor shows "Your Room on <ticker> is still running." with REJOIN, and opening the app never jumps into the Room by itself'
     notes: 'DEF506 (Saiful 2026-11-20). The full rejoin and no-second-charge checks are UAT-ROOM-028.'
+
+  - id: UAT-FLOOR-012
+    title: The Floor's SIM PORTFOLIO card prints the book value with a $ prefix and no decimals
+    layer: device
+    plans: [floor_pass]
+    steps:
+      - 'Open the Floor tab and read the SIM PORTFOLIO card (first card of the carousel)'
+      - 'Repeat with the phone language set to Bahasa Melayu, then Arabic'
+    expected:
+      - 'The headline reads the book value as $<amount> (for example $100,000): a $ prefix, thousands separators, no cents'
+      - 'The line under it reads "<stake> to start" on an untouched book, or "<pnl> all-time · <cash> cash · <n> positions" with cash as $<amount>; a negative P&L reads -$<amount>'
+      - 'In Bahasa Melayu and Arabic the $ is still a prefix and no amount reads RM: money on a US book is dollars whatever the phone language'
+    notes: 'CR282 lane F1 (2026-11-24): the card prints through the one money formatter (formatMoney, features/markets/money.dart). The Floor card always shows the US book; Bursa has no Floor card in phase 1, so there is no Bursa Floor case. The executor asserts the English run; the Malay and Arabic repeat is a visual check.'

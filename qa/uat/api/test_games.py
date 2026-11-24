@@ -85,3 +85,24 @@ def test_invalid_trades_refused(seed):
     body = orders.json()
     queued = body if isinstance(body, list) else body.get("orders", body.get("queued", []))
     assert queued == []
+
+
+@pytest.mark.uat("UAT-GAME-007")
+def test_bursa_ticker_refused_in_games_and_nothing_queued(seed):
+    u = seed.user(plan="floor_pass")
+    run_id = u.post("/v1/games/enter", json={}).json()["run_id"]
+    trade = f"/v1/games/runs/{run_id}/trade"
+    for path, body in (
+        (f"{trade}/quote", {"ticker": "1155.KL", "quantity": 100}),
+        (trade, {"ticker": "1155.KL", "quantity": 100}),
+    ):
+        r = u.post(path, json=body)
+        assert r.status_code == 422, (path, r.status_code, r.text)
+        detail = r.json()["detail"]
+        # switch off (Alpha): the ticker-not-found detail; switch on: the MarketNotInGamesError text
+        assert (isinstance(detail, dict) and detail.get("exists") is False) or "not available in Games" in str(detail), r.text
+    orders = u.get(f"/v1/games/runs/{run_id}/orders")
+    assert orders.status_code == 200
+    body = orders.json()
+    queued = body if isinstance(body, list) else body.get("orders", body.get("queued", []))
+    assert queued == []

@@ -53,6 +53,7 @@ def test_floor_renders_convene_cta(driver, run_dir):
 # CR263 journeys
 # --------------------------------------------------------------------------
 
+import re  # noqa: E402
 import time  # noqa: E402
 
 from helpers.journeys import (  # noqa: E402
@@ -67,6 +68,7 @@ from helpers.journeys import (  # noqa: E402
 from helpers.locators import (  # noqa: E402
     _all_by_text,
     _all_by_text_contains,
+    element_description,
     exists_id,
     exists_text,
     exists_text_contains,
@@ -144,3 +146,24 @@ def test_inbox_bell_opens_inbox_with_the_bottom_bar_still_visible(driver, run_di
         assert exists_id(driver, NAV_IDS[tab], retry=False), f"bottom-bar tab {tab} is hidden behind the inbox (DEF457)"
     go_back(driver)
     wait_visible_text(driver, "CONVENE THE ROOM", timeout_s=10)
+
+
+@pytest.mark.uat("UAT-FLOOR-012")
+def test_portfolio_card_prints_money_with_a_dollar_prefix(driver, run_dir):
+    from selenium.common.exceptions import WebDriverException
+
+    open_tab(driver, "Floor")
+    wait_visible_text_contains(driver, "SIM PORTFOLIO", timeout_s=15)
+    time.sleep(2.0)  # the card shows "loading" until the book arrives
+    snap(driver, run_dir, "floor", "portfolio_card")
+    amounts = []
+    for el in _all_by_text_contains(driver, "$", retry=False):
+        try:  # the ticker tape scrolls: its nodes can vanish between query and read
+            amounts.append(element_description(driver, el))
+        except WebDriverException:
+            continue
+    assert any(re.search(r"\$\d[\d,]*", t) for t in amounts), (
+        f"the SIM PORTFOLIO card should print the book value as $<amount>, saw {amounts!r}"
+    )
+    wrong = [t for t in amounts if re.search(r"\$-\d", t) or "RM" in t]
+    assert not wrong, f"money must read -$12.00 for a loss and never RM on a US book, saw {wrong!r}"
