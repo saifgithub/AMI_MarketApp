@@ -2475,3 +2475,15 @@ from outside `app.` (or a dict with non-string keys) still fails that test.
 **Why the first fix was not enough.** DEF519 fixed the one dialog. Nothing stopped the next dialog written the same natural way.
 
 **Enforcing check:** `mobile/test/dialog_pop_context_structural_test.dart` parses every `show*Dialog` / `show*Sheet` / `show*Popup` call under `mobile/lib`, takes the `builder:` closure and fails if a pop inside it (`Navigator.of(x).pop|maybePop|popUntil`, `Navigator.pop(x)`, `x.pop()`) names an identifier that is not the builder's own context parameter or a context parameter of a closure nested inside it. A non-closure builder also fails (cannot be verified). Push calls are not checked. It fails on the pre-DEF519 `brief_history_screen.dart` (proved by reverting it), has scanner self-tests, and asserts it found more than 40 call sites so the pattern cannot go inert.
+
+---
+
+## P43 — two artifacts of one version built with different feature flags
+
+**Class:** one release run produces more than one binary under the same version string (the Play AAB, the automated-tester APK, the IPA), each from its own `flutter build` command. Feature flags are `bool.fromEnvironment` dart-defines, compiled in and defaulting to `false`, so a flag added to one command and not the other shakes the feature out of the second binary without an error. The two artifacts then disagree about what version N contains: a bug report is untraceable and the tester rig exercises an app users do not have.
+
+**Instances.** DEF301 (2026-08-14, build 0.1.0+91): `share_apk_to_tester.sh` passed no `AMI_GAMES`, so Play served a 5-tab AAB and the rig a 4-tab APK; fixed by forwarding the choice from `publish_playstore.sh`. DEF530 (2026-11-24, build 0.1.0+130): CR282 added `--bursa` / `AMI_BURSA` to `build_playstore.sh` only; the AAB had Bursa on and the APK off. Same helper, same omission, next flag.
+
+**Why the first fix did not generalise.** DEF301 forwarded the one flag it was filed against. Nothing stated the rule ("whatever feature flag the AAB gets, the APK gets"), so the next author adding a flag to the AAB command had no reason to open the APK helper.
+
+**Enforcing check:** `backend/tests/unit/test_def530_apk_aab_dart_define_parity.py` parses the `--dart-define=NAME` set of `build_playstore.sh`'s `flutter build appbundle` (expanding the alpha `CHANNEL_DEFINES` from `release_channel.sh`) and of `share_apk_to_tester.sh`'s `flutter build apk`, and fails on any define the AAB sets that the APK lacks, unless it is in the test's commented `_AAB_ONLY` allow-list (RevenueCat key, AdMob mode/unit ids/test devices/consent geography, `AMI_RELEASE_CHANNEL`: store-billing and ads config, not features). `AMI_GAMES` and `AMI_BURSA` are asserted in both; `publish_playstore.sh` is asserted to derive and forward both from `BUILD_ARGS`; stale allow-list entries fail. Mutation-checked by removing the APK's `AMI_BURSA` line. Scope: Android AAB vs APK; the iOS IPA has a single build command and no sibling to drift from.
