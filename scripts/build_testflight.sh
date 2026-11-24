@@ -144,6 +144,7 @@ DO_BILLING=1
 DO_PRODUCTION=0
 DO_INTERNAL_ONLY=0
 DO_GAMES=1
+DO_BURSA=0
 while [[ $# -gt 0 ]]; do
   arg="$1"
   case "$arg" in
@@ -154,6 +155,7 @@ while [[ $# -gt 0 ]]; do
     --production) DO_PRODUCTION=1 ;;
     --internal-only) DO_INTERNAL_ONLY=1 ;;
     --no-games)   DO_GAMES=0 ;;
+    --bursa)      DO_BURSA=1 ;;
     --dry-run)    DRY_RUN=1 ;;
     --channel=*)  CHANNEL="${arg#--channel=}" ;;
     --channel)
@@ -175,6 +177,16 @@ while [[ $# -gt 0 ]]; do
   esac
   shift
 done
+
+# CR282 ruling 3 (Saiful 2026-11-23): Bursa is built and tested on Alpha and stays
+# off for testers until counsel answers the CMSA question. --bursa therefore
+# compiles AMI_BURSA=true into INTERNAL builds only; any other target refuses.
+if [[ "$DO_BURSA" -eq 1 && ( "$DO_INTERNAL_ONLY" -ne 1 || "$DO_PRODUCTION" -eq 1 || "${CHANNEL:-alpha}" == "beta" ) ]]; then
+  echo "✗ --bursa is for INTERNAL Alpha builds only (CR282 ruling 3)." >&2
+  echo "  Bursa stays off for testers until counsel rules (S6 Question 4)." >&2
+  echo "  Use:  $(basename "$0") --internal-only --bursa" >&2
+  exit 1
+fi
 
 # CR267 WP-45 — resolve the release channel BEFORE any credential or gate, so a
 # Beta refusal (or --dry-run) never depends on the ASC key being present.
@@ -229,6 +241,7 @@ fi
 # `--production` shipping a binary with an unreachable-by-design game route
 # compiled into it, which is precisely what App Review guideline 2.3.1 names.
 # The banner said "do not"; a banner is not a control (CR040).
+
 if [[ "$DO_GAMES" -eq 1 && ( "${RELEASE_CHANNEL:-}" == "production" || "$DO_PRODUCTION" -eq 1 ) ]]; then
   echo "✗ This is a PRODUCTION build and AMI_GAMES is on." >&2
   echo "  A hidden feature in a store binary is App Review guideline 2.3.1." >&2
@@ -573,6 +586,7 @@ ami_beta_ios_patch_project
 flutter build ios --release --no-codesign \
   "${CHANNEL_DEFINES[@]}" \
   --dart-define=AMI_GAMES="$([[ "$DO_GAMES" -eq 1 ]] && echo true || echo false)" \
+  --dart-define=AMI_BURSA="$([[ "$DO_BURSA" -eq 1 ]] && echo true || echo false)" \
   --dart-define=REVENUECAT_IOS_SDK_KEY="${REVENUECAT_IOS_SDK_KEY}" \
   --dart-define=ADMOB_MODE="${ADMOB_MODE}" \
   --dart-define=ADMOB_INTERSTITIAL_AD_UNIT_ID="${ADMOB_INTERSTITIAL_AD_UNIT_ID}" \

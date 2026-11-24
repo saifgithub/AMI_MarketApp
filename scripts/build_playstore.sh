@@ -150,6 +150,7 @@ DO_BILLING=1
 DO_PRODUCTION=0
 DO_INTERNAL_ONLY=0
 DO_GAMES=1
+DO_BURSA=0
 while [[ $# -gt 0 ]]; do
   arg="$1"
   case "$arg" in
@@ -159,6 +160,7 @@ while [[ $# -gt 0 ]]; do
     --production) DO_PRODUCTION=1 ;;
     --internal-only) DO_INTERNAL_ONLY=1 ;;
     --no-games)   DO_GAMES=0 ;;
+    --bursa)      DO_BURSA=1 ;;
     --dry-run)    DRY_RUN=1 ;;
     --channel=*)  CHANNEL="${arg#--channel=}" ;;
     --channel)
@@ -180,6 +182,16 @@ while [[ $# -gt 0 ]]; do
   esac
   shift
 done
+
+# CR282 ruling 3 (Saiful 2026-11-23): Bursa is built and tested on Alpha and stays
+# off for testers until counsel answers the CMSA question. --bursa therefore
+# compiles AMI_BURSA=true into INTERNAL builds only; any other target refuses.
+if [[ "$DO_BURSA" -eq 1 && ( "$DO_INTERNAL_ONLY" -ne 1 || "$DO_PRODUCTION" -eq 1 || "${CHANNEL:-alpha}" == "beta" ) ]]; then
+  echo "✗ --bursa is for INTERNAL Alpha builds only (CR282 ruling 3)." >&2
+  echo "  Bursa stays off for testers until counsel rules (S6 Question 4)." >&2
+  echo "  Use:  $(basename "$0") --internal-only --bursa" >&2
+  exit 1
+fi
 
 # CR267 WP-45 — resolve the release channel BEFORE any gate, so a Beta refusal
 # (or --dry-run) never depends on a keystore or any credential being present.
@@ -222,6 +234,7 @@ fi
 # build straight to production in two clicks, so the only thing standing
 # between a games binary and the store was a banner asking nicely. A banner
 # is not a control (CR040).
+
 if [[ "$DO_GAMES" -eq 1 && ( "${RELEASE_CHANNEL:-}" == "production" || "$DO_PRODUCTION" -eq 1 ) ]]; then
   echo "✗ This is a PRODUCTION build and AMI_GAMES is on." >&2
   echo "  A hidden feature in a store binary is App Review guideline 2.3.1," >&2
@@ -502,6 +515,7 @@ flutter build appbundle --release \
   --dart-define=GOOGLE_OAUTH_WEB_CLIENT_ID="${GOOGLE_OAUTH_WEB_CLIENT_ID}" \
   --dart-define=SENTRY_DSN="${SENTRY_DSN}" \
   --dart-define=AMI_GAMES="$([[ "$DO_GAMES" -eq 1 ]] && echo true || echo false)" \
+  --dart-define=AMI_BURSA="$([[ "$DO_BURSA" -eq 1 ]] && echo true || echo false)" \
   --dart-define=REVENUECAT_ANDROID_SDK_KEY="${REVENUECAT_ANDROID_SDK_KEY}" \
   --dart-define=ADMOB_MODE="${ADMOB_MODE}" \
   --dart-define=ADMOB_INTERSTITIAL_AD_UNIT_ID="${ADMOB_INTERSTITIAL_AD_UNIT_ID}" \
