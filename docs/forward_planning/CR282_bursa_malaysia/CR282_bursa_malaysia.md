@@ -101,3 +101,7 @@ On Alpha with the flag on: search `1155.KL`, convene a Room whose stored record 
 
 1. **Bursa on in Alpha, SC list included.** `MARKET_BURSA_ENABLED=true` in Alpha's env (config-only recreate of deploy #23). The SC list ingested on first boot: 886 compliant, 18 non-compliant, as of 2026-05-29. `1155.KL` validates as Bursa Malaysia. Written SC permission is still to be requested before release to users.
 2. **Liquidity floors: Bursa-specific**, derived from real Bursa turnover, documented, confirmed by Saiful before the flag goes on for users.
+
+## Bursa liquidity floors (measured 2026-11-24, branch `lane/cr282-bursa-floors`)
+
+1. Measured 882 `.KL` names (SC list codes + 18 large names). Lane E's RM2,100M / RM4.2M passed 64 (7%). Recommended **RM300M cap, RM250k/day** passes 221 (25%; 246 on the enforced avg-volume x price metric). **Pending Saiful's confirmation.** Detail: [`bursa_liquidity_floors_2026-11-24.md`](bursa_liquidity_floors_2026-11-24.md).
