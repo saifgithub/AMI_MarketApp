@@ -79,6 +79,21 @@ def spec_for(market: Market) -> MarketSpec:
     return MARKETS[market]
 
 
+def format_money(amount: float, market: Market = Market.US, *, signed: bool = False) -> str:
+    """The house money format, server side (mirrors mobile `formatMoney`).
+
+    Sign before the symbol (`-$8.08`, `+RM11.00`), thousands separators, two
+    decimals; an amount that rounds to zero prints unsigned (`$0.00`, or
+    `+$0.00` when `signed`) so `-0.0` never reads `+-$0.00` (DEF531).
+    """
+    body = f"{abs(amount):,.2f}"
+    if body == "0.00" or amount > 0:
+        sign = "+" if signed else ""
+    else:
+        sign = "-"
+    return f"{sign}{spec_for(market).currency_symbol}{body}"
+
+
 def market_for(ticker: str) -> Market:
     """`.KL` => Malaysia; everything else (including indices and OCC symbols) => US."""
     t = (ticker or "").upper().strip()
