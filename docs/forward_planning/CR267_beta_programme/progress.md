@@ -348,3 +348,10 @@ Found: two users have duplicate training portfolios created 40 ms apart on 2026-
 2. Ships: S3 ruled DeepInfra and WP-23 grader wiring (flag off); DEF367 extractor rules (baseline 0); `/logs/` rsync exclude; CR282 Bursa phase 1 lanes A–F (`MARKET_BURSA_ENABLED` off on Alpha; `AMI_BURSA` off in store builds).
 3. Lesson: rsync excludes are now taken from the command file via `--exclude-from`; a hand-typed list missed `infra/beta.env` on deploy #22 (no file existed, so nothing leaked).
 4. Next: DEF447 close check (07:41 +03); CR282 flag-on acceptance on Alpha with an internal `AMI_BURSA` build; Saiful: WP-23 fit go (~$3), Bursa liquidity floors, counsel Q4, Bursa data licence + stock list, SC reuse permission.
+
+### 25. 2026-11-24 — deploy #24 live; DEF447 closed; Bursa on in Alpha
+
+1. Deploy #24 `alpha-2026-11-24-2` = `4b4877c6`: WP-23 DeepInfra grader overload retry (`0d666c4c`). Suite 9727/0; local gate PASS; UAT OVERRIDE (stale device cases only); postflight PASS; alpha-post PASS.
+2. DEF447 closed: the 2026-11-24 04:30Z nightly ran clean (150/150, 0 failures, `left_sec_map` warning for QRVO/ROKU/WBD).
+3. Bursa on in Alpha since 07:24 +03 (Saiful's ruling, SC list included): SC list stored, 886/18, as of 2026-05-29.
+4. WP-23 fit run 2 started on melehost (≤$5 cap) with the retry fix; run 1 (50/300 Rooms, 14 lost to HTTP 429) kept as `deepinfra_room_scores_run1_overloaded.jsonl`.
