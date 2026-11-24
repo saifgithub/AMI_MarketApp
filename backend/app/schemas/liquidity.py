@@ -85,16 +85,21 @@ MICROCAP_FLOOR_USD_M = 500
 # `volume_avg_3m`, CR146 Tier B).
 ILLIQUID_AVG_DOLLAR_VOLUME_USD = 1_000_000
 
-# CR282 lane E — Bursa (`.KL`) floors, in RINGGIT: yfinance reports a `.KL` name's
-# market cap and price in MYR, so comparing them to the dollar floors above would
-# silently treat RM1,000M as a $1,000M name. The MYR equivalents are the dollar
-# floors converted at an ASSUMED RM4.20/USD (no FX feed — Saiful's ruling, one
-# book per currency): RM2,100M cap and RM4.2M/day. Deliberately a fixed, stated
-# assumption rather than a rate that drifts under a safety-floor rule; it is the
-# strict reading (most Bursa mid- and small-caps fall below it), so revisit with
-# real Bursa turnover data before Bursa is switched on for users.
-MICROCAP_FLOOR_MYR_M = 2_100
-ILLIQUID_AVG_DOLLAR_VOLUME_MYR = 4_200_000
+# CR282 — Bursa (`.KL`) floors, in RINGGIT (yfinance reports a `.KL` name's market cap
+# and price in MYR, so the dollar floors above must not be compared to them).
+# PENDING SAIFUL'S CONFIRMATION before Bursa goes on for users (ruling 2026-11-24).
+#
+# Derived from measured Bursa turnover, not converted from the US floors (lane E's
+# first cut, RM2,100M / RM4.2M = the dollar floors at an assumed RM4.20/USD, passed
+# only 64 of 882 measured names). Measured 2026-11-24 via yfinance: 882 `.KL` names
+# (the SC Shariah list's 886 codes + 18 large names added by hand, 882 with complete data),
+# market cap and the median of daily close x volume over the last 60 sessions.
+# RM300M cap and RM250k/day median traded value pass 221 of 882 (25%), the most-traded
+# ~220-250 names; the enforced figure (avg volume x price) reads ~1.7x the median, so
+# the same floors pass 246 on it. Method, percentiles, options and caveats:
+# docs/forward_planning/CR282_bursa_malaysia/bursa_liquidity_floors_2026-11-24.md.
+MICROCAP_FLOOR_MYR_M = 300
+ILLIQUID_AVG_DOLLAR_VOLUME_MYR = 250_000
 
 
 def _is_my(ticker: str) -> bool:

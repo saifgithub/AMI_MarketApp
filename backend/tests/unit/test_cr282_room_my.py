@@ -290,13 +290,13 @@ def test_the_my_wacc_inputs_are_forwarded_in_compose():
 
 def test_liquidity_floors_are_per_market():
     assert (microcap_floor_m("NVDA"), illiquid_floor("NVDA"), money_symbol("NVDA")) == (500, 1_000_000, "$")
-    assert (microcap_floor_m(KL), illiquid_floor(KL), money_symbol(KL)) == (2_100, 4_200_000, "RM")
+    assert (microcap_floor_m(KL), illiquid_floor(KL), money_symbol(KL)) == (300, 250_000, "RM")
 
 
 def test_a_bursa_liquidity_message_is_in_ringgit_against_the_ringgit_floor():
-    v = LiquidityVerdict(status=LiquidityStatus.EXCLUDED, ticker=KL, market_cap_usd_m=800.0)
+    v = LiquidityVerdict(status=LiquidityStatus.EXCLUDED, ticker=KL, market_cap_usd_m=250.0)
     msg = v.message()
-    assert "RM800M market cap is below AMI's RM2100M microcap floor" in msg and "$" not in msg
+    assert "RM250M market cap is below AMI's RM300M microcap floor" in msg and "$" not in msg
     ok = LiquidityVerdict(status=LiquidityStatus.PERMITTED, ticker=KL, market_cap_usd_m=120_000.0)
     assert "RM120,000M" in ok.message() and "$" not in ok.message()
     us = LiquidityVerdict(status=LiquidityStatus.EXCLUDED, ticker="XYZ", market_cap_usd_m=400.0)
@@ -306,8 +306,12 @@ def test_a_bursa_liquidity_message_is_in_ringgit_against_the_ringgit_floor():
 def test_a_ringgit_cap_is_judged_against_the_ringgit_floor_in_the_lookup():
     from app.services.liquidity_lookup import _verdict_from_info
 
-    small = _verdict_from_info({"market_cap_usd_m": 900.0, "avg_volume": 5_000_000}, KL, 2.0)
-    assert small.status is LiquidityStatus.EXCLUDED  # RM900M < RM2,100M
+    small = _verdict_from_info({"market_cap_usd_m": 250.0, "avg_volume": 5_000_000}, KL, 2.0)
+    assert small.status is LiquidityStatus.EXCLUDED  # RM250M < RM300M
+    thin = _verdict_from_info({"market_cap_usd_m": 900.0, "avg_volume": 100_000}, KL, 2.0)
+    assert thin.status is LiquidityStatus.EXCLUDED  # RM200k/day < RM250k/day
+    ok = _verdict_from_info({"market_cap_usd_m": 900.0, "avg_volume": 5_000_000}, KL, 2.0)
+    assert ok.status is LiquidityStatus.PERMITTED  # clears both Bursa floors
     big = _verdict_from_info({"market_cap_usd_m": 120_000.0, "avg_volume": 5_000_000}, KL, 10.0)
     assert big.status is LiquidityStatus.PERMITTED
     us = _verdict_from_info({"market_cap_usd_m": 900.0, "avg_volume": 5_000_000}, "XYZ", 2.0)
@@ -394,7 +398,7 @@ def test_a_bursa_liquid_only_line_carries_the_ringgit_floor(my_sheet):
         agent_id=AgentId.PORTFOLIO_MANAGER, mandate=mandate, ticker=KL,
         profile=my_sheet, transcript=[],
     )
-    assert "Avoid microcaps (< RM2100M market cap)" in sp
+    assert "Avoid microcaps (< RM300M market cap)" in sp
 
 
 def test_localize_money_leaves_cashtags_and_us_alone():
