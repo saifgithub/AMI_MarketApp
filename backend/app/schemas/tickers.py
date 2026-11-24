@@ -17,6 +17,21 @@ class TickerSuggestion(BaseModel):
     exchange: str
 
 
+class TickerCandidate(BaseModel):
+    """One name-search hit (CR283). `market` is `US` | `MY`."""
+
+    ticker: str
+    market: str
+    short_name: str
+    long_name: str
+
+
+class TickerResolveResponse(BaseModel):
+    query: str
+    market: str
+    candidates: list[TickerCandidate]
+
+
 class TickerValidateResponse(BaseModel):
     ticker: str
     exists: bool
