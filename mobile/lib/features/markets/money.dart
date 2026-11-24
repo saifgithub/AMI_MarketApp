@@ -11,6 +11,9 @@
 ///
 /// Negatives print `-$12.00`, never the `$-12.00` the old string-gluing
 /// produced when a P&L went below zero.
+///
+/// An amount that DISPLAYS as zero is zero: `-0.0` and `-0.001` print
+/// `$0.00` (or `+$0.00` when signed), never `-$0.00` / `+-$0.00` (DEF531).
 library;
 
 import 'package:ami_trade/features/markets/market.dart';
@@ -58,8 +61,12 @@ String formatMoney(
   bool signed = false,
   bool grouped = true,
 }) {
-  final body =
-      _formatter(market, decimals ?? (compact ? 1 : 2), compact, grouped)
-          .format(amount);
-  return signed && amount >= 0 ? '+$body' : body;
+  final fmt =
+      _formatter(market, decimals ?? (compact ? 1 : 2), compact, grouped);
+  // Judge zero by what the formatter would print, so rounding, compact
+  // scaling and locale digits all agree with the text on screen. A negative
+  // that rounds to zero would otherwise print `-$0.00` (and `+-$0.00` signed).
+  final displaysZero = fmt.format(amount.abs()) == fmt.format(0);
+  final body = displaysZero ? fmt.format(0) : fmt.format(amount);
+  return signed && (displaysZero || amount >= 0) ? '+$body' : body;
 }
