@@ -1,4 +1,4 @@
-# Counsel brief for the Malaysian lawyer: four narrow questions (CR267, 2026-11-20)
+# Counsel brief for the Malaysian lawyer: six narrow questions (CR267, 2026-11-20)
 
 Prepared 2026-11-20 for the founder to send to Malaysian counsel. It states facts and questions only. It contains no legal conclusions. Every web source was checked on 2026-11-20. Where a source is a law-firm summary and not the official text, it says so, and counsel should read the official text.
 
@@ -145,6 +145,51 @@ Bursa stays off for testers (CR282 ruling 3). The US Room continues on Alpha and
 
 Whether CR282 ships to users, and possibly how the Room presents its verdict in every market.
 
+## Question 5. Bursa Malaysia market data: what we may show, and from whom (added 2026-11-24, CR282/CR283)
+
+### Facts
+
+1. With Bursa switched on (Alpha only today; off for testers), the app shows Bursa Main and ACE Market stocks: delayed last price, daily price history and charts, and the stock code and name. AMI's simulated analysts also read those prices to write their analysis, and the simulated portfolio values positions at the delayed price.
+2. Our source today is Yahoo Finance, through the open-source `yfinance` library, for prices, and Yahoo's public search for turning a name into a code ("CIMB" to 1023). We have no agreement with Yahoo or with Bursa. Yahoo's terms are not a Bursa licence.
+3. The same source serves our US prices. US market data is a separate, later matter (CR007) and not part of this question.
+4. We have not been able to read Bursa's own market-data policy or price list: bursamalaysia.com blocks automated reading, and we have not yet contacted Bursa's data team.
+5. The app has paid plans (Trader $14.99, Floor Manager $34.99 a month); the Beta is free. Users are worldwide, including Malaysian residents.
+
+### Questions
+
+1. To show delayed Bursa prices, price history and charts in a mobile app (free and paid tiers), do we need a licence from Bursa Malaysia or one of its licensed data vendors? Does "delayed" change the answer, and is there a delay after which no licence is needed?
+2. Is it lawful to keep using Yahoo Finance as the source for Bursa data in a commercial app without our own agreement, or does that only shift the question to Yahoo's terms?
+3. May we store and display Bursa stock codes and company names (a list of about 1,100 listed companies) without a licence? Are listing names treated differently from prices?
+4. Does it matter that AMI's analysts use the prices to generate text, rather than only displaying them?
+
+### What we do meanwhile
+
+Bursa stays on in Alpha (internal) and off for testers. Before it goes on for users we will contact Bursa's data team for its terms; your answer tells us what to ask for.
+
+### What the answer would change
+
+Whether Bursa ships with Yahoo as its source, or waits for a licensed feed and the cost that comes with it.
+
+## Question 6. Reusing the SC's Shariah-compliant list (added 2026-11-24, CR282)
+
+### Facts
+
+1. The SC publishes its List of Shariah-Compliant Securities twice a year as a free PDF on sc.com.my. The app downloads it, reads the stock codes, and uses them to tell a user whether a Bursa stock is on the list, citing the SC and the list's date. We store the codes and the date only, not the PDF or its text.
+2. The SC website's disclaimer says its content may not be reproduced or stored "in another site or retrieval system" without prior written permission.
+
+### Questions
+
+1. Does storing the codes and showing "on the SC list as at <date>" need the SC's written permission under that disclaimer?
+2. If permission is needed, is there anything we should ask the SC to cover beyond codes and dates (for example, showing company names from the list)?
+
+### What we do meanwhile
+
+The SC check runs in Alpha only. We plan to write to the SC for permission before Bursa goes on for users; if you think that is unnecessary or should be worded a particular way, please say.
+
+### What the answer would change
+
+Whether the Shariah screen for Bursa can ship as built, or waits for the SC's reply.
+
 ## Out of scope for this brief
 
-We are not asking about any of the following. They are the public-release legal backlog (CR267 section 7) and other items that stay with later work: a full counsel review of the legal documents (Terms of Service, Privacy Policy, data deletion policy, cookie and other notices); the licensing position for market data (the yfinance replacement, CR007); payments, subscriptions and free-with-ads, and ads verification (CR225, CR226); the production cloud, managed Postgres and the vendor terms that come with them; independent security review; analytics; Arabic and Malay versions of the legal text; content verification of lessons (CR060); introducing Buy / Hold / Sell actions; the securities-law position of the product (AMI is a training simulator and is not licensed to give investment advice); the third-party grader vendor's terms (Jev) and DeepInfra's terms; EU, UK and US privacy law (GDPR, UK GDPR, CCPA); and Apple and Google store policy interpretation. If any of these should be added to this engagement, the founder will say so.
+We are not asking about any of the following. They are the public-release legal backlog (CR267 section 7) and other items that stay with later work: a full counsel review of the legal documents (Terms of Service, Privacy Policy, data deletion policy, cookie and other notices); the licensing position for US market data (the yfinance replacement, CR007; Bursa data is Question 5); payments, subscriptions and free-with-ads, and ads verification (CR225, CR226); the production cloud, managed Postgres and the vendor terms that come with them; independent security review; analytics; Arabic and Malay versions of the legal text; content verification of lessons (CR060); introducing Buy / Hold / Sell actions; the securities-law position of the product (AMI is a training simulator and is not licensed to give investment advice); the third-party grader vendor's terms (Jev) and DeepInfra's terms; EU, UK and US privacy law (GDPR, UK GDPR, CCPA); and Apple and Google store policy interpretation. If any of these should be added to this engagement, the founder will say so.
