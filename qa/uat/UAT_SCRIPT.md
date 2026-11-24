@@ -1167,7 +1167,7 @@ _Device (automated, Appium) · plans: floor_pass_
 1. A build with AMI_BURSA on; Alpha with MARKET_BURSA_ENABLED=true
 
 **Steps**
-1. With the chip on US, type a word that is both a US ticker and a Bursa short name (try TM: Toyota on the US side, Telekom Malaysia on Bursa) and wait for the box to settle
+1. With the chip on US, type british american (BTI in the US, British American Tobacco Malaysia 4162 on Bursa) and wait for the box to settle
 2. Read the two lines under the box; tap the Bursa line
 3. Switch the chip to MY, type the same word again and read the order of the two lines
 
@@ -1176,7 +1176,7 @@ _Device (automated, Appium) · plans: floor_pass_
 2. Tapping the Bursa line opens the Room on that .KL ticker
 3. The active market's line is listed first, so the order flips with the chip
 
-> CR283 (2026-11-24). TM is an UNVERIFIED example of a word in both markets (the Yahoo probe could not be re-run when this case was written); if it lists in only one market, note the word used that does. The single-market and lookup-down paths are in UAT-FLOOR-013 and UAT-FLOOR-015.
+> CR283 (2026-11-24). Both examples measured on Alpha 2026-11-24 (deploy #27): british american resolves to BTI and 4162.KL; AXIS to AXS and 5106.KL (a second word if the first changes). TM does not match Telekom Malaysia on Yahoo. The single-market and lookup-down paths are in UAT-FLOOR-013 and UAT-FLOOR-015.
 
 <a id="room"></a>
 ## Convene the Room

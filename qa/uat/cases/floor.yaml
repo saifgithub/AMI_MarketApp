@@ -186,14 +186,14 @@ cases:
     preconditions:
       - 'A build with AMI_BURSA on; Alpha with MARKET_BURSA_ENABLED=true'
     steps:
-      - 'With the chip on US, type a word that is both a US ticker and a Bursa short name (try TM: Toyota on the US side, Telekom Malaysia on Bursa) and wait for the box to settle'
+      - 'With the chip on US, type british american (BTI in the US, British American Tobacco Malaysia 4162 on Bursa) and wait for the box to settle'
       - 'Read the two lines under the box; tap the Bursa line'
       - 'Switch the chip to MY, type the same word again and read the order of the two lines'
     expected:
       - 'Under the box a "Which market?" heading and two lines appear, one per market, each with its ticker, company name and US or MY tag; the CONVENE THE ROOM button names no ticker and does nothing until a line is tapped'
       - 'Tapping the Bursa line opens the Room on that .KL ticker'
       - 'The active market''s line is listed first, so the order flips with the chip'
-    notes: 'CR283 (2026-11-24). TM is an UNVERIFIED example of a word in both markets (the Yahoo probe could not be re-run when this case was written); if it lists in only one market, note the word used that does. The single-market and lookup-down paths are in UAT-FLOOR-013 and UAT-FLOOR-015.'
+    notes: 'CR283 (2026-11-24). Both examples measured on Alpha 2026-11-24 (deploy #27): british american resolves to BTI and 4162.KL; AXIS to AXS and 5106.KL (a second word if the first changes). TM does not match Telekom Malaysia on Yahoo. The single-market and lookup-down paths are in UAT-FLOOR-013 and UAT-FLOOR-015.'
 
   - id: UAT-FLOOR-015
     title: With Bursa on and the name lookup unreachable, MY mode says so and US mode keeps working
