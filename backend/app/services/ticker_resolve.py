@@ -17,6 +17,7 @@ Network is isolated in `_fetch_search` so tests mock one function.
 
 from __future__ import annotations
 
+import re
 import time
 from dataclasses import dataclass
 
@@ -27,11 +28,10 @@ from app.trading_math.markets import Market, is_bursa_code
 
 SEARCH_URL = "https://query2.finance.yahoo.com/v1/finance/search"
 
-# Yahoo rejects non-browser clients on this host.
-_USER_AGENT = (
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 "
-    "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
-)
+# Measured 2026-11-24 (Mac and melehost): a bare "Mozilla/5.0" gets 200; a full
+# Chrome UA string gets 429 on every call (Yahoo expects a real browser to carry
+# its consent cookie). Do not "improve" this to a full browser string.
+_USER_AGENT = "Mozilla/5.0"
 _TIMEOUT_S = 6.0
 _QUOTES_COUNT = 10
 
@@ -99,6 +99,20 @@ def _to_candidate(entry: object, market: Market) -> TickerCandidate | None:
     return TickerCandidate(ticker=symbol, market=market, short_name=short, long_name=long)
 
 
+def _is_exact(c: TickerCandidate, typed: str) -> bool:
+    return typed in (c.ticker, c.ticker.removesuffix(".KL"), c.short_name.upper())
+
+
+def _name_starts(c: TickerCandidate, typed: str) -> bool:
+    pat = re.compile(re.escape(typed.lower()) + r"\b")
+    for name in (c.short_name, c.long_name):
+        n = " ".join(name.lower().split())
+        n = n.removeprefix("the ")
+        if pat.match(n):
+            return True
+    return False
+
+
 def resolve(q: str, market: Market, *, client: httpx.Client | None = None) -> list[TickerCandidate]:
     key = (market, q.strip().lower())
     now = time.monotonic()
@@ -113,6 +127,13 @@ def resolve(q: str, market: Market, *, client: httpx.Client | None = None) -> li
         if cand is not None and cand.ticker not in seen:
             seen.add(cand.ticker)
             out.append(cand)
+    # Yahoo's search is fuzzy ("hi" -> Hartford High Yield ETF, "the" -> The
+    # Boeing Company, "V" -> VOO), and the app takes the top hit: keep only a
+    # symbol/short-name match or a name that starts with the typed words, exact
+    # first, so a typed ticker never turns into a different company.
+    typed = " ".join(q.split())
+    out = [c for c in out if _is_exact(c, typed.upper()) or _name_starts(c, typed)]
+    out.sort(key=lambda c: not _is_exact(c, typed.upper()))
     if len(_cache) >= _CACHE_MAX:
         _cache.clear()
     _cache[key] = (now + CACHE_TTL_SECONDS, out)

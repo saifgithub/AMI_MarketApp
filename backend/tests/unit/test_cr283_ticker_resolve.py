@@ -98,14 +98,16 @@ def test_us_keeps_only_us_venues_and_class_share_dot(client, bursa_on, yahoo):
     r = client.get("/v1/tickers/resolve", params={"q": "CIMB", "market": "us"})
     assert r.status_code == 200
     tickers = [c["ticker"] for c in r.json()["candidates"]]
-    assert tickers == ["CIMB", "BRK.B"]
+    assert tickers == ["CIMB"]  # Berkshire is a US venue but not what was typed
     assert all(c["market"] == "US" for c in r.json()["candidates"])
+    r = client.get("/v1/tickers/resolve", params={"q": "berkshire", "market": "us"})
+    assert [c["ticker"] for c in r.json()["candidates"]] == ["BRK.B"]
 
 
 def test_us_works_with_bursa_off(client, bursa_off, yahoo):
     r = client.get("/v1/tickers/resolve", params={"q": "CIMB", "market": "US"})
     assert r.status_code == 200
-    assert [c["ticker"] for c in r.json()["candidates"]] == ["CIMB", "BRK.B"]
+    assert [c["ticker"] for c in r.json()["candidates"]] == ["CIMB"]
 
 
 def test_bursa_off_refuses_my_without_calling_yahoo(client, bursa_off, yahoo):
@@ -192,3 +194,51 @@ def test_http_layer_maps_status_and_garbage_to_unavailable():
 
 def test_real_client_sends_a_browser_user_agent():
     assert ticker_resolve._USER_AGENT.startswith("Mozilla/5.0")
+
+
+def test_an_exact_symbol_beats_yahoos_fuzzy_top_hit() -> None:
+    """Live 2026-11-24: Yahoo answered "hi" with HINC first and HI later; the app
+    takes the top hit, so without this a typed ticker convened a different company."""
+    from unittest.mock import patch
+
+    from app.services import ticker_resolve as tr
+    from app.trading_math.markets import Market
+
+    body = {"quotes": [
+        {"symbol": "HINC", "exchange": "NYQ", "quoteType": "EQUITY", "shortname": "Hinc"},
+        {"symbol": "HI", "exchange": "NYQ", "quoteType": "EQUITY", "shortname": "Hillenbrand"},
+    ]}
+    tr.clear_cache()
+    with patch.object(tr, "_fetch_search", return_value=body):
+        assert [c.ticker for c in tr.resolve("hi", Market.US)] == ["HI"]
+
+
+def test_fuzzy_hits_that_do_not_match_the_name_are_dropped() -> None:
+    """Live 2026-11-24 shapes: "the" returned The Boeing Company and "hi" Hartford
+    High Yield ETF; neither is what the user typed."""
+    from unittest.mock import patch
+
+    from app.services import ticker_resolve as tr
+    from app.trading_math.markets import Market
+
+    def body(*rows):
+        return {"quotes": [
+            {"symbol": s, "exchange": e, "quoteType": "EQUITY", "shortname": sn, "longname": ln}
+            for s, e, sn, ln in rows
+        ]}
+
+    cases = [
+        ("the", Market.US, body(("BA", "NYQ", "Boeing Company (The)", "The Boeing Company")), []),
+        ("hi", Market.US, body(("HINC", "NYQ", "Hartford High Yield ET", "Hartford High Yield ETF")), []),
+        ("apple", Market.US, body(("AAPL", "NMS", "Apple Inc.", "Apple Inc."),
+                                  ("APLE", "NYQ", "Apple Hospitality REIT", "Apple Hospitality REIT, Inc.")),
+         ["AAPL", "APLE"]),
+        ("public bank", Market.MY, body(("1295.KL", "KLS", "PBBANK", "Public Bank Berhad")), ["1295.KL"]),
+        ("cimb", Market.MY, body(("1023.KL", "KLS", "CIMB", "CIMB Group Holdings Berhad")), ["1023.KL"]),
+    ]
+    for q, m, b, want in cases:
+        tr.clear_cache()
+        with patch.object(tr, "_fetch_search", return_value=b):
+            assert [c.ticker for c in tr.resolve(q, m)] == want, q
+    tr.clear_cache()
+    tr.clear_cache()
