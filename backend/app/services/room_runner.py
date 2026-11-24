@@ -214,7 +214,12 @@ from app.services.tier_policy import pick_tier
 from app.services.sim_engine import get_sim_engine
 from app.services.verdict_outcomes import bank_verdict_outcome
 from app.services import opendosm_cpi
-from app.services.room_market import NOT_AVAILABLE_FOR_MARKET, localize_money, market_of_profile
+from app.services.room_market import (
+    NOT_AVAILABLE_FOR_MARKET,
+    localize_money,
+    market_of_profile,
+    my_fundamentals_footer,
+)
 from app.trading_math import bnm_calendar
 from app.trading_math.markets import Market, market_for, spec_for
 from app.trading_math.portfolio import shares_for_size
@@ -632,6 +637,10 @@ _FUNDAMENTALS_OPTIONAL_LIVE_ONLY_FIELDS = (
     "forward_pe", "price_to_sales", "ev_to_ebitda", "peg_ratio", "peg_basis",
     "fcf_yield", "dividend_yield", "sector", "industry",
     "analyst_target_price", "analyst_rating",
+    # DEF533 — the name of the index the relative-strength legs were measured
+    # against (set only for a `.KL` name, "FBM KLCI"). Without it the legs reached
+    # the sheet and the renderer fell back to its "S&P 500" default.
+    "benchmark_name",
     # CR145 Tier A — fetched since DEF053 and consumed only as the FCF-yield
     # numerator/denominator and inside `net_cash`, never rendered. Optional
     # rather than core: yfinance omits any of the three for some names, and an
@@ -8607,6 +8616,7 @@ class RoomRunner:
                 news_state=decision.news_feed.state.value,
                 social_state=decision.social_feed.state.value,
                 market_withheld=AgentId.MARKET_ANALYST in withheld,
+                ticker=ticker,
             )
 
             frozen = await asyncio.to_thread(
@@ -11373,6 +11383,13 @@ async def _compute_agent_text(
     # own threaded sheet — a missing/empty one makes the checker a no-op,
     # never a strike (unknowable is not unverifiable).
     text = annotate_sheet_mismatches(text, profile)
+    if (
+        agent_id is AgentId.FUNDAMENTALS_ANALYST
+        and market_of_profile(profile) is Market.MY
+        and not _output_guard_withholds(text)
+    ):
+        # DEF533 — a Bursa Fundamentals turn always names what is dark for the market.
+        text = f"{text}\n\n{my_fundamentals_footer()}"
     return text, geom_sig, envelope, envelope_parsed, data_gaps
 
 

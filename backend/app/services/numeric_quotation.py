@@ -168,6 +168,9 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
+from app.services.room_market import market_of_profile
+from app.trading_math.markets import Market, spec_for
+
 # ── Reused from risk_officer.py's CR219 R59-F2 normalization rule ───────────
 #
 # These names are defined HERE (this module is the new home) and re-exported
@@ -784,7 +787,7 @@ _MILLIONS_SCALED_FIELDS = frozenset(
 )
 
 
-def _sheet_value_phrase(mismatch: SheetMismatch) -> str:
+def _sheet_value_phrase(mismatch: SheetMismatch, market: Market = Market.US) -> str:
     """The sheet's own value, formatted for the annotation. Millions-scaled
     fields render in the sheet's own "$X,XXXM" shape (`sheet_value` there is
     the resolved raw-dollar amount, divided back down by the same
@@ -792,7 +795,10 @@ def _sheet_value_phrase(mismatch: SheetMismatch) -> str:
     number in its own unit (a P/E multiple, an RSI reading, a percent
     without the sign implied one way or the other)."""
     if mismatch.field_name in _MILLIONS_SCALED_FIELDS:
-        return f"${mismatch.sheet_value / 1_000_000.0:,.0f}M"
+        millions = mismatch.sheet_value / 1_000_000.0
+        symbol = spec_for(market).currency_symbol
+        sign = "-" if round(millions) < 0 else ""
+        return f"{sign}{symbol}{abs(millions):,.0f}M"
     return f"{mismatch.sheet_value:g}"
 
 
@@ -817,6 +823,7 @@ def annotate_sheet_mismatches(
     mismatches = find_sheet_mismatches(text, profile)
     if not mismatches:
         return text
+    market = market_of_profile(profile)
     notes = []
     for m in mismatches:
         # `claimed_raw` can carry one trailing space — `_NUMERAL_RE`'s
@@ -831,7 +838,7 @@ def annotate_sheet_mismatches(
         quoted = m.claimed_raw.strip()
         notes.append(
             f"AMI checked “{quoted}” against the fact sheet: "
-            f"the sheet's own figure is {_sheet_value_phrase(m)}, not "
+            f"the sheet's own figure is {_sheet_value_phrase(m, market)}, not "
             f"{quoted}."
         )
     return text + "\n\n[" + " ".join(notes) + " These are the figures of record.]"

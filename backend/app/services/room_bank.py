@@ -325,13 +325,22 @@ def policy_settings() -> dict[str, Any]:
     return {name: getattr(settings, name) for name in sorted(ROOM_POLICY_SETTINGS)}
 
 
+#: Bumped when the way a Bursa sheet is rendered or built changes in a way a frozen
+#: `.KL` sheet cannot absorb (DEF533). It is part of the variant for `.KL` only, so
+#: a new Room rebuilds the day's sheet and re-keys the bank; US keys are untouched.
+MY_SHEET_REVISION = 2
+
+
 def sheet_variant(
-    *, news_state: str, social_state: str, market_withheld: bool,
+    *, news_state: str, social_state: str, market_withheld: bool, ticker: str | None = None,
 ) -> str:
     """What may legitimately differ between two users' sheets for one ticker on
     one day. The sheet a user gets depends on which live feeds they were
     entitled to and on whether the Market desk is pulled back."""
-    return f"news={news_state}|social={social_state}|market={'withheld' if market_withheld else 'present'}"
+    variant = f"news={news_state}|social={social_state}|market={'withheld' if market_withheld else 'present'}"
+    if ticker and market_for(ticker) is Market.MY:
+        variant += f"|my_rev={MY_SHEET_REVISION}"
+    return variant
 
 
 @dataclass(frozen=True)
