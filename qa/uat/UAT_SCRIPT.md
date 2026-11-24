@@ -1508,7 +1508,7 @@ _Device (automated, Appium) · plans: floor_pass · uses LLM_
 1. The account has Room credits (the Convene sheet shows the price and the balance)
 
 **Steps**
-1. On the Floor tap CONVENE THE ROOM; read the price line; pick AAPL; tap CONVENE
+1. On the Floor tap CONVENE THE ROOM; read the price line; pick AAPL (if AAPL already ran on this account today, pick a US name it has not: MSFT, then NVDA); tap CONVENE
 2. Wait for the run to finish (up to ten minutes)
 
 **Expected**
@@ -1518,7 +1518,7 @@ _Device (automated, Appium) · plans: floor_pass · uses LLM_
 4. The run ends on a verdict card with a decision (BUY / SELL / HOLD style action), not an error or an empty card
 5. Any entry, stop or target the verdict card quotes reads $<price> with the $ in front, on an English and on a Malay-language phone, and never RM on a US ticker
 
-> CR282 lane F1 (2026-11-24): the verdict card and the existing-trade line use the one money formatter. The executor does not assert the format; read it from the run's verdict screenshot.
+> CR282 lane F1 (2026-11-24): the verdict card and the existing-trade line use the one money formatter. The executor does not assert the format; read it from the run's verdict screenshot. Same inputs, same Room (WP-24): a second same-day run on a ticker whose inputs have not changed shows "Inputs unchanged since your last run ... No credits used." instead of streaming, which is correct behaviour and not this case (AMI-DL-29) - pick another name.
 
 #### UAT-ROOM-027 — After a Room a dismissible card asks if the verdict made sense, and a response can be reported
 

@@ -237,7 +237,7 @@ cases:
     preconditions:
       - 'The account has Room credits (the Convene sheet shows the price and the balance)'
     steps:
-      - 'On the Floor tap CONVENE THE ROOM; read the price line; pick AAPL; tap CONVENE'
+      - 'On the Floor tap CONVENE THE ROOM; read the price line; pick AAPL (if AAPL already ran on this account today, pick a US name it has not: MSFT, then NVDA); tap CONVENE'
       - 'Wait for the run to finish (up to ten minutes)'
     expected:
       - 'The Convene sheet states the Room price and the user''s credits before anything is charged, and says how much live news and social data can add ("up to +4 more ...") so the final charge is never a surprise (DEF495)'
@@ -245,7 +245,7 @@ cases:
       - 'The Room opens on AAPL and streams desk by desk'
       - 'The run ends on a verdict card with a decision (BUY / SELL / HOLD style action), not an error or an empty card'
       - 'Any entry, stop or target the verdict card quotes reads $<price> with the $ in front, on an English and on a Malay-language phone, and never RM on a US ticker'
-    notes: 'CR282 lane F1 (2026-11-24): the verdict card and the existing-trade line use the one money formatter. The executor does not assert the format; read it from the run''s verdict screenshot.'
+    notes: 'CR282 lane F1 (2026-11-24): the verdict card and the existing-trade line use the one money formatter. The executor does not assert the format; read it from the run''s verdict screenshot. Same inputs, same Room (WP-24): a second same-day run on a ticker whose inputs have not changed shows "Inputs unchanged since your last run ... No credits used." instead of streaming, which is correct behaviour and not this case (AMI-DL-29) - pick another name.'
 
   - id: UAT-ROOM-017
     title: The Convene picker opens pre-filled when launched for a ticker
