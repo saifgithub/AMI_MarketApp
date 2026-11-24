@@ -15,7 +15,12 @@ How it proves it:
      prompt, the trader grammar, the forward-catalyst text — and (c) the derived
      prompt version of every agent (the exact input to `room_bank.policy_version`).
   2. The tests re-render the frozen sheet and compare. A frozen sheet rather than
-     a live build keeps the comparison independent of today's date.
+     a live build keeps the comparison independent of today's date, EXCEPT for
+     one thing the sheet cannot freeze: `news_headlines` holds each headline's
+     absolute `published_at`, and `format_headline` renders its age ("11d ago")
+     against the clock at render time (DEF543 — the golden went red 24h after it
+     was minted). `pin_render_clock` therefore pins that clock to the golden's own
+     instant, so the comparison holds on any day.
   3. A freshly built US sheet must equal the frozen one except for the keys that
      depend on today's date, which proves the BUILD side (EDGAR overlays, WACC,
      catalyst) also stayed US-identical.
@@ -64,6 +69,11 @@ import test_prompt_data_parity as P  # noqa: E402  (needs the path insert above)
 
 GOLDEN = _THIS_DIR / "fixtures" / "cr282_room_us_golden.json"
 TICKER = "NVDA"
+
+# The instant the golden was minted: its headlines are `published_at = then - 10d
+# - 1h` (test_prompt_data_parity._NEWS_PUBLISHED_AT, 1794609226), so this is the
+# clock at which they read "10d ago" — the age the golden's hashes were taken at.
+GOLDEN_CLOCK = datetime(2026, 11, 23, 23, 33, 46, tzinfo=timezone.utc)
 
 # Sheet keys whose value is a function of today's date (the run-date anchor and
 # every relative-day phrase computed against it). The live fixtures are written
@@ -155,6 +165,22 @@ def install_seams(monkeypatch, ticker: str = TICKER) -> None:
             ratio_baselines.record_observation(ticker, metric, value, on=today - timedelta(days=i))
 
 
+def _clock_at(instant: datetime) -> type:
+    class _Clock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return instant if tz is None else instant.astimezone(tz)
+
+    return _Clock
+
+
+def pin_render_clock(monkeypatch, instant: datetime = GOLDEN_CLOCK) -> None:
+    """Pin the clock a US prompt rendering reads (DEF543): the relative-age label
+    in `news_context._relative_age`. A new clock reader in a render path is one
+    more module here, not a new leak."""
+    monkeypatch.setattr(news_context, "datetime", _clock_at(instant))
+
+
 def _h(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
@@ -238,12 +264,47 @@ def _load() -> dict:
 
 def test_us_renderings_are_byte_identical_to_pre_cr282(monkeypatch):
     install_seams(monkeypatch)
+    pin_render_clock(monkeypatch)
     golden = _load()
     sheet = decode_profile(golden["sheet"])
     now = render_corpus(sheet)
     assert set(now) == set(golden["corpus"]), "corpus keys changed — regenerate deliberately"
     changed = sorted(k for k in now if now[k] != golden["corpus"][k])
     assert not changed, f"US rendering changed (re-keys every banked US Room): {changed[:8]}"
+
+
+@pytest.mark.parametrize("today", [
+    datetime(2026, 11, 24, 19, 0, tzinfo=timezone.utc),
+    datetime(2026, 11, 24, 22, 58, tzinfo=timezone.utc),
+    datetime(2026, 11, 25, 0, 30, tzinfo=timezone.utc),
+    datetime(2027, 8, 1, 12, 0, tzinfo=timezone.utc),
+])
+def test_the_golden_holds_whatever_day_it_is(monkeypatch, today):
+    """DEF543 — the real clock moves, the pinned render clock does not: the same
+    corpus on every day, including the one the unpinned comparison went red on."""
+    install_seams(monkeypatch)
+    golden = _load()
+    monkeypatch.setattr(news_context, "datetime", _clock_at(today))
+    pin_render_clock(monkeypatch)
+    assert render_corpus(decode_profile(golden["sheet"])) == golden["corpus"]
+
+
+def test_the_only_date_relative_text_in_a_us_rendering_is_the_headline_age(monkeypatch):
+    """DEF543 — the leak, pinned: with the clock NOT pinned, moving it changes the
+    frozen sheet's rendering through the headline age label and nothing else."""
+    import re
+
+    from app.services.room_prompts import _format_profile
+
+    sheet = decode_profile(_load()["sheet"])
+    enable_default_off_flags(monkeypatch)
+    seen = {}
+    for label, instant in (("then", GOLDEN_CLOCK), ("later", GOLDEN_CLOCK.replace(year=2027))):
+        monkeypatch.setattr(news_context, "datetime", _clock_at(instant))
+        seen[label] = _format_profile(sheet)
+    assert seen["then"] != seen["later"]
+    age = re.compile(r"\(PUBSENT, \d+d ago\)")
+    assert age.sub("(AGE)", seen["then"]) == age.sub("(AGE)", seen["later"])
 
 
 def test_us_derived_prompt_versions_are_unchanged(monkeypatch):
