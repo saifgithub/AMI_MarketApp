@@ -156,6 +156,14 @@ def _append_journal(
         pass
 
 
+def net_of_fees(gross: float, fees: float) -> float:
+    """DEF542 — the realised P&L a user reads: price P&L minus the fees the round
+    trip paid. A break-even Bursa round trip is -RM16.42, not +RM0.00, because the
+    book really lost it. Gross stays on the trade row and in outcome scoring; only
+    the Journal's closed entry is net."""
+    return round(gross - fees, 2)
+
+
 def _as_utc_iso(iso: str | None) -> str | None:
     """A ledger timestamp as a tz-aware ISO string. Lot dates come off stored rows
     and can be naive (SQLite); a naive string reads as LOCAL time on the client,
@@ -180,7 +188,8 @@ def _journal_sell_close(user_id: UUID, sell: SimTrade) -> bool:
     effect = get_sim_engine().sell_close_effect(user_id, sell)
     if effect is None:
         return False
-    closed_qty, realised, still_held, position_opened_at = effect
+    closed_qty, gross, still_held, position_opened_at, fees = effect
+    realised = net_of_fees(gross, fees)
     market = market_for(sell.ticker)
     price = sell.entry_price
     closed_at = sell.opened_at.isoformat()
@@ -195,6 +204,7 @@ def _journal_sell_close(user_id: UUID, sell: SimTrade) -> bool:
         "closed_at": closed_at,
         "closed_price": price,
         "realised_pnl": realised,
+        **({"fees": fees} if fees > 0 else {}),
     }
     summary = f"Sold {closed_qty:g} at {format_money(price, market)}."
     if still_held > 1e-6:
@@ -217,6 +227,7 @@ def _journal_sell_close(user_id: UUID, sell: SimTrade) -> bool:
                 "status": "manual",
                 "closed_price": price,
                 "realised_pnl": realised,
+                **({"fees": fees, "gross_realised_pnl": gross} if fees > 0 else {}),
             },
         },
     ))
@@ -230,6 +241,7 @@ def closed_trade_payload(
     closed_price: float | None,
     realised_pnl: float,
     status: str,
+    fees: float = 0.0,
 ) -> dict:
     """CR222 §3 — the close entry's payload: the trade, the realised outcome,
     and the registration the position was opened with.
@@ -242,15 +254,25 @@ def closed_trade_payload(
     `outcome` is a fresh block rather than fields merged into `trade`: the
     trade JSON is a shipped shape the client parses, and adding keys to it
     would put a new fact where an old parser will not look for it.
+
+    DEF542 — `realised_pnl` here is the GROSS (price-only) figure and `fees` the
+    round trip's total; the entry carries the NET (`realised_pnl` minus `fees`)
+    in both blocks, the fees beside it, and the gross in `outcome` for audit.
+    With no fees the payload is exactly what it was.
     """
-    payload: dict = {
-        "trade": trade.to_json(),
-        "outcome": {
-            "status": status,
-            "closed_price": closed_price,
-            "realised_pnl": realised_pnl,
-        },
+    net = net_of_fees(realised_pnl, fees)
+    trade_json = trade.to_json()
+    outcome: dict = {
+        "status": status,
+        "closed_price": closed_price,
+        "realised_pnl": net,
     }
+    if fees > 0:
+        trade_json["realised_pnl"] = net
+        trade_json["fees"] = fees
+        outcome["fees"] = fees
+        outcome["gross_realised_pnl"] = realised_pnl
+    payload: dict = {"trade": trade_json, "outcome": outcome}
     registered = registered_preregistration(user_id, trade.id)
     if registered is not None:
         payload[PREREGISTRATION_PAYLOAD_KEY] = registered
@@ -279,13 +301,14 @@ def journal_bracket_closes(
             continue
         try:
             won = u.new_status == "won"
+            net = net_of_fees(u.realised_pnl, u.fees)
             store.append(JournalEntryCreate(
                 user_id=user_id,
                 entry_type=EntryType.SIM_TRADE,
                 reference_id=t.id,
                 title=(
                     f"Closed {t.ticker} ({u.new_status.upper()}) — "
-                    f"{format_money(u.realised_pnl, market, signed=True)}"
+                    f"{format_money(net, market, signed=True)}"
                 ),
                 summary=(
                     f"{'Target hit' if won else 'Stop hit'} "
@@ -303,6 +326,7 @@ def journal_bracket_closes(
                     closed_price=u.closed_price,
                     realised_pnl=u.realised_pnl,
                     status=u.new_status,
+                    fees=u.fees,
                 ),
             ))
         except Exception:  # pragma: no cover
@@ -314,24 +338,27 @@ def journal_manual_close(user_id: UUID, closed: SimTrade) -> None:
     a failed write never fails the close."""
     try:
         market = market_for(closed.ticker)
+        fees = closed.round_trip_fees or 0.0
+        net = net_of_fees(closed.realised_pnl, fees)
         get_journal_store().append(JournalEntryCreate(
             user_id=user_id,
             entry_type=EntryType.SIM_TRADE,
             reference_id=closed.id,
             title=(
                 f"Closed {closed.ticker} (MANUAL) — "
-                f"{format_money(closed.realised_pnl, market, signed=True)}"
+                f"{format_money(net, market, signed=True)}"
             ),
             summary=f"Closed at {format_money(closed.closed_price, market)}.",
             ticker=closed.ticker,
             tags=["sim_trade", "closed", "manual"],
-            outcome=Outcome.WIN if closed.realised_pnl >= 0 else Outcome.LOSS,
+            outcome=Outcome.WIN if net >= 0 else Outcome.LOSS,
             payload=closed_trade_payload(
                 user_id=user_id,
                 trade=closed,
                 closed_price=closed.closed_price,
                 realised_pnl=closed.realised_pnl,
                 status="manual",
+                fees=fees,
             ),
         ))
     except Exception:  # pragma: no cover

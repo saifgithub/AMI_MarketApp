@@ -119,15 +119,15 @@ def test_bursa_sell_of_the_whole_position_journals_a_closed_entry_in_ringgit(bur
     sell = _fill(sim, uid, "1155.KL", Side.SELL, 100)
     opened, closed = _entries(uid)
     assert opened.title == "BUY 100 1155.KL @ RM10.00"
-    assert closed.title == "Closed 1155.KL (MANUAL) — +RM100.00"
+    assert closed.title == "Closed 1155.KL (MANUAL) — +RM81.27"
     assert closed.summary == "Sold 100 at RM11.00."
     assert closed.reference_id == sell.trade.id
     assert closed.outcome == "win"
     t = closed.payload["trade"]
     assert t["status"] == "closed"
     assert t["closed_price"] == 11.0
-    assert t["realised_pnl"] == 100.0
-    assert closed.payload["outcome"]["realised_pnl"] == 100.0
+    assert t["realised_pnl"] == 81.27  # DEF542: net of fees 9.30 + 9.43
+    assert closed.payload["outcome"]["realised_pnl"] == 81.27
 
 
 def test_us_sell_journals_a_closed_entry_with_a_leading_minus_def532(bursa_on):
@@ -151,7 +151,7 @@ def test_partial_sell_says_what_is_still_held(bursa_on):
     _fill(sim, uid, "1155.KL", Side.SELL, 100)
     _, closed = _entries(uid)
     assert closed.summary == "Sold 100 at RM10.50. 200 still held."
-    assert closed.title == "Closed 1155.KL (MANUAL) — +RM50.00"
+    assert closed.title == "Closed 1155.KL (MANUAL) — +RM36.66"
 
 
 def test_a_sell_the_ledger_cannot_place_keeps_its_opened_entry():
@@ -199,6 +199,6 @@ def test_my_bracket_close_by_the_sweep_is_journaled_in_ringgit(bursa_on):
     closed = [e for e in _entries(uid) if "closed" in e.tags]
     assert len(closed) == 1
     e = closed[0]
-    assert e.title == "Closed 1155.KL (LOST) — -RM150.00"
+    assert e.title == "Closed 1155.KL (LOST) — -RM168.41"
     assert e.summary == "Stop hit at RM8.50."
-    assert e.payload["trade"]["realised_pnl"] == -150.0
+    assert e.payload["trade"]["realised_pnl"] == -168.41  # DEF542: net of fees 9.30 + 9.11

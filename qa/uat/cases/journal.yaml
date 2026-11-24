@@ -170,9 +170,9 @@ cases:
     expected:
       - 'The opened entry reads "BUY 100 1155.KL @ RM<price>" with "Opened at RM<price>" and no $ anywhere'
       - 'The closed entry title and summary read "Closed 1155.KL (MANUAL) — +RM<amount>" (or "— -RM<amount>") and "Sold 100 at RM<price>."'
-      - 'Closed price and Realised P&L rows read RM<price> and +RM<amount> or -RM<amount> (a break-even close still shows the row, as +RM0.00); a US trade entry beside it still reads $'
+      - 'Closed price and Realised P&L rows read RM<price> and +RM<amount> or -RM<amount>; Realised P&L is net of fees and a Fees row shows them (a Bursa round trip sold at the buy price reads -RM<fees>, e.g. buy and sell 100 6888.KL @ RM1.61 reads Realised P&L -RM16.42 and Fees RM16.42, title "— -RM16.42"); a US trade entry beside it still reads $ with no Fees row (DEF542)'
       - 'On the closed entry, Opened at is the time of the BUY and Closed at the time of the sell (a buy at 5:35 PM sold at 5:36 PM reads Opened at 5:35 PM, never the close time) (DEF540)'
-    notes: 'CR282 lane C/F1 + DEF532 (AT:B1): journal text takes its symbol from the ticker''s market (trading_math.markets.format_money) and the detail rows from formatMoney; a sell that closes shares writes the closed entry (it used to stay "SELL … Opened at $…"), and a Bursa stop/target close by the sweep is journaled too. Asserted at API level by UAT-JRNL-014 when Bursa is in session. Active since 2026-11-24: needs a run on build 0.1.0+130 or later (not release-blocking; a store build cannot run it).'
+    notes: 'CR282 lane C/F1 + DEF532 (AT:B1): journal text takes its symbol from the ticker''s market (trading_math.markets.format_money) and the detail rows from formatMoney; a sell that closes shares writes the closed entry (it used to stay "SELL … Opened at $…"), and a Bursa stop/target close by the sweep is journaled too. DEF542: closed-entry Realised P&L is net of the stored fees of both legs (buy leg pro-rated by shares sold), gross stays on the trade row. Asserted at API level by UAT-JRNL-014 when Bursa is in session. Active since 2026-11-24: needs a run on build 0.1.0+130 or later (not release-blocking; a store build cannot run it).'
 
   - id: UAT-JRNL-013
     title: Selling a whole US position writes a closed Journal entry with the realised P&L in dollars

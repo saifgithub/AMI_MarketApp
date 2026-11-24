@@ -323,6 +323,14 @@ class _PayloadBlock extends StatelessWidget {
               formatMoney(realisedPnl,
                   market: tradeMarket, signed: true, grouped: false)));
         }
+        // DEF542 — Realised P&L above is NET of fees; this row says what the
+        // round trip paid. Absent (not 0) when the market charged nothing.
+        final fees = t['fees'];
+        if (isClosed && fees is num && fees > 0) {
+          rows.add(_KV(
+              l.journalKvFees,
+              formatMoney(fees, market: tradeMarket, grouped: false)));
+        }
         if (verdictRef != null && verdictRef.isNotEmpty) {
           // First 8 chars match the short_id surfaced in the bug-report UI.
           rows.add(_KV('From verdict', verdictRef.substring(0, 8)));

@@ -6022,4 +6022,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String get tradeTicketFeeTotal => 'Jumlah yuran';
+
+  @override
+  String get journalKvFees => 'Fees';
 }

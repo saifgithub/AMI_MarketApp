@@ -2730,6 +2730,7 @@
         "journalFilterBlocked": "a1f4014f85aa",
         "journalFilterBrief": "b1762f76a9b4",
         "journalFilterChallenges": "6532ac8d28da",
+        "journalKvFees": "6d80486cc33a",
         "journalRetentionWarning": "d1ded2c21362",
         "leagueTitle": "3cd0bba23781",
         "lessonDeckBack": "262c8b040299",
@@ -3628,5 +3629,6 @@
     "tradeTicketFeeTotal": "Jumlah yuran",
     "floorOmniboxLookupDown": "Can't look up names right now — use the 4-digit code.",
     "floorOmniboxChooseMarket": "Which market?",
-    "floorMarketChipSemantics": "Market: {market}. Tap to switch."
+    "floorMarketChipSemantics": "Market: {market}. Tap to switch.",
+    "journalKvFees": "Fees"
 }

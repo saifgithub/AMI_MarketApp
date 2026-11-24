@@ -159,6 +159,12 @@ class SimTrade:
     status: TradeStatus = "open"
     verdict_ref: UUID | None = None
     realised_pnl: float = 0.0
+    #: DEF542 — the fee this fill itself paid (`sim_trades.toll_charged`; None =
+    #: predates the toll). Deliberately NOT in `to_json`: that shape is shipped.
+    toll_charged: float | None = None
+    #: DEF542 — set only by `manual_close`: the fees of the whole round trip
+    #: (buy leg for the shares sold + the exit fee). None everywhere else.
+    round_trip_fees: float | None = None
 
     @classmethod
     def from_row(cls, row: SimTradeRow) -> "SimTrade":
@@ -180,6 +186,9 @@ class SimTrade:
             status=row.status,  # type: ignore[assignment]
             verdict_ref=row.verdict_ref,
             realised_pnl=float(row.realised_pnl or 0),
+            toll_charged=(
+                float(row.toll_charged) if row.toll_charged is not None else None
+            ),
         )
 
     def to_json(self) -> dict:
@@ -571,6 +580,20 @@ class OutcomeUpdate:
     new_status: TradeStatus
     closed_price: float
     realised_pnl: float
+    #: DEF542 — fees of this lot's round trip (buy leg pro-rated to the shares
+    #: sold + the exit fee charged). `realised_pnl` stays GROSS (price-only):
+    #: outcome scoring reads it. The journal nets it.
+    fees: float = 0.0
+
+
+def prorated_fee(fee_total: float | None, qty_total: float, qty_part: float) -> float:
+    """DEF542 — the share of one fill's stored fee that belongs to `qty_part` of
+    its `qty_total` shares. The ONE pro-rating rule: the FIFO sell path and both
+    bracket/manual close paths all call it, so the journal's fees cannot drift
+    between exits. NULL fee (fill predates the toll) is 0, never an estimate."""
+    if not fee_total or qty_total <= 0 or qty_part <= 0:
+        return 0.0
+    return float(fee_total) * min(qty_part, qty_total) / qty_total
 
 
 # ── Engine ────────────────────────────────────────────────────────────────
@@ -1577,11 +1600,11 @@ class SimEngine:
 
     def sell_close_effect(
         self, user_id: UUID, sell: SimTrade,
-    ) -> tuple[float, float, float, str | None] | None:
+    ) -> tuple[float, float, float, str | None, float] | None:
         """DEF532 — what a filled long-closing SELL realised, from the FIFO ledger.
 
-        `(shares closed, realised P&L, shares still held, position opened_at)`,
-        or None when the sell
+        `(shares closed, realised P&L, shares still held, position opened_at,
+        round-trip fees)`, or None when the sell
         closed nothing (a short open, or a ledger that cannot place it). It is the
         difference between the lot picture with and without this sell, over the same
         `compute_lots_fifo` the holding detail reads, so the journal and the lot
@@ -1591,6 +1614,11 @@ class SimEngine:
         this sell drew shares from, i.e. when the closed position was OPENED. The
         sell's own `opened_at` is when the SELL order filled (the close time) and
         must never be reported as the position's open time.
+
+        DEF542: `realised P&L` stays the GROSS price-only figure; `round-trip
+        fees` is the stored buy-leg fee of the shares this sell drew (pro-rated
+        by quantity, via `prorated_fee`) plus the sell's own stored fee. The
+        caller nets them.
         """
         ticker = sell.ticker.upper().strip()
         with get_session() as s:
@@ -1625,11 +1653,21 @@ class SimEngine:
         position_opened_at = (
             min(drawn, key=lambda l: str(l.entry_date)).entry_date if drawn else None
         )
+        row_by_id = {str(r.id): r for r in rows}
+        buy_fees = 0.0
+        for l in drawn:
+            taken = l.quantity_closed - before_closed.get(l.entry_trade_id, 0.0)
+            buy = row_by_id.get(str(l.entry_trade_id))
+            if buy is not None:
+                buy_fees += prorated_fee(buy.toll_charged, float(buy.quantity), taken)
+        sell_row = row_by_id.get(str(sell.id))
+        sell_fee = float(sell_row.toll_charged or 0.0) if sell_row is not None else 0.0
         return (
             round(closed, 6),
             round(realised, 2),
             round(sum(l.quantity_open for l in after), 6),
             position_opened_at,
+            round(buy_fees + sell_fee, 2),
         )
 
     def option_lots(self, user_id: UUID, underlying: str | None = None) -> dict:
@@ -4803,23 +4841,28 @@ class SimEngine:
             if p_row is not None else min(float(t.quantity), lot_left)
         )
         t.realised_pnl = round((price - float(t.entry_price)) * sold, 2)
-        self._charge_exit_fee(p_row, t, price * sold)
+        # DEF542 — read the buy-leg fee BEFORE `_charge_exit_fee` folds the exit
+        # fee into the same column.
+        buy_fee = prorated_fee(t.toll_charged, float(t.quantity), sold)
+        exit_fee = self._charge_exit_fee(p_row, t, price * sold)
         updates.append(OutcomeUpdate(
             trade_id=t.id, new_status=new_status,  # type: ignore[arg-type]
             closed_price=price, realised_pnl=float(t.realised_pnl),
+            fees=round(buy_fee + exit_fee, 2),
         ))
 
     @staticmethod
-    def _charge_exit_fee(p_row, t: SimTradeRow, sold_notional: float) -> None:
+    def _charge_exit_fee(p_row, t: SimTradeRow, sold_notional: float) -> float:
         """CR282 — a Bursa exit (bracket or manual close) pays the Bursa fee
         schedule, debited from the MYR book and added to the closed lot's
         `toll_charged`. A no-op on the US book, which charges nothing on these
-        exits today."""
+        exits today. Returns the fee charged (0.0 when none), DEF542."""
         if p_row is None or p_row.kind != _BOOK_KIND[Market.MY] or sold_notional <= 0:
-            return
+            return 0.0
         fees = bursa_fees(sold_notional)
         p_row.current_cash = round(float(p_row.current_cash) - fees.total, 2)
         t.toll_charged = round(float(t.toll_charged or 0.0) + fees.total, 2)
+        return fees.total
 
     def manual_close(self, user_id: UUID, trade_id: UUID) -> SimTrade | None:
         with get_session() as s:
@@ -4867,9 +4910,12 @@ class SimEngine:
                 if p_row is not None else float(row.quantity)
             )
             row.realised_pnl = round((price - float(row.entry_price)) * sold, 2)
-            self._charge_exit_fee(p_row, row, price * sold)
+            buy_fee = prorated_fee(row.toll_charged, float(row.quantity), sold)
+            exit_fee = self._charge_exit_fee(p_row, row, price * sold)
             s.flush()
-            return SimTrade.from_row(row)
+            closed = SimTrade.from_row(row)
+            closed.round_trip_fees = round(buy_fee + exit_fee, 2)
+            return closed
 
     def clear(self) -> None:
         with get_session() as s:
