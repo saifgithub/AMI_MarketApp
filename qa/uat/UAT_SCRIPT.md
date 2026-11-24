@@ -2216,7 +2216,7 @@ _Device (automated, Appium) · plans: floor_pass_
 _Device (automated, Appium) · plans: floor_pass_
 
 **Steps**
-1. Portfolio > New trade; ticker NFLX; quantity 100 (about 60% of the book); SUBMIT TRADE
+1. Portfolio > New trade; ticker NFLX; choose a quantity worth more than the single-name cap but less than the cash held (read the book value first: roughly 40-60% of it; the old "100 shares" stopped matching once the book changed size, AMI-DL-24); SUBMIT TRADE
 2. Close the ticket, then open Portfolio > New trade again
 
 **Expected**
@@ -2543,7 +2543,7 @@ _API (automated, live Alpha) · plans: floor_pass_
 _Device (automated, Appium) · plans: floor_pass_
 
 **Steps**
-1. Portfolio > ADD in the WATCHLIST section; type a ticker; confirm
+1. Portfolio > HISTORY tab (US book); scroll below the closed trades to the WATCHLIST section (since CR188 it lives there, not in its own tab; hidden on the Bursa book); ADD; type a ticker; confirm
 2. Read the watchlist
 
 **Expected**

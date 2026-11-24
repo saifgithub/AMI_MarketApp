@@ -151,7 +151,7 @@ cases:
     layer: device
     plans: [floor_pass]
     steps:
-      - 'Portfolio > ADD in the WATCHLIST section; type a ticker; confirm'
+      - 'Portfolio > HISTORY tab (US book); scroll below the closed trades to the WATCHLIST section (since CR188 it lives there, not in its own tab; hidden on the Bursa book); ADD; type a ticker; confirm'
       - 'Read the watchlist'
     expected:
       - 'The ticker is listed under WATCHLIST'
