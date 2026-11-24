@@ -117,3 +117,7 @@ Closes the "Malay Mail / Bernama news feed" item deferred in Lane E.
 ## Bursa liquidity floors (measured 2026-11-24, branch `lane/cr282-bursa-floors`)
 
 1. Measured 882 `.KL` names (SC list codes + 18 large names). Lane E's RM2,100M / RM4.2M passed 64 (7%). Recommended **RM300M cap, RM250k/day** passes 221 (25%; 246 on the enforced avg-volume x price metric). **Pending Saiful's confirmation.** Detail: [`bursa_liquidity_floors_2026-11-24.md`](bursa_liquidity_floors_2026-11-24.md).
+
+## Counsel ruling (2026-11-24)
+
+Saiful, relaying counsel: "On all 3, since these are internal testers, counsel says we are covered." The three are counsel brief Question 4 (CMSA investment advice), Question 5 (Bursa market data via Yahoo) and Question 6 (SC Shariah-list reuse), plus the Malay Mail / Bernama news permission. Scope confirmed by Saiful the same day: **internal groups only** (TestFlight internal group, Play internal track). Nothing changes in the builds: `--bursa` stays internal-only and is still refused on Beta and store builds (`test_cr282_bursa_build_containment.py`). Before Bursa reaches Beta (external) testers or the store, all four reopen.
