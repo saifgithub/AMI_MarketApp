@@ -2275,6 +2275,9 @@ _Device (automated, Appium) · plans: floor_pass_
 
 _Device (automated, Appium) · plans: floor_pass_
 
+**Preconditions**
+1. The mandate single-name cap is below 100% (YOU > MANDATE). A user-set cap of 100% cannot be broken by a cash-funded order, so on such an account report this case skipped ("cap 100%") and do not edit the mandate (AMI-DL-26)
+
 **Steps**
 1. Portfolio > New trade; ticker NFLX; choose a quantity worth more than the single-name cap but less than the cash held (read the book value first: roughly 40-60% of it; the old "100 shares" stopped matching once the book changed size, AMI-DL-24); SUBMIT TRADE
 2. Close the ticket, then open Portfolio > New trade again
@@ -2294,15 +2297,15 @@ _Device (automated, Appium) · plans: floor_pass_
 2. Alpha with MARKET_BURSA_ENABLED=true (on since 2026-11-24)
 
 **Steps**
-1. Portfolio: tap BURSA in the US | BURSA switch; read the empty state; tap NEW BURSA TRADE
+1. Portfolio: tap BURSA in the US | BURSA switch; read the tab (empty state on a book with no Bursa history); tap NEW BURSA TRADE (NEW TRADE on a used book)
 2. Enter 1155.KL; read the quantity field and the fee estimate; buy 100
 3. Open a new Bursa ticket, enter 1155.KL and quantity 150
 4. Switch back to US
 
 **Expected**
-1. The BURSA tab shows "Your Bursa book starts with RM50,000. Place your first Bursa trade to begin." and the quantity starts at 100 with the amber hint "Bursa trades in board lots of 100"
+1. On a book with no Bursa history the BURSA tab shows "Your Bursa book starts with RM50,000. Place your first Bursa trade to begin."; on a used book it shows the RM book and its history instead. The ticket quantity starts at 100 with no hint (100 is a valid lot)
 2. The ticket lists ESTIMATED FEES (Brokerage, Clearing, Stamp duty, Total fees) in RM; the fill reads "Filled: BUY 100 1155.KL @ RM<price>" and cash drops by the price plus fees
-3. A quantity of 150 shows the board-lot hint and SUBMIT TRADE stays disabled; the minus and plus buttons step by 100
+3. A quantity of 150 shows the amber hint "Bursa trades in board lots of 100. Enter a multiple of 100." and SUBMIT TRADE stays disabled; the minus and plus buttons step by 100
 4. Switching to US shows the dollar book untouched, and every amount there still reads $
 
 > CR282 phase 1 acceptance (docs/forward_planning/CR282_bursa_malaysia/CR282_bursa_malaysia.md). Fee figures are UNVERIFIED research figures per that doc; do not assert amounts. Active since 2026-11-24: the backend precondition is met on Alpha, so this needs a run on build 0.1.0+130 or later (not release-blocking; a store build cannot run it). The API side is UAT-SIM-035 and UAT-SIM-036.
