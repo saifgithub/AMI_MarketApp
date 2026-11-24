@@ -1,0 +1,66 @@
+{
+  "seed": 20261125,
+  "requested_n": 200,
+  "universe_rows": 1072,
+  "dropped": {
+    "no_market_cap": 12,
+    "zero_or_missing_volume": 1
+  },
+  "dropped_total": 13,
+  "eligible": 1059,
+  "sampled": 200,
+  "tercile_cut_market_cap": {
+    "large": {
+      "min": 362346560.0,
+      "max": 122649174016.0
+    },
+    "mid": {
+      "min": 91009656.0,
+      "max": 361900000.0
+    },
+    "small": {
+      "min": 5878090.0,
+      "max": 90874392.0
+    }
+  },
+  "by_tercile": {
+    "large": 68,
+    "small": 65,
+    "mid": 67
+  },
+  "by_code_series": {
+    "0xxx": 68,
+    "other": 132
+  },
+  "universe_code_series": {
+    "0xxx": 351,
+    "other": 708
+  },
+  "by_sector": {
+    "Basic Materials": 21,
+    "Communication Services": 5,
+    "Consumer Cyclical": 28,
+    "Consumer Defensive": 24,
+    "Energy": 6,
+    "Financial Services": 7,
+    "Healthcare": 6,
+    "Industrials": 57,
+    "Real Estate": 19,
+    "Technology": 24,
+    "Utilities": 3
+  },
+  "universe_sector": {
+    "Basic Materials": 110,
+    "Communication Services": 26,
+    "Consumer Cyclical": 146,
+    "Consumer Defensive": 129,
+    "Energy": 31,
+    "Financial Services": 37,
+    "Healthcare": 34,
+    "Industrials": 303,
+    "Real Estate": 102,
+    "Technology": 126,
+    "Utilities": 15
+  },
+  "board": "unknown for every symbol (Yahoo does not provide it); code_series is the proxy"
+}

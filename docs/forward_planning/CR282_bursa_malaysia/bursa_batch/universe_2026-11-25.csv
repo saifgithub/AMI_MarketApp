@@ -1,0 +1,1073 @@
+symbol,short_name,long_name,sector,industry,market_cap,avg_daily_volume_3m,price,currency,board,code_series,pulled_at
+0001.KL,SCOMNET,Supercomnet Technologies Berhad,Industrials,Electrical Equipment & Parts,387007904,579038,0.46,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0002.KL,KOTRA,Kotra Industries Berhad,Healthcare,Drug Manufacturers—Specialty & Generic,533930688,9503,3.6,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0005.KL,UCREST,UCrest Berhad,Healthcare,Health Information Services,40910508,752869,0.055,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0006.KL,PINEAPP,Pineapple Resources Berhad,Technology,Electronics & Computer Distribution,44814000,4233,0.84,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0007.KL,PUC,PUC Berhad,Communication Services,Advertising Agencies,117348376,9357214,0.035,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0008.KL,WILLOW,Willownex Berhad,Technology,Computer Hardware,128339600,94740,0.265,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0010.KL,IRIS,Iris Group Berhad,Industrials,Business Equipment & Supplies,146830976,1027264,0.18,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0011.KL,BTECH,Brite-Tech Berhad,Industrials,Pollution & Treatment Controls,66779996,56403,0.265,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0012.KL,3A,Three-A Resources Berhad,Consumer Defensive,Packaged Foods,342629984,102966,0.705,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0017.KL,NOVATECH,Nova Technology Services Berhad,Communication Services,Telecom Services,26808780,585659,0.03,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0020.KL,NETX,NetX Holdings Berhad,Technology,Information Technology Services,32828342,98077,0.035,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0022.KL,PARLO,Parlo Berhad,Consumer Cyclical,Travel Services,20534406,1491862,0.03,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0023.KL,IFCAMSC,IFCA MSC Berhad,Technology,Software—Application,110966328,502819,0.185,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0024.KL,JAG,JAG Berhad,Industrials,Waste Management,255860224,6722150,0.365,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0025.KL,YBS,YBS International Berhad,Industrials,Specialty Industrial Machinery,58921820,577995,0.2,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0026.KL,NOVAMSC,Nova MSC Berhad,Technology,Software—Application,107661944,1050704,0.05,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0028.KL,SCOPE,Scope Industries Berhad,Technology,Electronic Components,75077328,1128269,0.065,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0029.KL,DIGISTA,Digistar Corporation Berhad,Industrials,Conglomerates,20871140,69243,0.03,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0032.KL,REDTONE,REDtone Digital Berhad,Communication Services,Telecom Services,187381360,1218751,0.245,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0034.KL,MMAG,MMAG Holdings Berhad,Technology,Software—Application,23211972,37424919,0.01,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0035.KL,HEXCAP,Hextar Capital Berhad,Technology,Communication Equipment,75536920,341787,0.13,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0036.KL,KGROUP,Key Alliance Group Berhad,Industrials,Conglomerates,8582166,135246,0.07,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0037.KL,RGB,RGB International Bhd.,Consumer Cyclical,Gambling,304921088,1007598,0.2,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0038.KL,ARTRONIQ,Artroniq Berhad,Technology,Electronics & Computer Distribution,55474100,887735,0.11,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0039.KL,GFM,GFM Services Berhad,Industrials,Specialty Business Services,121368152,1232140,0.16,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0040.KL,OPENSYS,OpenSys (M) Berhad,Technology,Software—Infrastructure,129582920,392216,0.29,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0041.KL,AIMAX,AIMAX Berhad,Industrials,Conglomerates,28100238,26510012,0.005,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0043.KL,MTRONIC,Metronic Global Berhad,Technology,Information Technology Services,8758099,2324625,0.005,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0045.KL,SSB8,Southern Score Builders Berhad,Industrials,Engineering & Construction,1090843008,3291279,0.48,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0048.KL,ANCOMLB,Ancom Logistics Berhad,Industrials,Integrated Freight & Logistics,33130042,277462,0.07,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0049.KL,OCNCASH,Oceancash Pacific Berhad,Consumer Defensive,Household & Personal Products,29992000,46874,0.115,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0050.KL,WTS,WTS Capital Berhad,Technology,Software—Application,102498768,5068030,0.145,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0051.KL,CUSCAPI,Cuscapi Berhad,Technology,Software—Application,28346534,11197838,0.03,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0053.KL,OSKVI,OSK Ventures International Berhad,Financial Services,Asset Management,94293632,8035,0.48,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0054.KL,KARYON,Karyon Industries Berhad,Basic Materials,Specialty Chemicals,61842720,735358,0.13,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0055.KL,SERSOL,Sersol Berhad,Basic Materials,Specialty Chemicals,20114858,1498861,0.025,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0056.KL,NCT,NCT Alliance Berhad,Technology,Information Technology Services,1141434624,2394967,0.54,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0058.KL,JCBNEXT,JcbNext Berhad,Financial Services,Asset Management,228569072,9327,1.75,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0059.KL,ECOHLDS,Ecobuilt Holdings Berhad,Industrials,Engineering & Construction,14725164,129506,0.035,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0060.KL,HM,Harvest Miracle Capital Berhad,Technology,Information Technology Services,257055392,1093946,0.125,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0064.KL,EFFICEN,Efficient E-Solutions Berhad,Industrials,Specialty Business Services,64850248,256270,0.07,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0065.KL,EFORCE,Excel Force MSC Berhad,Technology,Software—Application,60987840,6695145,0.1,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0066.KL,VSOLAR,Vsolar Group Berhad,Technology,Electronics & Computer Distribution,19890042,333161,0.04,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0069.KL,VINVEST,Vinvest Capital Holdings Berhad,Real Estate,Real Estate—Development,29073012,2211254,0.03,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0070.KL,MQTECH,MQ Technology Berhad,Industrials,Tools & Accessories,17727734,3067382,0.05,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0072.KL,ERDASAN,Erdasan Group Berhad,Industrials,Specialty Industrial Machinery,21735302,143798,0.095,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0074.KL,AP,Ace Pacific Group Berhad,Consumer Defensive,Farm Products,13725350,1354690,0.065,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0078.KL,GDEX,GDEX Berhad,Industrials,Integrated Freight & Logistics,711086720,1062758,0.13,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0079.KL,ALRICH,Aldrich Resources Berhad,Technology,Information Technology Services,15476923,144174,0.045,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0080.KL,STRAITS,Straits Energy Resources Berhad,Industrials,Integrated Freight & Logistics,27347712,476246,0.025,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0081.KL,REKATECH,Rekatech Capital Berhad,Industrials,Engineering & Construction,14800000,750593,0.025,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0082.KL,GPACKET,Green Packet Berhad,Communication Services,Telecom Services,38900968,826383,0.015,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0083.KL,NOTION,Notion VTec Berhad,Technology,Electronic Components,300355648,7463054,0.57,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0084.KL,FAST,Fast Energy Holdings Berhad,Industrials,Tools & Accessories,17589682,234630,0.035,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0085.KL,MLAB,Mlabs Systems Berhad,Technology,Communication Equipment,11562765,60945,0.04,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0086.KL,YGL,Ygl Convergence Berhad,Technology,Electronics & Computer Distribution,20528768,612990,0.075,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0089.KL,TEXCYCL,Tex Cycle Technology (M) Berhad,Industrials,Waste Management,233458800,62980,0.88,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0090.KL,ELSOFT,Elsoft Research Berhad,Technology,Semiconductor Equipment & Materials,135198576,467591,0.2,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0091.KL,PGB,Propel Global Bhd,Industrials,Engineering & Construction,,48364,0.06,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0092.KL,MTOUCHE,mTouche Technology Berhad,Communication Services,Telecom Services,23167978,504240,0.025,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0093.KL,SOLUTN,Solution Group Berhad,Technology,Scientific & Technical Instruments,43564024,548212,0.09,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0094.KL,ZENTECH,Zen Tech International Berhad,Healthcare,Medical Instruments & Supplies,15797251,1397603,0.005,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0095.KL,MAG,MAG Holdings Berhad,Consumer Defensive,Farm Products,304407104,31069516,0.16,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0096.KL,NEXGRAM,Nexgram Holdings Berhad,Industrials,Industrial Distribution,24435720,14784737,0.025,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0097.KL,VITROX,ViTrox Corporation Berhad,Technology,Semiconductor Equipment & Materials,17433104384,4526575,9.2,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0098.KL,AUMAS,AuMas Resources Berhad,Basic Materials,Gold,537341760,1515895,0.295,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0099.KL,SCICOM,Scicom (MSC) Berhad,Industrials,Specialty Business Services,703798080,657891,1.98,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0100.KL,ESCERAM,ES Ceramics Technology Berhad,Basic Materials,Specialty Chemicals,102531600,1397598,0.145,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0101.KL,TMCLIFE,TMC Life Sciences Berhad,Healthcare,Medical Care Facilities,740300032,82317,0.425,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0102.KL,WAJA,Waja Konsortium Berhad,Industrials,Engineering & Construction,50181040,1355553,0.045,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0103.KL,MNC,M N C Wireless Berhad,Communication Services,Telecom Services,23581366,183522,0.025,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0104.KL,GENETEC,Genetec Technology Berhad,Industrials,Specialty Industrial Machinery,216474160,5310541,0.28,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0105.KL,ASIAPLY,Asia Poly Holdings Berhad,Basic Materials,Specialty Chemicals,84348272,1323643,0.08,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0106.KL,OMAI,OpenMove AI Berhad,Technology,Information Technology Services,69286336,9714,0.4,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0107.KL,EDUSPEC,Eduspec Holdings Berhad,Consumer Defensive,Education & Training Services,141344048,892977,0.09,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0108.KL,N2N,N2N Connect Berhad,Technology,Software—Application,145133088,451940,0.26,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0109.KL,SCBUILD,SC Estate Builder Berhad,Basic Materials,Building Materials,26599862,1091283,0.005,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0111.KL,K1,K-One Technology Berhad,Technology,Electronic Components,124801040,2078833,0.15,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0112.KL,MIKROMB,Mikro MSC Berhad,Industrials,Electrical Equipment & Parts,809576064,2563030,0.67,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0113.KL,MMSV,MMS Ventures Berhad,Technology,Semiconductor Equipment & Materials,53987920,534982,0.275,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0116.KL,FOCUS,Focus Dynamics Group Berhad,Consumer Cyclical,Restaurants,31861028,4113933,0.005,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0117.KL,SMRT,SMRT Holdings Berhad,Consumer Defensive,Education & Training Services,56919412,2775641,0.125,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0118.KL,TRIVE,Trive Property Group Berhad,Technology,Solar,21465580,191458,0.015,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0119.KL,APPASIA,AppAsia Berhad,Technology,Software—Application,142572832,150479,0.105,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0120.KL,VIS,Visdynamics Holdings Berhad,Technology,Semiconductor Equipment & Materials,116755800,3549883,0.455,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0122.KL,AIM,Advance Information Marketing Berhad,Industrials,Specialty Business Services,25014086,109383,0.05,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0123.KL,PRIVA,Privasia Technology Berhad,Technology,Information Technology Services,43902644,512567,0.065,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0126.KL,MICROLN,Microlink Solutions Berhad,Technology,Information Technology Services,128687528,1870988,0.08,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0127.KL,JHM,JHM Consolidation Berhad,Technology,Electronic Components,315120000,4151204,0.52,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0128.KL,FRONTKN,Frontken Corporation Berhad,Industrials,Specialty Business Services,8321379328,5231806,4.59,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0129.KL,SRIDGE,Silver Ridge Holdings Bhd.,Technology,Communication Equipment,43139068,2932670,0.105,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0131.KL,DFX,Divfex Berhad,Technology,Information Technology Services,82030400,4613975,0.11,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0132.KL,TDEX,Technodex Bhd,Technology,Information Technology Services,22144910,240298,0.025,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0133.KL,SANICHI,Sanichi Technology Berhad,Industrials,Tools & Accessories,17984282,311877,0.095,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0136.KL,GREENYB,Greenyield Berhad,Consumer Defensive,Farm Products,79258856,78685,0.14,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0138.KL,ZETRIX,Zetrix AI Berhad,Technology,Information Technology Services,441993600,368271406,0.055,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0140.KL,XOXNET,Xox Networks Berhad,Industrials,Specialty Business Services,28392730,374154,0.025,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0143.KL,KEYASIC,Key ASIC Berhad,Technology,Semiconductors,56518492,7214782,0.04,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0145.KL,TFP,TFP Group Berhad,Technology,Information Technology Services,31258316,2647387,0.03,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0146.KL,JFTECH,JF Technology Berhad,Technology,Semiconductor Equipment & Materials,650567488,2047575,0.675,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0147.KL,INNITY,Innity Corporation Berhad,Communication Services,Advertising Agencies,16031392,5941,0.115,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0148.KL,SUNZEN,Sunzen Group Berhad,Consumer Defensive,Packaged Foods,166176176,283766,0.21,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0149.KL,FIBON,Fibon Berhad,Industrials,Electrical Equipment & Parts,58630084,48283,0.6,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0150.KL,FINTEC,Fintec Global Berhad,Financial Services,Asset Management,12311977,65041,0.06,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0151.KL,KGB,Kelington Group Berhad,Industrials,Engineering & Construction,6224376320,2858679,7.07,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0152.KL,DGB,DGB Asia Berhad,Technology,Software—Application,9915486,326441,0.03,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0153.KL,OVERSEA,Oversea Enterprise Berhad,Consumer Cyclical,Restaurants,79381400,102456,0.035,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0154.KL,EAH,EA Holdings Berhad,Industrials,Conglomerates,32258816,274746,0.005,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0155.KL,MGRC,Malaysian Genomics Resource Centre Berhad,Healthcare,Diagnostics & Research,45279448,35158,0.3,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0156.KL,MPAY,ManagePay Systems Berhad,Technology,Software—Infrastructure,46443668,307379,0.045,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0157.KL,FOCUSP,Focus Point Holdings Berhad,Healthcare,Medical Instruments & Supplies,301048384,281462,0.49,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0158.KL,SCC,SCC Holdings Berhad,Consumer Defensive,Food Distribution,28232030,15243,0.2,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0160.KL,HHHCORP,Hiap Huat Holdings Berhad,Energy,Oil & Gas Refining & Marketing,41477660,95512,0.105,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0161.KL,HEXIND,Hextar Industries Berhad,Basic Materials,Agricultural Inputs,676280320,598870,0.255,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0162.KL,WIDAD,Widad Group Berhad,Industrials,Engineering & Construction,31211532,882622,0.01,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0163.KL,CAREPLS,Careplus Group Berhad,Healthcare,Medical Instruments & Supplies,55225776,5127412,0.065,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0165.KL,XOX,XOX Berhad,Communication Services,Telecom Services,25089922,145664,0.135,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0166.KL,INARI,Inari Amertron Berhad,Technology,Semiconductor Equipment & Materials,8339098112,19632351,2.15,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0167.KL,MCLEAN,MClean Technologies Berhad,Industrials,Specialty Business Services,160778016,3462893,0.595,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0168.KL,BMGREEN,BM GreenTech Berhad,Industrials,Specialty Industrial Machinery,893262144,692750,1.3,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0169.KL,SMTRACK,SMTrack Berhad,Technology,Information Technology Services,6607358,58151,0.005,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0171.KL,PLABS,PeterLabs Holdings Berhad,Healthcare,Drug Manufacturers—Specialty & Generic,63299196,40520,0.23,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0172.KL,OCK,OCK Group Berhad,Communication Services,Telecom Services,419542144,2365283,0.395,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0173.KL,CATCHA,Catcha Digital Berhad,Communication Services,Publishing,104621856,47633,0.23,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0174.KL,EVD,Evd Berhad,Technology,Software—Application,13496564,193958,0.03,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0175.KL,HHRG,HHRG Berhad,Consumer Defensive,Farm Products,89691344,23464932,0.07,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0176.KL,KRONO,Kronologi Asia Berhad,Technology,Software—Application,93493392,3375800,0.105,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0177.KL,MIDTOWN,Midtown Group Berhad,Industrials,Engineering & Construction,13337047,332140,0.07,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0178.KL,SEDANIA,Sedania Innovator Berhad,Consumer Defensive,Household & Personal Products,34675924,2342585,0.085,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0179.KL,BIOHLDG,Bioalpha Holdings Berhad,Consumer Defensive,Packaged Foods,28392480,1023443,0.02,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0180.KL,KTC,Kim Teck Cheong Consolidated Berhad,Consumer Defensive,Food Distribution,88641528,503432,0.13,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0181.KL,AEMULUS,Aemulus Holdings Berhad,Technology,Semiconductor Equipment & Materials,245495360,5828414,0.365,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0182.KL,LKL,LKL International Berhad,Healthcare,Medical Instruments & Supplies,9701960,493233,0.025,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0183.KL,SALUTE,Salutica Berhad,Technology,Consumer Electronics,44255748,5333808,0.095,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0185.KL,HSSEB,HSS Engineers Berhad,Industrials,Engineering & Construction,228816048,212717,0.45,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0186.KL,PTRANS,Perak Transit Berhad,Industrials,Infrastructure Operations,184883600,6039574,0.15,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0187.KL,BCMALL,BCM Alliance Berhad,Healthcare,Medical Distribution,9153504,183076,0.045,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0188.KL,HLT,HLT Global Berhad,Industrials,Specialty Industrial Machinery,12547932,649680,0.01,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0189.KL,MATANG,Matang Berhad,Consumer Defensive,Farm Products,179190032,416417,0.075,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0190.KL,ESAFE,Eversafe Rubber Berhad,Consumer Cyclical,Auto Parts,21653442,28648,0.09,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0191.KL,CABNET,Cabnet Holdings Berhad,Industrials,Engineering & Construction,37537500,161980,0.21,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0192.KL,INTA,Inta Bina Group Berhad,Industrials,Engineering & Construction,234636496,1477635,0.365,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0193.KL,KINERGY,Kinergy Advancement Berhad,Industrials,Engineering & Construction,797516672,10691995,0.365,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0195.KL,BINACOM,Binasat Communications Berhad,Communication Services,Telecom Services,39278576,254832,0.065,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0196.KL,QES,QES Group Berhad,Technology,Electronics & Computer Distribution,563363904,4208704,0.615,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0197.KL,WEGMANS,Wegmans Holdings Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",57235884,77388,0.105,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0198.KL,GDB,GDB Holdings Berhad,Industrials,Engineering & Construction,567188160,3826114,0.55,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0199.KL,TRIMODE,Tri-Mode System (M) Berhad,Industrials,Integrated Freight & Logistics,28220000,6620,0.17,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0200.KL,REVENUE,Revenue IF Berhad,Technology,Software—Infrastructure,48407756,2549977,0.08,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0201.KL,NOVA,Nova Wellness Group Berhad,Consumer Defensive,Packaged Foods,113145528,31627,0.355,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0202.KL,RGTECH,Radiant Globaltech Berhad,Technology,Electronics & Computer Distribution,77770416,42275,0.14,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0203.KL,SMETRIC,Securemetric Berhad,Technology,Software—Infrastructure,40394620,925011,0.07,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0205.KL,DPIH,DPI Holdings Berhad,Basic Materials,Specialty Chemicals,73009656,185532,0.1,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0206.KL,NADIBHD,Gagasan Nadi Cergas Berhad,Real Estate,Real Estate—Development,252255008,508488,0.335,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0207.KL,MESTRON,Mestron Holdings Berhad,Industrials,Metal Fabrication,101909792,2150088,0.105,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0208.KL,GREATEC,Greatech Technology Berhad,Industrials,Specialty Industrial Machinery,6286359552,6101654,2.5,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0209.KL,AIMFLEX,Aimflex Berhad,Industrials,Specialty Industrial Machinery,120478400,6043548,0.085,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0210.KL,ARVEX,Arvex Berhad,Consumer Cyclical,Specialty Retail,43700000,142287,0.115,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0211.KL,TASHIN,Tashin Holdings Berhad,Basic Materials,Steel,64563336,11116,0.185,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0212.KL,SDS,SDS Group Berhad,Consumer Defensive,Packaged Foods,217483856,203666,0.405,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0213.KL,MTAG,MTAG Group Berhad,Industrials,Specialty Business Services,135463600,333879,0.2,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0215.KL,SLVEST,Solarvest Holdings Berhad,Technology,Solar,3282908672,6744664,3.35,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0216.KL,SPRING,Spring Art Holdings Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",31176856,128003,0.075,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0217.KL,PWRWELL,Powerwell Holdings Berhad,Industrials,Electrical Equipment & Parts,476052640,3537104,0.82,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0218.KL,ACO,ACO Group Berhad,Technology,Electronics & Computer Distribution,46895128,482425,0.135,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0219.KL,RL,Reservoir Link Energy Bhd,Energy,Oil & Gas Equipment & Services,98644288,3786148,0.255,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0220.KL,OVH,Ocean Vantage Holdings Berhad,Energy,Oil & Gas Equipment & Services,117374368,381753,0.26,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0221.KL,TCS,TCS Group Holdings Berhad,Industrials,Engineering & Construction,46246328,191177,0.07,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0222.KL,OPTIMAX,Optimax Holdings Berhad,Healthcare,Medical Care Facilities,260787232,200393,0.48,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0223.KL,SAMAIDEN,Samaiden Group Berhad,Industrials,Engineering & Construction,1407578880,2997753,2.51,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0225.KL,SCGBHD,Southern Cable Group Berhad,Industrials,Electrical Equipment & Parts,2608746752,8077203,2.04,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0226.KL,ANEKA,Aneka Jaringan Holdings Berhad,Industrials,Engineering & Construction,69450616,153159,0.1,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0227.KL,EFRAME,Econframe Berhad,Industrials,Building Products & Equipment,90197408,315806,0.24,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0228.KL,HPPHB,HPP Holdings Berhad,Consumer Cyclical,Packaging & Containers,112717280,13843,0.29,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0229.KL,MOBILIA,Mobilia Holdings Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",62066072,80724,0.09,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0230.KL,TELADAN,Teladan Group Berhad,Consumer Cyclical,Residential Construction,460422880,302561,0.555,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0231.KL,FLEXI,Flexidynamic Holdings Berhad,Industrials,Specialty Industrial Machinery,34463192,169087,0.115,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0232.KL,VOLCANO,Volcano Berhad,Industrials,Metal Fabrication,52672700,28075,0.29,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0233.KL,PEKAT,Pekat Group Berhad,Technology,Solar,1548461056,2484982,2.18,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0235.KL,NESTCON,Nestcon Berhad,Industrials,Engineering & Construction,334980320,101091,0.43,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0236.KL,RAMSSOL,Ramssol Group Berhad,Technology,Software—Application,327773120,6197462,0.78,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0237.KL,HAILY,Haily Group Berhad,Industrials,Engineering & Construction,67680864,291687,0.16,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0238.KL,CEKD,CEKD Berhad,Industrials,Metal Fabrication,49616112,14472,0.255,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0239.KL,ECOMATE,Ecomate Holdings Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",622964928,3059791,0.87,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0240.KL,CORAZA,Coraza Integrated Technology Berhad,Industrials,Metal Fabrication,541319616,2659093,1.09,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0241.KL,TAGHILL,Taghill Holdings Berhad,Industrials,Engineering & Construction,108931080,632469,0.07,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0242.KL,PPJACK,Pappajack Berhad,Financial Services,Credit Services,682586560,176409,0.89,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0243.KL,CENGILD,Cengild Medical Berhad,Healthcare,Medical Care Facilities,130496448,360720,0.155,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0245.KL,MNHLDG,MN Holdings Berhad,Industrials,Engineering & Construction,1875626112,5328024,2.66,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0246.KL,CNERGEN,Cnergenz Berhad,Industrials,Electrical Equipment & Parts,566184512,3246191,1.13,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0247.KL,UNITRAD,Unitrade Industries Berhad,Industrials,Industrial Distribution,350604800,202808,0.215,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0248.KL,YEWLEE,Yew Lee Pacific Group Berhad,Industrials,Industrial Distribution,370129984,9973124,0.625,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0249.KL,LGMS,LGMS Berhad,Technology,Information Technology Services,246240016,931059,0.54,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0250.KL,YXPM,YX Precious Metals Bhd,Consumer Cyclical,Luxury Goods,66987004,253872,0.18,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0251.KL,SFPTECH,SFP Tech Holdings Berhad,Industrials,Metal Fabrication,531113536,7007111,0.22,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0252.KL,ORGABIO,Orgabio Holdings Berhad,Consumer Defensive,Beverages—Non-Alcoholic,70642376,46641,0.285,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0253.KL,INFOTEC,Infoline Tec Group Berhad,Technology,Software—Infrastructure,57783088,284256,0.16,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0255.KL,EIB,Ecoscience International Berhad,Industrials,Engineering & Construction,26180000,32324,0.07,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0256.KL,UMC,UMediC Group Berhad,Healthcare,Medical Devices,85999304,173495,0.23,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0257.KL,UNIQUE,Unique Fire Holdings Berhad,Industrials,Security & Protection Services,156595952,254429,0.39,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0258.KL,AGMO,Agmo Holdings Berhad,Technology,Software—Application,74727000,635069,0.23,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0259.KL,SNS,SNS Network Technology Berhad,Technology,Electronics & Computer Distribution,690144448,5645962,0.405,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0260.KL,PTRB,PT Resources Holdings Berhad,Consumer Defensive,Packaged Foods,128404800,25820,0.24,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0261.KL,COSMOS,Cosmos Technology International Berhad,Industrials,Pollution & Treatment Controls,92340472,397680,0.36,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0262.KL,SUNVIEW,Sunview Group Berhad,Industrials,Engineering & Construction,249801248,11469269,0.4,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0263.KL,BETA,Betamek Berhad,Consumer Cyclical,Auto Parts,261391488,548554,0.565,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0265.KL,INFOM,Infomina Berhad,Technology,Information Technology Services,1022078464,710461,1.71,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0266.KL,LEFORM,Leform Berhad,Basic Materials,Steel,268803872,121072,0.165,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0267.KL,ECA,ECA Integrated Solution Berhad,Industrials,Specialty Industrial Machinery,170816928,2070667,0.295,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0268.KL,L&PBHD,L&P Global Berhad,Consumer Cyclical,Packaging & Containers,117521776,1722127,0.21,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0269.KL,DSS,DS Sigma Holdings Berhad,Consumer Cyclical,Packaging & Containers,117600000,130974,0.245,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0270.KL,NATGATE,NationGate Holdings Berhad,Technology,Electronic Components,3600821248,30841232,1.59,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0271.KL,WELLS,Wellspire Holdings Berhad,Consumer Defensive,Food Distribution,448638752,663993,0.63,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0272.KL,TTVHB,TT Vision Holdings Berhad,Technology,Semiconductor Equipment & Materials,93523752,2391012,0.195,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0273.KL,VLB,Vestland Berhad,Real Estate,Real Estate—Development,856960064,2566053,0.825,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0275.KL,OPPSTAR,Oppstar Berhad,Technology,Semiconductors,268496192,8754929,0.415,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0276.KL,ADB,Autocount Dotcom Berhad,Technology,Software—Application,239467488,227350,0.435,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0277.KL,CLOUDPT,Cloudpoint Technology Berhad,Technology,Information Technology Services,212640000,1864024,0.4,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0278.KL,EDELTEQ,Edelteq Holdings Berhad,Technology,Semiconductors,226364112,3509001,0.36,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0279.KL,SYNERGY,Synergy House Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",75000000,217803,0.15,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0280.KL,MBN,MYMBN Berhad,Consumer Defensive,Packaged Foods,61760000,2551664,0.16,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0281.KL,DAY3,Daythree Digital Berhad,Technology,Information Technology Services,79999920,95109,0.12,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0282.KL,KGW,KGW Group Berhad,Industrials,Integrated Freight & Logistics,41037880,237693,0.085,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0283.KL,DCHCARE,DC Healthcare Holdings Berhad,Healthcare,Medical Care Facilities,74722504,502687,0.075,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0284.KL,GLXT,Glostrext Berhad,Industrials,Engineering & Construction,77152584,114108,0.185,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0285.KL,MERSEC,Mercury Securities Group Berhad,Financial Services,Capital Markets,241110016,884946,0.27,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0286.KL,EMCC,Evergreen Max Cash Capital Berhad,Financial Services,Credit Services,343487264,679596,0.305,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0287.KL,SSF,SSF Home Group Berhad,Consumer Cyclical,Specialty Retail,304000000,330937,0.38,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0288.KL,MINOX,Minox International Group Berhad,Basic Materials,Steel,50400000,143111,0.14,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0289.KL,PLYTEC,PLYTEC Holding Berhad,Basic Materials,Building Materials,78787880,72045,0.13,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0290.KL,PANDA,Panda Eco System Berhad,Technology,Software—Application,100144200,278880,0.145,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0291.KL,CHB,Critical Holdings Berhad,Industrials,Engineering & Construction,789201856,1725611,1.93,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0292.KL,JTGROUP,Jati Tinggi Group Berhad,Industrials,Engineering & Construction,332195968,3250337,0.75,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0293.KL,KJTS,KJTS Group Berhad,Industrials,Specialty Business Services,652724288,1380658,0.945,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0295.KL,MTEC,Master Tec Group Berhad,Industrials,Electrical Equipment & Parts,1020000000,202524,1.0,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0296.KL,HEGROUP,HE Group Berhad,Industrials,Engineering & Construction,288200000,3731000,0.655,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0297.KL,TSA,TSA Group Berhad,Basic Materials,Steel,321672000,36153,1.04,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0298.KL,WENTEL,Wentel Engineering Holdings Berhad,Industrials,Metal Fabrication,247250000,1884675,0.215,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0299.KL,AGX,AGX Group Berhad,Industrials,Integrated Freight & Logistics,201282736,56045,0.465,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0300.KL,SBH,SBH Marine Holdings Berhad,Consumer Defensive,Packaged Foods,102120000,158643,0.115,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0301.KL,ZANTAT,Zantat Holdings Berhad,Basic Materials,Chemicals,37017940,225379,0.13,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+03019.KL,MPSOL,Matrix Parking Solution Holdings Berhad,Industrials,Infrastructure Operations,28970630,161,0.1,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0302.KL,TOPMIX,Topmix Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",118156808,125280,0.3,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0303.KL,ALPHA,Alpha IVF Group Berhad,Healthcare,Medical Care Facilities,1328575744,1934433,0.275,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+03039.KL,RTSTECH,RTS Technology Holdings Berhad,Technology,Information Technology Services,27380622,48,0.105,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0304.KL,FPHB,Farm Price Holdings Berhad,Consumer Defensive,Food Distribution,166963792,118100,0.37,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0305.KL,SINKUNG,Sin-Kung Logistics Berhad,Industrials,Integrated Freight & Logistics,96000000,185591,0.08,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0306.KL,SMART,Smart Asia Chemical Bhd,Basic Materials,Specialty Chemicals,44382052,52198,0.12,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0307.KL,KENERGY,Kawan Renergy Berhad,Industrials,Engineering & Construction,151250000,443146,0.275,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+03072.KL,MILOLO,Milolo Berhad,Consumer Cyclical,Specialty Retail,,129,0.145,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0308.KL,KTI,KTI Landmark Berhad,Real Estate,Real Estate—Development,380000000,476662,0.475,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0309.KL,AGRICOR,Agricore CS Holdings Berhad,Consumer Defensive,Food Distribution,75851608,24875,0.37,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0310.KL,UUE,UUE Holdings Berhad,Industrials,Engineering & Construction,451704480,5635483,0.495,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0311.KL,GOHUB,Go Hub Capital Berhad,Technology,Information Technology Services,466399968,259016,1.06,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0312.KL,OFB,Ocean Fresh Berhad,Consumer Defensive,Packaged Foods,27318978,137858,0.13,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0313.KL,BWYS,BWYS Group Berhad,Basic Materials,Steel,143529824,114682,0.14,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0315.KL,KUCINGKO,Kucingko Berhad,Communication Services,Entertainment,40000000,345640,0.08,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0316.KL,SCB,Sik Cheong Berhad,Consumer Defensive,Packaged Foods,27930000,83662,0.105,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0317.KL,EPB,EPB Group Berhad,Industrials,Specialty Industrial Machinery,79980000,175120,0.215,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0318.KL,ELRIDGE,Elridge Energy Holdings Berhad,Utilities,Utilities—Renewable,1880000000,3922232,0.94,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0319.KL,VTC,VETECE Holdings Berhad,Technology,Information Technology Services,82320000,66932,0.21,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0320.KL,HAWK,Steel Hawk Berhad,Energy,Oil & Gas Equipment & Services,36791852,1684020,0.075,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0321.KL,SDCG,Solar District Cooling Group Berhad,Industrials,Specialty Business Services,347534432,5950943,0.82,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0322.KL,KHB,KHPT Holdings Berhad,Consumer Cyclical,Auto Parts,34202844,231377,0.085,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0323.KL,CREST,Crest Group Berhad,Technology,Scientific & Technical Instruments,147151664,1190396,0.17,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0325.KL,NE,Northeast Group Berhad,Technology,Electronic Components,706699968,1698370,0.955,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0326.KL,SORENTO,Sorento Capital Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",546099968,590082,0.635,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0327.KL,OBHB,OB Holdings Berhad,Consumer Defensive,Packaged Foods,80283536,184335,0.205,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0328.KL,3REN,3REN Berhad,Industrials,Engineering & Construction,195502992,1873269,0.3,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0329.KL,METRO,Metro Healthcare Berhad,Healthcare,Medical Care Facilities,205574464,223095,0.21,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0330.KL,SUPREME,Supreme Consolidated Resources Berhad,Consumer Defensive,Food Distribution,83850000,354961,0.195,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0331.KL,CRPMATE,Cropmate Berhad,Basic Materials,Agricultural Inputs,132840008,714500,0.18,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0332.KL,TOPVISN,Topvision Eye Specialist Berhad,Healthcare,Medical Care Facilities,55766796,264893,0.18,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0333.KL,VANZO,Vanzo Holdings Berhad,Consumer Defensive,Household & Personal Products,58343888,174770,0.125,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0335.KL,CARLORINO,Carlo Rino Group Berhad,Consumer Cyclical,Footwear & Accessories,75757576,164530,0.155,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0336.KL,WINSTAR,Winstar Capital Berhad,Basic Materials,Aluminum,202887680,912758,0.65,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0337.KL,SET,Swift Energy Technology Berhad,Industrials,Electrical Equipment & Parts,215172000,1758987,0.215,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0338.KL,KOPI,Oriental Kopi Holdings Berhad,Consumer Cyclical,Restaurants,1570000000,2641874,0.785,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0339.KL,CBHB,CBH Engineering Holding Berhad,Industrials,Engineering & Construction,1119133440,14887987,0.595,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0340.KL,NORTHERN,Northern Solar Holdings Berhad,Technology,Solar,326369984,3801959,0.825,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0341.KL,COLFORM,Colform Group Berhad,Basic Materials,Steel,141000000,10196,0.235,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0342.KL,RTECH,RichTech Digital Berhad,Technology,Software—Infrastructure,47576452,504525,0.235,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0343.KL,TECHSTORE,TechStore Berhad,Technology,Information Technology Services,67500000,516956,0.135,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0345.KL,SUNLOGY,ES Sunlogy Berhad,Industrials,Engineering & Construction,227149984,6442664,0.295,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0346.KL,SALIRAN,Saliran Group Berhad,Basic Materials,Steel,80409000,291188,0.21,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0347.KL,DENGKIL,Wawasan Dengkil Holdings Berhad,Industrials,Engineering & Construction,62114808,318695,0.115,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0348.KL,CLITE,Chemlite Innovation Berhad,Industrials,Metal Fabrication,144000000,1423616,0.24,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0349.KL,SUMI,Sumisaujana Group Berhad,Basic Materials,Chemicals,129924152,1162353,0.09,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0350.KL,MSB,MSB Global Group Berhad,Consumer Cyclical,Auto Parts,57950000,253577,0.095,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0351.KL,LSH,Lim Seong Hai Capital Berhad,Industrials,Engineering & Construction,997648704,686779,1.19,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0352.KL,WTEC,WTEC Group Berhad,Basic Materials,Chemicals,62399996,152756,0.13,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0353.KL,WESTRVR,West River Berhad,Industrials,Engineering & Construction,112675496,1900658,0.315,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0355.KL,FIBRO,Fibromat (M) Berhad,Industrials,Pollution & Treatment Controls,189931136,12916,0.765,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0356.KL,PEOPLE,Peoplelogy Berhad,Consumer Defensive,Education & Training Services,88519144,6846,0.215,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0357.KL,OHM,Oasis Home Holding Berhad,Consumer Cyclical,Internet Retail,175000000,380693,0.35,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0358.KL,ICTZONE,ICT Zone Asia Berhad,Technology,Information Technology Services,151136096,2131017,0.19,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0359.KL,HKB,Hartanah Kenyalang Berhad,Industrials,Engineering & Construction,552420032,1514440,0.81,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0360.KL,SAG,Signature Alliance Group Berhad,Industrials,Engineering & Construction,625000000,211340,0.625,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0361.KL,PMIBHD,Pan Merchant Berhad,Industrials,Specialty Industrial Machinery,187780000,60861,0.205,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0362.KL,ASM,ASM Automation Group Berhad,Industrials,Specialty Industrial Machinery,69519448,418274,0.13,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0363.KL,PMCK,PMCK Berhad,Healthcare,Medical Care Facilities,212666976,774795,0.195,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0365.KL,A1AKK,A1 A.K. Koh Group Berhad,Consumer Defensive,Packaged Foods,151200000,325567,0.18,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0366.KL,ICENTS,iCents Group Holdings Berhad,Industrials,Engineering & Construction,270000000,1752362,0.54,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0367.KL,ENPRO,Enproserve Group Berhad,Industrials,Engineering & Construction,252000000,3916937,0.24,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0368.KL,OXB,Oxford Innotech Berhad,Industrials,Metal Fabrication,340800000,3983412,0.48,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0369.KL,JSSOLAR,JS Solar Holding Berhad,Utilities,Utilities—Renewable,66625000,822479,0.205,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0370.KL,XPB,Express Powerr Solutions (M) Bhd,Industrials,Rental & Leasing Services,149511856,1727522,0.16,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0371.KL,CAMAROE,Camaroe Berhad,Consumer Defensive,Farm Products,32174998,92396,0.065,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0372.KL,CHEEDING,Cheeding Holdings Berhad,Industrials,Engineering & Construction,354779360,2536674,0.445,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0373.KL,VERDANT,Verdant Solar Holdings Bhd,Technology,Solar,,1963285,0.2,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0375.KL,THMY,THMY Holdings Berhad,Industrials,Electrical Equipment & Parts,1554000000,2088701,1.75,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0376.KL,IAB,Insights Analytics Berhad,Technology,Information Technology Services,467500000,1793177,0.85,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0377.KL,POWER,Powertechnic Group Berhad,Industrials,Farm & Heavy Construction Machinery,43447180,620288,0.14,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0378.KL,FAMIERA,Farmiera Berhad,Consumer Defensive,Farm Products,101250000,57627,0.225,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0379.KL,PMW,PMW International Berhad,Basic Materials,Building Materials,227473216,713780,0.255,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0380.KL,AQUAWALK,Aquawalk Group Berhad,Consumer Cyclical,Leisure,230375008,2838420,0.125,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0381.KL,POLYMER,Polymer Link Holdings Berhad,Basic Materials,Specialty Chemicals,84000016,2111325,0.15,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0382.KL,FOODIE,Foodie Media Berhad,Communication Services,Publishing,266400016,1063601,0.3,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0383.KL,PSP,PSP Energy Berhad,Energy,Oil & Gas Midstream,144288208,365533,0.135,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0385.KL,BMS,BMS Holdings Berhad,Basic Materials,Building Materials,,665159,0.135,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0386.KL,SBS,SBS Nexus Berhad,Communication Services,Advertising Agencies,53900000,669483,0.11,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0387.KL,GHS,Guan Huat Seng Holdings Berhad,Consumer Defensive,Packaged Foods,85230024,203787,0.18,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0388.KL,SEMICO,Semico Capital Berhad,Consumer Cyclical,Leisure,233999984,3495304,0.65,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0389.KL,OGM,One Gasmaster Holdings Berhad,Industrials,Industrial Distribution,51150004,437532,0.165,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0390.KL,ISF,ISF Group Berhad,Industrials,Engineering & Construction,740000000,4172248,0.74,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0391.KL,AMBEST,Ambest Group Berhad,Industrials,Metal Fabrication,530399968,2213946,1.04,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0392.KL,KEEMING,Kee Ming Group Berhad,Industrials,Specialty Industrial Machinery,,909575,2.11,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0393.KL,TEAMSTR,Teamstar Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",184000000,2219838,0.23,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0395.KL,OGX,OGX Group Berhad,Technology,Information Technology Services,288749984,2564956,0.385,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0396.KL,ADNEX,Adnex Group Berhad,Industrials,Engineering & Construction,220000000,405435,0.44,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0397.KL,5ER,5E Resources Holdings Berhad,Industrials,Waste Management,361900000,1847838,0.235,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0398.KL,GDGROUP,Golden Destinations Group Berhad,Consumer Cyclical,Travel Services,370000000,663522,0.37,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0399.KL,AMS,AMS Advanced Material Berhad,Industrials,Metal Fabrication,217262864,2058230,0.355,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0450.KL,MFGROUP,Manforce Group Berhad,Industrials,Staffing & Employment Services,117993680,779659,0.295,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0451.KL,INSPACE,Inspace Creation Berhad,Industrials,Engineering & Construction,77553336,43722,0.21,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0452.KL,GOLDLI,Gold Li Holdings Berhad,Real Estate,Real Estate—Development,,1151225,0.07,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0453.KL,EIPOWER,EI Power Berhad,Industrials,Engineering & Construction,402500000,6470879,0.575,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0455.KL,BUSCAP,Bus Cap Berhad,Consumer Cyclical,Auto Manufacturers,329709408,5005319,0.86,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0456.KL,MMCS,MM Computer Systems Berhad,Technology,Information Technology Services,,1359933,0.33,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0457.KL,PENTECH,Pentech Holdings Berhad,Technology,Information Technology Services,186000000,7704312,0.3,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0458.KL,ELSA,Elsa Berhad,Energy,Oil & Gas Equipment & Services,115756000,265045,0.215,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0459.KL,SUM,Sum Technology Berhad,Industrials,Engineering & Construction,195750000,4585187,0.435,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0460.KL,HSSBAKERY,HSS Holdings Berhad,Consumer Defensive,Packaged Foods,,248793,0.105,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0461.KL,RT,RT Pastry Holdings Berhad,Consumer Defensive,Packaged Foods,42380248,369350,0.125,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0462.KL,LIFTECH,Liftech Group Sdn Bhd,Industrials,Farm & Heavy Construction Machinery,,271038,0.17,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0463.KL,ECKEM,Eckem Holdings Berhad,Basic Materials,Specialty Chemicals,,296661,0.08,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0465.KL,RESTNGO,RNG Tech Berhad,Consumer Cyclical,Personal Services,,605900,0.09,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0466.KL,SRKKAI,SRKK AI Berhad,Technology,Information Technology Services,,1117653,0.33,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0467.KL,ENEST,Enest Group Berhad,Consumer Defensive,Farm Products,46500004,677237,0.08,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0468.KL,UNIPAC,,Energy,Oil & Gas Equipment & Services,104500000,5208510,0.19,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0469.KL,GTA,GTA Holdings Berhad,Industrials,Aerospace & Defense,303466624,6972975,0.235,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0470.KL,BFIELD,,Consumer Defensive,Packaged Foods,320000000,5092214,0.4,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0471.KL,PIONEER,,Industrials,Engineering & Construction,78052496,5811222,0.225,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0472.KL,ECOGRP,EGH International Berhad,Industrials,Engineering & Construction,85000000,7239018,0.085,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0473.KL,EVOCOM,Evocom Berhad,Industrials,Staffing & Employment Services,31893960,5305541,0.07,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0475.KL,GBBOND,,Basic Materials,Specialty Chemicals,65968000,4126423,0.16,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0476.KL,SLG,SLGC Berhad,Consumer Cyclical,Residential Construction,126000000,15208014,0.225,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0477.KL,ECOSYS,EcoSys (Malaysia) Berhad,Technology,Semiconductor Equipment & Materials,308531168,13081989,0.54,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0478.KL,NWEBHD,NWE Resources Group Berhad,Consumer Defensive,Packaged Foods,97200000,11960995,0.18,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0479.KL,RPLANET,RedPlanet Berhad,Technology,Information Technology Services,78349624,2251677,0.23,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0480.KL,SKACAP,SKA Capital Berhad,Industrials,Electrical Equipment & Parts,344767488,40429077,0.385,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0481.KL,KEB,KEB Berhad,Real Estate,Real Estate—Development,282363424,8305033,0.32,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0482.KL,MYDCD,MyDCD Berhad,Technology,Information Technology Services,888030016,85142420,0.495,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+0483.KL,,Impact Capital Holdings Berhad,Technology,Information Technology Services,108000000,,0.225,MYR,unknown,0xxx,2026-11-24T22:21:47.518849+00:00
+1015.KL,AMBANK,AMMB Holdings Berhad,Financial Services,Banks—Regional,21857550336,6068620,6.6,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1023.KL,CIMB,CIMB Group Holdings Berhad,Financial Services,Banks—Regional,76229943296,13684700,7.09,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1058.KL,MANULFE,Manulife Holdings Berhad,Financial Services,Insurance—Life,519372160,46680,2.17,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1066.KL,RHBBANK,RHB Bank Berhad,Financial Services,Banks—Regional,33566056448,11227106,7.69,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1082.KL,HLFG,Hong Leong Financial Group Berhad,Financial Services,Banks—Regional,19282388992,91222,17.0,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1147.KL,GOB,Global Oriental Berhad,Real Estate,Real Estate—Development,40920904,136088,0.09,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1155.KL,MAYBANK,Malayan Banking Berhad,Financial Services,Banks—Regional,122649174016,14137464,10.14,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1163.KL,ALLIANZ,Allianz Malaysia Berhad,Financial Services,Insurance—Diversified,3500931072,72166,19.0,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1171.KL,MBSB,MBSB Berhad,Financial Services,Banks—Regional,3905598464,3728617,0.475,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1198.KL,MAA,MAA Group Berhad,Financial Services,Insurance—Diversified,30329210,33641,0.115,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1287.KL,EXSIMHB,Exsim Hospitality Berhad,Real Estate,Real Estate—Development,1093757952,1243885,0.47,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1295.KL,PBBANK,Public Bank Berhad,Financial Services,Banks—Regional,88124538880,22409453,4.54,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1481.KL,ASB,Advance Synergy Berhad,Consumer Cyclical,Travel Services,151751696,2136682,0.06,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1538.KL,SYMLIFE,Symphony Life Berhad,Real Estate,Real Estate—Development,116519056,731708,0.165,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1562.KL,SPTOTO,Sports Toto Berhad,Industrials,Conglomerates,1655643648,454916,1.26,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1589.KL,IWCITY,Iskandar Waterfront City Berhad,Real Estate,Real Estate—Development,165803008,725532,0.18,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1619.KL,DRBHCOM,DRB-HICOM Berhad,Consumer Cyclical,Auto Manufacturers,1498258560,511104,0.775,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1643.KL,LANDMRK,Landmarks Berhad,Consumer Cyclical,Lodging,30218136,1615006,0.045,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1651.KL,MRCB,Malaysian Resources Corporation Berhad,Industrials,Engineering & Construction,1027527232,7200319,0.23,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1694.KL,MENANG,Menang Corporation (M) Berhad,Real Estate,Real Estate Services,469265632,28175,0.675,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1724.KL,PARAMON,Paramount Corporation Berhad,Real Estate,Real Estate—Development,600974016,136341,0.965,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1818.KL,BURSA,Bursa Malaysia Berhad,Financial Services,Financial Data & Stock Exchanges,6417741824,1130740,7.93,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1899.KL,BKAWAN,Batu Kawan Berhad,Industrials,Conglomerates,7411000832,12141,19.14,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1929.KL,CHINTEK,Chin Teck Plantations Berhad,Consumer Defensive,Farm Products,895359872,9522,9.8,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1961.KL,IOICORP,IOI Corporation Berhad,Consumer Defensive,Packaged Foods,27152060416,8413520,4.32,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+1996.KL,KRETAM,Kretam Holdings Berhad,Consumer Defensive,Farm Products,1480325376,165298,0.645,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2038.KL,NSOP,Negri Sembilan Oil Palms Berhad,Consumer Defensive,Farm Products,360838080,4161,5.14,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2054.KL,TDM,TDM Berhad,Consumer Defensive,Farm Products,301504160,668858,0.175,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2062.KL,HARBOUR,Harbour-Link Group Berhad,Industrials,Integrated Freight & Logistics,474306304,54861,1.19,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2089.KL,UTDPLT,United Plantations Berhad,Consumer Defensive,Farm Products,19536371712,733140,31.4,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2097.KL,MBRIGHT,Meta Bright Group Berhad,Consumer Cyclical,Lodging,362346560,290159,0.13,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2127.KL,COMFORT,Comfort Gloves Berhad,Basic Materials,Specialty Chemicals,112904984,1240880,0.195,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2135.KL,GOPENG,Gopeng Berhad,Consumer Defensive,Farm Products,221919584,10970,0.55,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2143.KL,ECM,ECM Libra Group Berhad,Consumer Cyclical,Lodging,106488176,42832,0.215,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2224.KL,SDRED,Selangor Dredging Berhad,Real Estate,Real Estate—Development,155536592,30329,0.365,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2259.KL,TALAMT,Talam Transform Berhad,Real Estate,Real Estate—Development,91009656,1153070,0.07,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2283.KL,ZELAN,Zelan Berhad,Industrials,Engineering & Construction,42246036,441314,0.05,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2291.KL,GENP,Genting Plantations Berhad,Consumer Defensive,Farm Products,4250830592,218222,4.74,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2305.KL,AYER,AYER Holdings Berhad,Real Estate,Real Estate—Development,583105408,1620,7.79,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2429.KL,TANCO,Tanco Holdings Berhad,Real Estate,Real Estate—Diversified,903820736,17892754,0.15,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2445.KL,KLK,Kuala Lumpur Kepong Berhad,Industrials,Conglomerates,23164114944,783251,20.8,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2453.KL,KLUANG,Kluang Rubber Company (Malaya) Berhad,Consumer Defensive,Farm Products,402553856,14195,6.54,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2488.KL,ABMB,Alliance Bank Malaysia Berhad,Financial Services,Banks—Regional,7855212032,1164329,4.54,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2542.KL,RVIEW,"Riverview Rubber Estates, Berhad",Consumer Defensive,Farm Products,192605840,2424,2.97,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2569.KL,SBAGAN,Sungei Bagan Rubber Company (Malaya) Berhad,Consumer Defensive,Farm Products,537424064,14933,5.86,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2593.KL,UMCCA,United Malacca Berhad,Consumer Defensive,Farm Products,1273299072,61414,6.07,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2607.KL,INCKEN,Inch Kenneth Kajang Rubber Public Limited Company,Consumer Cyclical,Resorts & Casinos,174190512,78272,0.46,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2658.KL,AJI,Ajinomoto (Malaysia) Berhad,Consumer Defensive,Packaged Foods,1197731200,81293,19.7,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2674.KL,ALCOM,Alcom Group Berhad,Basic Materials,Aluminum,73210312,11095,0.545,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2682.KL,PARKWD,Parkwood Holdings Berhad,Real Estate,Real Estate—Diversified,41221492,9837,0.07,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2739.KL,TECHNAX,Techna-X Berhad,Consumer Cyclical,Restaurants,5878090,638766,0.02,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2755.KL,FCW,FCW Holdings Berhad,Consumer Defensive,Household & Personal Products,449989408,6382,1.8,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2828.KL,CIHLDG,C.I. Holdings Berhad,Consumer Defensive,Packaged Foods,332100000,11170,2.05,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2836.KL,CARLSBG,Carlsberg Brewery Malaysia Berhad,Consumer Defensive,Beverages—Brewers,3864654848,370654,12.64,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+2852.KL,CMSB,Cahya Mata Sarawak Berhad,Basic Materials,Building Materials,930346176,2927040,0.865,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3018.KL,OLYMPIA,Olympia Industries Berhad,Consumer Cyclical,Gambling,61405916,118246,0.06,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3026.KL,DLADY,Dutch Lady Milk Industries Berhad,Consumer Defensive,Packaged Foods,1779200000,6837,27.8,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3034.KL,HAPSENG,Hap Seng Consolidated Berhad,Industrials,Conglomerates,5900516864,149167,2.37,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3042.KL,PETRONM,Petron Malaysia Refining & Marketing Bhd,Energy,Oil & Gas Refining & Marketing,804600000,179345,2.98,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3069.KL,MFCB,Mega First Corporation Berhad,Utilities,Utilities—Regulated Electric,2540835328,718830,2.7,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3107.KL,FIMACOR,Fima Corporation Berhad,Consumer Defensive,Farm Products,310380032,14025,1.31,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3158.KL,YNHPROP,YNH Property Bhd,Real Estate,Real Estate—Development,121552032,619283,0.23,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3174.KL,L&G,Land & General Berhad,Real Estate,Real Estate—Development,535164352,18768937,0.18,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3182.KL,GENTING,Genting Berhad,Consumer Cyclical,Resorts & Casinos,5159772160,7800193,1.34,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3204.KL,GKENT,George Kent (Malaysia) Berhad,Industrials,Engineering & Construction,137972608,244516,0.265,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3239.KL,BJASSET,Berjaya Assets Berhad,Industrials,Conglomerates,754691520,81882,0.295,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3247.KL,GUH,GUH Holdings Berhad,Technology,Electronic Components,64165576,79575,0.225,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3255.KL,HEIM,Heineken Malaysia Berhad,Consumer Defensive,Beverages—Brewers,3806434816,449408,12.6,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3298.KL,HEXZA,Hexza Corporation Berhad,Basic Materials,Specialty Chemicals,190185136,108443,0.925,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3301.KL,HLIND,Hong Leong Industries Berhad,Consumer Cyclical,Auto Manufacturers,5271301120,42050,16.5,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3336.KL,IJM,IJM Corporation Berhad,Industrials,Conglomerates,8608256000,11067675,2.36,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3379.KL,INSAS,Insas Berhad,Financial Services,Capital Markets,623159808,469220,0.9,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3395.KL,BJCORP,Berjaya Corporation Berhad,Industrials,Conglomerates,1456766848,2098938,0.245,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3417.KL,E&O,Eastern & Oriental Berhad,Real Estate,Real Estate—Development,1747797376,1099911,0.7,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3441.KL,JOHAN,Johan Holdings Berhad,Basic Materials,Building Materials,23360568,170916,0.02,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3476.KL,KSENG,Keck Seng (Malaysia) Berhad,Consumer Defensive,Farm Products,1624052352,30740,4.52,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3514.KL,MARCO,Marco Holdings Berhad,Technology,Electronics & Computer Distribution,110702216,233390,0.105,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3557.KL,ECOFIRS,EcoFirst Consolidated Bhd,Real Estate,Real Estate—Diversified,397449792,2029556,0.335,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3565.KL,WCEHB,WCE Holdings Berhad,Industrials,Engineering & Construction,2095699328,395148,0.635,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3573.KL,LIENHOE,Lien Hoe Corporation Berhad,Consumer Cyclical,Lodging,24931542,6259,0.075,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3611.KL,PGLOBE,Paragon Globe Berhad,Real Estate,Real Estate—Development,522636352,47241,0.7,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3662.KL,MFLOUR,Malayan Flour Mills Berhad,Consumer Defensive,Farm Products,734544256,1970567,0.6,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3689.KL,F&N,Fraser & Neave Holdings Bhd,Consumer Defensive,Beverages—Non-Alcoholic,7105899520,116696,19.4,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3719.KL,PANAMY,Panasonic Manufacturing Malaysia Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",316485504,36706,5.21,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3743.KL,SUNSURIA,Sunsuria Berhad,Real Estate,Real Estate—Development,241897680,151138,0.27,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3778.KL,MELEWAR,Melewar Industrial Group Berhad,Basic Materials,Steel,41337452,143316,0.115,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3794.KL,MCEMENT,Malayan Cement Berhad,Basic Materials,Building Materials,7932412416,1376438,4.76,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3816.KL,MISC,MISC Berhad,Industrials,Marine Shipping,34103015424,2115969,7.64,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3859.KL,MAGNUM,Magnum Berhad,Consumer Cyclical,Gambling,1724614912,619685,1.2,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3867.KL,MPI,Malaysian Pacific Industries Berhad,Technology,Semiconductors,7376726016,274374,37.0,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3883.KL,MUDA,Muda Holdings Berhad,Basic Materials,Paper & Paper Products,189131520,8266,0.62,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3891.KL,MUIIND,Malayan United Industries Berhad,Consumer Cyclical,Lodging,129032680,1491295,0.04,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3905.KL,MULPHA,Mulpha International Bhd,Industrials,Conglomerates,750136704,74354,2.45,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3913.KL,MUIPROP,MUI Properties Berhad,Real Estate,Real Estate—Development,111137200,276579,0.15,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+3948.KL,DUTALND,DutaLand Berhad,Consumer Defensive,Food Distribution,217673472,90454,0.27,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4006.KL,ORIENT,Oriental Holdings Berhad,Consumer Cyclical,Auto & Truck Dealerships,4054429184,92125,6.58,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4022.KL,MAXIM,Maxim Global Berhad,Real Estate,Real Estate—Development,205809200,51096,0.28,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4057.KL,ASIAPAC,Asian Pac Holdings Berhad,Real Estate,Real Estate—Diversified,163773168,435591,0.11,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4065.KL,PPB,PPB Group Berhad,Consumer Defensive,Packaged Foods,11878010880,376293,8.36,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4081.KL,PMCORP,Pan Malaysia Corporation Berhad,Consumer Defensive,Confectioners,42601252,106979,0.05,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4162.KL,BAT,British American Tobacco (Malaysia) Berhad,Consumer Defensive,Tobacco,902274752,204674,3.16,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4197.KL,SIME,Sime Darby Berhad,Consumer Cyclical,Auto Manufacturers,16357434368,13589077,2.4,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4219.KL,BPROP,Berjaya Property Berhad,Industrials,Conglomerates,1124435456,757641,0.23,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4235.KL,LIONIND,Lion Industries Corporation Berhad,Basic Materials,Steel,57868508,440170,0.085,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4243.KL,WTK,W T K Holdings Berhad,Industrials,Conglomerates,374245632,1400101,0.8,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4251.KL,IBHD,I-Berhad,Real Estate,Real Estate—Development,343600448,384914,0.185,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4286.KL,SEAL,Seal Incorporated Berhad,Real Estate,Real Estate—Development,307814240,82738,0.685,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4316.KL,SHCHAN,Sin Heng Chan (Malaya) Berhad,Consumer Defensive,Farm Products,91999024,102383,0.22,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4324.KL,HENGYUAN,Hengyuan Refining Company Berhad,Energy,Oil & Gas Refining & Marketing,1613536512,8222175,2.68,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4359.KL,TURIYA,Turiya Berhad,Technology,Semiconductor Equipment & Materials,52836256,38908,0.21,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4375.KL,SMI,South Malaysia Industries Berhad,Industrials,Electrical Equipment & Parts,39888620,7662,0.19,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4383.KL,JTIASA,Jaya Tiasa Holdings Berhad,Consumer Defensive,Farm Products,813751680,2481537,0.88,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4405.KL,TCHONG,Tan Chong Motor Holdings Berhad,Consumer Cyclical,Auto Manufacturers,8251065,149406,0.405,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4456.KL,DNEX,Dagang NeXchange Berhad,Technology,Information Technology Services,1500563712,28932919,0.425,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4464.KL,PHB,Pegasus Heights Berhad,Real Estate,Real Estate Services,54105884,132917,0.005,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4502.KL,MEDIA,Media Prima Berhad,Communication Services,Entertainment,249569824,47635,0.225,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4596.KL,SAPRES,Sapura Resources Berhad,Industrials,Conglomerates,46666288,27954,0.18,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4634.KL,POS,Pos Malaysia Berhad,Industrials,Integrated Freight & Logistics,187866432,965851,0.24,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4677.KL,YTL,YTL Corporation Berhad,Utilities,Utilities—Diversified,20305158144,16896532,1.73,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4707.KL,NESTLE,Nestlé (Malaysia) Berhad,Consumer Defensive,Packaged Foods,22286880768,62341,95.04,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4715.KL,GENM,Genting Malaysia Berhad,Consumer Cyclical,Resorts & Casinos,6460370432,4447419,1.14,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4723.KL,JAKS,JAKS Resources Berhad,Industrials,Engineering & Construction,249497632,45632324,0.095,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4731.KL,SCIENTX,Scientex Berhad,Consumer Cyclical,Packaging & Containers,5073462784,626266,3.26,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4758.KL,ANCOMNY,Ancom Nylex Berhad,Basic Materials,Specialty Chemicals,852897344,1605618,0.815,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4847.KL,EPICON,Epicon Berhad,Industrials,Engineering & Construction,125492800,688117,0.2,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4863.KL,TM,Telekom Malaysia Berhad,Communication Services,Telecom Services,29320321024,3652567,7.64,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+4995.KL,VERSATL,Versatile Creative Berhad,Consumer Cyclical,Packaging & Containers,218476992,69288,0.78,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5000.KL,HUMEIND,Hume Cement Industries Berhad,Basic Materials,Building Materials,1912041600,214795,2.65,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5001.KL,MIECO,Mieco Berhad,Basic Materials,Lumber & Wood Production,660000000,72637,0.66,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5005.KL,UNISEM,Unisem (M) Berhad,Technology,Semiconductors,5349919232,2666022,3.12,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5006.KL,VARIA,Varia Berhad,Industrials,Engineering & Construction,352499744,20466,0.815,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5007.KL,CHINWEL,Chin Well Holdings Berhad,Industrials,Tools & Accessories,213825952,45600,0.75,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5008.KL,HARISON,Harrisons Holdings (Malaysia) Berhad,Industrials,Industrial Distribution,404009568,27443,1.18,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5009.KL,WTHORSE,White Horse Berhad,Basic Materials,Building Materials,110043752,5398,0.5,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5010.KL,TONGHER,Tong Herr Resources Berhad,Industrials,Tools & Accessories,383794240,122900,2.5,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5011.KL,MSNIAGA,Mesiniaga Berhad,Technology,Information Technology Services,65234164,2516,1.08,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5012.KL,TAANN,Ta Ann Holdings Berhad,Consumer Defensive,Farm Products,2184641536,343095,4.96,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5015.KL,APM,APM Automotive Holdings Berhad,Consumer Cyclical,Auto Parts,486780832,21616,2.49,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5016.KL,WARISAN,Warisan TC Holdings Berhad,Industrials,Conglomerates,32550200,1150,0.5,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5020.KL,GLOMAC,Glomac Berhad,Real Estate,Real Estate—Development,234085792,89759,0.305,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5021.KL,AYS,AYS Ventures Berhad,Basic Materials,Steel,94153192,220006,0.225,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5022.KL,PAOS,Paos Holdings Berhad,Basic Materials,Specialty Chemicals,48914280,9229,0.27,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5024.KL,HUPSENG,Hup Seng Industries Berhad,Consumer Defensive,Packaged Foods,620000000,127556,0.775,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5025.KL,AURO,Auro Holdings Berhad,Basic Materials,Lumber & Wood Production,82999864,472467,0.125,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5026.KL,MHC,MHC Plantations Bhd.,Consumer Defensive,Farm Products,324297536,176193,1.65,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5027.KL,KMLOONG,Kim Loong Resources Berhad,Consumer Defensive,Packaged Foods,2296872960,81329,2.33,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5028.KL,HTPADU,HeiTech Padu Berhad,Technology,Information Technology Services,141796336,221227,0.87,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5029.KL,FAREAST,Far East Holdings Berhad,Consumer Defensive,Farm Products,2434735872,4161,4.1,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5031.KL,TIMECOM,TIME dotCom Berhad,Communication Services,Telecom Services,10242455552,1967780,5.54,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5032.KL,BIPORT,Bintulu Port Holdings Berhad,Industrials,Marine Shipping,2300000000,2261,5.0,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5035.KL,KNUSFOR,Knusford Berhad,Industrials,Industrial Distribution,43843800,2832,0.44,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5036.KL,EDARAN,Edaran Berhad,Technology,Information Technology Services,51246100,8690,0.885,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5037.KL,COMPUGT,Compugates Holdings Berhad,Technology,Electronics & Computer Distribution,60504080,654256,0.01,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5038.KL,KSL,KSL Holdings Berhad,Real Estate,Real Estate—Development,2584116224,217637,2.33,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5041.KL,PBA,PBA Holdings Bhd,Utilities,Utilities—Regulated Water,612336128,286683,1.85,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5042.KL,TSRCAP,TSR Capital Berhad,Industrials,Engineering & Construction,40123500,16595,0.23,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5048.KL,YB,YB Ventures Berhad,Basic Materials,Building Materials,21511238,338640,0.055,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5049.KL,CVIEW,Country View Berhad,Real Estate,Real Estate—Development,249000000,14943,2.49,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5053.KL,OSK,OSK Holdings Berhad,Real Estate,Real Estate—Development,4516003328,1225698,1.46,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5054.KL,TRC,TRC Synergy Berhad,Industrials,Engineering & Construction,162594608,707004,0.345,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5056.KL,ENGTEX,Engtex Group Berhad,Industrials,Industrial Distribution,371409600,828066,0.39,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5062.KL,HUAYANG,Hua Yang Berhad,Real Estate,Real Estate—Development,60972724,90995,0.14,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5065.KL,ORNA,Ornapaper Berhad,Consumer Cyclical,Packaging & Containers,45974340,4162,0.62,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5066.KL,NTPM,NTPM Holdings Berhad,Consumer Defensive,Household & Personal Products,185301600,267230,0.165,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5068.KL,LUSTER,Luster Industries Bhd,Industrials,Specialty Industrial Machinery,73394768,4553158,0.025,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5069.KL,BLDPLNT,BLD Plantation Bhd.,Consumer Defensive,Farm Products,1233639040,1343,14.66,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5070.KL,PRTASCO,Protasco Berhad,Industrials,Infrastructure Operations,89121056,539896,0.185,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5071.KL,COASTAL,Coastal Contracts Bhd,Energy,Oil & Gas Equipment & Services,916809600,207432,1.62,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5072.KL,HIAPTEK,Hiap Teck Venture Berhad,Basic Materials,Steel,418135200,928770,0.24,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5073.KL,NAIM,Naim Holdings Berhad,Industrials,Engineering & Construction,281876128,752267,0.58,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5075.KL,PLENITU,Plenitude Berhad,Real Estate,Real Estate—Development,545593280,52212,1.43,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5077.KL,MAYBULK,Maybulk Berhad,Industrials,Marine Shipping,291769056,278003,0.355,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5078.KL,M&G,Marine & General Berhad,Energy,Oil & Gas Equipment & Services,254943008,19798167,0.305,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5079.KL,ONEGLOVE,One Glove Group Berhad,Healthcare,Medical Instruments & Supplies,67011456,173851,0.115,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5080.KL,POHKONG,Poh Kong Holdings Berhad,Consumer Cyclical,Luxury Goods,418558784,155332,1.02,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5081.KL,EIG,Esthetics International Group Berhad,Consumer Defensive,Household & Personal Products,43880892,4062,0.185,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5084.KL,IBRACO,Ibraco Berhad,Real Estate,Real Estate—Diversified,499632288,10080,0.915,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5085.KL,MUDAJYA,Mudajaya Group Berhad,Industrials,Engineering & Construction,132868784,27253,0.25,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5087.KL,MYCRON,Mycron Steel Berhad,Basic Materials,Steel,71952672,13498,0.22,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5088.KL,APEX,Apex Equity Holdings Berhad,Financial Services,Capital Markets,109878256,182291,0.49,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5090.KL,MEDIAC,Media Chinese International Limited,Communication Services,Publishing,105398888,841017,0.065,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5094.KL,CSCSTEL,CSC Steel Holdings Berhad,Basic Materials,Steel,439467008,123037,1.19,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5095.KL,HEVEA,HeveaBoard Berhad,Basic Materials,Lumber & Wood Production,56586472,138214,0.1,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5098.KL,MASTEEL,Malaysia Steel Works (KL) Bhd.,Basic Materials,Steel,119163152,511540,0.16,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5099.KL,CAPITALA,Capital A Berhad,Industrials,Airlines,1031078208,17174003,0.23,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5100.KL,BPPLAS,BP Plastics Holding Bhd.,Consumer Cyclical,Packaging & Containers,219503744,40908,0.78,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5101.KL,EVERGRN,Evergreen Fibreboard Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",88690016,456601,0.105,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5102.KL,GCB,Guan Chong Berhad,Consumer Defensive,Confectioners,4604122112,9846687,1.68,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5104.KL,CNH,Citra Nusa Holdings Berhad,Industrials,Conglomerates,25133498,161901,0.035,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5105.KL,CANONE,Can-One Berhad,Consumer Defensive,Packaged Foods,286307968,9188,1.49,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5106.KL,AXREIT,Axis Real Estate Investment Trust,Real Estate,REIT—Diversified,3462570496,966404,1.71,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5107.KL,IQGROUP,IQ Group Holdings Berhad,Industrials,Security & Protection Services,34771280,11653,0.395,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5108.KL,"""icapital.biz Berhad""",iCapital.biz Berhad,Financial Services,Asset Management,328614688,130180,2.33,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5109.KL,YTLREIT,YTL Hospitality REIT,Real Estate,REIT—Hotel & Motel,1668781696,600500,0.93,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5110.KL,UOAREIT,Uoa Real Estate Investment,Real Estate,REIT—Diversified,547235264,126690,0.81,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5111.KL,TWRREIT,Tower Real Estate Investment Trust,Real Estate,REIT—Office,144808128,23196,0.295,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5112.KL,THPLANT,TH Plantations Berhad,Consumer Defensive,Farm Products,410990944,298379,0.465,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5113.KL,RSAWIT,Rimbunan Sawit Berhad,Consumer Defensive,Farm Products,296049728,226198,0.145,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5115.KL,ALAM,Alam Maritim Resources Berhad,Energy,Oil & Gas Equipment & Services,111394144,551596,0.25,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5116.KL,ALAQAR,Al-'Aqar Healthcare REIT,Real Estate,REIT—Healthcare Facilities,931953536,219779,1.11,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5120.KL,AMFIRST,AmFirst Real Estate Investment Trust,Real Estate,REIT—Diversified,240240560,277282,0.35,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5121.KL,HEKTAR,Hektar Real Estate Investment Trust,Real Estate,REIT—Retail,372375488,813035,0.525,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5123.KL,SENTRAL,Sentral REIT,Real Estate,REIT—Office,699369216,687437,0.585,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5125.KL,PANTECH,Pantech Group Holdings Berhad,Basic Materials,Steel,565552832,422804,0.68,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5126.KL,SOP,Sarawak Oil Palms Berhad,Consumer Defensive,Farm Products,4556460032,446285,5.0,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5127.KL,ARREIT,AmanahRaya Real Estate Investment Trust,Real Estate,REIT—Diversified,229287936,186066,0.4,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5129.KL,MELATI,Melati Ehsan Holdings Berhad,Industrials,Engineering & Construction,56598840,2958,0.49,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5130.KL,ATRIUM,Atrium Real Estate Investment Trust,Real Estate,REIT—Industrial,310694304,102196,1.17,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5131.KL,ZHULIAN,Zhulian Corporation Berhad,Consumer Cyclical,Luxury Goods,204700000,62117,0.445,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5132.KL,DELEUM,Deleum Berhad,Energy,Oil & Gas Equipment & Services,355374848,316341,0.885,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5133.KL,PENERGY,Petra Energy Berhad,Energy,Oil & Gas Equipment & Services,197379456,89866,0.615,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5134.KL,SAB,Southern Acids (M) Berhad,Industrials,Conglomerates,410802368,4474,3.0,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5135.KL,SWKPLNT,Sarawak Plantation Berhad,Consumer Defensive,Farm Products,1077064192,177766,3.86,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5136.KL,HEXTECH,Hextar Technologies Solutions Berhad,Basic Materials,Building Materials,2346557696,247075,1.14,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5138.KL,HSPLANT,Hap Seng Plantations Holdings Berhad,Consumer Defensive,Farm Products,1719323264,263467,2.15,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5139.KL,AEONCR,AEON Credit Service (M) Berhad,Financial Services,Credit Services,2236495360,350469,4.38,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5140.KL,TASCO,TASCO Berhad,Industrials,Integrated Freight & Logistics,284000000,136414,0.355,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5141.KL,DAYANG,Dayang Enterprise Holdings Bhd,Energy,Oil & Gas Equipment & Services,1157771776,2486191,1.0,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5142.KL,WASCO,Wasco Berhad,Energy,Oil & Gas Equipment & Services,588476544,1501070,0.76,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5143.KL,LUXCHEM,Luxchem Corporation Berhad,Basic Materials,Chemicals,410897440,401654,0.385,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5145.KL,SEALINK,Sealink International Berhad,Industrials,Marine Shipping,165000000,503891,0.33,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5147.KL,SAMCHEM,Samchem Holdings Berhad,Basic Materials,Chemicals,225760000,400238,0.415,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5148.KL,UEMS,UEM Sunrise Berhad,Real Estate,Real Estate—Development,2453360896,6716527,0.485,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5149.KL,TAS,TAS Offshore Berhad,Industrials,Aerospace & Defense,43784588,77125,0.245,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5151.KL,HEXTAR,Hextar Global Berhad,Basic Materials,Agricultural Inputs,3076603392,13959904,0.785,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5152.KL,MBL,Muar Ban Lee Group Berhad,Industrials,Specialty Industrial Machinery,77430208,18254,0.34,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5156.KL,XDL,XiDeLang Holdings Ltd,Consumer Cyclical,Footwear & Accessories,10581127,1304438,0.005,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5157.KL,SG,SaudiGold Group Berhad,Consumer Defensive,Packaged Foods,10150876,137245,0.065,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5159.KL,YOCB,Yoong Onn Corporation Berhad,Consumer Cyclical,Textile Manufacturing,198315872,36932,1.25,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5160.KL,HOMERIZ,Homeritz Corporation Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",158300720,44629,0.345,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5161.KL,JCY,JCY International Berhad,Technology,Computer Hardware,1085159424,15572070,0.505,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5162.KL,VSTECS,VSTECS Berhad,Technology,Electronics & Computer Distribution,1345694208,1743851,1.25,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5163.KL,SEB,Seremban Engineering Berhad,Industrials,Metal Fabrication,55776560,1654,0.7,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5165.KL,DFCITY,DFCITY Group Berhad,Basic Materials,Building Materials,41691668,3720,0.395,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5166.KL,CYBERE,Cyberjaya Education Group Berhad,Consumer Defensive,Education & Training Services,261284784,38269,1.5,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5168.KL,HARTA,Hartalega Holdings Berhad,Basic Materials,Specialty Chemicals,3441536512,10085303,1.01,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5169.KL,HOHUP,Ho Hup Construction Company Berhad,Industrials,Engineering & Construction,20730428,36443,0.04,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5171.KL,KIMLUN,Kimlun Corporation Berhad,Industrials,Engineering & Construction,291524192,203441,0.75,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5172.KL,SINARAN,Sinaran Advance Group Berhad,Consumer Cyclical,Footwear & Accessories,78822136,1738819,0.075,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5173.KL,SYGROUP,Shin Yang Group Berhad,Industrials,Marine Shipping,823022208,87332,0.7,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5176.KL,SUNREIT,Sunway Real Estate Investment Trust,Real Estate,REIT—Retail,6609878528,3313053,1.93,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5178.KL,INGENIEU,Ingenieur Gudang Berhad,Industrials,Engineering & Construction,37914820,9402224,0.025,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5180.KL,CLMT,CapitaLand Malaysia Trust,Real Estate,REIT—Retail,1853363584,2130411,0.54,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5182.KL,AVALAND,Avaland Berhad,Real Estate,Real Estate—Development,211264336,524550,0.145,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5183.KL,PCHEM,PETRONAS Chemicals Group Berhad,Basic Materials,Chemicals,30400000000,5517745,3.8,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5184.KL,CYPARK,Cypark Resources Berhad,Utilities,Utilities—Renewable,570219520,8895395,0.63,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5185.KL,AFFIN,AFFIN Bank Berhad,Financial Services,Banks—Regional,4974867968,710366,1.89,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5186.KL,MHB,Malaysia Marine and Heavy Engineering Holdings Berhad,Energy,Oil & Gas Equipment & Services,519999968,434608,0.325,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5188.KL,CNOUHUA,China Ouhua Winery Holdings Limited,Consumer Defensive,Beverages—Wineries & Distilleries,30060002,107904,0.045,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5190.KL,BENALEC,Benalec Holdings Berhad,Industrials,Engineering & Construction,56038792,667809,0.055,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5191.KL,TAMBUN,Tambun Indah Land Berhad,Real Estate,Real Estate—Diversified,298732096,45740,0.68,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5192.KL,ECEXCEL,EC Excel Holdings Berhad,Basic Materials,Steel,162329616,31616,0.75,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5195.KL,CENSOF,Censof Holdings Berhad,Technology,Software—Application,110456320,1210980,0.2,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5196.KL,BJFOOD,Berjaya Food Berhad,Consumer Cyclical,Restaurants,369166272,494412,0.185,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5197.KL,FLBHD,Focus Lumber Berhad,Basic Materials,Lumber & Wood Production,49147124,128270,0.225,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5198.KL,AFUJIYA,ABM Fujiya Berhad,Consumer Cyclical,Auto Parts,37800000,9,0.21,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5199.KL,HIBISCS,Hibiscus Petroleum Berhad,Energy,Oil & Gas E&P,1305189760,4849137,1.77,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5200.KL,UOADEV,UOA Development Bhd,Real Estate,Real Estate—Development,3981997824,225874,1.48,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5202.KL,MSM,MSM Malaysia Holdings Berhad,Consumer Defensive,Confectioners,499115776,385133,0.71,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5204.KL,AWANTEC,AwanBiru Technology Berhad,Consumer Defensive,Education & Training Services,193133072,290135,0.245,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5205.KL,SENDAI,Eversendai Corporation Berhad,Industrials,Engineering & Construction,140660384,1137961,0.18,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5207.KL,SBCCORP,SBC Corporation Berhad,Real Estate,Real Estate—Development,46119272,38087,0.18,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5208.KL,EITA,EITA Resources Berhad,Industrials,Specialty Industrial Machinery,164486608,162867,0.545,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5209.KL,GASMSIA,Gas Malaysia Berhad,Utilities,Utilities—Regulated Gas,6869400064,892833,5.35,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5210.KL,ARMADA,Bumi Armada Berhad,Energy,Oil & Gas Equipment & Services,1689474432,5132667,0.285,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5211.KL,SUNWAY,Sunway Berhad,Industrials,Conglomerates,27920539648,4062127,4.13,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5212.KL,PAVREIT,Pavilion Real Estate Investment Trust,Real Estate,REIT—Retail,6093737472,2004595,1.55,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5216.KL,DATASONIC,Datasonic Group Berhad,Technology,Computer Hardware,924604928,10254843,0.265,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5218.KL,VANTNRG,Vantris Energy Berhad,Energy,Oil & Gas Equipment & Services,579227008,2561441,0.25,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5219.KL,PESTEC,Pestec International Berhad,Industrials,Engineering & Construction,101987176,4007764,0.04,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5220.KL,GLOTEC,Globaltec Formation Berhad,Consumer Cyclical,Auto Parts,209913792,64546,0.78,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5223.KL,MENTIGA,Mentiga Corporation Berhad,Consumer Defensive,Farm Products,92400000,134258,1.32,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5225.KL,IHH,IHH Healthcare Berhad,Healthcare,Medical Care Facilities,69452169216,3830019,7.86,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5226.KL,GBGAQRS,Gabungan AQRS Berhad,Industrials,Engineering & Construction,73274144,178048,0.135,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5227.KL,IGBREIT,IGB Real Estate Investment Trust,Real Estate,REIT—Retail,11747662848,2243645,2.71,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5228.KL,ELKDESA,ELK-Desa Resources Berhad,Financial Services,Credit Services,407431136,184346,0.965,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5230.KL,TUNEPRO,Tune Protect Group Berhad,Financial Services,Insurance—Diversified,158264608,496743,0.21,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5231.KL,PBSB,PBS Berhad,Industrials,Specialty Business Services,72384584,204504,0.12,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5232.KL,LEONFB,Leon Fuat Berhad,Basic Materials,Steel,114235000,36004,0.335,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5236.KL,MATRIX,Matrix Concepts Holdings Berhad,Real Estate,Real Estate—Development,1642393856,2086680,0.875,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5238.KL,AAGB,AirAsia Group Berhad,Industrials,Airlines,1596398464,23610945,0.475,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5239.KL,TITIJYA,Titijaya Land Berhad,Real Estate,Real Estate—Development,275676096,114301,0.21,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5242.KL,SOLID,Solid Automotive Berhad,Consumer Cyclical,Auto Parts,51937188,96982,0.1,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5243.KL,VELESTO,Velesto Energy Berhad,Energy,Oil & Gas Drilling,1528989056,19680153,0.185,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5246.KL,WPRTS,Westports Holdings Berhad,Industrials,Marine Shipping,23956633600,5355951,6.94,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5247.KL,KAREX,Karex Berhad,Consumer Defensive,Household & Personal Products,442453504,305341,0.42,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5248.KL,BAUTO,Bermaz Auto Berhad,Consumer Cyclical,Auto & Truck Dealerships,828942848,1931070,0.74,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5249.KL,IOIPG,IOI Properties Group Berhad,Real Estate,Real Estate—Development,16022883328,3984954,2.91,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5250.KL,SEM,7-Eleven Malaysia Holdings Berhad,Consumer Defensive,Grocery Stores,2173770496,11783,1.96,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5252.KL,SASBADI,Sasbadi Holdings Berhad,Communication Services,Publishing,59562496,83480,0.14,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5253.KL,ECONBHD,Econpile Holdings Berhad,Industrials,Engineering & Construction,163012512,3202074,0.115,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5255.KL,LFG,Lianson Fleet Group Berhad,Energy,Oil & Gas Equipment & Services,1588397184,171858,1.4,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5257.KL,CARIMIN,Carimin Petroleum Berhad,Energy,Oil & Gas Equipment & Services,88841640,101479,0.385,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5258.KL,BIMB,Bank Islam Malaysia Berhad,Financial Services,Banks—Regional,4283634432,1142329,1.89,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5259.KL,AVANGAAD,Avangaad Berhad,Industrials,Marine Shipping,391243712,2979864,0.295,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5260.KL,OWG,Only World Group Holdings Berhad,Consumer Cyclical,Leisure,80304192,470561,0.175,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5263.KL,SUNCON,Sunway Construction Group Berhad,Industrials,Engineering & Construction,8492175872,4058517,6.39,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5264.KL,MALAKOF,Malakoff Corporation Berhad,Utilities,Utilities—Diversified,3787394816,2737124,0.775,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5265.KL,OASIS,Oasis Harvest Corporation Berhad,Consumer Cyclical,Restaurants,16556335,363364,0.075,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5267.KL,XINHWA,Xin Hwa Holdings Berhad,Industrials,Integrated Freight & Logistics,38331792,32333,0.15,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5269.KL,ALSREIT,Al-Salam Real Estate Investment Trust,Real Estate,REIT—Diversified,278400000,32170,0.48,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5271.KL,PECCA,Pecca Group Berhad,Consumer Cyclical,Auto Parts,1021481408,2082275,1.41,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5272.KL,RANHILL,Ranhill Utilities Berhad,Utilities,Utilities—Regulated Water,3265792000,2034377,2.52,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5273.KL,CHINHIN,Chin Hin Group Berhad,Basic Materials,Building Materials,7213457920,310580,2.04,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5274.KL,HLCAP,Hong Leong Capital Berhad,Financial Services,Capital Markets,667274240,40140,2.83,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5275.KL,MYNEWS,Mynews Holdings Berhad,Consumer Cyclical,Specialty Retail,296389824,237362,0.395,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5276.KL,DANCO,Dancomech Holdings Berhad,Industrials,Pollution & Treatment Controls,119488560,84461,0.27,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5277.KL,FPGROUP,FoundPac Group Berhad,Technology,Semiconductor Equipment & Materials,187908112,914593,0.345,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5278.KL,RHONEMA,Rhone Ma Holdings Berhad,Healthcare,Drug Manufacturers—Specialty & Generic,150350496,7780,0.68,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5280.KL,KIPREIT,KIP Real Estate Investment Trust,Real Estate,REIT—Retail,990628608,655067,0.855,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5281.KL,ADVCON,Advancecon Holdings Berhad,Industrials,Engineering & Construction,99972200,243616,0.18,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5283.KL,EWICAP,EWI Capital Berhad,Real Estate,Real Estate—Diversified,264000192,1246827,0.11,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5284.KL,LCTITAN,Lotte Chemical Titan Holding Berhad,Basic Materials,Chemicals,569389120,1881056,0.25,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5285.KL,SDG,SD Guthrie Berhad,Consumer Defensive,Packaged Foods,40871870464,10580264,5.91,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5286.KL,MI,Mi Technovation Berhad,Technology,Semiconductor Equipment & Materials,5151649792,4872661,5.74,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5288.KL,SIMEPROP,Sime Darby Property Berhad,Real Estate,Real Estate—Development,7956981760,4166675,1.17,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5289.KL,TECHBND,Techbond Group Berhad,Basic Materials,Specialty Chemicals,203848768,223256,0.27,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5291.KL,HPMT,HPMT Holdings Berhad,Industrials,Tools & Accessories,54200684,248609,0.165,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5292.KL,UWC,UWC Berhad,Industrials,Metal Fabrication,6678106112,4114503,6.05,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5293.KL,AME,AME Elite Consortium Berhad,Industrials,Engineering & Construction,772004800,295927,1.22,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5295.KL,INNATURE,InNature Berhad,Consumer Cyclical,Specialty Retail,88235184,223175,0.125,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5296.KL,MRDIY,Mr D.I.Y. Group (M) Berhad,Consumer Cyclical,Home Improvement Retail,9572250624,10557612,1.01,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5297.KL,TJSETIA,Tuju Setia Berhad,Industrials,Engineering & Construction,64474644,17653,0.185,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5298.KL,OMH,OM Materials Holdings Limited,Basic Materials,Other Industrial Metals & Mining,494235648,7785,0.645,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5299.KL,IGBCR,IGB Commercial Real Estate Investment Trust,Real Estate,REIT—Office,1423890944,264833,0.585,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5300.KL,YENHER,Yenher Holdings Berhad,Consumer Defensive,Packaged Foods,216000016,52869,0.72,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5301.KL,CTOS,CTOS Digital Berhad,Financial Services,Financial Data & Stock Exchanges,978454848,10933180,0.445,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5302.KL,ATECH,Aurelius Technologies Berhad,Technology,Semiconductor Equipment & Materials,708867584,1818040,0.545,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5303.KL,SWIFT,Swift Haulage Berhad,Industrials,Integrated Freight & Logistics,302016768,110933,0.36,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5305.KL,SENHENG,Senheng New Retail Berhad,Consumer Cyclical,Specialty Retail,135000000,562420,0.09,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5306.KL,FFB,Farm Fresh Berhad,Consumer Defensive,Packaged Foods,3532332032,2516114,1.78,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5307.KL,AMEREIT,AME Real Estate Investment Trust,Real Estate,REIT—Industrial,763726720,132491,1.43,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5308.KL,SENFONG,Seng Fong Holdings Berhad,Basic Materials,Specialty Chemicals,501549632,267891,0.695,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5309.KL,ITMAX,ITMAX System Berhad,Industrials,Security & Protection Services,4358376448,1505343,4.2,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5310.KL,KITACON,Kumpulan Kitacon Berhad,Real Estate,Real Estate—Development,315214208,8606,0.63,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5311.KL,CEB,Cape EMS Berhad,Technology,Electronic Components,271903872,8537479,0.255,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5313.KL,RADIUM,Radium Development Berhad,Real Estate,Real Estate—Development,2046119936,208069,0.59,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5315.KL,SKYWLD,SkyWorld Development Berhad,Real Estate,Real Estate—Development,343034720,709259,0.335,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5316.KL,MSTGOLF,MST Golf Group Berhad,Consumer Cyclical,Specialty Retail,102608576,59870,0.125,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5317.KL,CPETECH,CPE Technology Berhad,Technology,Electronic Components,731733184,3418108,1.09,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5318.KL,DXN,DXN Holdings Bhd.,Consumer Defensive,Packaged Foods,2244524544,2422387,0.46,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5319.KL,MKHOP,MKH Oil Palm (East Kalimantan) Berhad,Consumer Defensive,Farm Products,639011456,608977,0.63,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5320.KL,PLINTAS,Prolintas Infra Business Trust,Industrials,Infrastructure Operations,951500032,108219,0.865,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5321.KL,KEYFIELD,Keyfield International Berhad,Energy,Oil & Gas Equipment & Services,1075229696,242758,1.33,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5322.KL,FEYTECH,Feytech Holdings Berhad,Consumer Cyclical,Auto Parts,126480008,1143177,0.15,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5323.KL,JPG,Johor Plantations Group Berhad,Consumer Defensive,Farm Products,4286379776,4460469,1.72,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5325.KL,WELLCHIP,Well Chip Group Berhad,Consumer Cyclical,Luxury Goods,648000000,788081,0.9,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5326.KL,99SMART,99 Speed Mart Retail Holdings Berhad,Consumer Cyclical,Department Stores,25368000512,3152506,3.02,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5327.KL,MEGAFB,Mega Fortris Berhad,Industrials,Building Products & Equipment,1639246720,5993800,1.94,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5328.KL,LWSABAH,Life Water Berhad,Consumer Defensive,Beverages—Non-Alcoholic,723964608,951048,1.53,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5329.KL,AZAMJAYA,Azam Jaya Berhad,Industrials,Engineering & Construction,477500000,116133,0.955,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5330.KL,TMK,TMK Chemical Bhd,Basic Materials,Chemicals,3080000000,1048691,3.08,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5331.KL,PGLOBAL,Pantech Global Berhad,Basic Materials,Steel,522750016,904977,0.615,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5332.KL,REACHTEN,Reach Ten Holdings Berhad,Communication Services,Telecom Services,274792000,858643,0.28,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5335.KL,HI,HI Mobility Berhad,Industrials,Railroads,865000000,904320,1.73,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5336.KL,CKI,CUCKOO International (MAL) Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",444168000,1505843,0.31,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5337.KL,ECOSHOP,Eco-Shop Marketing Berhad,Consumer Cyclical,Department Stores,6913058816,6564467,1.2,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5338.KL,PARADIGM,Paradigm Real Estate Investment Trust,Real Estate,REIT—Diversified,1275985536,721485,0.795,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5340.KL,UMSINT,UMS Integration Limited,Technology,Semiconductor Equipment & Materials,5623855616,166822,5.98,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5341.KL,LACMED,LAC Med Berhad,Healthcare,Medical Devices,268000000,324051,0.67,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5343.KL,GENERGY,Wasco Greenergy Berhad,Utilities,Utilities—Renewable,152500000,382537,0.305,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5345.KL,GEOHAN,Geohan Corporation Berhad,Industrials,Engineering & Construction,125400000,158454,0.285,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5346.KL,HOCKSOON,Hock Soon Capital Berhad,Consumer Defensive,Farm Products,132499992,368703,0.265,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5347.KL,TENAGA,Tenaga Nasional Berhad,Utilities,Utilities—Regulated Electric,72514527232,6407814,12.44,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5348.KL,ORKIM,Orkim Berhad,Industrials,Marine Shipping,630000000,339579,0.63,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5351.KL,EMPIRE,Empire Premium Food Berhad,Consumer Cyclical,Restaurants,797500032,1543935,0.725,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5352.KL,MTTSL,MTT Shipping and Logistics Berhad,Industrials,Integrated Freight & Logistics,3155645184,6400929,1.26,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5356.KL,STRATUS,Stratus Global Holdings Berhad,Technology,Semiconductor Equipment & Materials,2099999872,5005409,1.68,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5357.KL,SKYECHIP,SkyeChip Berhad,Technology,Semiconductors,3861486080,3945640,2.15,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5358.KL,BCG,Big Caring Group Bhd,Healthcare,Pharmaceutical Retailers,7972382720,216840166,1.08,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5371.KL,KIMHIN,Kim Hin Industry Berhad,Basic Materials,Building Materials,109386512,1870,0.78,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5398.KL,GAMUDA,Gamuda Berhad,Industrials,Engineering & Construction,27183245312,19449598,4.48,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5401.KL,TROP,Tropicana Corporation Berhad,Real Estate,Real Estate—Development,2623308288,1081198,1.1,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5436.KL,PERSTIM,Perusahaan Sadur Timah Malaysia (Perstima) Berhad,Consumer Cyclical,Packaging & Containers,80039608,7616,0.62,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5517.KL,SHANG,Shangri-La Hotels (Malaysia) Berhad,Consumer Cyclical,Resorts & Casinos,638000000,55151,1.45,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5533.KL,OCB,OCB Berhad,Consumer Defensive,Packaged Foods,102850000,12611,1.0,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5555.KL,SUNMED,Sunway Healthcare Holdings Berhad,Healthcare,Medical Care Facilities,24048566272,11408141,2.09,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5568.KL,APB,APB Resources Berhad,Industrials,Metal Fabrication,20484444,56304,0.15,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5576.KL,MINHO,Minho (M) Berhad,Basic Materials,Lumber & Wood Production,101666376,32187,0.285,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5592.KL,GCE,Grand Central Enterprises Bhd.,Consumer Cyclical,Lodging,70920720,3624,0.36,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5606.KL,IGBB,IGB Berhad,Real Estate,Real Estate Services,4474231296,23788,2.25,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5614.KL,NHB,Nuenergy Holdings Berhad,Utilities,Utilities—Renewable,272016480,325596,1.44,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5649.KL,GPHAROS,Golden Pharos Berhad,Basic Materials,Lumber & Wood Production,19708566,36832,0.14,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5657.KL,PARKSON,Parkson Holdings Berhad,Consumer Cyclical,Department Stores,160846288,1010653,0.14,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5665.KL,SSTEEL,Southern Steel Berhad,Basic Materials,Steel,698017728,141998,0.465,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5673.KL,JSB,Jentayu Sustainables Berhad,Industrials,Conglomerates,98006880,107712,0.18,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5681.KL,PETDAG,PETRONAS Dagangan Berhad,Energy,Oil & Gas Refining & Marketing,19094185984,276306,19.22,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5703.KL,MUHIBAH,Muhibbah Engineering (M) Bhd.,Industrials,Engineering & Construction,310408896,750833,0.425,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5738.KL,CHHB,Country Heights Holdings Berhad,Consumer Cyclical,Lodging,48380840,65024,0.15,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5789.KL,LBS,LBS Bina Group Berhad,Real Estate,Real Estate—Development,511304128,1658587,0.335,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5797.KL,CHOOBEE,Choo Bee Metal Industries Berhad,Basic Materials,Steel,93551856,24593,0.48,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5819.KL,HLBANK,Hong Leong Bank Berhad,Financial Services,Banks—Regional,43100336128,936506,21.02,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5827.KL,OIB,Oriental Interest Berhad,Real Estate,Real Estate—Development,716684992,28640,1.18,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5843.KL,KPS,Kumpulan Perangsang Selangor Berhad,Industrials,Metal Fabrication,333178944,184995,0.62,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5878.KL,KPJ,KPJ Healthcare Berhad,Healthcare,Medical Care Facilities,10624006144,7040516,2.4,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5908.KL,DKSH,DKSH Holdings (Malaysia) Berhad,Industrials,Industrial Distribution,938065536,21922,5.95,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5916.KL,MSC,Malaysia Smelting Corporation Berhad,Basic Materials,Other Industrial Metals & Mining,1176000000,1306632,1.4,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5932.KL,BPURI,Bina Puri Holdings Bhd,Industrials,Engineering & Construction,196487472,997848,0.22,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+5983.KL,MBMR,MBM Resources Berhad,Consumer Cyclical,Auto & Truck Dealerships,1876260736,336964,4.8,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6009.KL,P&O,Pacific & Orient Berhad,Financial Services,Insurance—Property & Casualty,144024784,126848,0.51,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6012.KL,MAXIS,Maxis Berhad,Communication Services,Telecom Services,29720805376,1857517,3.79,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6017.KL,SHL,SHL Consolidated Bhd.,Real Estate,Real Estate Services,532672224,4190,2.2,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6033.KL,PETGAS,PETRONAS Gas Berhad,Energy,Oil & Gas Integrated,34232059904,792098,17.3,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6041.KL,FARLIM,Farlim Group (Malaysia) Bhd.,Real Estate,Real Estate—Diversified,22953844,11601,0.15,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6068.KL,PCCS,PCCS Group Berhad,Consumer Cyclical,Apparel Manufacturing,56250448,127382,0.255,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6076.KL,ENCORP,Encorp Berhad,Real Estate,Real Estate—Development,56933772,125322,0.18,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6084.KL,STAR,Star Media Group Berhad,Communication Services,Publishing,192062688,607059,0.265,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6139.KL,TAKAFUL,Syarikat Takaful Malaysia Keluarga Berhad,Financial Services,Insurance—Specialty,2389782016,1086961,2.74,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6149.KL,METROD,Metrod Holdings Berhad,Industrials,Electrical Equipment & Parts,120000000,2625,1.0,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6173.KL,BDB,Bina Darulaman Berhad,Industrials,Engineering & Construction,66848096,130264,0.22,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6181.KL,MALTON,Malton Berhad,Real Estate,Real Estate—Development,100404592,665798,0.175,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6203.KL,KHEESAN,Khee San Berhad,Consumer Defensive,Confectioners,128900656,2785375,0.105,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6211.KL,KIALIM,Kia Lim Berhad,Basic Materials,Building Materials,17652174,8048,0.285,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6254.KL,PDZ,PDZ Holdings Bhd,Industrials,Marine Shipping,17651010,461296,0.03,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6262.KL,INNO,Innoprise Plantations Berhad,Consumer Defensive,Farm Products,866732864,127616,1.81,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6297.KL,BOXPAK,Box-Pak (Malaysia) Bhd.,Consumer Cyclical,Packaging & Containers,20407986,4817,0.17,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6351.KL,AMWAY,Amway (Malaysia) Holdings Berhad,Consumer Cyclical,Specialty Retail,650967168,10674,3.96,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6378.KL,BEDI,BEDI Berhad,Basic Materials,Building Materials,411895808,68908,0.475,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6399.KL,ASTRO,Astro Malaysia Holdings Berhad,Communication Services,Entertainment,262045824,3089551,0.05,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6432.KL,APOLLO,Apollo Food Holdings Berhad,Consumer Defensive,Confectioners,456000000,42814,5.7,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6459.KL,MNRB,MNRB Holdings Berhad,Financial Services,Insurance—Reinsurance,1855915392,502166,2.37,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6483.KL,KENANGA,Kenanga Investment Bank Berhad,Financial Services,Capital Markets,406736736,339419,0.56,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6491.KL,KFIMA,Kumpulan Fima Berhad,Industrials,Conglomerates,693435200,149927,2.44,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6521.KL,SURIA,Suria Capital Holdings Berhad,Industrials,Marine Shipping,394235680,30222,1.14,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6556.KL,ANNJOO,Ann Joo Resources Berhad,Basic Materials,Steel,343858432,133219,0.49,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6599.KL,AEON,Aeon Co. (M) Bhd.,Consumer Cyclical,Department Stores,1242540032,859656,0.885,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6602.KL,BCB,BCB Berhad,Real Estate,Real Estate—Diversified,98886168,15403,0.245,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6633.KL,LHI,Leong Hup International Berhad,Consumer Defensive,Farm Products,2420653824,1499429,0.735,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6637.KL,PNEPCB,PNE PCB Berhad,Technology,Electronic Components,19620006,85014,0.035,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6718.KL,CRESNDO,Crescendo Corporation Berhad,Real Estate,Real Estate—Development,956048704,84974,1.13,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6742.KL,YTLPOWR,YTL Power International Berhad,Utilities,Utilities—Diversified,36324352000,17819604,4.16,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6769.KL,JKGLAND,JKG Land Berhad,Real Estate,Real Estate—Development,227492992,337414,0.1,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6807.KL,PUNCAK,Puncak Niaga Holdings Berhad,Industrials,Engineering & Construction,71559640,295412,0.16,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6815.KL,EUPE,Eupe Corporation Berhad,Real Estate,Real Estate—Development,93766264,45525,0.64,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6874.KL,JAGCPTL,JAG Capital Berhad,Utilities,Utilities—Regulated Gas,443021696,56533,0.795,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6888.KL,AXIATA,Axiata Group Berhad,Communication Services,Telecom Services,14801168384,7382950,1.61,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6912.KL,PASDEC,Pasdec Holdings Berhad,Real Estate,Real Estate—Development,108099696,11283,0.27,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6939.KL,FIAMMA,Fiamma Holdings Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",540913024,59429,1.02,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6947.KL,CDB,Celcomdigi Berhad,Communication Services,Telecom Services,26394361856,2965237,2.25,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6963.KL,VS,V.S. Industry Berhad,Technology,Electronic Components,963632768,49599032,0.25,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6971.KL,KOBAY,Kobay Technology Bhd.,Industrials,Metal Fabrication,585930880,1355529,1.83,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+6998.KL,BINTAI,Bintai Kinden Corporation Berhad,Industrials,Engineering & Construction,109691448,2694425,0.065,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7004.KL,MCEHLDG,MCE Holdings Berhad,Consumer Cyclical,Auto Parts,214570608,102545,1.4,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7005.KL,BIG,B.I.G. Industries Berhad,Basic Materials,Specialty Chemicals,33962712,60232,0.535,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7006.KL,RKI,Rhong Khen International Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",185351264,7682,0.95,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7007.KL,ARK,ARK Resources Holdings Berhad,Industrials,Engineering & Construction,18911088,1790,0.19,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7010.KL,PTT,PTT Synergy Group Berhad,Industrials,Engineering & Construction,701730048,323840,1.47,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7013.KL,HUBLINE,Hubline Berhad,Industrials,Marine Shipping,128679952,1857582,0.03,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7014.KL,YLI,YLI Holdings Berhad,Basic Materials,Steel,29335766,39383,0.26,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7016.KL,CHUAN,Chuan Huat Resources Berhad,Industrials,Building Products & Equipment,48070908,136887,0.285,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7017.KL,KOMARK,Komarkcorp Berhad,Industrials,Specialty Business Services,11545889,39732,0.05,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7018.KL,CME,CME Group Berhad,Industrials,Farm & Heavy Construction Machinery,12091260,831180,0.01,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7020.KL,ASTEEL,ASTEEL Group Berhad,Basic Materials,Steel,58652992,3575375,0.115,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7022.KL,GTRONIC,Globetronics Technology Bhd.,Technology,Semiconductors,136796880,816598,0.175,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7025.KL,WOODLAN,Woodlandor Holdings Berhad,Basic Materials,Lumber & Wood Production,21000524,488,0.525,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7028.KL,ZECON,Zecon Berhad,Industrials,Engineering & Construction,72741848,32959,0.455,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7029.KL,MASTER,Master-Pack Group Berhad,Consumer Cyclical,Packaging & Containers,84115032,4364,1.54,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7031.KL,AMTEL,Amtel Holdings Berhad,Technology,Scientific & Technical Instruments,28152692,36635,0.295,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7033.KL,HIGHTEC,Kumpulan H & L High-Tech Berhad,Industrials,Metal Fabrication,62132876,23519,0.545,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7034.KL,TGUAN,Thong Guan Industries Berhad,Consumer Cyclical,Packaging & Containers,575173888,417708,1.5,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7035.KL,CCK,CCK Consolidated Holdings Berhad,Consumer Defensive,Grocery Stores,464889376,389022,0.76,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7036.KL,BORNOIL,Borneo Oil Berhad,Industrials,Conglomerates,86064752,934095,0.005,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7043.KL,XIN,Xin Synergy Group Berhad,Basic Materials,Building Materials,125243192,368896,0.22,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7047.KL,FBG,FBG Holdings Berhad,Industrials,Engineering & Construction,94194784,700012,0.09,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7050.KL,WONG,Wong Engineering Corporation Berhad,Industrials,Metal Fabrication,33743544,71398,0.135,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7052.KL,PADINI,Padini Holdings Berhad,Consumer Cyclical,Apparel Retail,1065813376,1590529,1.08,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7054.KL,AASIA,Astral Asia Berhad,Consumer Defensive,Farm Products,79621400,121948,0.115,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7060.KL,NHFATT,New Hoong Fatt Holdings Berhad,Consumer Cyclical,Auto Parts,200066864,7740,1.21,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7062.KL,KHIND,Khind Holdings Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",46242900,1803,1.1,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7066.KL,YONGTAI,Yong Tai Berhad,Real Estate,Real Estate—Development,58199596,1364733,0.1,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7070.KL,VIZIONE,Vizione Holdings Berhad,Industrials,Engineering & Construction,52458124,122104,0.095,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7071.KL,OCR,OCR Group Berhad,Real Estate,Real Estate—Development,167043488,2255746,0.05,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7076.KL,CBIP,CB Industrial Product Holding Berhad,Industrials,Specialty Industrial Machinery,475594912,99691,1.03,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7077.KL,KPPROP,Kerjaya Prospek Property Berhad,Real Estate,Real Estate—Development,198342208,167811,0.24,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7078.KL,AZRB,Ahmad Zaki Resources Berhad,Industrials,Engineering & Construction,49205872,284620,0.075,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7079.KL,TWL,TWL Holdings Berhad,Real Estate,Real Estate—Development,166813376,10707885,0.025,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7080.KL,PERMAJU,Permaju Industries Berhad,Consumer Cyclical,Auto & Truck Dealerships,19571272,1685717,0.01,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7081.KL,PHARMA,Pharmaniaga Berhad,Healthcare,Medical Distribution,983553664,2027932,0.75,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7082.KL,M&A,M & A Equity Holdings Berhad,Financial Services,Capital Markets,289967296,511743,0.145,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7083.KL,ANALABS,Analabs Resources Berhad,Basic Materials,Specialty Chemicals,188049488,10090,1.7,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7084.KL,QL,QL Resources Berhad,Consumer Defensive,Farm Products,13841474560,1061666,3.8,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7085.KL,LTKM,LTKM Berhad,Consumer Defensive,Farm Products,145976272,7717,1.02,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7086.KL,ABLEGRP,AbleGroup Berhad,Industrials,Building Products & Equipment,21111988,70895,0.08,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7087.KL,MAGNI,Magni-Tech Industries Berhad,Consumer Cyclical,Apparel Manufacturing,619834304,128483,1.43,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7088.KL,POHUAT,Poh Huat Resources Holdings Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",161633104,51803,0.61,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7089.KL,LIIHEN,Lii Hen Industries Bhd,Consumer Cyclical,"Furnishings, Fixtures & Appliances",107999992,308235,0.2,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7091.KL,UNIMECH,Unimech Group Berhad,Industrials,Metal Fabrication,198038592,11890,1.36,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7094.KL,EUROSP,Eurospan Holdings Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",128822936,20040,2.9,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7095.KL,PIE,P.I.E. Industrial Berhad,Technology,Electronic Components,587584256,1067041,1.53,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7096.KL,JOE,Joe Holding Berhad,Consumer Cyclical,Auto Parts,18354714,110203,0.06,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7097.KL,TAWIN,Ta Win Holdings Berhad,Industrials,Electrical Equipment & Parts,20193970,672293,0.005,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7099.KL,MAYU,Mayu Global Group Berhad,Industrials,Metal Fabrication,65136136,17335,0.135,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7100.KL,UCHITEC,Uchi Technologies Berhad,Technology,Electronic Components,1015681664,264575,2.19,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7103.KL,SPRITZER,Spritzer Bhd,Consumer Defensive,Beverages—Non-Alcoholic,2265894656,640335,3.54,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7105.KL,HCK,HCK Capital Group Berhad,Real Estate,Real Estate—Development,1369970304,338314,2.17,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7106.KL,SUPERMX,Supermax Corporation Berhad,Healthcare,Medical Instruments & Supplies,1268760320,19732669,0.415,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7107.KL,OFI,Oriental Food Industries Holdings Berhad,Consumer Defensive,Confectioners,238800000,36432,0.995,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7108.KL,PERDANA,Perdana Petroleum Berhad,Energy,Oil & Gas Equipment & Services,245143648,2393809,0.11,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7113.KL,TOPGLOV,Top Glove Corporation Bhd.,Healthcare,Medical Instruments & Supplies,6855538176,51160198,0.855,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7114.KL,DNONCE,D'nonce Technology Bhd.,Consumer Cyclical,Packaging & Containers,34731252,1447920,0.04,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7115.KL,SKBSHUT,SKB Shutters Corporation Berhad,Industrials,Metal Fabrication,157548912,261711,0.81,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7117.KL,CJCEN,CJ Century Logistics Holdings Berhad,Industrials,Integrated Freight & Logistics,90192312,386790,0.155,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7120.KL,AXTERIA,Axteria Group Berhad,Real Estate,Real Estate—Development,130093112,4894358,0.15,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7121.KL,XL,XL Holdings Berhad,Consumer Defensive,Farm Products,433903904,14471908,0.825,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7123.KL,MAXLAND,Maxland Berhad,Basic Materials,Lumber & Wood Production,32080028,254662,0.02,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7128.KL,CAMRES,CAM Resources Berhad,Consumer Defensive,Farm Products,47463708,14587,0.26,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7129.KL,ASIAFLE,Asia File Corporation Bhd.,Industrials,Business Equipment & Supplies,246164832,20490,1.3,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7131.KL,LAND33,Land 33 Berhad,Consumer Cyclical,Packaging & Containers,39463444,85591,0.11,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7132.KL,SMISCOR,SMIS Corporation Berhad,Consumer Cyclical,Auto Parts,21081500,3503,0.5,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7133.KL,ULICORP,United U-LI Corporation Berhad,Industrials,Building Products & Equipment,276605984,261520,1.27,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7134.KL,PWF,PWF Corporation Bhd.,Consumer Defensive,Farm Products,187037056,49737,0.61,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7137.KL,UMS,UMS Holdings Berhad,Industrials,Industrial Distribution,71614400,1398,1.76,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7139.KL,NICE,Niche Capital Emas Holdings Berhad,Industrials,Engineering & Construction,122212240,2148525,0.07,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7140.KL,OKA,OKA Corporation Bhd,Basic Materials,Building Materials,111654888,59774,0.455,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7145.KL,TXCD,Txcd Berhad,Industrials,Engineering & Construction,57658048,325793,0.185,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7146.KL,AEM,AE Multi Holdings Berhad,Technology,Electronic Components,9735765,176666,0.045,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7148.KL,DPHARMA,Duopharma Biotech Berhad,Healthcare,Drug Manufacturers—Specialty & Generic,1038897920,329483,1.08,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7149.KL,ENGKAH,Eng Kah Corporation Berhad,Consumer Defensive,Household & Personal Products,18526916,11814,0.15,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7152.KL,JAYCORP,Jaycorp Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",49293308,45601,0.185,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7153.KL,KOSSAN,Kossan Rubber Industries Bhd,Healthcare,Medical Instruments & Supplies,2948637696,6837745,1.17,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7154.KL,NEXGBINA,Nexg Bina Berhad,Consumer Cyclical,Apparel Manufacturing,43146548,1754212,0.035,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7155.KL,SKPRES,SKP Resources Bhd,Basic Materials,Specialty Chemicals,491921280,5964183,0.33,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7157.KL,CYL,CYL Corporation Berhad,Consumer Cyclical,Packaging & Containers,32000000,22687,0.32,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7160.KL,PENTA,Pentamaster Corporation Berhad,Industrials,Specialty Industrial Machinery,3414322432,3564309,4.8,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7161.KL,KERJAYA,Kerjaya Prospek Group Berhad,Industrials,Engineering & Construction,3812632064,2052085,3.04,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7162.KL,ASTINO,Astino Berhad,Basic Materials,Building Materials,212316816,40935,0.455,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7163.KL,PJBUMI,PJBumi Berhad,Industrials,Engineering & Construction,349320032,677162,4.26,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7165.KL,VELOCITY,Velocity Capital Partner Berhad,Industrials,Building Products & Equipment,89791680,1357641,0.065,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7167.KL,ABLEGLOB,Able Global Berhad,Consumer Defensive,Packaged Foods,470571040,73629,1.53,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7168.KL,PRG,PRG Holdings Berhad,Consumer Cyclical,Textile Manufacturing,48988604,768093,0.1,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7169.KL,DOMINAN,Dominant Enterprise Berhad,Basic Materials,Lumber & Wood Production,115668144,13950,0.7,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7170.KL,LFECORP,LFE Corporation Berhad,Industrials,Engineering & Construction,139687264,436264,0.12,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7172.KL,PMBTECH,PMB Technology Berhad,Industrials,Metal Fabrication,2765237504,106664,1.48,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7173.KL,TOYOVEN,Toyo Ventures Holdings Berhad,Basic Materials,Specialty Chemicals,41475240,659129,0.25,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7174.KL,CAB,CAB Cakaran Corporation Berhad,Consumer Defensive,Farm Products,377606688,758500,0.54,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7176.KL,TPC,TPC Plus Berhad,Consumer Defensive,Farm Products,86305176,5591,0.28,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7178.KL,YSPSAH,Y.S.P. Southeast Asia Holding Berhad,Healthcare,Drug Manufacturers—Specialty & Generic,276597728,21475,1.95,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7179.KL,LAGENDA,Lagenda Properties Berhad,Consumer Cyclical,Residential Construction,1181123200,689058,1.42,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7180.KL,SERNKOU,Sern Kou Resources Berhad,Basic Materials,Lumber & Wood Production,803182656,204837,0.745,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7181.KL,ARBB,ARB Berhad,Technology,Information Technology Services,24996024,419075,0.02,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7184.KL,G3,G3 Global Berhad,Technology,Communication Equipment,62264048,1201661,0.015,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7186.KL,SWSCAP,SWS Capital Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",30227814,53753,0.1,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7187.KL,CHGP,Chin Hin Group Property Berhad,Consumer Cyclical,Auto Manufacturers,1307591808,168243,0.945,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7188.KL,BTM,BTM Resources Berhad,Basic Materials,Lumber & Wood Production,37694600,107595,0.03,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7191.KL,ADVENTA,Adventa Berhad,Healthcare,Medical Instruments & Supplies,39724300,503148,0.13,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7192.KL,GIIB,GIIB Holdings Berhad,Basic Materials,Specialty Chemicals,156992000,31630308,0.19,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7195.KL,BNASTRA,Binastra Corporation Berhad,Real Estate,Real Estate—Development,2693378304,1013793,2.46,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7197.KL,GESHEN,GE-Shen Corporation Berhad,Industrials,Metal Fabrication,530370656,253232,1.29,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7198.KL,DPS,DPS Resources Berhad,Industrials,Conglomerates,142288576,325766,0.505,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7199.KL,KEINHIN,Kein Hing International Berhad,Industrials,Metal Fabrication,115433992,14298,1.06,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7200.KL,TEKSENG,Tek Seng Holdings Berhad,Consumer Cyclical,Textile Manufacturing,91897448,445254,0.255,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7201.KL,PICORP,Progressive Impact Corporation Berhad,Industrials,Waste Management,29503396,520266,0.045,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7202.KL,HEXRTL,Hextar Retail Berhad,Basic Materials,Lumber & Wood Production,183673488,624582,0.395,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7204.KL,D&O,D & O Green Technologies Berhad,Technology,Semiconductor Equipment & Materials,471003776,9473691,0.38,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7207.KL,SUCCESS,Success Transformer Corporation Berhad,Industrials,Electrical Equipment & Parts,133588112,118643,0.555,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7208.KL,EURO,Euro Holdings Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",122926496,272285,0.065,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7209.KL,CHEETAH,Cheetah Holdings Berhad,Consumer Cyclical,Apparel Manufacturing,48623528,663275,0.1,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7210.KL,FM,FM Global Logistics Holdings Berhad,Industrials,Integrated Freight & Logistics,323897984,50472,0.58,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7211.KL,TAFI,TAFI Industries Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",248220336,71422,0.66,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7212.KL,DESTINI,Destini Berhad,Industrials,Aerospace & Defense,137241344,470622,0.25,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7214.KL,ARANK,A-Rank Berhad,Basic Materials,Aluminum,62564108,29340,0.35,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7215.KL,NIHSIN,Ni Hsin Group Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",58095692,42732446,0.1,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7216.KL,KAWAN,Kawan Food Berhad,Consumer Defensive,Packaged Foods,218571072,50212,0.65,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7218.KL,ARKA,Arka Berhad,Industrials,Integrated Freight & Logistics,21091056,2980,0.32,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7219.KL,AIZO,AIZO Group Berhad,Basic Materials,Building Materials,122246400,7460525,0.055,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7221.KL,BSLCORP,BSL Corporation Berhad,Industrials,Metal Fabrication,33284612,813503,0.015,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7222.KL,IMASPRO,Imaspro Corporation Berhad,Basic Materials,Agricultural Inputs,56000000,13840,0.7,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7223.KL,JADI,Jadi Imaging Holdings Berhad,Basic Materials,Specialty Chemicals,41993652,1172003,0.03,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7225.KL,PA,P.A. Resources Berhad,Industrials,Metal Fabrication,289188704,4726543,0.19,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7226.KL,WATTA,Watta Holding Berhad,Technology,Communication Equipment,41395200,9435,0.49,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7227.KL,UMSNGB,UMS-Neiken Group Berhad,Industrials,Electrical Equipment & Parts,65743892,5909,0.835,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7228.KL,T7GLOBAL,T7 Global Berhad,Energy,Oil & Gas Equipment & Services,249739904,385061,0.25,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7229.KL,FAVCO,Favelle Favco Berhad,Industrials,Farm & Heavy Construction Machinery,357313152,18393,1.5,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7230.KL,TOMEI,Tomei Consolidated Berhad,Consumer Cyclical,Luxury Goods,221760000,31285,1.6,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7231.KL,WELLCAL,Wellcall Holdings Berhad,Consumer Cyclical,Auto Parts,532803904,240511,1.07,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7232.KL,RESINTC,Resintech Berhad,Industrials,Building Products & Equipment,81923472,51388,0.415,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7233.KL,DUFU,Dufu Technology Corp. Berhad,Industrials,Metal Fabrication,1246510080,3187027,2.32,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7234.KL,LOTUSCIR,Lotus Circular Berhad,Consumer Cyclical,Apparel Retail,58674412,26764,0.195,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7235.KL,SUPERLN,Superlon Holdings Berhad,Industrials,Building Products & Equipment,133951696,325169,0.88,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7237.KL,PWROOT,Power Root Berhad,Consumer Defensive,Beverages—Non-Alcoholic,472515584,65225,1.16,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7239.KL,SCNWOLF,Scanwolf Corporation Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",130562168,44633,0.425,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7240.KL,IHB,Infraharta Holdings Berhad,Industrials,Engineering & Construction,53141488,139280,0.12,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7241.KL,NGGB,Nextgreen Global Berhad,Industrials,Conglomerates,874796544,2391972,0.8,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7243.KL,MAGMA,Magma Group Berhad,Consumer Cyclical,Lodging,463215488,1600695,0.24,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7245.KL,CITAGLB,Citaglobal Berhad,Industrials,Engineering & Construction,681669632,579251,1.21,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7246.KL,SIGN,Signature International Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",839146496,32159,1.3,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7247.KL,SCGM,SCGM Bhd,Financial Services,Shell Companies,69321976,1317187,0.36,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7248.KL,SLP,SLP Resources Berhad,Consumer Cyclical,Packaging & Containers,272585600,5851,0.86,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7249.KL,SKYGATE,Skygate Solutions Berhad,Real Estate,Real Estate—Development,264328112,695211,0.72,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7250.KL,UZMA,Uzma Berhad,Energy,Oil & Gas Integrated,173094224,849964,0.285,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7252.KL,TEOSENG,Teo Seng Capital Berhad,Consumer Defensive,Farm Products,437921088,480903,0.785,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7277.KL,DIALOG,Dialog Group Berhad,Energy,Oil & Gas Equipment & Services,11004204032,6403174,1.95,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7285.KL,TOMYPAK,Tomypak Holdings Berhad,Consumer Cyclical,Packaging & Containers,40956084,69258,0.095,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7293.KL,YINSON,Yinson Holdings Berhad,Energy,Oil & Gas Equipment & Services,6020358656,3917791,2.06,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7315.KL,AHB,AHB Holdings Berhad,Industrials,Conglomerates,36820732,5008162,0.04,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7323.KL,KEN,Ken Holdings Berhad,Industrials,Engineering & Construction,73528008,9767,0.41,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7374.KL,TIENWAH,Tien Wah Press Holdings Berhad,Industrials,Specialty Business Services,90464064,12959,0.625,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7382.KL,GLBHD,Golden Land Berhad,Real Estate,Real Estate—Development,53628444,15238,0.25,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7412.KL,SHH,SHH Resources Holdings Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",109994504,7051,1.1,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7439.KL,TECGUAN,Teck Guan Perdana Berhad,Consumer Defensive,Packaged Foods,72174424,7667,1.8,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7471.KL,EDEN,Eden Inc. Berhad,Industrials,Conglomerates,75803400,160417,0.15,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7498.KL,RALCO,Ralco Corporation Berhad,Consumer Cyclical,Packaging & Containers,50035052,483732,0.985,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7501.KL,HARNLEN,Harn Len Corporation Bhd,Consumer Defensive,Farm Products,289135680,1115056,0.45,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7544.KL,QUALITY,Quality Concrete Holdings Berhad,Industrials,Engineering & Construction,43471500,311,0.75,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7579.KL,AWC,AWC Berhad,Industrials,Engineering & Construction,218929600,2083019,0.65,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7595.KL,MGB,MGB Berhad,Industrials,Engineering & Construction,218095552,180867,0.37,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7609.KL,AJIYA,Ajiya Berhad,Industrials,Building Products & Equipment,518124128,43577,0.945,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7617.KL,MAGNA,Magna Prima Berhad,Real Estate,Real Estate—Development,265436448,71953,0.665,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7668.KL,BESHOM,Beshom Holdings Berhad,Healthcare,Pharmaceutical Retailers,153753936,65906,0.515,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7676.KL,GCAP,G Capital Berhad,Utilities,Utilities—Renewable,50822480,112787,0.155,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7692.KL,MYTECH,MyTech Group Berhad,Industrials,Tools & Accessories,55382332,104904,0.225,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7757.KL,UPA,UPA Corporation Berhad,Industrials,Conglomerates,152871440,23296,0.66,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7765.KL,RAPID,Rapid Synergy Berhad,Industrials,Metal Fabrication,70017208,81393,0.655,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7773.KL,EPMB,EP Manufacturing Bhd,Consumer Cyclical,Auto Parts,113115288,261201,0.395,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7803.KL,HEXCARE,Hextar Healthcare Berhad,Basic Materials,Specialty Chemicals,60616088,1110225,0.055,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7811.KL,SAPIND,Sapura Industrial Berhad,Consumer Cyclical,Auto Parts,61131616,4351,0.84,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7854.KL,TIMWELL,Timberwell Berhad,Basic Materials,Lumber & Wood Production,239101056,1593385,0.895,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7889.KL,THRIVEN,Thriven Global Berhad,Real Estate,Real Estate—Diversified,32816646,331175,0.06,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7935.KL,MILUX,Milux Corporation Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",131631800,27125,0.56,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7943.KL,GREENTEC,Greentronics Technology Berhad,Industrials,Engineering & Construction,359492704,875077,0.4,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+7986.KL,CNASIA,CN Asia Corporation Bhd,Industrials,Specialty Industrial Machinery,21534600,71006,0.08,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8044.KL,CFM,Computer Forms (Malaysia) Berhad,Industrials,Specialty Business Services,15686933,1294064,0.05,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8052.KL,CGB,Central Global Berhad,Basic Materials,Specialty Chemicals,916247808,21266019,0.87,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8079.KL,LEESK,Lee Swee Kiat Group Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",64482532,19716,0.265,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8117.KL,PGF,PGF Capital Berhad,Basic Materials,Building Materials,345266560,30146,1.73,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8141.KL,MJPERAK,Majuperak Holdings Berhad,Real Estate,Real Estate—Diversified,45507496,13000,0.16,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8176.KL,WAVEFRNT,WaveFront Berhad,Technology,Electronic Components,144343632,865388,0.12,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8192.KL,MERCURY,Mercury Industries Berhad,Industrials,Engineering & Construction,43145500,2756,0.61,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8206.KL,ECOWLD,Eco World Development Group Berhad,Real Estate,Real Estate—Development,5277526528,1168416,1.63,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8273.KL,PPHB,Public Packages Holdings Berhad,Consumer Cyclical,Packaging & Containers,175334032,53148,0.655,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8303.KL,LOTUS,Lotus KFM Berhad,Consumer Defensive,Packaged Foods,102664856,121520,0.08,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8311.KL,PESONA,Pesona Metro Holdings Berhad,Industrials,Engineering & Construction,319803392,413406,0.475,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8338.KL,DATAPRP,Dataprep Holdings Bhd,Technology,Information Technology Services,34397092,11059769,0.04,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8346.KL,PRKCORP,Perak Corporation Berhad,Industrials,Marine Shipping,58999996,16111,0.59,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8362.KL,KYM,KYM Holdings Bhd,Consumer Cyclical,Packaging & Containers,41965484,23462,0.275,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8397.KL,TNLOGIS,Tiong Nam Logistics Holdings Berhad,Industrials,Integrated Freight & Logistics,413607392,67867,0.785,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8419.KL,PANSAR,Pansar Berhad,Industrials,Conglomerates,305796032,62074,0.44,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8435.KL,CEPCO,Concrete Engineering Products Berhad,Basic Materials,Building Materials,334318240,7375,4.48,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8443.KL,HIL,Hil Industries Berhad,Industrials,Metal Fabrication,199164480,5954,0.6,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8478.KL,HWATAI,Hwa Tai Industries Berhad,Consumer Defensive,Packaged Foods,25443312,18029,0.34,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8486.KL,LIONPSIM,Lion Posim Berhad,Basic Materials,Building Materials,66069752,7208,0.29,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8494.KL,LBICAP,LBI Capital Berhad,Real Estate,Real Estate—Diversified,52106844,93972,0.455,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8524.KL,TALIWRK,Taliworks Corporation Berhad,Industrials,Waste Management,423321696,1988109,0.21,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8567.KL,SALCON,Salcon Berhad,Industrials,Waste Management,210024224,323814,0.185,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8583.KL,MAHSING,Mah Sing Group Berhad,Real Estate,Real Estate—Development,1984107136,4597059,0.775,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8591.KL,CRESBLD,Crest Builder Holdings Berhad,Industrials,Engineering & Construction,88245168,140835,0.42,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8605.KL,FIHB,Federal International Holdings Berhad,Consumer Cyclical,Residential Construction,29077622,5919,0.215,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8613.KL,ENRA,ENRA Group Berhad,Industrials,Conglomerates,133044168,22496,0.79,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8621.KL,LPI,LPI Capital Bhd,Financial Services,Insurance—Property & Casualty,5059461120,78522,12.7,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8648.KL,JASKITA,Jasa Kita Berhad,Industrials,Tools & Accessories,85414504,13685,0.19,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8664.KL,SPSETIA,S P Setia Berhad,Real Estate,Real Estate—Development,2803708160,4689509,0.555,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8672.KL,KAMDAR,Kamdar Group (M) Berhad,Consumer Cyclical,Textile Manufacturing,31678400,12182,0.16,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8702.KL,TEXCHEM,Texchem Resources Bhd,Industrials,Conglomerates,90874392,101587,0.78,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8745.KL,S&FCAP,S & F Capital Berhad,Real Estate,Real Estate—Diversified,39351212,56441,0.05,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8869.KL,PMETAL,Press Metal Aluminium Holdings Berhad,Basic Materials,Aluminum,52733554688,8953888,6.4,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8877.KL,EKOVEST,Ekovest Berhad,Industrials,Engineering & Construction,533773984,5283125,0.18,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8885.KL,AVI,Avillion Berhad,Consumer Cyclical,Lodging,42488644,592214,0.03,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8893.KL,MKLAND,M K Land Holdings Berhad,Real Estate,Real Estate—Development,174665536,1275091,0.145,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8907.KL,EG,EG Industries Berhad,Technology,Electronic Components,1367806592,5816579,1.46,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8923.KL,JIANKUN,Jiankun International Berhad,Real Estate,Real Estate—Development,19869998,507135,0.035,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8966.KL,TECHBASE,Techbase Industries Berhad,Consumer Cyclical,Apparel Manufacturing,18760368,947843,0.06,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+8982.KL,CEPAT,Cepatwawasan Group Berhad,Consumer Defensive,Farm Products,245465248,69961,0.795,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9008.KL,TEGRA,Tegra Berhad,Industrials,Specialty Business Services,155601824,729391,0.335,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9016.KL,EKSONS,Eksons Corporation Berhad,Basic Materials,Lumber & Wood Production,82354624,56448,0.51,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9059.KL,TSH,TSH Resources Berhad,Consumer Defensive,Farm Products,1308668928,1883467,1.08,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9075.KL,THETA,Theta Edge Berhad,Technology,Information Technology Services,65472000,683198,0.555,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9083.KL,JETSON,Kumpulan Jetson Berhad,Basic Materials,Specialty Chemicals,34387688,358014,0.075,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9091.KL,EMICO,Emico Holdings Berhad,Consumer Cyclical,Leisure,17187264,14096,0.125,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9113.KL,ICONIC,Iconic Worldwide Berhad,Healthcare,Medical Instruments & Supplies,162046256,7196367,0.095,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9121.KL,KPSCB,KPS Consortium Berhad,Industrials,Building Products & Equipment,82931024,7069,0.51,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9148.KL,GBAY,Greater Bay Holdings Berhad,Consumer Cyclical,Packaging & Containers,44106236,3832,0.56,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9172.KL,FPI,Formosa Prosonic Industries Berhad,Technology,Consumer Electronics,293828128,451980,1.1,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9199.KL,LYSAGHT,Lysaght Galvanized Steel Berhad,Basic Materials,Steel,97713000,2375,2.35,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9237.KL,SCIB,Sarawak Consolidated Industries Berhad,Basic Materials,Building Materials,91634976,1270822,0.12,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9261.KL,GADANG,Gadang Holdings Berhad,Industrials,Engineering & Construction,112121408,802343,0.14,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9288.KL,BONIA,Bonia Corporation Berhad,Consumer Cyclical,Apparel Manufacturing,144716496,16422,0.72,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9296.KL,RCECAP,RCE Capital Berhad,Financial Services,Credit Services,1196448640,671774,0.815,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9318.KL,FITTERS,FITTERS Diversified Berhad,Industrials,Conglomerates,58532296,1119269,0.025,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9326.KL,LBALUM,LB Aluminium Berhad,Basic Materials,Aluminum,182637280,328935,0.42,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9334.KL,KESM,KESM Industries Berhad,Technology,Semiconductors,170337424,64904,3.96,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9369.KL,TGL,Teo Guan Lee Corporation Berhad,Consumer Cyclical,Apparel Manufacturing,73323088,9675,0.82,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9377.KL,FSBM,FSBM Holdings Berhad,Technology,Electronics & Computer Distribution,46205884,11466425,0.08,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9385.KL,LAYHONG,Lay Hong Berhad,Consumer Defensive,Farm Products,166661696,530372,0.22,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9393.KL,ITRONIC,Industronics Berhad,Technology,Electronic Components,21227676,2013288,0.03,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9407.KL,PARAGON,Paragon Union Berhad,Consumer Cyclical,Auto Parts,96061904,41462,0.95,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9423.KL,CWG,CWG Holdings Berhad,Basic Materials,Paper & Paper Products,34049936,19409,0.13,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9431.KL,SJC,Seni Jaya Corporation Berhad,Communication Services,Advertising Agencies,194592784,511688,0.48,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9466.KL,KKB,KKB Engineering Berhad,Industrials,Metal Fabrication,358021536,177082,1.24,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9539.KL,MUH,Multi-Usage Holdings Berhad,Real Estate,Real Estate—Development,18054080,5362,0.32,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9571.KL,MITRA,Mitrajaya Holdings Berhad,Industrials,Engineering & Construction,223356576,533941,0.31,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9598.KL,PTARAS,Pintaras Jaya Berhad,Industrials,Engineering & Construction,195720448,30987,1.18,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9601.KL,HWGB,Ho Wah Genting Berhad,Industrials,Electrical Equipment & Parts,18499230,163745,0.075,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9628.KL,LEBTECH,Lebtech Berhad,Industrials,Engineering & Construction,80525368,1,0.59,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9679.KL,WCT,WCT Holdings Berhad,Industrials,Engineering & Construction,405313984,6006266,0.26,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9695.KL,PLS,PLS Plantations Berhad,Consumer Defensive,Farm Products,94518648,100288,0.215,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9717.KL,SYCAL,Sycal Ventures Berhad,Industrials,Engineering & Construction,74938400,61675,0.18,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9741.KL,ROHAS,Rohas Tecnic Berhad,Industrials,Engineering & Construction,77988520,150248,0.165,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9776.KL,RSSB,Rivertree STF Synergies Berhad,Consumer Defensive,Packaged Foods,193315168,630693,0.37,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9792.KL,SEG,SEG International Bhd,Consumer Defensive,Education & Training Services,774159040,1113177,0.635,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9814.KL,BERTAM,Bertam Alliance Berhad,Real Estate,Real Estate Services,39000000,67420,0.12,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9822.KL,SAM,SAM Engineering & Equipment (M) Berhad,Industrials,Aerospace & Defense,2450692096,590120,3.62,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9873.KL,PRESTAR,Prestar Resources Berhad,Basic Materials,Steel,94247040,104417,0.265,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9881.KL,LSTEEL,Leader Steel Holdings Berhad,Basic Materials,Steel,54156360,5514,0.35,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9938.KL,BRIGHT,Bright Packaging Industry Berhad,Consumer Cyclical,Packaging & Containers,32852864,82495,0.16,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9946.KL,ETA,ETA Group Berhad,Consumer Defensive,Packaged Foods,69436496,229601,0.105,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9954.KL,RGTBHD,RGT Berhad,Basic Materials,Specialty Chemicals,154061888,363062,0.45,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9962.KL,GMUTUAL,Gromutual Berhad,Real Estate,Real Estate—Diversified,93901992,17711,0.25,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00
+9997.KL,PENSONI,Pensonic Holdings Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",66090168,30488,0.445,MYR,unknown,other,2026-11-24T22:21:47.518849+00:00

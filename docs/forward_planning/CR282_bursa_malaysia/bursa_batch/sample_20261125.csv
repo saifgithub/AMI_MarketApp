@@ -1,0 +1,201 @@
+symbol,short_name,long_name,sector,industry,market_cap,tercile,board,code_series,avg_daily_volume_3m,price,currency
+0002.KL,KOTRA,Kotra Industries Berhad,Healthcare,Drug Manufacturers—Specialty & Generic,533930688,large,unknown,0xxx,9503,3.6,MYR
+0020.KL,NETX,NetX Holdings Berhad,Technology,Information Technology Services,32828342,small,unknown,0xxx,98077,0.035,MYR
+0023.KL,IFCAMSC,IFCA MSC Berhad,Technology,Software—Application,110966328,mid,unknown,0xxx,502819,0.185,MYR
+0037.KL,RGB,RGB International Bhd.,Consumer Cyclical,Gambling,304921088,mid,unknown,0xxx,1007598,0.2,MYR
+0038.KL,ARTRONIQ,Artroniq Berhad,Technology,Electronics & Computer Distribution,55474100,small,unknown,0xxx,887735,0.11,MYR
+0039.KL,GFM,GFM Services Berhad,Industrials,Specialty Business Services,121368152,mid,unknown,0xxx,1232140,0.16,MYR
+0041.KL,AIMAX,AIMAX Berhad,Industrials,Conglomerates,28100238,small,unknown,0xxx,26510012,0.005,MYR
+0053.KL,OSKVI,OSK Ventures International Berhad,Financial Services,Asset Management,94293632,mid,unknown,0xxx,8035,0.48,MYR
+0054.KL,KARYON,Karyon Industries Berhad,Basic Materials,Specialty Chemicals,61842720,small,unknown,0xxx,735358,0.13,MYR
+0060.KL,HM,Harvest Miracle Capital Berhad,Technology,Information Technology Services,257055392,mid,unknown,0xxx,1093946,0.125,MYR
+0066.KL,VSOLAR,Vsolar Group Berhad,Technology,Electronics & Computer Distribution,19890042,small,unknown,0xxx,333161,0.04,MYR
+0070.KL,MQTECH,MQ Technology Berhad,Industrials,Tools & Accessories,17727734,small,unknown,0xxx,3067382,0.05,MYR
+0084.KL,FAST,Fast Energy Holdings Berhad,Industrials,Tools & Accessories,17589682,small,unknown,0xxx,234630,0.035,MYR
+0107.KL,EDUSPEC,Eduspec Holdings Berhad,Consumer Defensive,Education & Training Services,141344048,mid,unknown,0xxx,892977,0.09,MYR
+0109.KL,SCBUILD,SC Estate Builder Berhad,Basic Materials,Building Materials,26599862,small,unknown,0xxx,1091283,0.005,MYR
+0112.KL,MIKROMB,Mikro MSC Berhad,Industrials,Electrical Equipment & Parts,809576064,large,unknown,0xxx,2563030,0.67,MYR
+0116.KL,FOCUS,Focus Dynamics Group Berhad,Consumer Cyclical,Restaurants,31861028,small,unknown,0xxx,4113933,0.005,MYR
+0117.KL,SMRT,SMRT Holdings Berhad,Consumer Defensive,Education & Training Services,56919412,small,unknown,0xxx,2775641,0.125,MYR
+0126.KL,MICROLN,Microlink Solutions Berhad,Technology,Information Technology Services,128687528,mid,unknown,0xxx,1870988,0.08,MYR
+0150.KL,FINTEC,Fintec Global Berhad,Financial Services,Asset Management,12311977,small,unknown,0xxx,65041,0.06,MYR
+0151.KL,KGB,Kelington Group Berhad,Industrials,Engineering & Construction,6224376320,large,unknown,0xxx,2858679,7.07,MYR
+0154.KL,EAH,EA Holdings Berhad,Industrials,Conglomerates,32258816,small,unknown,0xxx,274746,0.005,MYR
+0168.KL,BMGREEN,BM GreenTech Berhad,Industrials,Specialty Industrial Machinery,893262144,large,unknown,0xxx,692750,1.3,MYR
+0171.KL,PLABS,PeterLabs Holdings Berhad,Healthcare,Drug Manufacturers—Specialty & Generic,63299196,small,unknown,0xxx,40520,0.23,MYR
+0173.KL,CATCHA,Catcha Digital Berhad,Communication Services,Publishing,104621856,mid,unknown,0xxx,47633,0.23,MYR
+0174.KL,EVD,Evd Berhad,Technology,Software—Application,13496564,small,unknown,0xxx,193958,0.03,MYR
+0177.KL,MIDTOWN,Midtown Group Berhad,Industrials,Engineering & Construction,13337047,small,unknown,0xxx,332140,0.07,MYR
+0207.KL,MESTRON,Mestron Holdings Berhad,Industrials,Metal Fabrication,101909792,mid,unknown,0xxx,2150088,0.105,MYR
+0211.KL,TASHIN,Tashin Holdings Berhad,Basic Materials,Steel,64563336,small,unknown,0xxx,11116,0.185,MYR
+0217.KL,PWRWELL,Powerwell Holdings Berhad,Industrials,Electrical Equipment & Parts,476052640,large,unknown,0xxx,3537104,0.82,MYR
+0227.KL,EFRAME,Econframe Berhad,Industrials,Building Products & Equipment,90197408,small,unknown,0xxx,315806,0.24,MYR
+0232.KL,VOLCANO,Volcano Berhad,Industrials,Metal Fabrication,52672700,small,unknown,0xxx,28075,0.29,MYR
+0243.KL,CENGILD,Cengild Medical Berhad,Healthcare,Medical Care Facilities,130496448,mid,unknown,0xxx,360720,0.155,MYR
+0245.KL,MNHLDG,MN Holdings Berhad,Industrials,Engineering & Construction,1875626112,large,unknown,0xxx,5328024,2.66,MYR
+0249.KL,LGMS,LGMS Berhad,Technology,Information Technology Services,246240016,mid,unknown,0xxx,931059,0.54,MYR
+0253.KL,INFOTEC,Infoline Tec Group Berhad,Technology,Software—Infrastructure,57783088,small,unknown,0xxx,284256,0.16,MYR
+0259.KL,SNS,SNS Network Technology Berhad,Technology,Electronics & Computer Distribution,690144448,large,unknown,0xxx,5645962,0.405,MYR
+0260.KL,PTRB,PT Resources Holdings Berhad,Consumer Defensive,Packaged Foods,128404800,mid,unknown,0xxx,25820,0.24,MYR
+0261.KL,COSMOS,Cosmos Technology International Berhad,Industrials,Pollution & Treatment Controls,92340472,mid,unknown,0xxx,397680,0.36,MYR
+0265.KL,INFOM,Infomina Berhad,Technology,Information Technology Services,1022078464,large,unknown,0xxx,710461,1.71,MYR
+0266.KL,LEFORM,Leform Berhad,Basic Materials,Steel,268803872,mid,unknown,0xxx,121072,0.165,MYR
+0267.KL,ECA,ECA Integrated Solution Berhad,Industrials,Specialty Industrial Machinery,170816928,mid,unknown,0xxx,2070667,0.295,MYR
+0278.KL,EDELTEQ,Edelteq Holdings Berhad,Technology,Semiconductors,226364112,mid,unknown,0xxx,3509001,0.36,MYR
+0283.KL,DCHCARE,DC Healthcare Holdings Berhad,Healthcare,Medical Care Facilities,74722504,small,unknown,0xxx,502687,0.075,MYR
+0292.KL,JTGROUP,Jati Tinggi Group Berhad,Industrials,Engineering & Construction,332195968,mid,unknown,0xxx,3250337,0.75,MYR
+0309.KL,AGRICOR,Agricore CS Holdings Berhad,Consumer Defensive,Food Distribution,75851608,small,unknown,0xxx,24875,0.37,MYR
+0311.KL,GOHUB,Go Hub Capital Berhad,Technology,Information Technology Services,466399968,large,unknown,0xxx,259016,1.06,MYR
+0315.KL,KUCINGKO,Kucingko Berhad,Communication Services,Entertainment,40000000,small,unknown,0xxx,345640,0.08,MYR
+0320.KL,HAWK,Steel Hawk Berhad,Energy,Oil & Gas Equipment & Services,36791852,small,unknown,0xxx,1684020,0.075,MYR
+0322.KL,KHB,KHPT Holdings Berhad,Consumer Cyclical,Auto Parts,34202844,small,unknown,0xxx,231377,0.085,MYR
+0323.KL,CREST,Crest Group Berhad,Technology,Scientific & Technical Instruments,147151664,mid,unknown,0xxx,1190396,0.17,MYR
+0325.KL,NE,Northeast Group Berhad,Technology,Electronic Components,706699968,large,unknown,0xxx,1698370,0.955,MYR
+0327.KL,OBHB,OB Holdings Berhad,Consumer Defensive,Packaged Foods,80283536,small,unknown,0xxx,184335,0.205,MYR
+0336.KL,WINSTAR,Winstar Capital Berhad,Basic Materials,Aluminum,202887680,mid,unknown,0xxx,912758,0.65,MYR
+0337.KL,SET,Swift Energy Technology Berhad,Industrials,Electrical Equipment & Parts,215172000,mid,unknown,0xxx,1758987,0.215,MYR
+0342.KL,RTECH,RichTech Digital Berhad,Technology,Software—Infrastructure,47576452,small,unknown,0xxx,504525,0.235,MYR
+0359.KL,HKB,Hartanah Kenyalang Berhad,Industrials,Engineering & Construction,552420032,large,unknown,0xxx,1514440,0.81,MYR
+0369.KL,JSSOLAR,JS Solar Holding Berhad,Utilities,Utilities—Renewable,66625000,small,unknown,0xxx,822479,0.205,MYR
+0371.KL,CAMAROE,Camaroe Berhad,Consumer Defensive,Farm Products,32174998,small,unknown,0xxx,92396,0.065,MYR
+0387.KL,GHS,Guan Huat Seng Holdings Berhad,Consumer Defensive,Packaged Foods,85230024,small,unknown,0xxx,203787,0.18,MYR
+0388.KL,SEMICO,Semico Capital Berhad,Consumer Cyclical,Leisure,233999984,mid,unknown,0xxx,3495304,0.65,MYR
+0397.KL,5ER,5E Resources Holdings Berhad,Industrials,Waste Management,361900000,mid,unknown,0xxx,1847838,0.235,MYR
+0398.KL,GDGROUP,Golden Destinations Group Berhad,Consumer Cyclical,Travel Services,370000000,large,unknown,0xxx,663522,0.37,MYR
+0458.KL,ELSA,Elsa Berhad,Energy,Oil & Gas Equipment & Services,115756000,mid,unknown,0xxx,265045,0.215,MYR
+0461.KL,RT,RT Pastry Holdings Berhad,Consumer Defensive,Packaged Foods,42380248,small,unknown,0xxx,369350,0.125,MYR
+0478.KL,NWEBHD,NWE Resources Group Berhad,Consumer Defensive,Packaged Foods,97200000,mid,unknown,0xxx,11960995,0.18,MYR
+0480.KL,SKACAP,SKA Capital Berhad,Industrials,Electrical Equipment & Parts,344767488,mid,unknown,0xxx,40429077,0.385,MYR
+0481.KL,KEB,KEB Berhad,Real Estate,Real Estate—Development,282363424,mid,unknown,0xxx,8305033,0.32,MYR
+1198.KL,MAA,MAA Group Berhad,Financial Services,Insurance—Diversified,30329210,small,unknown,other,33641,0.115,MYR
+1651.KL,MRCB,Malaysian Resources Corporation Berhad,Industrials,Engineering & Construction,1027527232,large,unknown,other,7200319,0.23,MYR
+1694.KL,MENANG,Menang Corporation (M) Berhad,Real Estate,Real Estate Services,469265632,large,unknown,other,28175,0.675,MYR
+1724.KL,PARAMON,Paramount Corporation Berhad,Real Estate,Real Estate—Development,600974016,large,unknown,other,136341,0.965,MYR
+1996.KL,KRETAM,Kretam Holdings Berhad,Consumer Defensive,Farm Products,1480325376,large,unknown,other,165298,0.645,MYR
+2127.KL,COMFORT,Comfort Gloves Berhad,Basic Materials,Specialty Chemicals,112904984,mid,unknown,other,1240880,0.195,MYR
+2445.KL,KLK,Kuala Lumpur Kepong Berhad,Industrials,Conglomerates,23164114944,large,unknown,other,783251,20.8,MYR
+2453.KL,KLUANG,Kluang Rubber Company (Malaya) Berhad,Consumer Defensive,Farm Products,402553856,large,unknown,other,14195,6.54,MYR
+2542.KL,RVIEW,"Riverview Rubber Estates, Berhad",Consumer Defensive,Farm Products,192605840,mid,unknown,other,2424,2.97,MYR
+2682.KL,PARKWD,Parkwood Holdings Berhad,Real Estate,Real Estate—Diversified,41221492,small,unknown,other,9837,0.07,MYR
+3107.KL,FIMACOR,Fima Corporation Berhad,Consumer Defensive,Farm Products,310380032,mid,unknown,other,14025,1.31,MYR
+3298.KL,HEXZA,Hexza Corporation Berhad,Basic Materials,Specialty Chemicals,190185136,mid,unknown,other,108443,0.925,MYR
+3417.KL,E&O,Eastern & Oriental Berhad,Real Estate,Real Estate—Development,1747797376,large,unknown,other,1099911,0.7,MYR
+3611.KL,PGLOBE,Paragon Globe Berhad,Real Estate,Real Estate—Development,522636352,large,unknown,other,47241,0.7,MYR
+3662.KL,MFLOUR,Malayan Flour Mills Berhad,Consumer Defensive,Farm Products,734544256,large,unknown,other,1970567,0.6,MYR
+3905.KL,MULPHA,Mulpha International Bhd,Industrials,Conglomerates,750136704,large,unknown,other,74354,2.45,MYR
+4006.KL,ORIENT,Oriental Holdings Berhad,Consumer Cyclical,Auto & Truck Dealerships,4054429184,large,unknown,other,92125,6.58,MYR
+4022.KL,MAXIM,Maxim Global Berhad,Real Estate,Real Estate—Development,205809200,mid,unknown,other,51096,0.28,MYR
+4405.KL,TCHONG,Tan Chong Motor Holdings Berhad,Consumer Cyclical,Auto Manufacturers,8251065,small,unknown,other,149406,0.405,MYR
+4456.KL,DNEX,Dagang NeXchange Berhad,Technology,Information Technology Services,1500563712,large,unknown,other,28932919,0.425,MYR
+4634.KL,POS,Pos Malaysia Berhad,Industrials,Integrated Freight & Logistics,187866432,mid,unknown,other,965851,0.24,MYR
+4715.KL,GENM,Genting Malaysia Berhad,Consumer Cyclical,Resorts & Casinos,6460370432,large,unknown,other,4447419,1.14,MYR
+4863.KL,TM,Telekom Malaysia Berhad,Communication Services,Telecom Services,29320321024,large,unknown,other,3652567,7.64,MYR
+5000.KL,HUMEIND,Hume Cement Industries Berhad,Basic Materials,Building Materials,1912041600,large,unknown,other,214795,2.65,MYR
+5001.KL,MIECO,Mieco Berhad,Basic Materials,Lumber & Wood Production,660000000,large,unknown,other,72637,0.66,MYR
+5005.KL,UNISEM,Unisem (M) Berhad,Technology,Semiconductors,5349919232,large,unknown,other,2666022,3.12,MYR
+5008.KL,HARISON,Harrisons Holdings (Malaysia) Berhad,Industrials,Industrial Distribution,404009568,large,unknown,other,27443,1.18,MYR
+5010.KL,TONGHER,Tong Herr Resources Berhad,Industrials,Tools & Accessories,383794240,large,unknown,other,122900,2.5,MYR
+5015.KL,APM,APM Automotive Holdings Berhad,Consumer Cyclical,Auto Parts,486780832,large,unknown,other,21616,2.49,MYR
+5031.KL,TIMECOM,TIME dotCom Berhad,Communication Services,Telecom Services,10242455552,large,unknown,other,1967780,5.54,MYR
+5070.KL,PRTASCO,Protasco Berhad,Industrials,Infrastructure Operations,89121056,small,unknown,other,539896,0.185,MYR
+5078.KL,M&G,Marine & General Berhad,Energy,Oil & Gas Equipment & Services,254943008,mid,unknown,other,19798167,0.305,MYR
+5080.KL,POHKONG,Poh Kong Holdings Berhad,Consumer Cyclical,Luxury Goods,418558784,large,unknown,other,155332,1.02,MYR
+5100.KL,BPPLAS,BP Plastics Holding Bhd.,Consumer Cyclical,Packaging & Containers,219503744,mid,unknown,other,40908,0.78,MYR
+5104.KL,CNH,Citra Nusa Holdings Berhad,Industrials,Conglomerates,25133498,small,unknown,other,161901,0.035,MYR
+5108.KL,"""icapital.biz Berhad""",iCapital.biz Berhad,Financial Services,Asset Management,328614688,mid,unknown,other,130180,2.33,MYR
+5130.KL,ATRIUM,Atrium Real Estate Investment Trust,Real Estate,REIT—Industrial,310694304,mid,unknown,other,102196,1.17,MYR
+5145.KL,SEALINK,Sealink International Berhad,Industrials,Marine Shipping,165000000,mid,unknown,other,503891,0.33,MYR
+5149.KL,TAS,TAS Offshore Berhad,Industrials,Aerospace & Defense,43784588,small,unknown,other,77125,0.245,MYR
+5151.KL,HEXTAR,Hextar Global Berhad,Basic Materials,Agricultural Inputs,3076603392,large,unknown,other,13959904,0.785,MYR
+5152.KL,MBL,Muar Ban Lee Group Berhad,Industrials,Specialty Industrial Machinery,77430208,small,unknown,other,18254,0.34,MYR
+5157.KL,SG,SaudiGold Group Berhad,Consumer Defensive,Packaged Foods,10150876,small,unknown,other,137245,0.065,MYR
+5165.KL,DFCITY,DFCITY Group Berhad,Basic Materials,Building Materials,41691668,small,unknown,other,3720,0.395,MYR
+5169.KL,HOHUP,Ho Hup Construction Company Berhad,Industrials,Engineering & Construction,20730428,small,unknown,other,36443,0.04,MYR
+5171.KL,KIMLUN,Kimlun Corporation Berhad,Industrials,Engineering & Construction,291524192,mid,unknown,other,203441,0.75,MYR
+5173.KL,SYGROUP,Shin Yang Group Berhad,Industrials,Marine Shipping,823022208,large,unknown,other,87332,0.7,MYR
+5180.KL,CLMT,CapitaLand Malaysia Trust,Real Estate,REIT—Retail,1853363584,large,unknown,other,2130411,0.54,MYR
+5202.KL,MSM,MSM Malaysia Holdings Berhad,Consumer Defensive,Confectioners,499115776,large,unknown,other,385133,0.71,MYR
+5204.KL,AWANTEC,AwanBiru Technology Berhad,Consumer Defensive,Education & Training Services,193133072,mid,unknown,other,290135,0.245,MYR
+5205.KL,SENDAI,Eversendai Corporation Berhad,Industrials,Engineering & Construction,140660384,mid,unknown,other,1137961,0.18,MYR
+5223.KL,MENTIGA,Mentiga Corporation Berhad,Consumer Defensive,Farm Products,92400000,mid,unknown,other,134258,1.32,MYR
+5231.KL,PBSB,PBS Berhad,Industrials,Specialty Business Services,72384584,small,unknown,other,204504,0.12,MYR
+5239.KL,TITIJYA,Titijaya Land Berhad,Real Estate,Real Estate—Development,275676096,mid,unknown,other,114301,0.21,MYR
+5255.KL,LFG,Lianson Fleet Group Berhad,Energy,Oil & Gas Equipment & Services,1588397184,large,unknown,other,171858,1.4,MYR
+5257.KL,CARIMIN,Carimin Petroleum Berhad,Energy,Oil & Gas Equipment & Services,88841640,small,unknown,other,101479,0.385,MYR
+5258.KL,BIMB,Bank Islam Malaysia Berhad,Financial Services,Banks—Regional,4283634432,large,unknown,other,1142329,1.89,MYR
+5260.KL,OWG,Only World Group Holdings Berhad,Consumer Cyclical,Leisure,80304192,small,unknown,other,470561,0.175,MYR
+5271.KL,PECCA,Pecca Group Berhad,Consumer Cyclical,Auto Parts,1021481408,large,unknown,other,2082275,1.41,MYR
+5276.KL,DANCO,Dancomech Holdings Berhad,Industrials,Pollution & Treatment Controls,119488560,mid,unknown,other,84461,0.27,MYR
+5285.KL,SDG,SD Guthrie Berhad,Consumer Defensive,Packaged Foods,40871870464,large,unknown,other,10580264,5.91,MYR
+5296.KL,MRDIY,Mr D.I.Y. Group (M) Berhad,Consumer Cyclical,Home Improvement Retail,9572250624,large,unknown,other,10557612,1.01,MYR
+5298.KL,OMH,OM Materials Holdings Limited,Basic Materials,Other Industrial Metals & Mining,494235648,large,unknown,other,7785,0.645,MYR
+5310.KL,KITACON,Kumpulan Kitacon Berhad,Real Estate,Real Estate—Development,315214208,mid,unknown,other,8606,0.63,MYR
+5315.KL,SKYWLD,SkyWorld Development Berhad,Real Estate,Real Estate—Development,343034720,mid,unknown,other,709259,0.335,MYR
+5316.KL,MSTGOLF,MST Golf Group Berhad,Consumer Cyclical,Specialty Retail,102608576,mid,unknown,other,59870,0.125,MYR
+5318.KL,DXN,DXN Holdings Bhd.,Consumer Defensive,Packaged Foods,2244524544,large,unknown,other,2422387,0.46,MYR
+5319.KL,MKHOP,MKH Oil Palm (East Kalimantan) Berhad,Consumer Defensive,Farm Products,639011456,large,unknown,other,608977,0.63,MYR
+5329.KL,AZAMJAYA,Azam Jaya Berhad,Industrials,Engineering & Construction,477500000,large,unknown,other,116133,0.955,MYR
+5336.KL,CKI,CUCKOO International (MAL) Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",444168000,large,unknown,other,1505843,0.31,MYR
+5340.KL,UMSINT,UMS Integration Limited,Technology,Semiconductor Equipment & Materials,5623855616,large,unknown,other,166822,5.98,MYR
+5343.KL,GENERGY,Wasco Greenergy Berhad,Utilities,Utilities—Renewable,152500000,mid,unknown,other,382537,0.305,MYR
+5348.KL,ORKIM,Orkim Berhad,Industrials,Marine Shipping,630000000,large,unknown,other,339579,0.63,MYR
+5351.KL,EMPIRE,Empire Premium Food Berhad,Consumer Cyclical,Restaurants,797500032,large,unknown,other,1543935,0.725,MYR
+5352.KL,MTTSL,MTT Shipping and Logistics Berhad,Industrials,Integrated Freight & Logistics,3155645184,large,unknown,other,6400929,1.26,MYR
+5358.KL,BCG,Big Caring Group Bhd,Healthcare,Pharmaceutical Retailers,7972382720,large,unknown,other,216840166,1.08,MYR
+5657.KL,PARKSON,Parkson Holdings Berhad,Consumer Cyclical,Department Stores,160846288,mid,unknown,other,1010653,0.14,MYR
+5665.KL,SSTEEL,Southern Steel Berhad,Basic Materials,Steel,698017728,large,unknown,other,141998,0.465,MYR
+5673.KL,JSB,Jentayu Sustainables Berhad,Industrials,Conglomerates,98006880,mid,unknown,other,107712,0.18,MYR
+5819.KL,HLBANK,Hong Leong Bank Berhad,Financial Services,Banks—Regional,43100336128,large,unknown,other,936506,21.02,MYR
+5916.KL,MSC,Malaysia Smelting Corporation Berhad,Basic Materials,Other Industrial Metals & Mining,1176000000,large,unknown,other,1306632,1.4,MYR
+6084.KL,STAR,Star Media Group Berhad,Communication Services,Publishing,192062688,mid,unknown,other,607059,0.265,MYR
+6139.KL,TAKAFUL,Syarikat Takaful Malaysia Keluarga Berhad,Financial Services,Insurance—Specialty,2389782016,large,unknown,other,1086961,2.74,MYR
+6149.KL,METROD,Metrod Holdings Berhad,Industrials,Electrical Equipment & Parts,120000000,mid,unknown,other,2625,1.0,MYR
+6491.KL,KFIMA,Kumpulan Fima Berhad,Industrials,Conglomerates,693435200,large,unknown,other,149927,2.44,MYR
+6742.KL,YTLPOWR,YTL Power International Berhad,Utilities,Utilities—Diversified,36324352000,large,unknown,other,17819604,4.16,MYR
+7006.KL,RKI,Rhong Khen International Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",185351264,mid,unknown,other,7682,0.95,MYR
+7022.KL,GTRONIC,Globetronics Technology Bhd.,Technology,Semiconductors,136796880,mid,unknown,other,816598,0.175,MYR
+7033.KL,HIGHTEC,Kumpulan H & L High-Tech Berhad,Industrials,Metal Fabrication,62132876,small,unknown,other,23519,0.545,MYR
+7066.KL,YONGTAI,Yong Tai Berhad,Real Estate,Real Estate—Development,58199596,small,unknown,other,1364733,0.1,MYR
+7083.KL,ANALABS,Analabs Resources Berhad,Basic Materials,Specialty Chemicals,188049488,mid,unknown,other,10090,1.7,MYR
+7086.KL,ABLEGRP,AbleGroup Berhad,Industrials,Building Products & Equipment,21111988,small,unknown,other,70895,0.08,MYR
+7094.KL,EUROSP,Eurospan Holdings Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",128822936,mid,unknown,other,20040,2.9,MYR
+7100.KL,UCHITEC,Uchi Technologies Berhad,Technology,Electronic Components,1015681664,large,unknown,other,264575,2.19,MYR
+7120.KL,AXTERIA,Axteria Group Berhad,Real Estate,Real Estate—Development,130093112,mid,unknown,other,4894358,0.15,MYR
+7121.KL,XL,XL Holdings Berhad,Consumer Defensive,Farm Products,433903904,large,unknown,other,14471908,0.825,MYR
+7128.KL,CAMRES,CAM Resources Berhad,Consumer Defensive,Farm Products,47463708,small,unknown,other,14587,0.26,MYR
+7131.KL,LAND33,Land 33 Berhad,Consumer Cyclical,Packaging & Containers,39463444,small,unknown,other,85591,0.11,MYR
+7134.KL,PWF,PWF Corporation Bhd.,Consumer Defensive,Farm Products,187037056,mid,unknown,other,49737,0.61,MYR
+7154.KL,NEXGBINA,Nexg Bina Berhad,Consumer Cyclical,Apparel Manufacturing,43146548,small,unknown,other,1754212,0.035,MYR
+7172.KL,PMBTECH,PMB Technology Berhad,Industrials,Metal Fabrication,2765237504,large,unknown,other,106664,1.48,MYR
+7173.KL,TOYOVEN,Toyo Ventures Holdings Berhad,Basic Materials,Specialty Chemicals,41475240,small,unknown,other,659129,0.25,MYR
+7178.KL,YSPSAH,Y.S.P. Southeast Asia Holding Berhad,Healthcare,Drug Manufacturers—Specialty & Generic,276597728,mid,unknown,other,21475,1.95,MYR
+7180.KL,SERNKOU,Sern Kou Resources Berhad,Basic Materials,Lumber & Wood Production,803182656,large,unknown,other,204837,0.745,MYR
+7184.KL,G3,G3 Global Berhad,Technology,Communication Equipment,62264048,small,unknown,other,1201661,0.015,MYR
+7197.KL,GESHEN,GE-Shen Corporation Berhad,Industrials,Metal Fabrication,530370656,large,unknown,other,253232,1.29,MYR
+7222.KL,IMASPRO,Imaspro Corporation Berhad,Basic Materials,Agricultural Inputs,56000000,small,unknown,other,13840,0.7,MYR
+7235.KL,SUPERLN,Superlon Holdings Berhad,Industrials,Building Products & Equipment,133951696,mid,unknown,other,325169,0.88,MYR
+7239.KL,SCNWOLF,Scanwolf Corporation Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",130562168,mid,unknown,other,44633,0.425,MYR
+7243.KL,MAGMA,Magma Group Berhad,Consumer Cyclical,Lodging,463215488,large,unknown,other,1600695,0.24,MYR
+7277.KL,DIALOG,Dialog Group Berhad,Energy,Oil & Gas Equipment & Services,11004204032,large,unknown,other,6403174,1.95,MYR
+7285.KL,TOMYPAK,Tomypak Holdings Berhad,Consumer Cyclical,Packaging & Containers,40956084,small,unknown,other,69258,0.095,MYR
+7315.KL,AHB,AHB Holdings Berhad,Industrials,Conglomerates,36820732,small,unknown,other,5008162,0.04,MYR
+7382.KL,GLBHD,Golden Land Berhad,Real Estate,Real Estate—Development,53628444,small,unknown,other,15238,0.25,MYR
+7692.KL,MYTECH,MyTech Group Berhad,Industrials,Tools & Accessories,55382332,small,unknown,other,104904,0.225,MYR
+7854.KL,TIMWELL,Timberwell Berhad,Basic Materials,Lumber & Wood Production,239101056,mid,unknown,other,1593385,0.895,MYR
+8079.KL,LEESK,Lee Swee Kiat Group Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",64482532,small,unknown,other,19716,0.265,MYR
+8141.KL,MJPERAK,Majuperak Holdings Berhad,Real Estate,Real Estate—Diversified,45507496,small,unknown,other,13000,0.16,MYR
+8346.KL,PRKCORP,Perak Corporation Berhad,Industrials,Marine Shipping,58999996,small,unknown,other,16111,0.59,MYR
+8419.KL,PANSAR,Pansar Berhad,Industrials,Conglomerates,305796032,mid,unknown,other,62074,0.44,MYR
+8435.KL,CEPCO,Concrete Engineering Products Berhad,Basic Materials,Building Materials,334318240,mid,unknown,other,7375,4.48,MYR
+8486.KL,LIONPSIM,Lion Posim Berhad,Basic Materials,Building Materials,66069752,small,unknown,other,7208,0.29,MYR
+8567.KL,SALCON,Salcon Berhad,Industrials,Waste Management,210024224,mid,unknown,other,323814,0.185,MYR
+8664.KL,SPSETIA,S P Setia Berhad,Real Estate,Real Estate—Development,2803708160,large,unknown,other,4689509,0.555,MYR
+8877.KL,EKOVEST,Ekovest Berhad,Industrials,Engineering & Construction,533773984,large,unknown,other,5283125,0.18,MYR
+9075.KL,THETA,Theta Edge Berhad,Technology,Information Technology Services,65472000,small,unknown,other,683198,0.555,MYR
+9288.KL,BONIA,Bonia Corporation Berhad,Consumer Cyclical,Apparel Manufacturing,144716496,mid,unknown,other,16422,0.72,MYR
+9334.KL,KESM,KESM Industries Berhad,Technology,Semiconductors,170337424,mid,unknown,other,64904,3.96,MYR
+9539.KL,MUH,Multi-Usage Holdings Berhad,Real Estate,Real Estate—Development,18054080,small,unknown,other,5362,0.32,MYR
+9598.KL,PTARAS,Pintaras Jaya Berhad,Industrials,Engineering & Construction,195720448,mid,unknown,other,30987,1.18,MYR
+9628.KL,LEBTECH,Lebtech Berhad,Industrials,Engineering & Construction,80525368,small,unknown,other,1,0.59,MYR
+9814.KL,BERTAM,Bertam Alliance Berhad,Real Estate,Real Estate Services,39000000,small,unknown,other,67420,0.12,MYR
+9997.KL,PENSONI,Pensonic Holdings Berhad,Consumer Cyclical,"Furnishings, Fixtures & Appliances",66090168,small,unknown,other,30488,0.445,MYR
