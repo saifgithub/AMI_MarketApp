@@ -355,3 +355,11 @@ Found: two users have duplicate training portfolios created 40 ms apart on 2026-
 2. DEF447 closed: the 2026-11-24 04:30Z nightly ran clean (150/150, 0 failures, `left_sec_map` warning for QRVO/ROKU/WBD).
 3. Bursa on in Alpha since 07:24 +03 (Saiful's ruling, SC list included): SC list stored, 886/18, as of 2026-05-29.
 4. WP-23 fit run 2 started on melehost (≤$5 cap) with the retry fix; run 1 (50/300 Rooms, 14 lost to HTTP 429) kept as `deepinfra_room_scores_run1_overloaded.jsonl`.
+
+### 26. 2026-11-24 — deploy #25 live; WP-23 done; Bursa floors confirmed
+
+1. Deploy #25 `alpha-2026-11-24-3` = `8d8b22da`: WP-23 3–2 split rule; coded rule ON in Alpha (DeepInfra grader only). Suite 9729/0; postflight, API, alpha-post PASS.
+2. WP-23 done: UAT-ROOM-035 PASS; stored coded decisions carry every answer, rule and grader version.
+3. CR282: Bursa floors RM300M + RM250k/day confirmed (`20f9c068`); Liquid-only explainer states the floors; UAT Bursa cases read the live flag (all PASS against Alpha with Bursa on); Bursa device cases unblocked for build 130.
+4. UAT-SIM-020 failed once: the AAPL options chain had no candidates at 02:00 ET (off-hours yfinance gap, US path untouched). Re-run in US hours.
+5. Next: deploy #26 (floors, explainer, UAT); device-lab bookings AMI-DL-23/24 on build 130.
