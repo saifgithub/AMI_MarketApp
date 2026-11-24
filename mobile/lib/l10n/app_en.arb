@@ -7497,5 +7497,9 @@
   "tradeTicketFeeTotal": "Total fees",
   "@tradeTicketFeeTotal": {
     "description": "CR282 F2. Last line of the Bursa fee estimate: the sum of the fees above. NEW key. retranslate:[ar,ms]"
+  },
+  "journalKvFees": "Fees",
+  "@journalKvFees": {
+    "description": "DEF542. Label of the journal-detail row on a CLOSED trade giving the total fees the round trip paid (buy leg for the shares sold + exit); shown beside Realised P&L, which is net of them. Omitted when there were no fees. NEW key. retranslate:[ar,ms]"
   }
 }

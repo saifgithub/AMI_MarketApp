@@ -6010,4 +6010,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tradeTicketFeeTotal => 'Total fees';
+
+  @override
+  String get journalKvFees => 'Fees';
 }

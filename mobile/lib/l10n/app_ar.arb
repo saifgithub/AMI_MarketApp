@@ -2727,6 +2727,7 @@
         "journalFilterBlocked": "a1f4014f85aa",
         "journalFilterChallenges": "6532ac8d28da",
         "journalFilterOneOnOne": "a6dc6e55860c",
+        "journalKvFees": "6d80486cc33a",
         "journalRetentionWarning": "d1ded2c21362",
         "lessonDeckBack": "262c8b040299",
         "lessonDeckCheckHeading": "554a1965a3c6",
@@ -3624,5 +3625,6 @@
     "tradeTicketFeeTotal": "Total fees",
     "floorOmniboxLookupDown": "Can't look up names right now — use the 4-digit code.",
     "floorOmniboxChooseMarket": "Which market?",
-    "floorMarketChipSemantics": "Market: {market}. Tap to switch."
+    "floorMarketChipSemantics": "Market: {market}. Tap to switch.",
+    "journalKvFees": "Fees"
 }

@@ -9943,6 +9943,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Total fees'**
   String get tradeTicketFeeTotal;
+
+  /// DEF542. Label of the journal-detail row on a CLOSED trade giving the total fees the round trip paid (buy leg for the shares sold + exit); shown beside Realised P&L, which is net of them. Omitted when there were no fees. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Fees'**
+  String get journalKvFees;
 }
 
 class _AppLocalizationsDelegate
