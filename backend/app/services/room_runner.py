@@ -2674,7 +2674,8 @@ def _prompt_open_risk(value: object) -> object:
 
 
 def _stop_clause(
-    sym: str, stops: dict[str, set[float]], unstopped: dict[str, int]
+    sym: str, stops: dict[str, set[float]], unstopped: dict[str, int],
+    market: Market = Market.US,
 ) -> str:
     """The per-position stop, or a LOUD statement that there isn't one.
 
@@ -2690,11 +2691,12 @@ def _stop_clause(
     """
     have = sorted(stops.get(sym, ()))
     missing = unstopped.get(sym, 0)
+    symbol = spec_for(market).currency_symbol  # DEF541 — RM in a Bursa block, never "$"
     if have and not missing:
-        levels = ", ".join(f"${s:g}" for s in have)
+        levels = ", ".join(f"{symbol}{s:g}" for s in have)
         return f" — stop {levels}" if len(have) == 1 else f" — stops {levels}"
     if have and missing:
-        levels = ", ".join(f"${s:g}" for s in have)
+        levels = ", ".join(f"{symbol}{s:g}" for s in have)
         return (
             f" — stops {levels}, and {missing} lot{'s' if missing > 1 else ''} "
             f"with NO stop recorded"
@@ -2792,7 +2794,7 @@ def _build_sim_holdings_block(user_id: UUID | None, ticker: str) -> str:
             unrealised = mkt_value - cost_basis
             lines.append(
                 f"  {sym} ×{qty:g} ({weight:.1f}% of portfolio, "
-                f"unrealised {unrealised:+,.2f}){_stop_clause(sym, stops, unstopped)}"
+                f"unrealised {unrealised:+,.2f}){_stop_clause(sym, stops, unstopped, market_for(ticker))}"
             )
         if ticker_u in agg:
             held_qty, _ = agg[ticker_u]
