@@ -1374,6 +1374,11 @@ class SimEngine:
         existing_open_risk_pct). The risk sum is per OPEN TRADE ROW (each buy
         execution carries its own stop), not per aggregated holding — a ticker
         bought twice at different stops sums both legs correctly.
+
+        DEF541 — each row counts only the shares its lot still holds
+        (`_open_quantity_by_lot`): a sold lot's BUY row stays `open` by design
+        (DEF166/DEF316), and its stop used to keep counting against
+        `max_open_risk_pct` on a book that no longer held the shares.
         """
         trades = self.list_trades(user_id, market=market)
         last_loss_closed_at = max(
@@ -1382,11 +1387,15 @@ class SimEngine:
         )
         trade_open_timestamps = [t.opened_at for t in trades]
         existing_open_risk_pct = 0.0
+        lot_open = _open_quantity_by_lot(trades)
         for t in trades:
             if t.status != "open" or t.stop is None:
                 continue
+            held = lot_open.get(str(t.id), 0.0)
+            if held <= 1e-9:
+                continue
             mark = quotes.get(t.ticker, t.entry_price)
-            market_value = mark * t.quantity
+            market_value = mark * held
             position_pct = _position_pct(market_value, portfolio_value)
             existing_open_risk_pct += _position_risk_contribution(
                 position_pct, t.entry_price, t.stop
