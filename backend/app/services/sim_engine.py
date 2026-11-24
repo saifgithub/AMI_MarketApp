@@ -1486,6 +1486,38 @@ class SimEngine:
             out[ticker] = (blend.stop, blend.target)
         return out
 
+    def open_lot_stops(
+        self, user_id: UUID, market: Market = Market.US,
+    ) -> dict[str, tuple[set[float], int]]:
+        """DEF538 — `{ticker: (distinct stops, lots with no stop)}` over the lots
+        that still have shares behind them, one book, one query.
+
+        The Room's holdings block names each position's protection; it used to
+        read that off every `open` trade row, but a sold lot's BUY row stays
+        `open` by design (DEF316), so a dead lot's stop was listed on a position
+        the user no longer holds. Same `_open_quantity_by_lot` derivation the
+        sweep and `position_brackets` use."""
+        with get_session() as s:
+            rows = s.execute(
+                select(SimTradeRow)
+                .where(training_trade_scope(user_id, market))
+                .order_by(SimTradeRow.opened_at.asc())
+            ).scalars().all()
+        lot_open = _open_quantity_by_lot(rows)
+        out: dict[str, tuple[set[float], int]] = {}
+        for r in rows:
+            if r.status != "open" or lot_open.get(str(r.id), 0.0) <= 1e-9:
+                continue
+            side = r.side.value if hasattr(r.side, "value") else str(r.side)
+            if side != "buy":
+                continue
+            stops, missing = out.setdefault(r.ticker, (set(), 0))
+            if r.stop:
+                stops.add(float(r.stop))
+            else:
+                out[r.ticker] = (stops, missing + 1)
+        return out
+
     def position_bracket(
         self, user_id: UUID, ticker: str, *, extra: LotBracket | None = None,
     ) -> tuple[float | None, float | None]:
