@@ -2415,8 +2415,11 @@
         "floorConveneOn": "e37be59c8112",
         "floorFirmHeading": "7c80a2378c3e",
         "floorFirmSeats": "7ffa1663ad70",
+        "floorMarketChipSemantics": "69e6267910e6",
         "floorOmniboxCaption": "cf13182f88d0",
+        "floorOmniboxChooseMarket": "56d695d97311",
         "floorOmniboxHint": "598da0c3eac3",
+        "floorOmniboxLookupDown": "a0ab039de0be",
         "floorReactionFailed": "16e672746fa3",
         "floorReactionHint": "6778acb11f11",
         "floorReactionPrompt": "6971f831cf5b",
@@ -3618,5 +3621,8 @@
     "tradeTicketFeeBrokerage": "Brokerage",
     "tradeTicketFeeClearing": "Clearing",
     "tradeTicketFeeStampDuty": "Stamp duty",
-    "tradeTicketFeeTotal": "Total fees"
+    "tradeTicketFeeTotal": "Total fees",
+    "floorOmniboxLookupDown": "Can't look up names right now — use the 4-digit code.",
+    "floorOmniboxChooseMarket": "Which market?",
+    "floorMarketChipSemantics": "Market: {market}. Tap to switch."
 }

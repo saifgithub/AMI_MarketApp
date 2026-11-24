@@ -2271,7 +2271,6 @@
     "portfolioTabOrders": "ORDERS",
     "portfolioRetry": "TRY AGAIN",
     "@@x-ami-seeds": {
-        "portfolioMarketBursa": "82cc88868326",
         "adBadge": "c7bf4bbdbcd8",
         "adBadgeSponsored": "7dfe1c6dad71",
         "adDismiss": "e3da4c0eb866",
@@ -2417,8 +2416,11 @@
         "floorConveneOn": "e37be59c8112",
         "floorFirmHeading": "7c80a2378c3e",
         "floorFirmSeats": "7ffa1663ad70",
+        "floorMarketChipSemantics": "69e6267910e6",
         "floorOmniboxCaption": "cf13182f88d0",
+        "floorOmniboxChooseMarket": "56d695d97311",
         "floorOmniboxHint": "598da0c3eac3",
+        "floorOmniboxLookupDown": "a0ab039de0be",
         "floorReactionFailed": "16e672746fa3",
         "floorReactionHint": "6778acb11f11",
         "floorReactionPrompt": "6971f831cf5b",
@@ -2919,6 +2921,7 @@
         "portfolioJournalRetentionUnknown": "2ffc76f45837",
         "portfolioLastNClosed": "6b396dda8702",
         "portfolioLive": "35e0d0360a0a",
+        "portfolioMarketBursa": "82cc88868326",
         "portfolioMock": "caac6fa1e29f",
         "portfolioNoOpenPositions": "91fe109fa34d",
         "portfolioOpenTrades": "c77f380ff1bf",
@@ -3622,5 +3625,8 @@
     "tradeTicketFeeBrokerage": "Upah broker",
     "tradeTicketFeeClearing": "Yuran penjelasan",
     "tradeTicketFeeStampDuty": "Duti setem",
-    "tradeTicketFeeTotal": "Jumlah yuran"
+    "tradeTicketFeeTotal": "Jumlah yuran",
+    "floorOmniboxLookupDown": "Can't look up names right now — use the 4-digit code.",
+    "floorOmniboxChooseMarket": "Which market?",
+    "floorMarketChipSemantics": "Market: {market}. Tap to switch."
 }

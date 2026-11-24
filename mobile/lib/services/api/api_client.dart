@@ -1552,6 +1552,20 @@ class ApiClient {
     return TickerValidation.fromJson(r.data!);
   }
 
+  /// CR283 — company name -> ticker candidates on one market (`US` | `MY`).
+  /// Throws on any failure (503 upstream, network): callers must read a throw
+  /// as "lookup down", never as "no such company" — only an empty list means
+  /// the lookup answered and nothing matched.
+  Future<List<ResolvedTicker>> resolveTicker(String query, String market) async {
+    final r = await _dio.get<Map<String, dynamic>>(
+      '/v1/tickers/resolve',
+      queryParameters: {'q': query, 'market': market},
+    );
+    return ((r.data?['candidates'] as List?) ?? const [])
+        .map((j) => ResolvedTicker.fromJson(j as Map<String, dynamic>))
+        .toList();
+  }
+
   // ── Watchlist (A18) ─────────────────────────────────────────────
 
   Future<List<WatchlistEntry>> watchlistList(String userId) async {

@@ -129,3 +129,19 @@ cases:
       - 'Switch off: 1155.KL is not accepted, exists is false'
       - 'Switch on: 1155.KL is accepted, exists is true and exchange is "Bursa Malaysia"'
     notes: 'CR282 phase 1 (2026-11-24). Alpha has run with MARKET_BURSA_ENABLED=true since 2026-11-24 (Saiful''s ruling; the SC Shariah list is ingested), so the switch-on branch is the one that runs there; the switch-off branch is the "flag off, nothing changes" half of the CR282 acceptance and runs against any backend with the switch off. The device half is UAT-SIM-037 and UAT-ROOM-034.'
+
+  - id: UAT-PLAT-010
+    title: Name resolution answers per market, refuses Bursa while the switch is off, and never returns a wrong-market ticker
+    layer: api
+    plans: [anon]
+    steps:
+      - 'Read the Bursa switch state from GET /v1/tickers/validate?ticker=1155.KL'
+      - 'GET /v1/tickers/resolve?q=CIMB&market=MY and GET /v1/tickers/resolve?q=AAPL&market=US'
+      - 'GET /v1/tickers/resolve?q=CIMB&market=XX; GET /v1/tickers/resolve with a blank q'
+    expected:
+      - 'Switch on: market=MY answers 200 with market "MY", every candidate ticker ending .KL with market "MY", and 1023.KL among the CIMB candidates; each candidate carries ticker, market, short_name and long_name'
+      - 'Switch off: market=MY answers 422 "Bursa Malaysia is not available yet." and nothing is looked up'
+      - 'Either state: market=US answers 200 with market "US", AAPL among the candidates, and no .KL candidate'
+      - 'market=XX answers 422 "unknown market"; a blank q answers 422'
+      - 'If the name source is unreachable the answer is 503 "Name lookup is unavailable right now", never 200 with an empty list: the executor skips (not passes) the value assertions in that case'
+    notes: 'CR283 (2026-11-24), backend/app/api/tickers.py + services/ticker_resolve.py. The source is Yahoo search (the same host as Alpha''s Bursa price feed), so the value assertions depend on the live feed: a 503 is recorded as a skip with its reason. The device half is UAT-FLOOR-013 and UAT-FLOOR-014.'

@@ -88,3 +88,36 @@ def test_bursa_switch_state_server_ready_and_ticker_validation_match_it(api, bur
         assert v.json()["exchange"] == "Bursa Malaysia", v.json()
     else:
         assert v.json()["exists"] is False, "a .KL ticker must not be accepted while MARKET_BURSA_ENABLED is off"
+
+
+@pytest.mark.uat("UAT-PLAT-010")
+def test_name_resolution_per_market_and_bursa_refusal(api, bursa_on):
+    us = api.get("/v1/tickers/resolve", params={"q": "AAPL", "market": "US"})
+    if us.status_code == 503:
+        assert "unavailable" in us.json()["detail"], us.text
+        pytest.skip("name source unreachable (503): value assertions not run")
+    assert us.status_code == 200, us.text
+    assert us.json()["market"] == "US"
+    tickers = [c["ticker"] for c in us.json()["candidates"]]
+    assert "AAPL" in tickers and not any(t.endswith(".KL") for t in tickers), tickers
+    assert all(c["market"] == "US" for c in us.json()["candidates"])
+
+    my = api.get("/v1/tickers/resolve", params={"q": "CIMB", "market": "MY"})
+    if bursa_on:
+        if my.status_code == 503:
+            pytest.skip("name source unreachable (503): value assertions not run")
+        assert my.status_code == 200, my.text
+        body = my.json()
+        assert body["market"] == "MY"
+        assert body["candidates"], "CIMB must resolve on Bursa"
+        assert all(c["ticker"].endswith(".KL") and c["market"] == "MY" for c in body["candidates"])
+        assert "1023.KL" in [c["ticker"] for c in body["candidates"]]
+        assert set(body["candidates"][0]) == {"ticker", "market", "short_name", "long_name"}
+    else:
+        assert my.status_code == 422
+        assert my.json()["detail"] == "Bursa Malaysia is not available yet."
+
+    bad = api.get("/v1/tickers/resolve", params={"q": "CIMB", "market": "XX"})
+    assert bad.status_code == 422 and "unknown market" in bad.json()["detail"]
+    blank = api.get("/v1/tickers/resolve", params={"q": "   ", "market": "US"})
+    assert blank.status_code == 422

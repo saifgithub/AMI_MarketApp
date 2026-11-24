@@ -4,15 +4,15 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**326 cases** — 208 api, 25 device, 93 manual; 16 blocked.
+**330 cases** — 209 api, 27 device, 94 manual; 16 blocked.
 
 ## Areas
 
-1. [Platform, version gate & UAT seeding](#platform) — 9 cases
+1. [Platform, version gate & UAT seeding](#platform) — 10 cases
 2. [Authentication, sessions & account identity](#auth) — 32 cases
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 20 cases
 4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 33 cases
-5. [Floor tab & home shell](#floor) — 12 cases
+5. [Floor tab & home shell](#floor) — 15 cases
 6. [Convene the Room](#room) — 35 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
 8. [Brief Your Agent](#brief) — 18 cases
@@ -110,6 +110,24 @@ _API (automated, live Alpha) · plans: anon_
 3. Switch on: 1155.KL is accepted, exists is true and exchange is "Bursa Malaysia"
 
 > CR282 phase 1 (2026-11-24). Alpha has run with MARKET_BURSA_ENABLED=true since 2026-11-24 (Saiful's ruling; the SC Shariah list is ingested), so the switch-on branch is the one that runs there; the switch-off branch is the "flag off, nothing changes" half of the CR282 acceptance and runs against any backend with the switch off. The device half is UAT-SIM-037 and UAT-ROOM-034.
+
+#### UAT-PLAT-010 — Name resolution answers per market, refuses Bursa while the switch is off, and never returns a wrong-market ticker
+
+_API (automated, live Alpha) · plans: anon_
+
+**Steps**
+1. Read the Bursa switch state from GET /v1/tickers/validate?ticker=1155.KL
+2. GET /v1/tickers/resolve?q=CIMB&market=MY and GET /v1/tickers/resolve?q=AAPL&market=US
+3. GET /v1/tickers/resolve?q=CIMB&market=XX; GET /v1/tickers/resolve with a blank q
+
+**Expected**
+1. Switch on: market=MY answers 200 with market "MY", every candidate ticker ending .KL with market "MY", and 1023.KL among the CIMB candidates; each candidate carries ticker, market, short_name and long_name
+2. Switch off: market=MY answers 422 "Bursa Malaysia is not available yet." and nothing is looked up
+3. Either state: market=US answers 200 with market "US", AAPL among the candidates, and no .KL candidate
+4. market=XX answers 422 "unknown market"; a blank q answers 422
+5. If the name source is unreachable the answer is 503 "Name lookup is unavailable right now", never 200 with an empty list: the executor skips (not passes) the value assertions in that case
+
+> CR283 (2026-11-24), backend/app/api/tickers.py + services/ticker_resolve.py. The source is Yahoo search (the same host as Alpha's Bursa price feed), so the value assertions depend on the live feed: a 503 is recorded as a skip with its reason. The device half is UAT-FLOOR-013 and UAT-FLOOR-014.
 
 ### Device (automated, Appium)
 
@@ -1117,6 +1135,48 @@ _Device (automated, Appium) · plans: floor_pass_
 3. In Bahasa Melayu and Arabic the $ is still a prefix and no amount reads RM: money on a US book is dollars whatever the phone language
 
 > CR282 lane F1 (2026-11-24): the card prints through the one money formatter (formatMoney, features/markets/money.dart). The Floor card always shows the US book; Bursa has no Floor card in phase 1, so there is no Bursa Floor case. The executor asserts the English run; the Malay and Arabic repeat is a visual check.
+
+#### UAT-FLOOR-013 — With Bursa on, the Floor search box has a US / MY chip and a company name resolves to the active market's code
+
+_Device (automated, Appium) · plans: floor_pass_
+
+**Preconditions**
+1. A build with AMI_BURSA on (internal TestFlight / Play build; store builds keep it off)
+2. Alpha with MARKET_BURSA_ENABLED=true
+
+**Steps**
+1. Open the Floor. Read the search box: note the small US / MY chip inside it. Tap the chip, then open the Portfolio tab and read its US | BURSA switch, then return to the Floor
+2. With the chip on MY, type CIMB and read the button; tap it
+3. Back on the Floor, type maybank and tap the button
+4. Switch the chip to US; type AAPL and read the button; then type 1023 and read the button
+5. Open the Convene picker (empty box, tap CONVENE THE ROOM) with the chip on MY
+
+**Expected**
+1. The chip reads US by default and flips to MY on a tap; the Portfolio switch shows the same market (one setting, either control moves both)
+2. On MY the button reads CONVENE THE ROOM · CIMB · 1023 and the Room opens on 1023.KL; maybank opens the Room on 1155.KL
+3. On US, AAPL reads CONVENE THE ROOM · AAPL; 1023 reads CONVENE THE ROOM · 1023.KL in either market (a number code always goes to Bursa)
+4. On MY the picker offers .KL names as one-tap suggestions; on US it offers the US names
+
+> CR283 (2026-11-24). Convening spends a Room credit: use a funded account. With the build lacking AMI_BURSA the chip does not exist and the box behaves as before (UAT-FLOOR-003). The API half is UAT-PLAT-010.
+
+#### UAT-FLOOR-014 — A word listed in both markets shows a two-line chooser, never a silent pick
+
+_Device (automated, Appium) · plans: floor_pass_
+
+**Preconditions**
+1. A build with AMI_BURSA on; Alpha with MARKET_BURSA_ENABLED=true
+
+**Steps**
+1. With the chip on US, type a word that is both a US ticker and a Bursa short name (try TM: Toyota on the US side, Telekom Malaysia on Bursa) and wait for the box to settle
+2. Read the two lines under the box; tap the Bursa line
+3. Switch the chip to MY, type the same word again and read the order of the two lines
+
+**Expected**
+1. Under the box a "Which market?" heading and two lines appear, one per market, each with its ticker, company name and US or MY tag; the CONVENE THE ROOM button names no ticker and does nothing until a line is tapped
+2. Tapping the Bursa line opens the Room on that .KL ticker
+3. The active market's line is listed first, so the order flips with the chip
+
+> CR283 (2026-11-24). TM is an UNVERIFIED example of a word in both markets (the Yahoo probe could not be re-run when this case was written); if it lists in only one market, note the word used that does. The single-market and lookup-down paths are in UAT-FLOOR-013 and UAT-FLOOR-015.
 
 <a id="room"></a>
 ## Convene the Room
@@ -3599,6 +3659,7 @@ crawl; real-money purchases are never pressed (crawler/never_press.json).
 2026-11-22 (build 129): Your Firm lays the 13 agent tiles out in desk bands (CR159; same tiles, taps and semantics ids, catalogue qa/uat/controls/your_firm.yaml already updated); Games responses now carry the keys the app reads (DEF527; a SELL stays a sell, restart passes commit as the query param). 8 + 12 new strings are seeded for AR/MS.
 2026-11-24 (CR282 phase 1, Bursa Malaysia): every Bursa control is behind the AMI_BURSA dart-define and is absent from a store build, so a store-build crawl sees no new control. The catalogue now describes them for the acceptance run on an AMI_BURSA build: the Portfolio US / BURSA switch and NEW BURSA TRADE (qa/uat/controls/portfolio.yaml) and the ticket's board-lot quantity steppers (qa/uat/controls/trade_ticket_sheet.yaml). Visible in store builds: every money amount is now printed through one formatter (a negative reads -$12.00, the $ stays a prefix in Arabic and Malay, the ticker tape and watchlist no longer use the phone's locale currency); the catalogue's control states do not quote amounts, so no entry changed for it. Line numbers re-derived for the new entries only.
 2026-11-24 (CR282, Settings > Compliance): the Liquid-only explain sheet now states the floors ($500M market cap and $1M traded a day; plus a Bursa line on an AMI_BURSA build). Same control, same sheet, new text only; catalogue note in qa/uat/controls/settings.yaml; the device check is UAT-MAND-041. Money amounts everywhere print through one formatter (CR282 F1; DEF531 fixed the "+-$0.00" sign artefact).
+2026-11-24 (CR283, one market setting): the Floor search box gains a US / MY chip, and a typed company name resolves to the active market's code (a two-line chooser when both markets list the word). Both exist only on an AMI_BURSA build, so a store-build crawl sees no new control. The catalogue describes the chip and the chooser line in qa/uat/controls/floor_omnibox.yaml (new Semantics ids ami.floor.market_chip and ami.floor.market_choice.<ticker>); the existing field entry's note names the new routing. Device checks: UAT-FLOOR-013 to UAT-FLOOR-015. Three new strings are seeded for AR/MS.
 
 ### Device (automated, Appium)
 
@@ -4129,6 +4190,25 @@ _Manual (iPhone checklist) · plans: any_
 2. With a Room still running, the Floor shows "Your Room on <ticker> is still running." with REJOIN, and opening the app never jumps into the Room by itself
 
 > DEF506 (Saiful 2026-11-20). The full rejoin and no-second-charge checks are UAT-ROOM-028.
+
+#### UAT-FLOOR-015 — With Bursa on and the name lookup unreachable, MY mode says so and US mode keeps working
+
+_Manual (iPhone checklist) · plans: floor_pass_
+
+**Preconditions**
+1. A build with AMI_BURSA on; Alpha reachable but its name source (Yahoo search) blocked or the resolve route failing
+
+**Steps**
+1. With the chip on MY, type CIMB and read under the box; tap the button
+2. Type 1023 and tap the button
+3. Switch the chip to US, type AAPL and tap the button
+
+**Expected**
+1. On MY, CIMB shows "Can't look up names right now — use the 4-digit code." under the box and the button convenes nothing
+2. 1023 still opens the Room on 1023.KL (a code needs no lookup)
+3. On US, AAPL opens the Room on AAPL exactly as with Bursa off (today's ticker-shape rule)
+
+> CR283 (2026-11-24). Needs the failure to be induced on the server, so it is a by-hand case; the logic is pinned by the widget tests (mobile/test/widgets/floor/cr283_omnibox_market_test.dart) and the 503 by the backend unit tests.
 
 #### UAT-ROOM-014 — Convene sheet, live console, verdict card and cost line on a real iPhone
 

@@ -7,7 +7,9 @@ library;
 
 import 'dart:async';
 
+import 'package:ami_trade/features/markets/market.dart';
 import 'package:ami_trade/services/yahoo_finance_service.dart';
+import 'package:ami_trade/state/bursa_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/watchlist_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,9 +17,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 // Named constant so tier-based speed is a one-line change later.
 const int kTickerTapeRefreshSeconds = 120;
 
-/// Active bourse — hardcoded to US at alpha.
-/// Wire to the user's mandate field in Phase 2 (Tadawul / Bursa landing).
-final activeBourseProvider = Provider<Bourse>((_) => Bourse.us);
+/// Active bourse. US unless the build has Bursa (CR283) and the user's
+/// app-wide market is MY; Tadawul lands in a later phase.
+final activeBourseProvider = Provider<Bourse>((ref) {
+  if (!ref.watch(bursaEnabledProvider)) return Bourse.us;
+  return ref.watch(selectedMarketProvider) == AppMarket.my
+      ? Bourse.my
+      : Bourse.us;
+});
 
 /// Projection of the watchlist down to a stable, content-comparable key.
 /// Sorted + comma-joined so Riverpod's default `==` fires the listener only
@@ -68,6 +75,13 @@ class TickerTapeNotifier extends AsyncNotifier<TickerTapeData> {
         if (prev != next) _silentRefresh();
       },
     );
+    // CR283 — the market switch re-bases the tape. The held quotes belong to
+    // the other bourse, so they must not be served as "stale" for this one.
+    ref.listen<Bourse>(activeBourseProvider, (prev, next) {
+      if (prev == next) return;
+      _lastGood = null;
+      _silentRefresh();
+    });
     return _fetch();
   }
 

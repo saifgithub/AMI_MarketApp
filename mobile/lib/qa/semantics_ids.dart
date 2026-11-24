@@ -236,6 +236,13 @@ class FloorIds {
 
   static const String rejoinBanner = 'ami.floor.rejoin_banner';
   static const String rejoinCta = 'ami.floor.rejoin_cta';
+
+  /// CR283 — the US / MY chip in the Floor search box (Bursa builds only).
+  static const String marketChip = 'ami.floor.market_chip';
+
+  /// CR283 — the two-line market chooser; one row per market, suffixed with
+  /// the ticker (`ami.floor.market_choice.1023.KL`).
+  static const String marketChoicePrefix = 'ami.floor.market_choice.';
 }
 
 /// CR232 — the exit affordances a pushed full page carries, now that a

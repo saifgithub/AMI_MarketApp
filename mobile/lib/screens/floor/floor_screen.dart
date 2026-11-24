@@ -46,6 +46,7 @@ import 'package:ami_trade/screens/room/room_screen.dart';
 import 'package:ami_trade/screens/sim/company_review_screen.dart';
 import 'package:ami_trade/services/telemetry/telemetry_emitter.dart';
 import 'package:ami_trade/state/active_room_provider.dart';
+import 'package:ami_trade/state/bursa_providers.dart';
 import 'package:ami_trade/state/inbox_providers.dart';
 import 'package:ami_trade/state/lessons_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
@@ -203,7 +204,8 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
 
     final l = AppLocalizations.of(context);
     final activeRoom = ref.watch(activeRoomProvider);
-    final unlocked = ref.watch(lessonsNotifierProvider).unlockedAgentIds;
+    final bursaOn = ref.watch(bursaEnabledProvider);
+    final unlocked =ref.watch(lessonsNotifierProvider).unlockedAgentIds;
     // CR184 — the NOT ACTIONED card collapses (is omitted, not blanked) when
     // nothing is outstanding: loading, error and empty all read as "no card",
     // because acceptance #4 forbids a blank card and "everything actioned"
@@ -309,6 +311,14 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                     onAsk: _ask,
                     onPick: () => ConveneSheet.show(context),
                     onReview: _review,
+                    // CR283 — Bursa-off builds pass no market, so the box has
+                    // no chip and makes no lookup.
+                    market: bursaOn ? ref.watch(selectedMarketProvider) : null,
+                    onMarketChanged: (m) =>
+                        ref.read(selectedMarketProvider.notifier).select(m),
+                    resolve: (q, m) => ref
+                        .read(apiClientProvider)
+                        .resolveTicker(q, m.apiCode),
                   ),
                   const SizedBox(height: AmiSpacing.m),
 

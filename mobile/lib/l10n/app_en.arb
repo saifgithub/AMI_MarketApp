@@ -5603,6 +5603,23 @@
   "@floorOmniboxCaption": {
     "description": "CR173 slice 2 (CR244 audit fix L6 appended 'or open Company Review first', per the approved mockup's caption). Caption under the primary button, explaining the routing. 'Convene' is the app's verb for starting a 12-agent Room run. retranslate:[ar,ms]"
   },
+  "floorOmniboxLookupDown": "Can't look up names right now — use the 4-digit code.",
+  "@floorOmniboxLookupDown": {
+    "description": "CR283. Shown under the Floor search box when the market is set to Malaysia (Bursa) and the name lookup service is unreachable, so a company name like 'CIMB' cannot be turned into a stock code. Tells the user the way forward: type the 4-digit Bursa stock code instead (e.g. 1023). Must not read as 'no such company'. NEW key. retranslate:[ar,ms]"
+  },
+  "floorOmniboxChooseMarket": "Which market?",
+  "@floorOmniboxChooseMarket": {
+    "description": "CR283. Heading of the two-line chooser under the Floor search box when the typed word matches a listing in BOTH the US and Malaysian (Bursa) markets; the user taps the market they meant. NEW key. retranslate:[ar,ms]"
+  },
+  "floorMarketChipSemantics": "Market: {market}. Tap to switch.",
+  "@floorMarketChipSemantics": {
+    "description": "CR283. Screen-reader label of the small US / MY market chip in the Floor search box. {market} is the active market's short code ('US' or 'MY'), already formatted - do not translate it. NEW key. retranslate:[ar,ms]",
+    "placeholders": {
+      "market": {
+        "type": "String"
+      }
+    }
+  },
   "floorConveneOn": "CONVENE THE ROOM · {ticker}",
   "@floorConveneOn": {
     "description": "CR173 slice 2. The primary button once the typed text is ticker-shaped, naming the ticker it will run on. Showing the ticker is a safety property, not decoration: the router matches shape, not meaning, so a user who typed a word that looks like a ticker sees the mistake before spending a credit. Mono uppercase. NEW key. retranslate:[ar,ms]",
