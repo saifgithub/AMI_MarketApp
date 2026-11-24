@@ -87,7 +87,7 @@ ILLIQUID_AVG_DOLLAR_VOLUME_USD = 1_000_000
 
 # CR282 — Bursa (`.KL`) floors, in RINGGIT (yfinance reports a `.KL` name's market cap
 # and price in MYR, so the dollar floors above must not be compared to them).
-# PENDING SAIFUL'S CONFIRMATION before Bursa goes on for users (ruling 2026-11-24).
+# Confirmed by Saiful 2026-11-24 (RM300M market cap + RM250k a day; bursa_liquidity_floors_2026-11-24.md).
 #
 # Derived from measured Bursa turnover, not converted from the US floors (lane E's
 # first cut, RM2,100M / RM4.2M = the dollar floors at an assumed RM4.20/USD, passed
