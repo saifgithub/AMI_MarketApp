@@ -1169,7 +1169,7 @@ _Device (automated, Appium) · plans: floor_pass_
 **Steps**
 1. With the chip on US, type british american (BTI in the US, British American Tobacco Malaysia 4162 on Bursa) and wait for the box to settle
 2. Read the two lines under the box; tap the Bursa line
-3. Switch the chip to MY, type the same word again and read the order of the two lines
+3. Switch the chip to MY with the word still in the box, tap into the box, and read the order of the two lines; then clear it and type the same word again
 
 **Expected**
 1. Under the box a "Which market?" heading and two lines appear, one per market, each with its ticker, company name and US or MY tag; the CONVENE THE ROOM button names no ticker and does nothing until a line is tapped
