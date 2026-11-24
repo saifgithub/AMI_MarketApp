@@ -363,3 +363,10 @@ Found: two users have duplicate training portfolios created 40 ms apart on 2026-
 3. CR282: Bursa floors RM300M + RM250k/day confirmed (`20f9c068`); Liquid-only explainer states the floors; UAT Bursa cases read the live flag (all PASS against Alpha with Bursa on); Bursa device cases unblocked for build 130.
 4. UAT-SIM-020 failed once: the AAPL options chain had no candidates at 02:00 ET (off-hours yfinance gap, US path untouched). Re-run in US hours.
 5. Next: deploy #26 (floors, explainer, UAT); device-lab bookings AMI-DL-23/24 on build 130.
+
+### 27. 2026-11-24 — device lab on build 130; deploy #26; build 131
+
+1. AMI-DL-23 (Android, 10/14 passed) and AMI-DL-24 (iPhone, 12/17 passed, 1 blocked) on build 0.1.0+130, recorded in the UAT ledger. Money format and the Bursa ticket, lots and fees passed. Failures became DEF531 (`+-$0.00`), DEF532 (Bursa journal in $; closing sells, US too, wrote no closed entry), DEF533 (Bursa Room still US-framed: the benchmark name never reached the live sheet; lane E's tests stubbed that seam with US data) and DEF534 (no thousands separator in cash refusals). DEF530: the tester APK lacked AMI_BURSA, the DEF301 class again; P43 guard added. WATCH-013 and SIM-029 were case wording.
+2. Deploy #26 `alpha-2026-11-24-4` = `3e770cb3`: Bursa floors RM300M / RM250k (confirmed), Liquid-only explainer, DEF530–534. Suite 9765/0; local gate PASS; UAT OVERRIDE (stale device cases only, no area gaps); postflight PASS on re-run (first run hit readiness during startup). Changed API cases 47 passed incl. JRNL-013/014 (DEF532 live) and ROOM-035; UAT-SIM-020 failed off-hours (empty options chain at ~01:30 ET), re-run scheduled 17:52 +03.
+3. Build 0.1.0+131 (internal, Bursa on, DEF531–534): TestFlight internal + Play internal; the tester APK carries AMI_BURSA (DEF530 verified in a real build); staged in the Android exchange folder.
+4. Next: device re-run of JRNL-012 / ROOM-034 (+ re-versioned cases) on build 131 once the Suite's coordinator lifts its booking drain.
