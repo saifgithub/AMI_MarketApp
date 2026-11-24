@@ -146,6 +146,10 @@ def _upsert_mandate_sync(user_id: UUID, mandate: Mandate) -> Mandate:
     return get_mandate_store().upsert(user_id, mandate)
 
 
+def _has_mandate_sync(user_id: UUID) -> bool:
+    return get_mandate_store().get(user_id) is not None
+
+
 @router.post("/readback/confirm", response_model=ReadbackConfirmResponse)
 async def confirm_readback(
     req: ReadbackConfirmRequest,
@@ -202,7 +206,7 @@ async def confirm_readback(
     # mandate is never clobbered without the explicit `restart` signal (DEF060).
     persist = restart_authed
     if current_user is not None and not restart_authed:
-        persist = await run_in_threadpool(get_mandate_store().get, current_user.id) is None
+        persist = not await run_in_threadpool(_has_mandate_sync, current_user.id)
     try:
         mandate_dict = session_to_mandate_dict(
             session,
