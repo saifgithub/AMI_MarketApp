@@ -2741,25 +2741,23 @@ def _build_sim_holdings_block(user_id: UUID | None, ticker: str) -> str:
         portfolio = sim.ensure_portfolio(user_id, **mkt)
         cash = portfolio.current_cash
         total = sim.total_value(user_id, **mkt)
-        open_trades = sim.list_trades(user_id, status="open", **mkt)
-        # Aggregate open trades per name (a name may have more than one open lot).
-        agg: dict[str, list[float]] = {}
-        # CR153/154/155/156 (deduped) — the per-lot stop, so the Room can see
-        # what each open position actually risks. Collected as a set per name
-        # because one name can hold several lots at different stops, and
+        # DEF538 — positions come from the book's HOLDINGS (what the portfolio
+        # screen and the compliance check read), never from summing `open` trade
+        # rows: a sell leaves its BUY row `open` and adds its own permanently
+        # `open` SELL row (DEF166/DEF316), so a bought-then-sold name read as
+        # still held — twice over.
+        agg: dict[str, list[float]] = {
+            h.ticker.upper(): [float(h.quantity), float(h.quantity) * float(h.avg_cost)]
+            for h in portfolio.holdings
+            if float(h.quantity) > 1e-9
+        }
+        # CR153/154/155/156 (deduped) — the per-lot stop of lots still held, so
+        # the Room can see what each open position actually risks. A set per
+        # name because one name can hold several lots at different stops, and
         # collapsing them to one number would invent a stop nobody set.
-        stops: dict[str, set[float]] = {}
-        unstopped: dict[str, int] = {}
-        for t in open_trades:
-            sym = t.ticker.upper()
-            row = agg.setdefault(sym, [0.0, 0.0])  # [qty, cost_basis]
-            row[0] += t.quantity
-            row[1] += t.quantity * t.entry_price
-            stop = getattr(t, "stop", None)
-            if stop:
-                stops.setdefault(sym, set()).add(float(stop))
-            else:
-                unstopped[sym] = unstopped.get(sym, 0) + 1
+        lot_stops = sim.open_lot_stops(user_id, **mkt) if agg else {}
+        stops: dict[str, set[float]] = {k: v[0] for k, v in lot_stops.items()}
+        unstopped: dict[str, int] = {k: v[1] for k, v in lot_stops.items()}
         marks = sim.current_marks(list(agg)) if agg else {}
     except Exception as exc:  # noqa: BLE001 — degrade loudly, never silence
         logger.warning(
