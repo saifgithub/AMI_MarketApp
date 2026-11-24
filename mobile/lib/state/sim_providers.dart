@@ -3,13 +3,16 @@ library;
 
 import 'dart:async';
 
+import 'package:ami_trade/features/markets/market.dart';
 import 'package:ami_trade/features/sim/order_pricing.dart';
 import 'package:ami_trade/models/sim.dart';
 import 'package:ami_trade/models/sim_resting_order.dart';
 import 'package:ami_trade/services/api/api_client.dart';
 import 'package:ami_trade/services/api/friendly_error.dart';
+import 'package:ami_trade/services/api/market_refusal.dart';
 import 'package:ami_trade/services/device_user.dart';
 import 'package:ami_trade/services/telemetry/telemetry_emitter.dart';
+import 'package:ami_trade/state/bursa_providers.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/telemetry_providers.dart';
@@ -29,6 +32,7 @@ class SimState {
     this.lastSubmit,
     this.error,
     this.errorRetryable = false,
+    this.marketRefusal,
   });
 
   final SimPortfolio? portfolio;
@@ -74,6 +78,12 @@ class SimState {
   /// control over that is an invitation to double-fill.
   final bool errorRetryable;
 
+  /// CR282 - the last order a market's own rules refused (board lot, tick grid,
+  /// price limit, shorts, market disabled), as the server worded it. Separate
+  /// from [error] on purpose: it is not a failure to retry or a generic "could
+  /// not place that trade", it is a specific rule the ticket shows verbatim.
+  final MarketRefusal? marketRefusal;
+
   List<SimRestingOrder> get liveRestingOrders =>
       [for (final o in restingOrders) if (o.isLive) o];
 
@@ -90,8 +100,10 @@ class SimState {
     SimSubmitResult? lastSubmit,
     String? error,
     bool? errorRetryable,
+    MarketRefusal? marketRefusal,
     bool clearLastSubmit = false,
     bool clearError = false,
+    bool clearMarketRefusal = false,
   }) {
     return SimState(
       portfolio: portfolio ?? this.portfolio,
@@ -108,6 +120,8 @@ class SimState {
       // app cannot keep) in a new place.
       errorRetryable:
           clearError ? false : (errorRetryable ?? this.errorRetryable),
+      marketRefusal:
+          clearMarketRefusal ? null : (marketRefusal ?? this.marketRefusal),
     );
   }
 }
@@ -241,6 +255,37 @@ class SimNotifier extends StateNotifier<SimState> {
     }
   }
 
+  /// CR282 - the ticket's pre-confirm look at a non-US order: the itemised fees
+  /// and, when the market's own rules refuse it, the server's sentence. Touches
+  /// no state. A 422 that is not a market rule (and any other failure) is
+  /// `(result: null, refusal: null)` - the ticket then shows nothing rather than
+  /// a guess, and the order itself is still judged by `/submit`.
+  Future<({SimPreviewResult? result, MarketRefusal? refusal})> previewMarket({
+    required String ticker,
+    required String side,
+    required double quantity,
+    SimOrderType orderType = SimOrderType.market,
+    double? limitPrice,
+    double? triggerPrice,
+  }) async {
+    try {
+      final api = _ref.read(apiClientProvider);
+      final userId = await DeviceUser.getOrCreate();
+      final r = await api.simPreview(
+        userId: userId,
+        ticker: ticker,
+        side: side,
+        quantity: quantity,
+        orderType: orderType.wire,
+        limitPrice: limitPrice,
+        triggerPrice: triggerPrice,
+      );
+      return (result: r, refusal: null);
+    } catch (e) {
+      return (result: null, refusal: MarketRefusal.fromError(e));
+    }
+  }
+
   Future<SimSubmitResult?> submit({
     required String ticker,
     required String side,
@@ -254,7 +299,11 @@ class SimNotifier extends StateNotifier<SimState> {
     int? horizonDays,
     String? verdictRef,
   }) async {
-    state = state.copyWith(submitting: true, clearError: true, clearLastSubmit: true);
+    state = state.copyWith(
+        submitting: true,
+        clearError: true,
+        clearLastSubmit: true,
+        clearMarketRefusal: true);
     try {
       final api = _ref.read(apiClientProvider);
       // CR181 — captured before the await; `_ref` is unusable if this
@@ -305,6 +354,12 @@ class SimNotifier extends StateNotifier<SimState> {
       // order is being placed" — which are the same thing to the user and
       // diverge by four round trips in the code.
       await refresh();
+      // CR282 - a Bursa fill changed the MYR book, which `refresh()` above
+      // (the US book) did not read.
+      if (_ref.read(bursaEnabledProvider) &&
+          marketForTicker(ticker) == AppMarket.my) {
+        await _ref.read(bursaSimProvider.notifier).refresh();
+      }
       // These two feed the Journal tab and the ticker tape. Neither is on
       // screen when this sheet closes, so they are deliberately NOT awaited:
       // the wait that matters is the one that makes the screen the user
@@ -319,6 +374,13 @@ class SimNotifier extends StateNotifier<SimState> {
       // carries no `verdict_ref` for the server to dedup on. A retry control
       // here is a second order.
       if (!mounted) return null;
+      // CR282 - a market's own rule refusal keeps the server's sentence; it is
+      // not "couldn't place that trade".
+      final refusal = MarketRefusal.fromError(e);
+      if (refusal != null) {
+        state = state.copyWith(marketRefusal: refusal);
+        return null;
+      }
       state = state.copyWith(
           error: friendlyError(e, action: 'place that trade'),
           errorRetryable: false);
@@ -379,8 +441,68 @@ class SimNotifier extends StateNotifier<SimState> {
   }
 
   void clearLastSubmit() {
-    state = state.copyWith(clearLastSubmit: true);
+    state = state.copyWith(clearLastSubmit: true, clearMarketRefusal: true);
   }
+
+  /// CR282 - the typed order changed, so the last market-rule refusal is about
+  /// an order that no longer exists. Leaves a safety-floor refusal alone.
+  void clearMarketRefusal() {
+    if (state.marketRefusal == null) return;
+    state = state.copyWith(clearMarketRefusal: true);
+  }
+}
+
+/// CR282 lane F2 - the Bursa (MYR) book: its portfolio and trade ledger.
+///
+/// Loads `?market=MY`, which the server answers by creating the book on first
+/// touch, so this provider is only ever *watched* once the user is looking at
+/// Bursa (the market switch, a `.KL` ticker, a `.KL` order) - a user who never
+/// opens Bursa never creates a book. Resting orders are not loaded here: the
+/// server's order book is one list across markets and the Orders tab reads it
+/// from [SimNotifier].
+class BursaSimNotifier extends StateNotifier<SimState> {
+  BursaSimNotifier(this._ref) : super(const SimState());
+
+  final Ref _ref;
+
+  Future<void> refresh() async {
+    state = state.copyWith(loading: true, clearError: true);
+    try {
+      final api = _ref.read(apiClientProvider);
+      final userId = await DeviceUser.getOrCreate();
+      final portfolio = await api.simMarketPortfolio(userId, AppMarket.my);
+      final trades = await api.simMarketTrades(userId, AppMarket.my);
+      if (!mounted) return;
+      state = state.copyWith(
+        portfolio: portfolio,
+        trades: trades,
+        loading: false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      state = state.copyWith(
+          loading: false,
+          error: friendlyError(e, action: 'load your Bursa book'),
+          errorRetryable: isRetryable(e));
+    }
+  }
+}
+
+final bursaSimProvider =
+    StateNotifierProvider<BursaSimNotifier, SimState>((ref) {
+  final n = BursaSimNotifier(ref);
+  Future.microtask(n.refresh);
+  return n;
+});
+
+/// CR282 - the book the Portfolio, a ticker and the ticket should read for
+/// [market]: the MYR book for Bursa when the build has it, otherwise the US
+/// book (so a flag-off build never touches the Bursa provider).
+SimState simStateFor(WidgetRef ref, AppMarket market) {
+  if (market == AppMarket.my && ref.watch(bursaEnabledProvider)) {
+    return ref.watch(bursaSimProvider);
+  }
+  return ref.watch(simNotifierProvider);
 }
 
 final simNotifierProvider = StateNotifierProvider<SimNotifier, SimState>((ref) {
@@ -408,4 +530,12 @@ final portfolioHistoryProvider =
   final api = ref.watch(apiClientProvider);
   final userId = await DeviceUser.getOrCreate();
   return api.simPortfolioHistory(userId);
+});
+
+/// CR282 - the live quote (price, change, source, the server's `market_state`)
+/// for a ticker's detail screen.
+final tickerQuoteProvider = FutureProvider.autoDispose.family<
+    ({double price, double changePct, String source, String marketState}),
+    String>((ref, ticker) {
+  return ref.watch(apiClientProvider).simQuoteDetail(ticker);
 });

@@ -3608,5 +3608,17 @@
     "firmDeskRisk": "RISK",
     "firmDeskConcierge": "CONCIERGE",
     "firmDeskConciergeNote": "reports to you",
-    "firmDeskCount": "{filled}/{total}"
+    "firmDeskCount": "{filled}/{total}",
+    "portfolioMarketUs": "AMI Trade US book",
+    "portfolioMarketBursa": "BURSA",
+    "portfolioBursaEmpty": "Buku Bursa anda bermula dengan {amount} apabila anda membuat dagangan Bursa pertama anda.",
+    "portfolioBursaEmptyCta": "DAGANGAN BURSA BARU",
+    "tradeTicketBoardLotHint": "Bursa didagangkan dalam lot papan sebanyak {lot}. Masukkan gandaan {lot}.",
+    "tradeTicketQtyLessLot": "Kurangkan kuantiti sebanyak {lot}",
+    "tradeTicketQtyMoreLot": "Tambah kuantiti sebanyak {lot}",
+    "tradeTicketFeesHeading": "ANGGARAN YURAN",
+    "tradeTicketFeeBrokerage": "Upah broker",
+    "tradeTicketFeeClearing": "Yuran penjelasan",
+    "tradeTicketFeeStampDuty": "Duti setem",
+    "tradeTicketFeeTotal": "Jumlah yuran"
 }

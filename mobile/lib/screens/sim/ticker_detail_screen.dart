@@ -23,6 +23,7 @@ import 'package:ami_trade/screens/sim/chart_fullscreen_screen.dart';
 import 'package:ami_trade/screens/sim/company_review_screen.dart';
 import 'package:ami_trade/screens/sim/price_alert_sheet.dart';
 import 'package:ami_trade/screens/sim/trade_ticket_sheet.dart';
+import 'package:ami_trade/state/bursa_providers.dart';
 import 'package:ami_trade/state/price_alert_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/state/ticker_history_provider.dart';
@@ -88,7 +89,13 @@ class _TickerDetailScreenState extends ConsumerState<TickerDetailScreen> {
   Widget _buildPortrait(BuildContext context) {
     final l = AppLocalizations.of(context);
     final ticker = widget.ticker;
-    final simState = ref.watch(simNotifierProvider);
+    // CR282 - a `.KL` ticker's holding and trades live in the MYR book. The
+    // Bursa provider is only watched for a `.KL` ticker in a Bursa build.
+    final isMy = ref.watch(bursaEnabledProvider) &&
+        marketForTicker(ticker) == AppMarket.my;
+    final simState = isMy
+        ? ref.watch(bursaSimProvider)
+        : ref.watch(simNotifierProvider);
     final watchlistState = ref.watch(watchlistNotifierProvider);
     final portfolio = simState.portfolio;
 
@@ -144,6 +151,7 @@ class _TickerDetailScreenState extends ConsumerState<TickerDetailScreen> {
           onRefresh: () async {
             await Future.wait<void>([
               ref.read(simNotifierProvider.notifier).refresh(),
+              if (isMy) ref.read(bursaSimProvider.notifier).refresh(),
               ref.read(watchlistNotifierProvider.notifier).refresh(),
             ]);
           },
@@ -152,6 +160,13 @@ class _TickerDetailScreenState extends ConsumerState<TickerDetailScreen> {
             children: [
               statusCard,
               const SizedBox(height: AmiSpacing.m),
+              // CR282 - the Bursa price in RM and the server's market state
+              // (REGULAR / CLOSED - the server does not say *why* it is closed,
+              // so neither does this; UNKNOWN draws no pill).
+              if (isMy) ...[
+                _BursaQuote(ticker: ticker),
+                const SizedBox(height: AmiSpacing.m),
+              ],
               TickerChart(
                 ticker: ticker,
                 height: 220,
@@ -233,6 +248,23 @@ class _TickerDetailScreenState extends ConsumerState<TickerDetailScreen> {
   }
 }
 
+
+class _BursaQuote extends ConsumerWidget {
+  const _BursaQuote({required this.ticker});
+
+  final String ticker;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final q = ref.watch(tickerQuoteProvider(ticker));
+    return QuoteChip(
+      key: const Key('bursaQuote'),
+      quote: q.valueOrNull,
+      loading: q.isLoading,
+      ticker: ticker,
+    );
+  }
+}
 
 class _PositionCard extends StatelessWidget {
   const _PositionCard({required this.holding});

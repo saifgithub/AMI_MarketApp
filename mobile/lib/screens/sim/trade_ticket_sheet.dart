@@ -27,7 +27,9 @@ import 'package:ami_trade/qa/semantics_ids.dart';
 import 'package:ami_trade/screens/room/convene_sheet.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
 import 'package:ami_trade/services/alpaca/alpaca_client.dart';
+import 'package:ami_trade/services/api/market_refusal.dart';
 import 'package:ami_trade/state/alpaca_providers.dart';
+import 'package:ami_trade/state/bursa_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/screens/settings/settings_screen.dart';
@@ -259,6 +261,15 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   AlpacaSnapshot? _alpacaSnapshot;
   DateTime? _alpacaSnapshotAt;
   static const _alpacaSnapshotTtl = Duration(seconds: 30);
+
+  // CR282 - Bursa (`.KL`) only. The server's own look at the typed order: the
+  // itemised fees and, when the market's rules refuse it, its sentence. Fetched
+  // on a debounce once the ticker is priced and the quantity is a whole lot,
+  // and dropped the moment the order it described changes.
+  Timer? _previewTimer;
+  ({SimPreviewResult? result, MarketRefusal? refusal})? _myPreview;
+  String? _previewKey;
+  bool _wasMy = false;
   // Bug d5717660: when a trade has no AI verdict, suggest convening first.
   // The user can dismiss the advisory and proceed — the trade is recorded
   // with verdict_ref=null, which the journal renders as "Without AI advice".
@@ -292,6 +303,10 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
           '1',
     );
     if (widget.coverTicker != null) _side = 'buy';
+    // CR282 - a Bursa ticket opens on one board lot, not on 1 (which the market
+    // would refuse).
+    if (_isMy && _qty.text == '1') _qty.text = '${AppMarket.my.boardLot}';
+    _wasMy = _isMy;
     // CR188 slice 2 — the one exit. Everything that used to close a position by
     // its own route now opens THIS sheet with the side and quantity already
     // right, so "sell" has one mechanic and choosing MARKET vs LIMIT vs STOP is
@@ -356,6 +371,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
 
   @override
   void dispose() {
+    _previewTimer?.cancel();
     _validator.dispose();
     _ticker.removeListener(_onTickerChanged);
     _limit.removeListener(_rebaseBracket);
@@ -369,6 +385,11 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   }
 
   void _onTickerChanged() {
+    final nowMy = _isMy;
+    if (nowMy && !_wasMy && _qty.text.trim() == '1') {
+      _qty.text = '${AppMarket.my.boardLot}';
+    }
+    _wasMy = nowMy;
     final t = _ticker.text.trim().toUpperCase();
     // Invalidate the chip if the user is editing — once they pause we'll
     // refetch. Avoids showing the wrong ticker's price during typing.
@@ -400,6 +421,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
         _quoteTicker = ticker;
         _quoteLoading = false;
       });
+      _schedulePreview();
       // CR171 — a cover carries no bracket: the server closes the whole
       // position at the fill and never reads stop/target on that path.
       // Anchoring them here would put two numbers in front of the user that
@@ -436,10 +458,89 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   }
 
   void _rebuildOnInput() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    setState(() {});
+    if (_isMy) {
+      ref.read(simNotifierProvider.notifier).clearMarketRefusal();
+      _schedulePreview();
+    }
   }
 
   bool get _isCover => widget.coverTicker != null;
+
+  /// CR282 - the typed ticker is a Bursa one AND this build has Bursa.
+  bool get _isMy =>
+      ref.read(bursaEnabledProvider) &&
+      marketForTicker(_ticker.text) == AppMarket.my;
+
+  /// CR282 - Bursa trades in whole board lots; null/zero is "not typed yet",
+  /// which is not a violation.
+  bool get _boardLotInvalid {
+    if (!_isMy) return false;
+    final qty = double.tryParse(_qty.text.trim());
+    if (qty == null || qty <= 0) return false;
+    return qty % AppMarket.my.boardLot != 0;
+  }
+
+  /// The state the typed ticker's own book is in: for `.KL`, the MYR book's
+  /// portfolio (holdings, cash) in place of the US one.
+  SimState _effective2(SimState us, SimPortfolio? p) =>
+      p == null ? us : us.copyWith(portfolio: p);
+
+  SimState _effective(SimState us) {
+    if (!_isMy) return us;
+    final p = ref.read(bursaSimProvider).portfolio;
+    return p == null ? us : us.copyWith(portfolio: p);
+  }
+
+  void _stepQty(int direction) {
+    final lot = AppMarket.my.boardLot;
+    final cur = double.tryParse(_qty.text.trim()) ?? 0;
+    final next = direction > 0
+        ? ((cur / lot).floor() + 1) * lot
+        : ((cur / lot).ceil() - 1) * lot;
+    _qty.text = '${next < lot ? lot : next}';
+  }
+
+  void _schedulePreview() {
+    _previewTimer?.cancel();
+    final typed = _ticker.text.trim().toUpperCase();
+    final qty = double.tryParse(_qty.text.trim());
+    final limit =
+        _orderType.needsLimitPrice ? double.tryParse(_limit.text.trim()) : null;
+    final trigger = _orderType.needsTriggerPrice
+        ? double.tryParse(_trigger.text.trim())
+        : null;
+    final ready = _isMy &&
+        _quote != null &&
+        _quoteTicker == typed &&
+        qty != null &&
+        qty > 0 &&
+        qty % AppMarket.my.boardLot == 0 &&
+        (!_orderType.needsLimitPrice || limit != null) &&
+        (!_orderType.needsTriggerPrice || trigger != null);
+    if (!ready) {
+      _previewKey = null;
+      _myPreview = null;
+      return;
+    }
+    final key = '$typed|$_side|$qty|${_orderType.wire}|$limit|$trigger';
+    if (key == _previewKey) return;
+    _myPreview = null;
+    _previewTimer = Timer(const Duration(milliseconds: 400), () async {
+      _previewKey = key;
+      final out = await ref.read(simNotifierProvider.notifier).previewMarket(
+            ticker: typed,
+            side: _side,
+            quantity: qty,
+            orderType: _orderType,
+            limitPrice: limit,
+            triggerPrice: trigger,
+          );
+      if (!mounted || _previewKey != key) return;
+      setState(() => _myPreview = out);
+    });
+  }
 
   /// CR227 Non-goals — cover-a-short and sell-from-holding are keyed to
   /// AMI's own position sizes, which don't translate to Alpaca's independent
@@ -506,6 +607,9 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   /// applies, read here so the sheet can say so before the tap rather than in
   /// the snackbar after it.
   bool _opensShort(SimState state) {
+    // CR282 - Bursa has no shorts in phase 1; a sell past the holding is a
+    // refusal the server words, never a short to warn about.
+    if (_isMy) return false;
     if (_side != 'sell') return false;
     final typed = _ticker.text.trim().toUpperCase();
     final qty = double.tryParse(_qty.text.trim());
@@ -531,6 +635,9 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
           qty.toStringAsFixed(0),
         );
       }
+      // CR282 - Bursa: no shorts and no bracket on a sell; whatever the market
+      // refuses, the server's preview says in its own words.
+      if (_isMy) return null;
       // A sell that CLOSES a long carries no bracket of its own — its levels
       // are meaningless, which is why the server does not judge them either.
       if (intent != SellIntent.opensShort) return null;
@@ -596,7 +703,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   /// An ordinary sell that CLOSES a long gets nothing — an exit carries no
   /// bracket of its own, the same reason a cover returns above.
   void _anchorBracket(double price) {
-    final state = ref.read(simNotifierProvider);
+    final state = _effective(ref.read(simNotifierProvider));
     if (_side == 'sell' && !_opensShort(state)) return;
     final short = _side == 'sell';
     if (!_stopByHand) {
@@ -680,7 +787,8 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     return switch (classifySell(held: held, quantity: qty)) {
       SellIntent.closesLong => l.tradeTicketNoticeHolding(
           held.toStringAsFixed(0), typed, qty.toStringAsFixed(0)),
-      SellIntent.opensShort => l.tradeTicketNoticeOpensShort(typed),
+      SellIntent.opensShort =>
+        _isMy ? null : l.tradeTicketNoticeOpensShort(typed),
       // The refusal panel already carries this case, in stronger words.
       SellIntent.crossesZero => null,
     };
@@ -740,11 +848,12 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     final typed = _ticker.text.trim().toUpperCase();
     final qty = double.tryParse(_qty.text.trim());
     if (typed.isEmpty || qty == null || qty <= 0 || _validator.checking) return;
+    if (_boardLotInvalid) return;
     // CR171 — refused here as well as in the disabled CTA, because the sheet
     // can reach this method from a keyboard submit action that never touches
     // the button.
-    if (_localRefusal(
-            AppLocalizations.of(context), ref.read(simNotifierProvider)) !=
+    if (_localRefusal(AppLocalizations.of(context),
+            _effective(ref.read(simNotifierProvider))) !=
         null) {
       return;
     }
@@ -759,8 +868,9 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     // stop order stays AMI-Sim-only regardless of the selector, since the
     // selector is hidden whenever `_destinationLocked`, and the Alpaca leg
     // below only ever places a market order.
-    final destination =
-        _destinationLocked ? TradeDestination.amiSim : _destination;
+    final destination = (_destinationLocked || _isMy)
+        ? TradeDestination.amiSim
+        : _destination;
 
     if (destination == TradeDestination.alpacaPaper) {
       await _submitAlpacaOnly(typed, qty);
@@ -1471,7 +1581,23 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(simNotifierProvider);
+    final usState = ref.watch(simNotifierProvider);
+    // CR282 - a `.KL` ticker is judged against the MYR book (its holdings, its
+    // cash). Watching the Bursa provider only for a `.KL` ticker means a user
+    // who never types one never creates a Bursa book.
+    final isMy = _isMy;
+    final state = isMy
+        ? _effective2(usState, ref.watch(bursaSimProvider).portfolio)
+        : usState;
+    final lot = AppMarket.my.boardLot;
+    final boardLotInvalid = _boardLotInvalid;
+    final marketRefusalText = !isMy
+        ? null
+        : (state.marketRefusal?.message ??
+            _myPreview?.refusal?.message ??
+            ((_myPreview?.result != null && !_myPreview!.result!.accepted)
+                ? _myPreview!.result!.violations.join('; ')
+                : null));
     // DEF419 — suppressed whenever [_destinationOutcomes] is showing: on
     // BOTH, the AMI leg's own `submit()` still sets `state.lastSubmit`
     // (`_legAmi` calls the ordinary notifier method), and before this DEF
@@ -1849,11 +1975,19 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                         const SizedBox(width: AmiSpacing.s),
                         _SideToggle(
                           value: _side,
-                          onChange: (v) => setState(() {
-                            _side = v;
-                            _prefillSellQuantity(state);
-                            _rebracketForSide();
-                          }),
+                          onChange: (v) {
+                            setState(() {
+                              _side = v;
+                              _prefillSellQuantity(state);
+                              _rebracketForSide();
+                            });
+                            if (isMy) {
+                              ref
+                                  .read(simNotifierProvider.notifier)
+                                  .clearMarketRefusal();
+                              _schedulePreview();
+                            }
+                          },
                         ),
                       ],
                     ),
@@ -1861,7 +1995,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                     // Hidden entirely on the cover/sell-from-holding entry paths
                     // (`_destinationLocked`) and for anyone without a linked Alpaca
                     // paper account — an unlinked user sees exactly today's ticket.
-                    if (alpacaLinked && !_destinationLocked) ...[
+                    if (alpacaLinked && !_destinationLocked && !isMy) ...[
                       const SizedBox(height: AmiSpacing.m),
                       _PillToggle<TradeDestination>(
                         label: l.tradeTicketDestinationLabel,
@@ -1965,25 +2099,119 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                         _quoteLoading ||
                         _validator.checking) ...[
                       const SizedBox(height: AmiSpacing.xs),
-                      _QuoteChip(
+                      QuoteChip(
                         quote: _quote,
                         ticker: _ticker.text.trim().toUpperCase(),
                         loading: _quoteLoading || _validator.checking,
                       ),
                     ],
                     const SizedBox(height: AmiSpacing.m),
-                    TextField(
-                      controller: _qty,
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-                      ],
-                      style: AmiTypography.body,
-                      decoration: _decoration(
-                          label: l.tradeTicketLabelQuantity,
-                          hint: l.tradeTicketHintQty),
-                    ),
+                    if (isMy)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: IconButton(
+                              tooltip: l.tradeTicketQtyLessLot(lot),
+                              icon: const Icon(Icons.remove_circle_outline,
+                                  color: AmiColors.hexCyan),
+                              onPressed: () => _stepQty(-1),
+                            ),
+                          ),
+                          Expanded(
+                            child: TextField(
+                              controller: _qty,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              textAlign: TextAlign.center,
+                              style: AmiTypography.body,
+                              decoration: _decoration(
+                                      label: l.tradeTicketLabelQuantity,
+                                      hint: l.tradeTicketHintQty)
+                                  .copyWith(
+                                errorText: boardLotInvalid
+                                    ? l.tradeTicketBoardLotHint(lot)
+                                    : null,
+                                errorMaxLines: 3,
+                                errorStyle: AmiTypography.caption
+                                    .copyWith(color: AmiColors.hexAmber),
+                                errorBorder: OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(AmiRadii.card),
+                                  borderSide: const BorderSide(
+                                      color: AmiColors.hexAmber),
+                                ),
+                                focusedErrorBorder: OutlineInputBorder(
+                                  borderRadius:
+                                      BorderRadius.circular(AmiRadii.card),
+                                  borderSide: const BorderSide(
+                                      color: AmiColors.hexAmber),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: IconButton(
+                              tooltip: l.tradeTicketQtyMoreLot(lot),
+                              icon: const Icon(Icons.add_circle_outline,
+                                  color: AmiColors.hexCyan),
+                              onPressed: () => _stepQty(1),
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      TextField(
+                        controller: _qty,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+                        ],
+                        style: AmiTypography.body,
+                        decoration: _decoration(
+                            label: l.tradeTicketLabelQuantity,
+                            hint: l.tradeTicketHintQty),
+                      ),
+                    // CR282 - what this Bursa order will cost in fees, from the
+                    // server's own preview, before the user confirms.
+                    if (isMy && _myPreview?.result?.fees != null) ...[
+                      const SizedBox(height: AmiSpacing.s),
+                      _BursaFeesCard(fees: _myPreview!.result!.fees!),
+                    ],
+                    // CR282 - a market-rule refusal (board lot, tick grid,
+                    // price limit, shorts, market disabled), in the server's
+                    // own words - from the preview, or from a submit it refused.
+                    if (marketRefusalText != null) ...[
+                      const SizedBox(height: AmiSpacing.s),
+                      Container(
+                        key: const Key('marketRefusal'),
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(AmiSpacing.m),
+                        decoration: BoxDecoration(
+                          color: AmiColors.slate900,
+                          borderRadius: BorderRadius.circular(AmiRadii.card),
+                          border: Border.all(color: AmiColors.hexAmber),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.block,
+                                size: 18, color: AmiColors.hexAmber),
+                            const SizedBox(width: AmiSpacing.s),
+                            Expanded(
+                              child: Text(marketRefusalText,
+                                  style: AmiTypography.caption
+                                      .copyWith(color: AmiColors.hexAmber)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     // CR170 — the order-type controls appear ONLY when this backend
                     // actually has a resting-order book. Against a pre-CR170 server
                     // `order_type=limit` is accepted and filled instantly at the price
@@ -2002,10 +2230,13 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                           (SimOrderType.stop, l.tradeTicketOrderStop),
                           (SimOrderType.stopLimit, l.tradeTicketOrderStopLimit),
                         ],
-                        onChange: (v) => setState(() {
-                          _orderType = v;
-                          _rebaseBracket();
-                        }),
+                        onChange: (v) {
+                          setState(() {
+                            _orderType = v;
+                            _rebaseBracket();
+                          });
+                          if (isMy) _schedulePreview();
+                        },
                       ),
                       if (_orderType.needsTriggerPrice) ...[
                         const SizedBox(height: AmiSpacing.m),
@@ -2201,6 +2432,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
                                 : l.tradeTicketSubmit)),
                         onPressed: (state.submitting ||
                                 _validator.checking ||
+                                boardLotInvalid ||
                                 localRefusal != null ||
                                 // The trade this advisory belongs to has already
                                 // executed. A live submit button under an unread
@@ -2438,9 +2670,12 @@ class _OrderIntentHint extends StatelessWidget {
 /// Inline chip under the ticker field — shows the live price, day-change
 /// %, and a LIVE / MOCK pill so the user has a price anchor when setting
 /// TP / SL on a manual trade.
-class _QuoteChip extends StatelessWidget {
-  const _QuoteChip(
-      {required this.quote, required this.loading, required this.ticker});
+class QuoteChip extends StatelessWidget {
+  const QuoteChip(
+      {super.key,
+      required this.quote,
+      required this.loading,
+      required this.ticker});
 
   final String ticker;
 
@@ -2531,6 +2766,59 @@ class _QuoteChip extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// CR282 - the itemised Bursa fee estimate on the ticket, straight from the
+/// server's preview (the app never computes a fee). Brokerage, clearing and
+/// stamp duty, then the total, all in ringgit.
+class _BursaFeesCard extends StatelessWidget {
+  const _BursaFeesCard({required this.fees});
+
+  final SimFees fees;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    String rm(double v) => formatMoney(v, market: AppMarket.my);
+    Widget row(String label, double v, {bool bold = false}) => Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(label,
+                    style: AmiTypography.caption.copyWith(
+                        color: bold ? AmiColors.textHigh : AmiColors.textMed)),
+              ),
+              Text(rm(v),
+                  style: AmiTypography.caption.copyWith(
+                      color: bold ? AmiColors.textHigh : AmiColors.textMed,
+                      fontWeight: bold ? FontWeight.w700 : FontWeight.w400)),
+            ],
+          ),
+        );
+    return Container(
+      key: const Key('bursaFees'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(AmiSpacing.s),
+      decoration: BoxDecoration(
+        color: AmiColors.slate900,
+        borderRadius: BorderRadius.circular(AmiRadii.card),
+        border: Border.all(color: AmiColors.slate700),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.tradeTicketFeesHeading,
+              style: AmiTypography.labelMono
+                  .copyWith(fontSize: 10, color: AmiColors.textLow)),
+          row(l.tradeTicketFeeBrokerage, fees.brokerage),
+          row(l.tradeTicketFeeClearing, fees.clearing),
+          row(l.tradeTicketFeeStampDuty, fees.stampDuty),
+          row(l.tradeTicketFeeTotal, fees.total, bold: true),
         ],
       ),
     );
