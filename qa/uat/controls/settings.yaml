@@ -70,7 +70,7 @@ controls:
     expect: sheet
     target: ami.screen.settings.compliance_explain_sheet
     line: 926
-    note: "repeated x6 (halal, ESG-lite, tobacco/alcohol/gambling, fossil, long-only, liquid-only). Tapping the LABEL (not the switch) opens a bottom sheet with title + plain-English explanation; sheet has no controls, dismiss by swipe/barrier. CR282 (2026-11-24): the Liquid-only sheet states the floors ("at least $500M market cap and $1M traded a day"), plus a Bursa line ("On Bursa Malaysia: at least RM300M market cap and RM250k traded a day.") only on an AMI_BURSA build; see UAT-MAND-041."
+    note: "repeated x6 (halal, ESG-lite, tobacco/alcohol/gambling, fossil, long-only, liquid-only). Tapping the LABEL (not the switch) opens a bottom sheet with title + plain-English explanation; sheet has no controls, dismiss by swipe/barrier. CR282 (2026-11-24): the Liquid-only sheet states the floors ('at least $500M market cap and $1M traded a day'), plus a Bursa line ('On Bursa Malaysia: at least RM300M market cap and RM250k traded a day.') only on an AMI_BURSA build; see UAT-MAND-041."
   - label: "Timezone"
     kind: field
     expect: state
