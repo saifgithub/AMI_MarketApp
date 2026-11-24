@@ -9821,7 +9821,7 @@ abstract class AppLocalizations {
   /// CR282 F2. Empty state on the Portfolio screen's Bursa side before any Bursa trade. {amount} is the already-formatted starting capital, e.g. 'RM50,000' - do not reformat it or move the currency symbol. NEW key. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
-  /// **'Your Bursa book starts with {amount} when you place your first Bursa trade.'**
+  /// **'Your Bursa book starts with {amount}. Place your first Bursa trade to begin.'**
   String portfolioBursaEmpty(String amount);
 
   /// CR282 F2. Button under the Bursa empty state that opens the trade ticket. Mono uppercase. NEW key. retranslate:[ar,ms]

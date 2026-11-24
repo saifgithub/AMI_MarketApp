@@ -7417,7 +7417,7 @@
   "@portfolioMarketBursa": {
     "description": "CR282 F2. Label of the Bursa Malaysia half of the Portfolio market switch (US | BURSA). Mono uppercase, one short token; Bursa is a proper name, keep it. NEW key. retranslate:[ar,ms]"
   },
-  "portfolioBursaEmpty": "Your Bursa book starts with {amount} when you place your first Bursa trade.",
+  "portfolioBursaEmpty": "Your Bursa book starts with {amount}. Place your first Bursa trade to begin.",
   "@portfolioBursaEmpty": {
     "description": "CR282 F2. Empty state on the Portfolio screen's Bursa side before any Bursa trade. {amount} is the already-formatted starting capital, e.g. 'RM50,000' - do not reformat it or move the currency symbol. NEW key. retranslate:[ar,ms]",
     "placeholders": {

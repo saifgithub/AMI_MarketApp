@@ -385,8 +385,8 @@ void main() {
       await _openBursa(t);
 
       expect(
-          find.text('Your Bursa book starts with RM50,000 when you place your '
-              'first Bursa trade.'),
+          find.text('Your Bursa book starts with RM50,000. Place your first '
+              'Bursa trade to begin.'),
           findsOneWidget);
       expect(find.text('NEW BURSA TRADE'), findsOneWidget);
       // An empty state, not an error and not a RM50,000.00 value card.

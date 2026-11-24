@@ -5917,7 +5917,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String portfolioBursaEmpty(String amount) {
-    return 'Your Bursa book starts with $amount when you place your first Bursa trade.';
+    return 'Your Bursa book starts with $amount. Place your first Bursa trade to begin.';
   }
 
   @override

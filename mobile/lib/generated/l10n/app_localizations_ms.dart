@@ -5929,7 +5929,7 @@ class AppLocalizationsMs extends AppLocalizations {
 
   @override
   String portfolioBursaEmpty(String amount) {
-    return 'Buku Bursa anda bermula dengan $amount apabila anda membuat dagangan Bursa pertama anda.';
+    return 'Buku Bursa anda bermula dengan $amount. Buat dagangan Bursa pertama anda untuk bermula.';
   }
 
   @override

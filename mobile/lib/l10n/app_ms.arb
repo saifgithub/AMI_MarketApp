@@ -2271,6 +2271,7 @@
     "portfolioTabOrders": "ORDERS",
     "portfolioRetry": "TRY AGAIN",
     "@@x-ami-seeds": {
+        "portfolioMarketBursa": "82cc88868326",
         "adBadge": "c7bf4bbdbcd8",
         "adBadgeSponsored": "7dfe1c6dad71",
         "adDismiss": "e3da4c0eb866",
@@ -3611,7 +3612,7 @@
     "firmDeskCount": "{filled}/{total}",
     "portfolioMarketUs": "AMI Trade US book",
     "portfolioMarketBursa": "BURSA",
-    "portfolioBursaEmpty": "Buku Bursa anda bermula dengan {amount} apabila anda membuat dagangan Bursa pertama anda.",
+    "portfolioBursaEmpty": "Buku Bursa anda bermula dengan {amount}. Buat dagangan Bursa pertama anda untuk bermula.",
     "portfolioBursaEmptyCta": "DAGANGAN BURSA BARU",
     "tradeTicketBoardLotHint": "Bursa didagangkan dalam lot papan sebanyak {lot}. Masukkan gandaan {lot}.",
     "tradeTicketQtyLessLot": "Kurangkan kuantiti sebanyak {lot}",
