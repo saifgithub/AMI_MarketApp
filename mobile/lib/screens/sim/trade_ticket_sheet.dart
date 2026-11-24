@@ -231,6 +231,7 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
   late final TextEditingController _limit;
   late final TextEditingController _trigger;
   SimOrderType _orderType = SimOrderType.market;
+  bool _qtyIsMarketDefault = false;
   // DEF504 — a STOP/TARGET field is the user's the moment they type in it (or a
   // verdict pre-fills it); until then the sheet owns it and re-bases it when the
   // entry price it is measured from moves.
@@ -306,6 +307,15 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     // CR282 - a Bursa ticket opens on one board lot, not on 1 (which the market
     // would refuse).
     if (_isMy && _qty.text == '1') _qty.text = '${AppMarket.my.boardLot}';
+    // CR283 - an empty ticket opens on the app-wide market's book: with MY
+    // active it starts on one board lot, until a US ticker is typed.
+    if (_ticker.text.isEmpty &&
+        _qty.text == '1' &&
+        ref.read(bursaEnabledProvider) &&
+        ref.read(selectedMarketProvider) == AppMarket.my) {
+      _qty.text = '${AppMarket.my.boardLot}';
+      _qtyIsMarketDefault = true;
+    }
     _wasMy = _isMy;
     // CR188 slice 2 — the one exit. Everything that used to close a position by
     // its own route now opens THIS sheet with the side and quantity already
@@ -389,6 +399,13 @@ class _TradeTicketSheetState extends ConsumerState<TradeTicketSheet> {
     if (nowMy && !_wasMy && _qty.text.trim() == '1') {
       _qty.text = '${AppMarket.my.boardLot}';
     }
+    if (_qtyIsMarketDefault &&
+        !nowMy &&
+        _ticker.text.trim().isNotEmpty &&
+        _qty.text.trim() == '${AppMarket.my.boardLot}') {
+      _qty.text = '1';
+    }
+    if (_ticker.text.trim().isNotEmpty) _qtyIsMarketDefault = false;
     _wasMy = nowMy;
     final t = _ticker.text.trim().toUpperCase();
     // Invalidate the chip if the user is editing — once they pause we'll

@@ -7,8 +7,10 @@ library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/screens/room/room_screen.dart';
+import 'package:ami_trade/services/yahoo_finance_service.dart';
 import 'package:ami_trade/state/mandate_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
+import 'package:ami_trade/state/ticker_tape_provider.dart';
 import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:ami_trade/widgets/credits_line.dart';
 import 'package:ami_trade/widgets/sheet_insets.dart';
@@ -26,6 +28,12 @@ const _suggestedTickers = [
   'TSLA',
   'AMZN'
 ];
+
+/// CR283 — the picker's one-tap names follow the app-wide market. With Bursa
+/// off `activeBourseProvider` is always US, so this is today's list.
+List<String> _suggestionsFor(Bourse bourse) => bourse == Bourse.my
+    ? YahooFinanceService.defaultTickers[Bourse.my]!.take(7).toList()
+    : _suggestedTickers;
 
 class ConveneSheet extends ConsumerStatefulWidget {
   const ConveneSheet({super.key, this.initialTicker});
@@ -188,7 +196,7 @@ class _ConveneSheetState extends ConsumerState<ConveneSheet> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                for (final t in _suggestedTickers)
+                for (final t in _suggestionsFor(ref.watch(activeBourseProvider)))
                   ActionChip(
                     label: Text(t,
                         style: AmiTypography.labelMono

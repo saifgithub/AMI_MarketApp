@@ -64,7 +64,7 @@ import 'app_localizations_ms.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -87,17 +87,17 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('ar'),
     Locale('en'),
-    Locale('ms')
+    Locale('ms'),
   ];
 
   /// Application title. Used in MaterialApp and system places. Keep as 'AMI Trade' across all locales — it's a product name, not translatable.
@@ -3279,14 +3279,23 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{ticker} passes the {standard} screen ({source}, as of {date}).'**
   String shariaVerdictPass(
-      String ticker, String standard, String source, String date);
+    String ticker,
+    String standard,
+    String source,
+    String date,
+  );
 
   /// CR069 Phase 1b. Shown on a REJECTED trade: the ticker is inside the parent index and absent from the compliant set, so it is a real exclusion under this standard and the trade is blocked. OBSERVANCE-SENSITIVE. Translator notes: (a) this is the ONLY one of the four verdict strings that reports a negative screen result — keep it clearly distinct from shariaVerdictUnknown, which reports NO ruling; conflating the two is the specific confusion CR069 design constraint 2 forbids; (b) attribute the exclusion to the named standard, not to AMI. {standard} and {source} arrive untranslated. CR282 lane D: the hard-coded 'S&P 500' became the {coverage} placeholder — the backend verdict names the universe its standard covers ('the S&P 500' for the US standard, 'Bursa Malaysia' for the SC Malaysia list), so the US text is unchanged and a .KL ticker no longer reads 'S&P 500'. {coverage} is a backend-supplied proper name and arrives untranslated. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
   /// **'{ticker} is in {coverage} but does not pass the {standard} screen ({source}, as of {date}), so this mandate won\'t trade it.'**
   String shariaVerdictScreenedOut(
-      String ticker, String coverage, String standard, String source, String date);
+    String ticker,
+    String coverage,
+    String standard,
+    String source,
+    String date,
+  );
 
   /// CR069 Phase 1b. Shown on a SUCCESSFUL, PERMITTED trade (G3, resolved 2026-07-23: unknown permits, with the disclosure attached) when the ticker sits outside the parent index and the standard therefore never examined it. OBSERVANCE-SENSITIVE and the highest-risk string in this set. Translator notes: (a) this is NOT a rejection, NOT a warning, and NOT a statement that the trade was risky — the trade went through; (b) 'hasn't reviewed it' must NOT become 'not permitted', 'haram', 'non-compliant', 'doubtful' or 'mashbooh' — turning an absence of a ruling into a negative ruling is a false assurance in the direction nobody checks, and is exactly what CR069 design constraint 2 forbids; (c) 'AMI doesn't know' is deliberate humility and must survive. {standard} arrives untranslated. CR282 lane D: the hard-coded 'S&P 500' became the {coverage} placeholder — the backend verdict names the universe its standard covers ('the S&P 500' for the US standard, 'Bursa Malaysia' for the SC Malaysia list), so the US text is unchanged and a .KL ticker no longer reads 'S&P 500'. {coverage} is a backend-supplied proper name and arrives untranslated. retranslate:[ar,ms]
   ///
@@ -4643,7 +4652,11 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Filled: {side} {qty} {ticker} @ {price}'**
   String tradeTicketFilled(
-      String side, String qty, String ticker, String price);
+    String side,
+    String qty,
+    String ticker,
+    String price,
+  );
 
   /// CR170 confirmation after placing an order that did NOT fill — it now waits for its price. Deliberately different in wording and colour from tradeTicketFilled: telling a user their order filled when it is still waiting is the failure this whole string exists to prevent. {price} is the price they named.
   ///
@@ -4698,7 +4711,11 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This raises your stop on all {qty} {ticker} from {fromStop} to {toStop}.'**
   String tradeTicketNoticeRaisesStop(
-      String qty, String ticker, String fromStop, String toStop);
+    String qty,
+    String ticker,
+    String fromStop,
+    String toStop,
+  );
 
   /// CR188 replaces the SUBMIT TRADE button label when the sell would open a short. A word on the control being pressed is structural; a sentence above it is an instruction, and this project's rule is that instructions are not controls. Uppercase, mono.
   ///
@@ -4801,7 +4818,10 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Waits until {ticker} reaches {trigger}, then becomes a limit order at {limit}.'**
   String tradeTicketHintRestsStopLimit(
-      String ticker, String trigger, String limit);
+    String ticker,
+    String trigger,
+    String limit,
+  );
 
   /// CR170 portfolio section heading above orders that have not filled yet. Uppercase, mono.
   ///
@@ -4838,7 +4858,11 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{side} {qty} {ticker} at {price} will stop waiting and will not fill.'**
   String restingOrderCancelBody(
-      String side, String qty, String ticker, String price);
+    String side,
+    String qty,
+    String ticker,
+    String price,
+  );
 
   /// CR170 confirm-dialog primary action. Uppercase, mono.
   ///
@@ -7270,6 +7294,24 @@ abstract class AppLocalizations {
   /// **'A ticker convenes your team, or open Company Review first. Anything else, AMI answers.'**
   String get floorOmniboxCaption;
 
+  /// CR283. Shown under the Floor search box when the market is set to Malaysia (Bursa) and the name lookup service is unreachable, so a company name like 'CIMB' cannot be turned into a stock code. Tells the user the way forward: type the 4-digit Bursa stock code instead (e.g. 1023). Must not read as 'no such company'. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t look up names right now — use the 4-digit code.'**
+  String get floorOmniboxLookupDown;
+
+  /// CR283. Heading of the two-line chooser under the Floor search box when the typed word matches a listing in BOTH the US and Malaysian (Bursa) markets; the user taps the market they meant. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Which market?'**
+  String get floorOmniboxChooseMarket;
+
+  /// CR283. Screen-reader label of the small US / MY market chip in the Floor search box. {market} is the active market's short code ('US' or 'MY'), already formatted - do not translate it. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Market: {market}. Tap to switch.'**
+  String floorMarketChipSemantics(String market);
+
   /// CR173 slice 2. The primary button once the typed text is ticker-shaped, naming the ticker it will run on. Showing the ticker is a safety property, not decoration: the router matches shape, not meaning, so a user who typed a word that looks like a ticker sees the mistake before spending a credit. Mono uppercase. NEW key. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
@@ -7563,14 +7605,23 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{side} {contracts} {right} \${strike}'**
   String optionLegLine(
-      String side, String contracts, String right, String strike);
+    String side,
+    String contracts,
+    String right,
+    String strike,
+  );
 
   /// CR172 §12. Same as optionLegLine but with the leg's own expiry appended, used ONLY when a structure's legs expire on different dates (a calendar spread). Without the date those two legs would render identically. NEW key. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:
   /// **'{side} {contracts} {right} \${strike} · {expiry}'**
-  String optionLegLineDated(String side, String contracts, String right,
-      String strike, String expiry);
+  String optionLegLineDated(
+    String side,
+    String contracts,
+    String right,
+    String strike,
+    String expiry,
+  );
 
   /// CR172 §12. How long the structure has left, on its own line under the legs. Only used for 2 or more days; today and tomorrow have their own keys because an option's last two days behave differently from every day before them. NEW key. retranslate:[ar,ms]
   ///
@@ -7685,7 +7736,11 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{quantity} {ticker} covered at \${price} — your {bracket} was reached.'**
   String shortClosedBracket(
-      String quantity, String ticker, String price, String bracket);
+    String quantity,
+    String ticker,
+    String price,
+    String bracket,
+  );
 
   /// CR171. Reported when the user closed the short themselves. Distinct from shortClosedMargin so 'you did this' never reads the same as 'the account did this to you'. NEW key. retranslate:[ar,ms]
   ///
@@ -8279,8 +8334,13 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'{action} {contracts} × {right} {strike} · exp {expiry}'**
-  String optionTicketLegLine(String action, String contracts, String right,
-      String strike, String expiry);
+  String optionTicketLegLine(
+    String action,
+    String contracts,
+    String right,
+    String strike,
+    String expiry,
+  );
 
   /// CR172 §3. Second line of an option leg. The backend quotes premium PER SHARE, not per contract, and saying which one avoids a 100× misreading. NEW key. retranslate:[ar,ms]
   ///
@@ -9914,8 +9974,9 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
 }
