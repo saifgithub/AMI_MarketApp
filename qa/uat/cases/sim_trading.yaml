@@ -460,42 +460,47 @@ cases:
       - 'Your own STOP is left exactly as typed while the untouched TARGET keeps following the limit price'
 
   - id: UAT-SIM-035
-    title: A Bursa (.KL) ticker is not accepted and no order can be placed on it while the Bursa switch is off
+    title: A Bursa (.KL) ticker is refused while the Bursa switch is off, and previews in MYR with itemised fees and the board-lot and tick rules when it is on
     layer: api
     plans: [trader]
     steps:
-      - 'GET /v1/tickers/validate?ticker=1155.KL'
-      - 'POST /v1/sim/preview and POST /v1/sim/submit for 1155.KL (a market order, then a resting limit order)'
-      - 'Read the portfolio before and after'
+      - 'GET /v1/tickers/validate?ticker=1155.KL; read the portfolio'
+      - 'Switch off: POST /v1/sim/preview and POST /v1/sim/submit for 1155.KL (a market order, then a resting limit order)'
+      - 'Switch on: POST /v1/sim/preview for 1155.KL quantity 100; preview quantity 150; preview and submit a limit order at 1.234 (off the tick grid); submit quantity 150'
+      - 'Read the portfolio again, and preview 1 share of AAPL'
     expected:
-      - 'validate says exists false for 1155.KL'
-      - 'Both routes answer 422 with the ticker-not-found detail (exists false), exactly as for any unknown ticker: no new error shape'
-      - 'Cash, holdings and the resting-order count are unchanged'
-    notes: 'CR282 phase 1 (2026-11-24), backend/app/api/tickers.py and sim.py. Switch off on Alpha.'
+      - 'Switch off: validate says exists false; both routes answer 422 with the ticker-not-found detail (exists false), exactly as for any unknown ticker: no new error shape'
+      - 'Switch on: validate says exists true with exchange "Bursa Malaysia"; the 100-share preview answers 200 with market "MY", currency "MYR" and itemised fees (brokerage, clearing, stamp duty and a total that is their sum, in MYR)'
+      - 'Switch on: quantity 150 answers 422 with code "board_lot" (preview and submit); the off-grid limit price answers 422 with code "tick_size" (preview and submit)'
+      - 'In both states cash, holdings and the resting-order count of the US book are unchanged (no Bursa order is filled by this case), and the AAPL preview is still market "US", currency "USD", fees null'
+    notes: 'CR282 phase 1 (2026-11-24), backend/app/api/tickers.py and sim.py. Alpha has had the switch on since 2026-11-24; the executor reads the switch state once per run and asserts the matching branch. Fee amounts are UNVERIFIED research figures (CR282 doc): only their shape and that the total is the sum are asserted. Previews can create the empty MYR book as a side effect; nothing is filled.'
 
   - id: UAT-SIM-036
-    title: The MYR book is unreachable while the switch is off, and the US book answers as before
+    title: The MYR book is unreachable while the switch is off and is RM50,000 when it is on, and the US book answers as before in both
     layer: api
     plans: [trader]
     steps:
-      - 'GET /v1/sim/portfolio/{user_id}?market=MY, GET /v1/sim/trades/{user_id}?market=MY, POST /v1/sim/portfolio/{user_id}/reset?market=MY, and GET the portfolio with market=XX'
+      - 'Switch off: GET /v1/sim/portfolio/{user_id}?market=MY, GET /v1/sim/trades/{user_id}?market=MY, POST /v1/sim/portfolio/{user_id}/reset?market=MY'
+      - 'Switch on: GET /v1/sim/portfolio/{user_id}?market=MY and GET /v1/sim/trades/{user_id}?market=MY (the MY reset is not called: it would consume the book''s reset cooldown)'
+      - 'GET the portfolio with market=XX'
       - 'GET the portfolio with no market and with market=US; GET the trade ledger with no market'
       - 'POST /v1/sim/preview for a US ticker (AAPL, 1 share)'
     expected:
-      - 'Every market=MY call answers 422 "... is not available yet." and market=XX answers 422 "unknown market": never a silent fall back to the US book, and the reset consumes no cooldown'
+      - 'Switch off: every market=MY call answers 422 "... is not available yet.": never a silent fall back to the US book, and the reset consumes no cooldown'
+      - 'Switch on: the MY portfolio answers 200 with market "MY", currency "MYR", starting capital 50000 and no holdings; the MY trade ledger answers 200'
+      - 'market=XX answers 422 "unknown market" in both states'
       - 'The portfolio is the US book either way: market "US" and currency "USD", with identical cash and holdings'
       - 'The trade ledger keeps its exact pre-CR282 keys: no market and no currency key'
       - 'The US preview still answers 200 with market "US", currency "USD" and fees null (no Bursa fee estimate on a US order)'
-    notes: 'CR282 phase 1 (2026-11-24), backend/app/api/sim.py. PortfolioSnapshot gained currency and market fields (always USD / US for the US book); the preview response gained market, currency and fees (US, USD, null). The Bursa book itself is exercised by UAT-SIM-037.'
+    notes: 'CR282 phase 1 (2026-11-24), backend/app/api/sim.py. PortfolioSnapshot gained currency and market fields (always USD / US for the US book); the preview response gained market, currency and fees (US, USD, null). The Bursa book itself is exercised by UAT-SIM-035 (previews) and UAT-SIM-037 (device). Alpha has had the switch on since 2026-11-24; the executor reads the switch state once per run.'
 
   - id: UAT-SIM-037
     title: With Bursa on, a board-lot order fills in the MYR book with itemised fees and a broken lot is refused
     layer: device
-    status: blocked
-    blocked_on: 'AMI_BURSA is off in every store build and MARKET_BURSA_ENABLED is off on Alpha (CR282: off until counsel Question 4 and the data licence are answered). Run this once on a build made with --dart-define=AMI_BURSA=true against a backend with the switch on; not release-blocking.'
     plans: [floor_pass]
     preconditions:
-      - 'An AMI_BURSA=true build and a backend with MARKET_BURSA_ENABLED=true'
+      - 'Build 0.1.0+130 or later (TestFlight internal or Play internal), which has AMI_BURSA on; store builds keep it off'
+      - 'Alpha with MARKET_BURSA_ENABLED=true (on since 2026-11-24)'
     steps:
       - 'Portfolio: tap BURSA in the US | BURSA switch; read the empty state; tap NEW BURSA TRADE'
       - 'Enter 1155.KL; read the quantity field and the fee estimate; buy 100'
@@ -506,4 +511,4 @@ cases:
       - 'The ticket lists ESTIMATED FEES (Brokerage, Clearing, Stamp duty, Total fees) in RM; the fill reads "Filled: BUY 100 1155.KL @ RM<price>" and cash drops by the price plus fees'
       - 'A quantity of 150 shows the board-lot hint and SUBMIT TRADE stays disabled; the minus and plus buttons step by 100'
       - 'Switching to US shows the dollar book untouched, and every amount there still reads $'
-    notes: 'CR282 phase 1 acceptance (docs/forward_planning/CR282_bursa_malaysia/CR282_bursa_malaysia.md). Fee figures are UNVERIFIED research figures per that doc; do not assert amounts.'
+    notes: 'CR282 phase 1 acceptance (docs/forward_planning/CR282_bursa_malaysia/CR282_bursa_malaysia.md). Fee figures are UNVERIFIED research figures per that doc; do not assert amounts. Active since 2026-11-24: the backend precondition is met on Alpha, so this needs a run on build 0.1.0+130 or later (not release-blocking; a store build cannot run it). The API side is UAT-SIM-035 and UAT-SIM-036.'

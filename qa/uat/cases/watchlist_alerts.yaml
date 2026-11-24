@@ -198,15 +198,15 @@ cases:
   - id: UAT-WATCH-017
     title: With Bursa on, a price alert on a .KL stock takes its price in RM
     layer: device
-    status: blocked
-    blocked_on: 'AMI_BURSA is off in every store build and MARKET_BURSA_ENABLED is off on Alpha (CR282 gate). Run once on an AMI_BURSA=true build against a backend with the switch on; not release-blocking.'
     plans: [floor_pass]
     preconditions:
-      - 'An AMI_BURSA=true build, a backend with MARKET_BURSA_ENABLED=true, and a held Bursa position (UAT-SIM-037)'
+      - 'Build 0.1.0+130 or later (TestFlight internal or Play internal), which has AMI_BURSA on; store builds keep it off'
+      - 'Alpha with MARKET_BURSA_ENABLED=true (on since 2026-11-24)'
+      - 'A held Bursa position (UAT-SIM-037)'
     steps:
       - 'Portfolio > BURSA > the 1155.KL holding > PER-LOT DETAIL > ALERT; pick "Price falls below"'
       - 'Read the price field, enter a price, Create alert; then cancel it'
     expected:
       - 'The price field carries an RM prefix (not $), and PRICE ALERTS lists "Price falls below RM<price>"'
       - 'After cancelling, the alert is gone'
-    notes: 'CR282 lane F1: price_alert_sheet.dart takes its prefix from the ticker''s market (marketForTicker).'
+    notes: 'CR282 lane F1: price_alert_sheet.dart takes its prefix from the ticker''s market (marketForTicker). Active since 2026-11-24: the backend precondition is met on Alpha, so this needs a run on build 0.1.0+130 or later (not release-blocking; a store build cannot run it).'

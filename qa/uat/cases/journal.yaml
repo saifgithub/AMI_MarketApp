@@ -159,14 +159,14 @@ cases:
   - id: UAT-JRNL-012
     title: With Bursa on, a closed Bursa trade's journal entry reads its amounts in RM
     layer: device
-    status: blocked
-    blocked_on: 'AMI_BURSA is off in every store build and MARKET_BURSA_ENABLED is off on Alpha (CR282 gate). Run once on an AMI_BURSA=true build against a backend with the switch on; not release-blocking.'
     plans: [floor_pass]
     preconditions:
-      - 'An AMI_BURSA=true build, a backend with MARKET_BURSA_ENABLED=true, and a Bursa position closed by hand (UAT-SIM-037, then close it)'
+      - 'Build 0.1.0+130 or later (TestFlight internal or Play internal), which has AMI_BURSA on; store builds keep it off'
+      - 'Alpha with MARKET_BURSA_ENABLED=true (on since 2026-11-24)'
+      - 'A Bursa position closed by hand (UAT-SIM-037, then close it)'
     steps:
       - 'You > JOURNAL; open the closed 1155.KL trade entry'
     expected:
       - 'The title and summary read "Closed 1155.KL (MANUAL) — RM<amount>" and "Closed at RM<price>"'
       - 'Closed price and Realised P&L rows read RM<price> and +RM<amount> or -RM<amount>; a US trade entry beside it still reads $'
-    notes: 'CR282 lane C/F1: the journal text for a manual close takes its symbol from the ticker''s market (backend/app/api/sim.py _ccy) and the detail rows from formatMoney. Bursa bracket closes are not journaled yet (CR282 lane C deferred item 6).'
+    notes: 'CR282 lane C/F1: the journal text for a manual close takes its symbol from the ticker''s market (backend/app/api/sim.py _ccy) and the detail rows from formatMoney. Bursa bracket closes are not journaled yet (CR282 lane C deferred item 6). Active since 2026-11-24: the backend precondition is met on Alpha, so this needs a run on build 0.1.0+130 or later (not release-blocking; a store build cannot run it).'

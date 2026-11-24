@@ -74,7 +74,7 @@ def test_every_error_carries_a_trace_id_in_header_and_body(api):
 
 
 @pytest.mark.uat("UAT-PLAT-009")
-def test_bursa_switch_off_server_ready_and_no_bursa_ticker(api):
+def test_bursa_switch_state_server_ready_and_ticker_validation_match_it(api, bursa_on):
     assert api.get("/v1/health").json()["status"] == "ok"
     ready = api.get("/v1/ready")
     assert ready.status_code == 200
@@ -82,5 +82,9 @@ def test_bursa_switch_off_server_ready_and_no_bursa_ticker(api):
 
     v = api.get("/v1/tickers/validate", params={"ticker": "1155.KL"})
     assert v.status_code == 200
-    assert v.json()["exists"] is False, "a .KL ticker must not be accepted while MARKET_BURSA_ENABLED is off"
     assert v.json()["ticker"] == "1155.KL"
+    if bursa_on:
+        assert v.json()["exists"] is True
+        assert v.json()["exchange"] == "Bursa Malaysia", v.json()
+    else:
+        assert v.json()["exists"] is False, "a .KL ticker must not be accepted while MARKET_BURSA_ENABLED is off"
