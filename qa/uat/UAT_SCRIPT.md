@@ -1169,7 +1169,7 @@ _Device (automated, Appium) · plans: floor_pass_
 **Steps**
 1. With the chip on US, type british american (BTI in the US, British American Tobacco Malaysia 4162 on Bursa) and wait for the box to settle
 2. Read the two lines under the box; tap the Bursa line
-3. Switch the chip to MY, type the same word again and read the order of the two lines
+3. Switch the chip to MY with the word still in the box, tap into the box, and read the order of the two lines; then clear it and type the same word again
 
 **Expected**
 1. Under the box a "Which market?" heading and two lines appear, one per market, each with its ticker, company name and US or MY tag; the CONVENE THE ROOM button names no ticker and does nothing until a line is tapped
@@ -3024,7 +3024,7 @@ _Device (automated, Appium) · plans: floor_pass_
 **Expected**
 1. The opened entry reads "BUY 100 1155.KL @ RM<price>" with "Opened at RM<price>" and no $ anywhere
 2. The closed entry title and summary read "Closed 1155.KL (MANUAL) — +RM<amount>" (or "— -RM<amount>") and "Sold 100 at RM<price>."
-3. Closed price and Realised P&L rows read RM<price> and +RM<amount> or -RM<amount>; a US trade entry beside it still reads $
+3. Closed price and Realised P&L rows read RM<price> and +RM<amount> or -RM<amount> (a break-even close still shows the row, as +RM0.00); a US trade entry beside it still reads $
 
 > CR282 lane C/F1 + DEF532 (AT:B1): journal text takes its symbol from the ticker's market (trading_math.markets.format_money) and the detail rows from formatMoney; a sell that closes shares writes the closed entry (it used to stay "SELL … Opened at $…"), and a Bursa stop/target close by the sweep is journaled too. Asserted at API level by UAT-JRNL-014 when Bursa is in session. Active since 2026-11-24: needs a run on build 0.1.0+130 or later (not release-blocking; a store build cannot run it).
 

@@ -312,7 +312,12 @@ class _PayloadBlock extends StatelessWidget {
           rows.add(_KV('Closed price', formatMoney(closedPrice,
               market: tradeMarket, grouped: false)));
         }
-        if (realisedPnl is num && realisedPnl != 0) {
+        // DEF537 — a break-even close is a real, known result: +0.00 on a
+        // closed trade is shown, never hidden. An open trade has no realised
+        // P&L to show, whatever the stored default is.
+        final isClosed = closedPrice is num ||
+            (t['status'] as String?)?.toLowerCase() == 'closed';
+        if (realisedPnl is num && (realisedPnl != 0 || isClosed)) {
           rows.add(_KV(
               'Realised P&L',
               formatMoney(realisedPnl,

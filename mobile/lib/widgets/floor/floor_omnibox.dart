@@ -156,11 +156,16 @@ class _FloorOmniboxState extends State<FloorOmnibox> {
   Timer? _lookupTimer;
   int _lookupSeq = 0;
   NameLookup? _lookup;
-  String _lookupText = '';
+
+  /// DEF536 — what [_lookup] answers: the text AND the market it was asked
+  /// about. Keyed on text alone, a market change left "already looked up" true
+  /// for a result that had been thrown away, and nothing re-armed the lookup.
+  String _lookupKey = '';
 
   bool get _bursa => widget.market != null;
   String get _typed => _ctrl.text.trim();
   bool get _nameMode => _bursa && isNameQuery(_ctrl.text);
+  String get _wantedKey => '${widget.market?.apiCode}|$_typed';
 
   OmniboxDecision _rule() => _bursa
       ? routeOmnibox(_ctrl.text, bursaEnabled: true)
@@ -169,7 +174,7 @@ class _FloorOmniboxState extends State<FloorOmnibox> {
   _Eff _eff() {
     final rule = _Eff(_Mode.rule, decision: _rule());
     if (!_nameMode) return rule;
-    final lookup = _lookupText == _typed ? _lookup : null;
+    final lookup = _lookupKey == _wantedKey ? _lookup : null;
     if (lookup == null) return const _Eff(_Mode.resolving);
     switch (lookup.kind) {
       case NameLookupKind.single:
@@ -191,13 +196,15 @@ class _FloorOmniboxState extends State<FloorOmnibox> {
 
   Future<void> _runLookup() async {
     final q = _typed;
+    final market = widget.market!;
+    final key = _wantedKey;
     final seq = ++_lookupSeq;
-    final result = await lookupName(q,
-        active: widget.market!, resolve: widget.resolve!);
+    final result =
+        await lookupName(q, active: market, resolve: widget.resolve!);
     if (!mounted || seq != _lookupSeq) return;
     setState(() {
       _lookup = result;
-      _lookupText = q;
+      _lookupKey = key;
     });
     _feedValidator();
   }
@@ -207,6 +214,8 @@ class _FloorOmniboxState extends State<FloorOmnibox> {
     super.didUpdateWidget(old);
     if (old.market != widget.market && _bursa) {
       _lookup = null;
+      _lookupKey = '';
+      _lookupSeq++;
       _lookupTimer?.cancel();
       if (_nameMode) _lookupTimer = Timer(_lookupDebounce, _runLookup);
       _feedValidator();
@@ -239,7 +248,7 @@ class _FloorOmniboxState extends State<FloorOmnibox> {
   void _onTextChanged() {
     setState(() {});
     _lookupTimer?.cancel();
-    if (_nameMode && _lookupText != _typed) {
+    if (_nameMode && _lookupKey != _wantedKey) {
       _lookupTimer = Timer(_lookupDebounce, _runLookup);
     }
     // Only ticker-shaped text is worth an existence check; a sentence bound for
