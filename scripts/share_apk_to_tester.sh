@@ -98,6 +98,15 @@ fi
 # AAB it was built beside rather than guessing.
 : "${AMI_GAMES:=false}"
 
+# DEF530 — DEF301 again, for the next feature flag. build_playstore.sh gained
+# `--bursa` (CR282) and compiles AMI_BURSA into the AAB; this helper did not
+# pass it, so build 0.1.0+130 had Bursa ON in the AAB and OFF in the tester APK.
+# Same default and same reasoning as AMI_GAMES: standalone stays the safe
+# direction, and publish_playstore.sh exports the choice it built the AAB with.
+# test_def530_apk_aab_dart_define_parity.py fails if the AAB gets a feature flag
+# this command does not.
+: "${AMI_BURSA:=false}"
+
 APK="${1:-}"
 
 if [[ -z "$APK" ]]; then
@@ -108,7 +117,8 @@ if [[ -z "$APK" ]]; then
       --dart-define=AMI_API_URL_ALPHA="${AMI_API_URL_ALPHA}" \
       --dart-define=GOOGLE_OAUTH_WEB_CLIENT_ID="${GOOGLE_OAUTH_WEB_CLIENT_ID}" \
       --dart-define=SENTRY_DSN="${SENTRY_DSN}" \
-      --dart-define=AMI_GAMES="${AMI_GAMES}" )
+      --dart-define=AMI_GAMES="${AMI_GAMES}" \
+      --dart-define=AMI_BURSA="${AMI_BURSA}" )
 fi
 
 if [[ ! -f "$APK" ]]; then
@@ -124,7 +134,7 @@ fi
 # one, which is a worse version of the same confusion. So the identity is
 # stated here instead, and the installed app states its own gates under
 # Settings — the copy that survives being installed.
-echo "▶ artifact feature set: AMI_GAMES=${AMI_GAMES}$([[ "$AMI_GAMES" == "true" ]] || echo '  (no GAME tab in this APK)')"
+echo "▶ artifact feature set: AMI_GAMES=${AMI_GAMES}$([[ "$AMI_GAMES" == "true" ]] || echo '  (no GAME tab in this APK)') AMI_BURSA=${AMI_BURSA}"
 echo "▶ publishing APK → ${AMI_APK_SHARE_DEST}  (via ${CHOSEN_ROUTE})"
 if scp -o ConnectTimeout=10 "$APK" "$AMI_APK_SHARE_DEST"; then
   echo "✓ automated-tester APK is current: ${AMI_APK_SHARE_DEST}"

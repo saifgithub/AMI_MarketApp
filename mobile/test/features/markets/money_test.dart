@@ -134,4 +134,58 @@ void main() {
       );
     });
   });
+
+  group('formatMoney - zero never carries a sign (DEF531)', () {
+    // Device lab AMI-DL-23: a lot's "Unrealised" line read "+-$0.00" because
+    // -0.0 >= 0 is true while NumberFormat prints -0.0 as "-$0.00".
+    const zeros = <double>[-0.0, 0.0, -0.001, 0.001, 0.004, -0.004];
+
+    for (final v in zeros) {
+      test('US $v', () {
+        expect(formatMoney(v, market: AppMarket.us), r'$0.00');
+        expect(formatMoney(v, market: AppMarket.us, signed: true), r'+$0.00');
+      });
+      test('MY $v', () {
+        expect(formatMoney(v, market: AppMarket.my), 'RM0.00');
+        expect(formatMoney(v, market: AppMarket.my, signed: true), '+RM0.00');
+      });
+    }
+
+    test('whole-dollar display: -0.4 is zero at decimals 0', () {
+      expect(formatMoney(-0.4, market: AppMarket.us, decimals: 0), r'$0');
+      expect(formatMoney(-0.4, market: AppMarket.us, decimals: 0, signed: true),
+          r'+$0');
+    });
+
+    test('compact: -0.0 and tiny negatives are zero', () {
+      for (final v in <double>[-0.0, -0.001, 0.001]) {
+        expect(formatMoney(v, market: AppMarket.us, compact: true), r'$0');
+        expect(
+          formatMoney(v, market: AppMarket.us, compact: true, signed: true),
+          r'+$0',
+        );
+        expect(formatMoney(v, market: AppMarket.my, compact: true), 'RM0');
+      }
+    });
+
+    test('rounding boundary agrees with the digits shown, either sign', () {
+      for (final signed in [false, true]) {
+        for (final v in [0.005, -0.005]) {
+          final out = formatMoney(v, market: AppMarket.us, signed: signed);
+          expect(out.contains('+-'), isFalse, reason: out);
+          if (out.endsWith(r'$0.00')) {
+            expect(out, signed ? r'+$0.00' : r'$0.00');
+          } else {
+            expect(out, v > 0 ? (signed ? r'+$0.01' : r'$0.01') : r'-$0.01');
+          }
+        }
+      }
+    });
+
+    test('just past the boundary keeps its sign', () {
+      expect(formatMoney(0.006, market: AppMarket.us, signed: true), r'+$0.01');
+      expect(formatMoney(-0.006, market: AppMarket.us, signed: true), r'-$0.01');
+      expect(formatMoney(-0.006, market: AppMarket.us), r'-$0.01');
+    });
+  });
 }

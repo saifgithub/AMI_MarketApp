@@ -245,11 +245,16 @@ else
   # in build_playstore.sh and does not exist in this shell, so reading it
   # here would abort the release on `set -u` (unbound variable) at the last
   # step, AFTER the Play upload had already succeeded.
+  #
+  # DEF530 — same for Bursa: `--bursa` rides BUILD_ARGS to build_playstore.sh,
+  # so its presence there is the AAB's AMI_BURSA=true.
   _apk_games=true
+  _apk_bursa=false
   for _a in ${BUILD_ARGS[@]+"${BUILD_ARGS[@]}"}; do
     [[ "$_a" == "--no-games" ]] && _apk_games=false
+    [[ "$_a" == "--bursa" ]] && _apk_bursa=true
   done
-  if AMI_GAMES="$_apk_games" "${PROJECT_ROOT}/scripts/share_apk_to_tester.sh"; then
+  if AMI_GAMES="$_apk_games" AMI_BURSA="$_apk_bursa" "${PROJECT_ROOT}/scripts/share_apk_to_tester.sh"; then
     apk_status="refreshed"
   else
     apk_status="STALE — see the warning above"
