@@ -1552,15 +1552,15 @@ _Device (automated, Appium) · plans: trader · uses LLM_
 
 **Steps**
 1. On the Floor convene the Room on 1155.KL; wait for the verdict
-2. Read the Fundamentals Analyst, Macro & Events and Flow & Positioning rows, then the Chief Investment Officer verdict card
+2. Read the Technical Strategist, Fundamentals Analyst, Macro & Events and Flow & Positioning rows, then the Chief Investment Officer verdict card
 
 **Expected**
-1. Prices and sizes read RM, never $; the relative-strength comparison is against the FBM KLCI, not the S&P 500
-2. Each desk that would have shown a US filings input says "not available for this market (Bursa Malaysia filings are not yet ingested)" instead of staying silent; the Fundamentals Analyst's turn always ends with an AMI note naming peer comparison, filed-statement detail and the filings index as not available for this market
+1. Prices and sizes read RM, never $; the relative-strength comparison is against the FBM KLCI, not the S&P 500, and the Technical Strategist's turn always ends with an AMI note saying so
+2. Each desk that would have shown a US filings input says "not available for this market (Bursa Malaysia filings are not yet ingested)" instead of staying silent; the Fundamentals Analyst's turn always ends with an AMI note naming peer comparison, filed-statement detail and the filings index as not available for this market; Macro & Events always ends with an AMI note listing the SEC filings index, executive-change, insider and 8-K inputs as not available for this market; Flow & Positioning always ends with an AMI note naming the put/call ratio as not available for this market (no Bursa options or positioning feed is ingested)
 3. A negative amount reads with the sign first (-RM15,433M), in the desk text and in any fact-check note, never "$-15,433M"
 4. An APPROVE verdict card quotes entry, stop and target in RM; a PASS or HOLD carries none, exactly as for a US name (a PASS needs only narration), so none is not a failure; the Room is stored with currency MYR
 
-> CR282 lane E; DEF533 (build 130 run found US framing on a .KL Room: S&P label, no Fundamentals dark-input line, "$-" in a fact-check note; fixed on the backend, so re-run on the same build after the deploy). Titles follow CR160 (Chief Investment Officer, Risk Officer, Execution Desk). Active since 2026-11-24: the backend precondition is met on Alpha, so this needs a run on build 0.1.0+130 or later (not release-blocking; a store build cannot run it). The API pre-spend half is UAT-ROOM-033.
+> CR282 lane E; DEF533 (build 130 run found US framing on a .KL Room: S&P label, no Fundamentals dark-input line, "$-" in a fact-check note; fixed on the backend, so re-run on the same build after the deploy); DEF535 (build 132 run: the Technical Strategist never named the FBM KLCI and Macro & Events / Flow & Positioning described the gaps in their own words; the coded per-desk AMI notes are appended by the runner). Titles follow CR160 (Chief Investment Officer, Risk Officer, Execution Desk). Active since 2026-11-24: the backend precondition is met on Alpha, so this needs a run on build 0.1.0+130 or later (not release-blocking; a store build cannot run it). The API pre-spend half is UAT-ROOM-033.
 
 <a id="one-on-one"></a>
 ## 1-on-1 agent chat
