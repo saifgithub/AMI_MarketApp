@@ -720,6 +720,7 @@ _Device (automated, Appium) · plans: anon_
 3. A readback with a LOOKS RIGHT confirmation is shown before the app hands over
 4. The app lands on the Floor with the tab bar FLOOR / PORTFOLIO / LESSONS / YOU
 5. Settings > MY MANDATE then shows the interview's mandate, not a blank one
+6. The readback's risk line names its level (1/5 capital preservation, 2 cautious, 3 balanced, 4 aggressive, 5 highest risk tolerance), never a fixed "moderate"; and Settings > MY MANDATE shows that same risk score, max drawdown % and constraints as the readback (DEF539: it used to show the 3/5, 30% defaults when the claim prompt was skipped)
 
 <a id="mandate-settings"></a>
 ## Mandate, risk limits, compliance & Settings
@@ -3025,6 +3026,7 @@ _Device (automated, Appium) · plans: floor_pass_
 1. The opened entry reads "BUY 100 1155.KL @ RM<price>" with "Opened at RM<price>" and no $ anywhere
 2. The closed entry title and summary read "Closed 1155.KL (MANUAL) — +RM<amount>" (or "— -RM<amount>") and "Sold 100 at RM<price>."
 3. Closed price and Realised P&L rows read RM<price> and +RM<amount> or -RM<amount> (a break-even close still shows the row, as +RM0.00); a US trade entry beside it still reads $
+4. On the closed entry, Opened at is the time of the BUY and Closed at the time of the sell (a buy at 5:35 PM sold at 5:36 PM reads Opened at 5:35 PM, never the close time) (DEF540)
 
 > CR282 lane C/F1 + DEF532 (AT:B1): journal text takes its symbol from the ticker's market (trading_math.markets.format_money) and the detail rows from formatMoney; a sell that closes shares writes the closed entry (it used to stay "SELL … Opened at $…"), and a Bursa stop/target close by the sweep is journaled too. Asserted at API level by UAT-JRNL-014 when Bursa is in session. Active since 2026-11-24: needs a run on build 0.1.0+130 or later (not release-blocking; a store build cannot run it).
 

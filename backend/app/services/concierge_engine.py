@@ -223,6 +223,9 @@ def process_answer(
 
     if next_step == ConversationStep.READBACK:
         summary = _build_readback_summary(session)
+        # DEF539: freeze the exact structured summary the user is about to
+        # confirm; `session_to_mandate_dict` persists THIS, not a rebuild.
+        session.readback_summary = summary
         message = Message(
             author=Author.CONCIERGE,
             content=_readback_text(summary),
@@ -693,6 +696,27 @@ def _build_readback_summary(session: OnboardingSession) -> dict[str, Any]:
     }
 
 
+# DEF539: the readback used to print "moderate" for every score, so a 1/5
+# (capital preservation) read back as "moderate". Wording mirrors the mobile
+# `settingsRiskLabel1..5` strings so Settings and the readback never disagree.
+RISK_LEVEL_LABELS: dict[int, str] = {
+    1: "capital preservation",
+    2: "cautious",
+    3: "balanced",
+    4: "aggressive",
+    5: "highest risk tolerance",
+}
+
+
+def risk_level_label(risk_score: int) -> str:
+    """Label for a 1-5 risk score. Raises on anything else rather than
+    inventing a label (CR040)."""
+    try:
+        return RISK_LEVEL_LABELS[risk_score]
+    except KeyError:
+        raise ValueError(f"risk_score {risk_score!r} is not in 1..5") from None
+
+
 def _readback_text(summary: dict[str, Any]) -> str:
     goal = summary["primary_goal"].replace("_", " ").title()
     horizon = summary["horizon"].replace("_", " ").title()
@@ -722,7 +746,7 @@ def _readback_text(summary: dict[str, Any]) -> str:
         f"Here's what I've got for your mandate. Read this and tell me if anything's off.\n\n"
         f"🎯 Goal: {goal}\n"
         f"📅 Horizon: {horizon}\n"
-        f"⚖️ Risk: {risk}/5 — moderate.  Max drawdown {drawdown}%.\n"
+        f"⚖️ Risk: {risk}/5 — {risk_level_label(risk)}.  Max drawdown {drawdown}%.\n"
         f"🛡️ Constraints: {flags_text}."
     )
 
@@ -734,7 +758,9 @@ def _readback_text(summary: dict[str, Any]) -> str:
 
 def session_to_mandate_dict(session: OnboardingSession, user_id: Any) -> dict[str, Any]:
     """Build the dict suitable for constructing a Mandate from a completed session."""
-    summary = _build_readback_summary(session)
+    # DEF539: prefer the summary frozen when the readback was shown, so the
+    # saved mandate is exactly what the user confirmed.
+    summary = session.readback_summary or _build_readback_summary(session)
     rc = session.risk_components_partial
     now = now_utc()
     return {

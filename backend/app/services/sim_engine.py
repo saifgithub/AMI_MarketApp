@@ -1577,14 +1577,20 @@ class SimEngine:
 
     def sell_close_effect(
         self, user_id: UUID, sell: SimTrade,
-    ) -> tuple[float, float, float] | None:
+    ) -> tuple[float, float, float, str | None] | None:
         """DEF532 — what a filled long-closing SELL realised, from the FIFO ledger.
 
-        `(shares closed, realised P&L, shares still held)`, or None when the sell
+        `(shares closed, realised P&L, shares still held, position opened_at)`,
+        or None when the sell
         closed nothing (a short open, or a ledger that cannot place it). It is the
         difference between the lot picture with and without this sell, over the same
         `compute_lots_fifo` the holding detail reads, so the journal and the lot
         cards cannot disagree.
+
+        DEF540: `position opened_at` is the ISO entry date of the earliest buy lot
+        this sell drew shares from, i.e. when the closed position was OPENED. The
+        sell's own `opened_at` is when the SELL order filled (the close time) and
+        must never be reported as the position's open time.
         """
         ticker = sell.ticker.upper().strip()
         with get_session() as s:
@@ -1611,10 +1617,19 @@ class SimEngine:
         realised = sum(l.realised_pnl for l in after) - sum(
             l.realised_pnl for l in before
         )
+        before_closed = {l.entry_trade_id: l.quantity_closed for l in before}
+        drawn = [
+            l for l in after
+            if l.quantity_closed - before_closed.get(l.entry_trade_id, 0.0) > 1e-9
+        ]
+        position_opened_at = (
+            min(drawn, key=lambda l: str(l.entry_date)).entry_date if drawn else None
+        )
         return (
             round(closed, 6),
             round(realised, 2),
             round(sum(l.quantity_open for l in after), 6),
+            position_opened_at,
         )
 
     def option_lots(self, user_id: UUID, underlying: str | None = None) -> dict:

@@ -236,6 +236,7 @@ cases:
       - 'A readback with a LOOKS RIGHT confirmation is shown before the app hands over'
       - 'The app lands on the Floor with the tab bar FLOOR / PORTFOLIO / LESSONS / YOU'
       - 'Settings > MY MANDATE then shows the interview''s mandate, not a blank one'
+      - 'The readback''s risk line names its level (1/5 capital preservation, 2 cautious, 3 balanced, 4 aggressive, 5 highest risk tolerance), never a fixed "moderate"; and Settings > MY MANDATE shows that same risk score, max drawdown % and constraints as the readback (DEF539: it used to show the 3/5, 30% defaults when the claim prompt was skipped)'
 
   - id: UAT-ONB-044
     title: Answers and completion are refused without the 18+ confirmation
