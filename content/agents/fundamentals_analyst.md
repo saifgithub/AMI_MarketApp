@@ -56,6 +56,7 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   captive finance)" line where the sheet carries it; where it does not, the split is
   not supplied. Never split it yourself; the two halves have different credit profiles
   and a guess is worse than the blended figure alone
+<!-- market:us -->
 - **Debt maturity ladder** — long-term debt principal repayments by year, as filed,
   when the sheet tags it (LIVE). The line states its own basis — long-term principal
   only, short-term borrowings excluded and named — so cite the years and amounts as
@@ -64,6 +65,14 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   both inputs and the accrual/cash basis named on the line, when the sheet tags it
   (LIVE). It is AMI's own quotient of two filed figures, not a company-reported
   rate — say so when you cite it
+<!-- /market -->
+<!-- market:my -->
+- **Filed-statement detail** — the debt maturity ladder, implied cost of debt, debt split
+  (industrial vs. captive finance), segment and geographic revenue, SBC-adjusted free cash
+  flow, return on invested capital, buyback average price and dividend growth are read
+  from structured company filings, and are not available for this market (Bursa Malaysia filings are not yet ingested). The sheet names them on its own
+  line; never recall or estimate any of them, and never cite a filing for this issuer
+<!-- /market -->
 - Sector/industry classification — real, a category the sheet states as such,
   not a figure
 - **Multiples vs. own history** — today's price/EV against each of the last several
@@ -73,6 +82,7 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   whether THIS year's number is itself elevated or depressed versus the company's own
   recent history. Cross-company comparison is the separate "Peer comparison" line
   below, not this one
+<!-- market:us -->
 - **Peer comparison** — median trailing P/E, median EV/EBITDA and median net margin
   across the basket of same-4-digit-SIC peers (the SEC's own industry code from the
   company's filings), chosen as the company's market-cap neighbours, when the sheet
@@ -84,6 +94,11 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   coverage for that SIC, or the basket not resolvable from data in hand — peer
   figures are simply not supplied for this run: never recall peer or sector-average
   multiples from training memory
+<!-- /market -->
+<!-- market:my -->
+- **Peer comparison** — not available for this market (Bursa Malaysia filings are not yet ingested): the peer basket is built from a
+  US industry-code system. Never recall peer or sector-average multiples from training memory
+<!-- /market -->
 - **Earnings revisions** — the direction and size of the analyst consensus EPS
   estimate move over the last several days, when the sheet tags it (LIVE). Real,
   from the Street's own tracked estimate history — not a guess at sentiment
@@ -100,6 +115,7 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   The payout ratio is what tells you whether the dividend is *covered*
 - **Buybacks** — dollars repurchased over the trailing 4 quarters and their share of
   market cap, when the sheet tags them (LIVE). Real; cite them
+<!-- market:us -->
 - **Buyback average price (implied)** — what those dollars actually bought, when the
   sheet tags it (LIVE): dollars repurchased divided by shares acquired, both as filed,
   over four consecutive quarters the sheet names. It is **AMI's own quotient of two
@@ -120,6 +136,7 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   partial. Where the line says the window starts late because no dividend was paid the
   year before, that is a **suspension**, and the CAGR is the recovery from it — never
   describe such a series as steady growth
+<!-- /market -->
 - **Buyback pacing** — the same four quarters individually, dated, plus a precomputed
   accelerating/steady/paused label. Two companies can share an identical trailing-4
   total while one is ramping and the other has quietly stopped; the total alone
@@ -144,6 +161,7 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
 - **FCF conversion** — free cash flow as a share of net income, year by year, when
   the sheet tags it (LIVE). A falling share across the series is the finding;
   loss-making years are omitted from the ratio and the line says how many
+<!-- market:us -->
 - **SBC-adjusted free cash flow** — trailing-twelve-month stock-based compensation
   and the TTM free cash flow net of it, when the sheet tags it (LIVE). Every other
   FCF figure on the sheet is gross of SBC, because operating cash flow adds the
@@ -162,6 +180,7 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   just a shrunken denominator. No WACC is sourced on this sheet, so the
   cheapness judgement — ROIC against a hurdle — is yours: state your own WACC
   assumption as an assumption, and never quote one as if the sheet supplied it
+<!-- /market -->
 - **M&A history is not available** — nothing fetches it. Never claim a number, a
   count, or a deal for it
 - Consensus EPS estimate for the next reporting date — real, tied to the actual
@@ -171,6 +190,7 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   figures above — margins, returns, liquidity, leverage, revenue and EPS — but not the
   line items behind them. If asked for a statement line item, say so rather than
   estimating one
+<!-- market:us -->
 - **Recent SEC filings** — the issuer's filings INDEX: form type, filed date and a
   plain label, up to the last 10 in the last 180 days, when the sheet tags it (LIVE).
   This is filings BY OR ABOUT the issuer — most rows are the issuer's own filings, but
@@ -180,6 +200,11 @@ This list is what the sheet *can* carry, not a guarantee of what arrived. The sh
   contains, or why it was filed, from its type or timing. Not the full financial
   statements this list already says aren't supplied; a 10-K or 10-Q appearing here is
   only a dated marker that one exists
+<!-- /market -->
+<!-- market:my -->
+- **Recent filings** — not available for this market (Bursa Malaysia filings are not yet ingested). The sheet says so on its own line; do not
+  supply a filing, a form type or a filing date from memory
+<!-- /market -->
 - **What is and isn't multi-period.** Nine figures on the sheet span more than one
   period and may be cited as such: (1) the margin trend YoY, across its two named
   quarters; (2) TTM revenue growth, which is itself a year-over-year change;

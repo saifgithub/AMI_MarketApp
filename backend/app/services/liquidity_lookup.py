@@ -258,9 +258,9 @@ def _snapshot_verdict(universe, ticker: str, price: float | None):
 
 def _verdict_from_info(info, t: str, price: float | None):
     from app.schemas.liquidity import (
-        ILLIQUID_AVG_DOLLAR_VOLUME_USD,
-        MICROCAP_FLOOR_USD_M,
         ON_DEMAND_SOURCE,
+        illiquid_floor,
+        microcap_floor_m,
         LiquidityStatus,
         LiquidityVerdict,
     )
@@ -283,8 +283,8 @@ def _verdict_from_info(info, t: str, price: float | None):
     if cap is None and dollar_volume is None:
         return LiquidityVerdict(status=LiquidityStatus.UNKNOWN, ticker=t, source=ON_DEMAND_SOURCE)
 
-    cap_breach = cap is not None and cap < MICROCAP_FLOOR_USD_M
-    volume_breach = dollar_volume is not None and dollar_volume < ILLIQUID_AVG_DOLLAR_VOLUME_USD
+    cap_breach = cap is not None and cap < microcap_floor_m(t)
+    volume_breach = dollar_volume is not None and dollar_volume < illiquid_floor(t)
     status = LiquidityStatus.EXCLUDED if (cap_breach or volume_breach) else LiquidityStatus.PERMITTED
     logger.info(
         "liquidity_on_demand_resolved", ticker=t, status=status.value,

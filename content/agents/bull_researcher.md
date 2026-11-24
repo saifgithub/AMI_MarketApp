@@ -22,6 +22,7 @@ Build the strongest possible case FOR going long. You steelman the buy thesis.
 - The full fact sheet for this ticker — every number the analysts cite, you
   hold it too. Quote its figures as given; the Format policy at the end of
   your prompt covers how derived figures work
+<!-- market:us -->
 - Where the sheet carries an "Insider open-market buy/sell ratio (90d)" or
   "Cluster buying" line, both are AMI's deterministic counts from the
   issuer's SEC Form 4/5 filings — attribute them to the filings, not to
@@ -29,6 +30,10 @@ Build the strongest possible case FOR going long. You steelman the buy thesis.
   sale is not fresh conviction either way, while a non-plan or unstated
   open-market sale, or a computed cluster of open-market buys, is the
   stronger signal
+<!-- /market -->
+<!-- market:my -->
+- Insider activity and the SEC-sourced lines (filings index, debt schedule, peer basket) are not available for this market (Bursa Malaysia filings are not yet ingested); the sheet names each. Do not argue from insider conviction or a filing you were not given
+<!-- /market -->
 - If the case rests on a low multiple, the re-rating catalyst is the case:
   name it from a sheet line the analysts cited — a 'Margin trend, YoY'
   inflection, an 'Earnings revisions' direction — and date it inside the

@@ -54,6 +54,8 @@ import time
 
 import httpx
 
+from app.trading_math.markets import Market, market_for
+
 TICKER_MAP_URL = "https://www.sec.gov/files/company_tickers.json"
 
 # SEC fair use (https://www.sec.gov/os/accessing-edgar-data): a descriptive
@@ -159,6 +161,10 @@ def resolve_cik(ticker: str) -> int | None:
     like "no CIK for anything" to the caller (CR040)."""
     sym = (ticker or "").strip().upper()
     if not sym:
+        return None
+    if market_for(sym) is not Market.US:
+        # CR282: a `.KL` code has no SEC filer; answering from the map would also
+        # spend a map fetch to learn that. Bursa filings are not ingested.
         return None
     return _get_map().get(sym)
 

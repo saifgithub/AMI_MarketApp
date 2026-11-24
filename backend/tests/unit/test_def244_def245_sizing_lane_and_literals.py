@@ -236,9 +236,17 @@ def test_the_researchers_output_style_is_pinned_to_a_reviewed_snapshot():
     # a position size? **No** — two sentences about a removed data field were
     # deleted and one bullet re-wrapped; the "not a position size" bullet is
     # untouched. bear unchanged. bull dcf57da48d1e -> 7c199bcea372.
+    #
+    # Reviewed 2026-11-24 (CR282 lane E). Both files gain `<!-- market:us|my -->`
+    # markers around the SEC-fed insider/debt bullets and a Bursa-only replacement
+    # bullet saying those inputs are not available for that market. The guard's
+    # question: does any bullet ask a RESEARCHERS-phase agent to output a position
+    # size? **No** — the US text a US Room receives is byte-identical (the marker
+    # lines are stripped at load; `test_cr282_room_us_byte_identical.py` proves it).
+    # bull 7c199bcea372 -> 1b1dc126db8d; bear dea413259494 -> 8365d154d325.
     expected = {
-        "bull_researcher.md": "7c199bcea372",
-        "bear_researcher.md": "dea413259494",
+        "bull_researcher.md": "1b1dc126db8d",
+        "bear_researcher.md": "8365d154d325",
     }
     actual = {
         name: hashlib.sha256(

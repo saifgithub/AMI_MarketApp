@@ -537,6 +537,11 @@ _KNOWN_SYNC_HTTPX_COUNTS = {
     # `asyncio.to_thread`, and from the `python -m app.services.ops_alerts test`
     # CLI (no event loop). No route calls it.
     "app/services/ops_alerts.py": 1,
+    # CR282 lane E: opendosm_cpi._fetch_rows. Reached only from
+    # `room_runner._stamp_my_macro`, i.e. `_profile_for_ticker`, which every Room
+    # path runs through `asyncio.to_thread` (the bank's `_freeze_sheet_blocking`
+    # and `run()`'s profile build); behind OPENDOSM_CPI_ENABLED and a one-day cache.
+    "app/services/opendosm_cpi.py": 1,
 }
 
 

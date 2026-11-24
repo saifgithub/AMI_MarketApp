@@ -49,8 +49,8 @@ from app.schemas.classification import (
     ClassificationVerdict,
 )
 from app.schemas.liquidity import (
-    ILLIQUID_AVG_DOLLAR_VOLUME_USD,
-    MICROCAP_FLOOR_USD_M,
+    illiquid_floor,
+    microcap_floor_m,
     LiquidityStatus,
     LiquidityVerdict,
 )
@@ -265,9 +265,9 @@ class ClassificationUniverse:
                 as_of=self.as_of,
             )
 
-        cap_breach = cap is not None and cap < MICROCAP_FLOOR_USD_M
+        cap_breach = cap is not None and cap < microcap_floor_m(t)
         volume_breach = (
-            dollar_volume is not None and dollar_volume < ILLIQUID_AVG_DOLLAR_VOLUME_USD
+            dollar_volume is not None and dollar_volume < illiquid_floor(t)
         )
         if cap_breach or volume_breach:
             return LiquidityVerdict(

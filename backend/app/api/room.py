@@ -68,6 +68,7 @@ from app.services.alpaca_service import render_snapshot
 from app.services.credit_service import InsufficientCredits
 from app.services.rate_limit import room_stream_rate_limit
 from app.services.sim_engine import SimEngine, get_sim_engine
+from app.trading_math.markets import Market, market_for
 from app.services.ticker_reference import (
     TickerNotFoundError,
     require_ticker_exists,
@@ -236,8 +237,10 @@ async def stream_room(
     # to_thread. (This is a SEPARATE reachability chain from the
     # `_build_room_sector_context` one inside room_runner.py, D7 — that
     # one is out of scope for this lane and stays waived.)
+    # CR282 lane E — a `.KL` Room is judged against the user's MYR book.
     portfolio_value, current_drawdown_pct = await asyncio.to_thread(
         sim.valuation_snapshot, req.user_id,
+        *((market_for(ticker),) if market_for(ticker) is not Market.US else ()),
     )
     # CR039 (AT:R60): start_run debits the plan's Room price, but only once
     # it's past its own dedup tiers — so a reconnect that attaches to an

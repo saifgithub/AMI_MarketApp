@@ -828,6 +828,21 @@ class Settings(BaseSettings):
     # Off in Beta builds until counsel answers the CMSA 2007 advice question.
     market_bursa_enabled: bool = False
 
+    # CR282 lane E — the Bursa Room's discount-rate inputs (`services/wacc.py`).
+    # No machine-readable MGS feed with clear terms was found, so these are dated
+    # settings, not fetched values; the rendered WACC line states both. Defaults:
+    # 10-year MGS 3.9% (benchmark 10y MGS 3.864% on 16 Nov 2026, Business Today;
+    # October range 3.80-4.03%); Malaysian equity risk premium 6.0% (approximate
+    # Damodaran-style mature-market ERP plus Malaysia country premium — an
+    # estimate, revisit twice a year). Review by 2027-02-01.
+    wacc_my_risk_free_pct: float = 3.9
+    wacc_my_erp_pct: float = 6.0
+
+    # CR282 lane E — the Malaysian CPI line on a Bursa Room's Macro & Events
+    # sheet, from OpenDOSM (api.data.gov.my, CC BY 4.0, 4 requests/minute).
+    # Default off: when off the sheet says the CPI is not fetched, never a number.
+    opendosm_cpi_enabled: bool = False
+
     # CR239 / WP-38 — device-UAT fault switch: JSON {"<user-uuid>": ["GET /v1/messages"]}.
     # Empty = off. Inert (logged as refused) outside local/dev/staging; malformed
     # JSON stops the boot. See app/services/uat_fault_inject.py.
