@@ -74,12 +74,19 @@ _ACTIVE_GATEWAY: contextvars.ContextVar[Any] = contextvars.ContextVar(
 )
 
 
+# A split is "close" only when the minority holds at least this many phrasings.
+# Saiful 2026-11-24 (WP-23 fit, `wp23_fit_2026-11-24.md`): a 4-1 split is a clear
+# answer; only 3-2 is close. Any split (1) gave 22% Contested; 2 gives ~17%.
+SPLIT_CLOSE_MIN_MINORITY = 2
+
+
 def grader_version(model: str) -> str:
     """Everything that changes what this grader answers, in the string the policy
     version hashes: the pinned model, temperature, the averaged questions and the
     structured trade."""
     averaged = "+".join(q.value for q in AVERAGED_QUESTIONS)
-    return f"{model}|t0|avg{PHRASING_COUNT}:{averaged}|trade=structure"
+    return (f"{model}|t0|avg{PHRASING_COUNT}:{averaged}|split{SPLIT_CLOSE_MIN_MINORITY}"
+            f"|trade=structure")
 
 
 class _DirectGateway:
@@ -115,8 +122,9 @@ def average_votes(
     qid: QuestionId, votes: Sequence[QuestionAnswer], close_band: float = CLOSE_BAND,
 ) -> QuestionAnswer:
     """One answer from several phrasings of the same question: the majority, with
-    any split marked `close`. A vote that is not yes/no leaves the question
-    not computable rather than being dropped."""
+    a split marked `close` when the minority holds at least
+    `SPLIT_CLOSE_MIN_MINORITY` phrasings (3-2, not 4-1). A vote that is not
+    yes/no leaves the question not computable rather than being dropped."""
     if not votes:
         return QuestionAnswer(qid, Answer.NOT_COMPUTABLE, rationale="no phrasing answered")
     if any(v.answer not in (Answer.YES, Answer.NO) for v in votes):
@@ -127,7 +135,7 @@ def average_votes(
     yes = sum(v.answer is Answer.YES for v in votes)
     no = len(votes) - yes
     answer = Answer.YES if yes > no else Answer.NO
-    split = yes > 0 and no > 0
+    split = min(yes, no) >= SPLIT_CLOSE_MIN_MINORITY
     p_yes_votes = [
         (v.confidence if v.answer is Answer.YES else 1.0 - v.confidence)
         for v in votes if v.confidence is not None

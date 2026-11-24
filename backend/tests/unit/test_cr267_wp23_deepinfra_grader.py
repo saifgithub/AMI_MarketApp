@@ -277,6 +277,21 @@ def test_a_minority_for_yes_gives_no_and_close():
     assert a.answer is Answer.NO and a.close is True
 
 
+def test_a_four_one_split_is_a_clear_answer_not_close():
+    """Saiful 2026-11-24 (WP-23 fit): only a 3-2 split is close."""
+    split = {(Q.THESIS_MATERIAL_DIRECTIONAL, i): ("yes" if i < 4 else "no", 0.95) for i in range(5)}
+    a = make_grader(Wire(split)).grade(transcript()).get(Q.THESIS_MATERIAL_DIRECTIONAL)
+    assert a.answer is Answer.YES and a.close is False
+    assert "4/5" in a.rationale and "split" not in a.rationale
+
+
+def test_the_split_rule_is_in_the_grader_version():
+    from app.services.room_graders import deepinfra as di
+
+    assert f"|split{di.SPLIT_CLOSE_MIN_MINORITY}|" in di.grader_version("m")
+    assert di.SPLIT_CLOSE_MIN_MINORITY == 2
+
+
 def test_a_unanimous_sharp_answer_is_not_close():
     wire = Wire({Q.BEAR_OBJECTION_ANSWERED: ("yes", 0.97)}, default=("no", 0.97))
     a = make_grader(wire).grade(transcript()).get(Q.BEAR_OBJECTION_ANSWERED)
