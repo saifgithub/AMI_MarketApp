@@ -226,7 +226,9 @@ def _desk_temperature_fields(*, ceiling: float | None = None) -> dict[str, float
     return {"temperature": value}
 
 
-_CALL_OVERRIDE_FIELDS = frozenset({"temperature", "logprobs", "top_logprobs"})
+_CALL_OVERRIDE_FIELDS = frozenset(
+    {"temperature", "logprobs", "top_logprobs", "chat_template_kwargs"}
+)
 
 
 def _call_request_overrides(meta: dict[str, Any]) -> dict[str, Any]:
@@ -236,11 +238,25 @@ def _call_request_overrides(meta: dict[str, Any]) -> dict[str, Any]:
     desks keep the global `llm_desk_temperature`. The caller puts
     `request_overrides` in its own `meta`; only the three whitelisted fields
     reach the wire, and an absent key changes nothing for any other call.
+    `chat_template_kwargs` (a vLLM chat-template hook, e.g. `enable_thinking`) is
+    MERGED into the slot's own dict rather than replacing it (`_apply_call_overrides`),
+    so a grader can switch thinking off for its short answers without touching the
+    slot's desk-facing configuration.
     """
     raw = meta.get("request_overrides")
     if not isinstance(raw, dict):
         return {}
     return {k: v for k, v in raw.items() if k in _CALL_OVERRIDE_FIELDS}
+
+
+def _apply_call_overrides(body: dict[str, Any], meta: dict[str, Any]) -> None:
+    """Put the call's `request_overrides` on [body]; `chat_template_kwargs` merges
+    key-by-key into what the slot already sends, everything else replaces."""
+    overrides = _call_request_overrides(meta)
+    kwargs = overrides.pop("chat_template_kwargs", None)
+    body.update(overrides)
+    if isinstance(kwargs, dict):
+        body["chat_template_kwargs"] = {**(body.get("chat_template_kwargs") or {}), **kwargs}
 
 
 class LLMProvider:
@@ -978,7 +994,7 @@ class OpenAICompatibleProvider(LLMProvider):
         if constraint is not None:
             body.update(_constraint_request_fields(constraint))
         if meta is not None:
-            body.update(_call_request_overrides(meta))
+            _apply_call_overrides(body, meta)
 
         # CR272 — retry TRANSIENT failures, and only before the first chunk
         # has been handed to the caller: once a chunk is out the reply is

@@ -52,7 +52,7 @@ DATABASE_URL is pointed at a scratch sqlite so no app code can reach Alpha's DB.
 Usage
   wp22_score.py score  --runs runs_wp20-arm1.jsonl --out scores.jsonl \
       [--pilot 10 | --limit N] [--concurrency 1] [--slot vllm] \
-      [--grader onprem|jev|deepinfra|cheapllm|code] [--trade-action buy] [--jev-version jev-1.13.0] [--model <deepinfra id>] \
+      [--grader onprem|jev|deepinfra|cheapllm|code|deepinfra_room|ling_room] [--trade-action buy] [--jev-version jev-1.13.0] [--model <deepinfra id>] \
       [--max-usd 5.00] [--max-calls 300]
   wp22_score.py wording --runs ... --out wording.jsonl [--sample 20]
   wp22_score.py report --runs runs_wp20-arm1.jsonl --scores scores.jsonl \
@@ -65,6 +65,12 @@ structured trade, direct client; needs `--trade-action buy` because the stored R
 Execution Desk side). `fit` then re-applies the rule offline (no DB, no network, no key) under each
 candidate `close_below_confidence` and prints the value that minimises rep disagreement within the
 Contested cap, plus the `ROOM_CODED_RULE_POLICY_JSON` to set. Consensus is never read.
+
+`--grader ling_room` is the same production plan on the on-prem Ling grader (`LingGrader`, the
+gateway's `vllm_fallback` slot, thinking off per call). It needs no key and spends nothing: the URL
+and model come from `--ling-url` / `--ling-model`, else `VLLM_FALLBACK_BASE_URL` /
+`VLLM_FALLBACK_MODEL`. It writes the same scores JSONL (grader `ling`, version
+`ling:<model>|...`), so `report` and `fit` compare it with a `deepinfra_room` run as they are.
 """
 from __future__ import annotations
 
@@ -109,7 +115,10 @@ _ARM_REP = re.compile(r"-rep(\d+)$")
 ROOM_TIMEOUT_S = 600.0
 
 # ── Hosted graders (Jev, DeepInfra): pins, prices, keys, spend cap ──────────
-GRADERS = ("onprem", "jev", "deepinfra", "cheapllm", "code", "deepinfra_room")
+GRADERS = ("onprem", "jev", "deepinfra", "cheapllm", "code", "deepinfra_room", "ling_room")
+# Graders that run the whole production plan (phrasing averaging, structured trade): they take
+# --trade-action, and the wording test does not apply to them.
+ROOM_KINDS = ("deepinfra_room", "ling_room")
 # Pinned, never "latest" (WP-23 policy key). Source: S12 plan §3 item 1 and the October
 # corpus (`jev_deep_dive_2026-10-14.md`), which logged `jev-1.13.0`; the CR257 pilot script
 # sent "jev-latest", which is exactly what production must not do.
@@ -266,6 +275,8 @@ def setup_grader(args: argparse.Namespace, env: dict | None = None) -> GraderSet
             from app.services.room_graders.hosted_llm import HostedLLMGrader
             return HostedLLMGrader(args.slot, phrasing=p)
         return GraderSetup("onprem", "on-prem vLLM", onprem, None, {})
+    if kind == "ling_room":
+        return _setup_ling_room(args, env)
     if kind == "code":
         def code(_p):
             from app.services.room_graders.code_cards import CodeCardsGrader
@@ -332,6 +343,42 @@ def _setup_deepinfra_room(args: argparse.Namespace, key: str, guard: SpendGuard)
                        guard, {"model": model, "base_url": DEEPINFRA_BASE_URL,
                                "prices_usd_per_m_in_out": list(prices) if prices else None,
                                "trade_action": args.trade_action})
+
+
+def _setup_ling_room(args: argparse.Namespace, env: dict | None = None) -> GraderSetup:
+    """The on-prem production grader (WP-23): `LingGrader` through the gateway's `vllm_fallback`
+    slot, pointed in-process at the Ling host. No key, no spend guard. The slot is `kind=vllm`
+    (the grader's thinking switch is a vLLM field) and the only slot allowed, so nothing else
+    can answer."""
+    source = env if env is not None else os.environ
+    url = (getattr(args, "ling_url", None) or source.get("VLLM_FALLBACK_BASE_URL") or "").strip()
+    model = (getattr(args, "ling_model", None) or source.get("VLLM_FALLBACK_MODEL") or "").strip()
+    if not url:
+        raise ValueError("--ling-url (or VLLM_FALLBACK_BASE_URL) is required for --grader ling_room")
+    if not model or model.lower().endswith("latest"):
+        raise ValueError("--ling-model (or VLLM_FALLBACK_MODEL) must be a pinned model id, "
+                         "never empty or 'latest'")
+    if not (getattr(args, "trade_action", None) or "").strip():
+        raise ValueError("--trade-action is required for --grader ling_room (the stored Rooms "
+                         "carry no Execution Desk side; `buy` = every Room proposed a trade)")
+    from app.core.config import settings  # noqa: PLC0415
+    settings.vllm_fallback_base_url = url
+    settings.vllm_fallback_model = model
+    settings.vllm_fallback_kind = "vllm"
+    settings.vllm_fallback_api_key = ""
+    settings.vllm_fallback_extra_body_json = ""
+    settings.vllm_base_url = ""
+    settings.llm_provider_allowlist = [HOSTED_SLOT]
+    settings.llm_prices_json = "{}"
+    timeout_s = float(settings.room_grader_ling_timeout_s)
+
+    def room(_p):
+        from app.services.room_graders.ling import LingGrader
+        return LingGrader(model=model, timeout_s=timeout_s)
+    from app.services.room_graders.ling import grader_version  # noqa: PLC0415
+    return GraderSetup("ling_room", f"Ling production grader {grader_version(model)}", room, None,
+                       {"model": model, "base_url": url, "slot": HOSTED_SLOT,
+                        "trade_action": args.trade_action})
 
 
 # ── Identity, selection ─────────────────────────────────────────────────────
@@ -970,8 +1017,8 @@ def cmd_run(args: argparse.Namespace, *, wording: bool) -> int:
         print("--grader code has no wording test: it reads cards and the structured trade, never prose",
               file=sys.stderr)
         return 2
-    if setup is not None and setup.kind == "deepinfra_room" and wording:
-        print("--grader deepinfra_room averages the phrasings itself; the wording test is for the "
+    if setup is not None and setup.kind in ROOM_KINDS and wording:
+        print(f"--grader {setup.kind} averages the phrasings itself; the wording test is for the "
               "single-phrasing graders", file=sys.stderr)
         return 2
     arms = load_arms(Path(args.runs))
@@ -992,7 +1039,7 @@ def cmd_run(args: argparse.Namespace, *, wording: bool) -> int:
         for room in rooms.values():
             room["trade_action"] = args.trade_action
         print(f"cards rebuilt for {sum(r.get('cards') is not None for r in rooms.values())} Rooms")
-    if setup is not None and setup.kind == "deepinfra_room":
+    if setup is not None and setup.kind in ROOM_KINDS:
         for room in rooms.values():
             room["trade_action"] = args.trade_action
     out = Path(args.out)
@@ -1109,7 +1156,7 @@ def cmd_inputs(args: argparse.Namespace) -> int:
     rooms = fetch_rooms(dsn, arms)
     names = fetch_names(dsn, sorted({a["ticker"] for a in arms}))
     print(f"rooms loaded: {len(rooms)}/{len(arms)}; company names: {len(names)}")
-    if setup is not None and setup.kind == "deepinfra_room":
+    if setup is not None and setup.kind in ROOM_KINDS:
         for room in rooms.values():
             room["trade_action"] = args.trade_action
     if args.dry:
@@ -1632,7 +1679,12 @@ def main(argv: list[str] | None = None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     def grader_args(p) -> None:
         p.add_argument("--grader", choices=GRADERS, default="onprem",
-                       help="onprem = vLLM slot (default); jev / deepinfra = paid, keys from bakeoff.env")
+                       help="onprem = vLLM slot (default); jev / deepinfra = paid, keys from bakeoff.env; "
+                            "deepinfra_room / ling_room = the production grader (hosted / on-prem Ling)")
+        p.add_argument("--ling-url", default=None,
+                       help="ling_room: Ling host base URL (no /v1); default $VLLM_FALLBACK_BASE_URL")
+        p.add_argument("--ling-model", default=None,
+                       help="ling_room: pinned Ling model id; default $VLLM_FALLBACK_MODEL")
         p.add_argument("--jev-version", default=JEV_DEFAULT_VERSION,
                        help="pinned Jev model id; 'latest' is refused")
         p.add_argument("--model", default=DEEPINFRA_DEFAULT_MODEL, help="pinned DeepInfra model id")
@@ -1643,8 +1695,8 @@ def main(argv: list[str] | None = None) -> int:
         p.add_argument("--max-calls", type=int, default=DEFAULT_MAX_CALLS,
                        help="stop cleanly after this many UNPRICED calls (jev / deepinfra)")
         p.add_argument("--trade-action", default=None,
-                       help="code grader only: add this `action` to the proposed trade (sensitivity run; "
-                            "the production trade block has no action, so trade_proposed is not computable)")
+                       help="code / deepinfra_room / ling_room: add this `action` to the proposed trade (the stored "
+                            "Rooms carry no Execution Desk side; production's trade block names it)")
 
     for name in ("score", "wording"):
         p = sub.add_parser(name)

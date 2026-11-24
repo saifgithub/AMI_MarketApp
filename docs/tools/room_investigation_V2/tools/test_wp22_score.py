@@ -783,6 +783,92 @@ class DeepInfraRoomGraderToolTests(unittest.TestCase):
         self.assertIn("averages the phrasings itself", err)
 
 
+class LingRoomGraderToolTests(unittest.TestCase):
+    """`--grader ling_room`: the production plan on the on-prem Ling grader. Network mocked: the
+    grader is only built here, never called; the row shape is checked with a scripted gateway."""
+    URL = "http://ling.test:8004"
+    MODEL = "ling-3.0-flash-fin-fp4"
+    ARGS = dict(grader="ling_room", jev_version=None, model="deepseek-ai/DeepSeek-V4-Flash",
+                max_usd=5.0, max_calls=300, price_in=None, price_out=None, slot="vllm",
+                trade_action="buy", ling_url=URL, ling_model=MODEL)
+    SETTINGS = ("vllm_fallback_base_url", "vllm_fallback_model", "vllm_fallback_kind",
+                "vllm_fallback_api_key", "vllm_fallback_extra_body_json", "vllm_base_url",
+                "llm_provider_allowlist", "llm_prices_json")
+
+    def setup(self, env=None, **kw):
+        from app.core.config import settings
+        for name in self.SETTINGS:
+            self.addCleanup(setattr, settings, name, getattr(settings, name))
+        return w.setup_grader(SimpleNamespace(**{**self.ARGS, **kw}), env if env is not None else {})
+
+    def test_it_builds_the_ling_grader_with_no_key_and_no_spend_guard(self):
+        setup = self.setup()
+        g = setup.factory(None)
+        self.assertEqual((g.name, setup.kind, g.slot), ("ling", "ling_room", "vllm_fallback"))
+        self.assertIsNone(setup.guard)
+        self.assertTrue(g.version.startswith(f"ling:{self.MODEL}|t0|avg5:"))
+        self.assertIn("|split2|", g.version)
+        self.assertEqual((setup.describe["model"], setup.describe["base_url"]), (self.MODEL, self.URL))
+        self.assertNotIn("spend", w._cap_meta(setup))
+        w._report_cap(setup)  # no guard: must not raise
+
+    def test_it_points_the_gateway_slot_at_ling_and_allows_nothing_else(self):
+        from app.core.config import settings
+        self.setup()
+        self.assertEqual((settings.vllm_fallback_base_url, settings.vllm_fallback_model,
+                          settings.vllm_fallback_kind), (self.URL, self.MODEL, "vllm"))
+        self.assertEqual(settings.vllm_base_url, "")
+        self.assertEqual(settings.llm_provider_allowlist, ["vllm_fallback"])
+
+    def test_url_and_model_fall_back_to_the_environment(self):
+        setup = self.setup({"VLLM_FALLBACK_BASE_URL": "http://env.test:1", "VLLM_FALLBACK_MODEL": "m-env"},
+                           ling_url=None, ling_model=None)
+        self.assertEqual((setup.describe["base_url"], setup.describe["model"]), ("http://env.test:1", "m-env"))
+
+    def test_an_argument_beats_the_environment(self):
+        setup = self.setup({"VLLM_FALLBACK_BASE_URL": "http://env.test:1", "VLLM_FALLBACK_MODEL": "m-env"})
+        self.assertEqual((setup.describe["base_url"], setup.describe["model"]), (self.URL, self.MODEL))
+
+    def test_it_needs_a_url_a_pinned_model_and_the_trade_action(self):
+        for kw in ({"ling_url": None}, {"ling_url": " "}, {"ling_model": None}, {"ling_model": "ling-latest"},
+                   {"trade_action": None}, {"trade_action": " "}):
+            with self.assertRaises(ValueError, msg=str(kw)):
+                self.setup(**kw)
+
+    def test_a_missing_url_stops_the_run_naming_what_to_set(self):
+        rc, _o, err = run_main(score_argv("--grader", "ling_room", "--trade-action", "buy"), {})
+        self.assertEqual(rc, 2)
+        self.assertIn("VLLM_FALLBACK_BASE_URL", err)
+
+    def test_the_wording_test_is_refused_for_it(self):
+        rc, _o, err = run_main(["wording", "--runs", "x", "--out", "y", "--grader", "ling_room",
+                                "--trade-action", "buy", "--ling-url", self.URL, "--ling-model", self.MODEL],
+                               {"WP22_DSN": "x"})
+        self.assertEqual(rc, 2)
+        self.assertIn("averages the phrasings itself", err)
+
+    def test_its_rows_have_the_deepinfra_room_shape_and_feed_the_report_and_fit(self):
+        from app.services.room_graders.ling import LingGrader
+        from app.services.room_graders.questions import load_question_set
+
+        class Gateway:
+            async def stream_chat(self, **kw):
+                kw["meta"]["reported_model"] = "served-ling"
+                yield '{"answer": "no"}'
+
+        res = asyncio.run(LingGrader(model=self.MODEL, gateway=Gateway()).agrade(
+            w.build_transcript(arm(), {"id": "r", "transcript": [], "trade_action": "buy"})))
+        self.assertIsNone(res.error)
+        ling_row = w.result_to_row(arm(), "r", res, phrasing=None, model_root="x")
+        di_row = w.result_to_row(arm(), "r", result({}), phrasing=None, model_root="x")
+        self.assertEqual(set(ling_row), set(di_row))
+        self.assertEqual((ling_row["grader"], ling_row["extra"]["served_model"]), ("ling", "served-ling"))
+        self.assertEqual(set(ling_row["answers"]), {q.id.value for q in load_question_set().questions})
+        self.assertIn(w.rule_outcome(ling_row), ("APPROVE", "PASS", "CONTESTED"))
+        table = [w.fit_metrics([ling_row], None, c) for c in w.FIT_GRID]
+        self.assertTrue(table and all(m["rooms"] == 1 for m in table))
+
+
 class FitTests(unittest.TestCase):
     def rows(self):
         out = []

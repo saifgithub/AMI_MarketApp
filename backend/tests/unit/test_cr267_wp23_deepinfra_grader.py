@@ -351,9 +351,9 @@ def test_a_slow_call_times_out_into_an_error_not_a_verdict():
 
 @pytest.fixture(autouse=True)
 def _no_overload_backoff(monkeypatch):
-    from app.services.room_graders import deepinfra as di
+    from app.services.room_graders import production_plan as plan
 
-    monkeypatch.setattr(di, "OVERLOAD_BACKOFF_S", 0.0)
+    monkeypatch.setattr(plan, "OVERLOAD_BACKOFF_S", 0.0)
 
 
 def test_a_transient_overload_is_retried_and_the_grade_succeeds():

@@ -18,16 +18,16 @@ three changes the bake-off's own findings called for, and nothing else:
 
 A failed or timed-out call fails the whole grade (a `GraderResult` with `error`), which
 the rule turns into "decision unavailable". The grader version names the model and the
-averaging, so changing either re-keys the policy version.
+averaging, so changing either re-keys the policy version. Change 3 and the retry rule live
+in `production_plan.ProductionPlanGrader`, shared with `LingGrader`; this module is the
+DeepInfra transport only.
 """
 
 from __future__ import annotations
 
-import asyncio
-import random
 import contextlib
 import contextvars
-from typing import Any, AsyncIterator, Callable, Sequence
+from typing import Any, AsyncIterator, Callable
 
 from app.services.llm_gateway import (
     ChatMessage,
@@ -35,38 +35,21 @@ from app.services.llm_gateway import (
     VLLMProvider,
     prepend_grounding_directive,
 )
-from app.services.room_grader_contract import (
-    Answer,
-    QuestionAnswer,
-    QuestionId,
-    RoomTranscript,
-    trade_proposed_answer,
+from app.services.room_grader_contract import RoomTranscript
+from app.services.room_graders.production_plan import (  # noqa: F401 — re-exported: tests and the fit tool read them here
+    AVERAGED_QUESTIONS,
+    CLOSE_BAND,
+    MAX_CONCURRENT_CALLS,
+    OVERLOAD_RETRIES,
+    PHRASING_COUNT,
+    SPLIT_CLOSE_MIN_MINORITY,
+    ProductionPlanGrader,
+    average_votes,
+    is_overload,
+    plan_version_suffix,
 )
-from app.services.room_graders.hosted_llm import HostedLLMGrader, _CallFailed
-from app.services.room_graders.questions import Question, load_question_set, render_transcript
 
 GRADER_NAME = "deepinfra"
-
-AVERAGED_QUESTIONS: tuple[QuestionId, ...] = (
-    QuestionId.BEAR_OBJECTION_ANSWERED,
-    QuestionId.THESIS_MATERIAL_DIRECTIONAL,
-)
-PHRASING_COUNT = 5
-MAX_CONCURRENT_CALLS = 8
-
-# DeepInfra sheds load with HTTP 429 "engine_overloaded" (and 503). Measured on
-# the first WP-23 fit run, 2026-11-24: 14 of 50 Rooms lost one of their 13
-# calls to it, and one lost call makes the whole Room "decision unavailable".
-# Overload is retried with jittered backoff; any other failure is not.
-OVERLOAD_RETRIES = 3
-OVERLOAD_BACKOFF_S = 1.0
-_OVERLOAD_MARKERS = ("HTTP 429", "HTTP 503", "engine_overloaded", "Model busy")
-
-
-def is_overload(exc: BaseException) -> bool:
-    text = str(exc)
-    return any(m in text for m in _OVERLOAD_MARKERS)
-CLOSE_BAND = 0.2
 
 _PROVIDER_NAME = "room_grader_deepinfra"
 _ACTIVE_GATEWAY: contextvars.ContextVar[Any] = contextvars.ContextVar(
@@ -74,19 +57,11 @@ _ACTIVE_GATEWAY: contextvars.ContextVar[Any] = contextvars.ContextVar(
 )
 
 
-# A split is "close" only when the minority holds at least this many phrasings.
-# Saiful 2026-11-24 (WP-23 fit, `wp23_fit_2026-11-24.md`): a 4-1 split is a clear
-# answer; only 3-2 is close. Any split (1) gave 22% Contested; 2 gives ~17%.
-SPLIT_CLOSE_MIN_MINORITY = 2
-
-
 def grader_version(model: str) -> str:
     """Everything that changes what this grader answers, in the string the policy
-    version hashes: the pinned model, temperature, the averaged questions and the
-    structured trade."""
-    averaged = "+".join(q.value for q in AVERAGED_QUESTIONS)
-    return (f"{model}|t0|avg{PHRASING_COUNT}:{averaged}|split{SPLIT_CLOSE_MIN_MINORITY}"
-            f"|trade=structure")
+    version hashes: the pinned model plus the shared production plan (temperature,
+    the averaged questions, the split rule, the structured trade)."""
+    return f"{model}{plan_version_suffix()}"
 
 
 class _DirectGateway:
@@ -118,44 +93,7 @@ class _DirectGateway:
             yield chunk
 
 
-def average_votes(
-    qid: QuestionId, votes: Sequence[QuestionAnswer], close_band: float = CLOSE_BAND,
-) -> QuestionAnswer:
-    """One answer from several phrasings of the same question: the majority, with
-    a split marked `close` when the minority holds at least
-    `SPLIT_CLOSE_MIN_MINORITY` phrasings (3-2, not 4-1). A vote that is not
-    yes/no leaves the question not computable rather than being dropped."""
-    if not votes:
-        return QuestionAnswer(qid, Answer.NOT_COMPUTABLE, rationale="no phrasing answered")
-    if any(v.answer not in (Answer.YES, Answer.NO) for v in votes):
-        return QuestionAnswer(
-            qid, Answer.NOT_COMPUTABLE,
-            rationale="a phrasing returned no yes/no answer",
-        )
-    yes = sum(v.answer is Answer.YES for v in votes)
-    no = len(votes) - yes
-    answer = Answer.YES if yes > no else Answer.NO
-    split = min(yes, no) >= SPLIT_CLOSE_MIN_MINORITY
-    p_yes_votes = [
-        (v.confidence if v.answer is Answer.YES else 1.0 - v.confidence)
-        for v in votes if v.confidence is not None
-    ]
-    if p_yes_votes:
-        p_yes = sum(p_yes_votes) / len(p_yes_votes)
-        confidence = p_yes if answer is Answer.YES else 1.0 - p_yes
-        near_half = abs(p_yes - 0.5) <= close_band
-    else:
-        confidence, near_half = None, False
-    return QuestionAnswer(
-        question=qid,
-        answer=answer,
-        confidence=confidence,
-        close=split or near_half,
-        rationale=f"{yes}/{len(votes)} phrasings yes" + (" (split)" if split else ""),
-    )
-
-
-class DeepInfraGrader(HostedLLMGrader):
+class DeepInfraGrader(ProductionPlanGrader):
     name = GRADER_NAME
 
     def __init__(
@@ -174,9 +112,8 @@ class DeepInfraGrader(HostedLLMGrader):
             raise ValueError("the DeepInfra grader has no API key")
         if not (base_url or "").strip():
             raise ValueError("the DeepInfra grader has no base URL")
-        super().__init__(_PROVIDER_NAME, version=grader_version(model), close_band=CLOSE_BAND)
+        super().__init__(_PROVIDER_NAME, timeout_s=timeout_s, version=grader_version(model))
         self._model = model
-        self._timeout_s = float(timeout_s)
         self._provider_factory = provider_factory or (
             lambda: VLLMProvider(
                 base_url=base_url,
@@ -206,58 +143,6 @@ class DeepInfraGrader(HostedLLMGrader):
             if close is not None:
                 with contextlib.suppress(Exception):
                     await close()
-
-    async def _grade_all(self, transcript: RoomTranscript, tally: dict[str, Any]):
-        rendered = render_transcript(transcript)
-        gate = asyncio.Semaphore(MAX_CONCURRENT_CALLS)
-
-        async def vote(q: Question, phrasing: int | None) -> QuestionAnswer:
-            attempt = 0
-            while True:
-                async with gate:
-                    try:
-                        return await asyncio.wait_for(
-                            self._grade_question(q, rendered, tally, phrasing), self._timeout_s,
-                        )
-                    except asyncio.TimeoutError:
-                        raise _CallFailed(
-                            f"{q.id.value}: call timed out after {self._timeout_s:g}s"
-                        ) from None
-                    except _CallFailed as exc:
-                        if attempt >= OVERLOAD_RETRIES or not is_overload(exc):
-                            raise
-                attempt += 1
-                tally["overload_retries"] = tally.get("overload_retries", 0) + 1
-                await asyncio.sleep(OVERLOAD_BACKOFF_S * (2 ** (attempt - 1)) * (0.5 + random.random()))
-
-        plan: list[tuple[Question, list[asyncio.Task]]] = []
-        tasks: list[asyncio.Task] = []
-        for q in load_question_set().questions:
-            if q.id is QuestionId.TRADE_PROPOSED:
-                continue
-            phrasings: list[int | None] = (
-                list(range(PHRASING_COUNT)) if q.id in AVERAGED_QUESTIONS else [None]
-            )
-            mine = [asyncio.ensure_future(vote(q, p)) for p in phrasings]
-            tasks.extend(mine)
-            plan.append((q, mine))
-        try:
-            await asyncio.gather(*tasks)
-        except BaseException:
-            for t in tasks:
-                t.cancel()
-            await asyncio.gather(*tasks, return_exceptions=True)
-            raise
-
-        by_q: dict[QuestionId, QuestionAnswer] = {}
-        for q, mine in plan:
-            votes = [t.result() for t in mine]
-            by_q[q.id] = (
-                average_votes(q.id, votes, self._close_band)
-                if q.id in AVERAGED_QUESTIONS else votes[0]
-            )
-        by_q[QuestionId.TRADE_PROPOSED] = trade_proposed_answer(transcript.proposed_trade)
-        return tuple(by_q[q.id] for q in load_question_set().questions)
 
 
 def build_from_settings() -> DeepInfraGrader:
