@@ -79,16 +79,22 @@ def mint_user(client: httpx.Client, base: str) -> dict:
     return {"user_id": body["user"]["id"], "token": body["token"]}
 
 
-def set_plan(client: httpx.Client, base: str, user_id: str, plan: str) -> None:
+def set_plan(
+    client: httpx.Client, base: str, user_id: str, plan: str,
+    note: str = "CR035 room benchmark batch user",
+) -> None:
     resp = client.patch(
         f"{base}/v1/admin/users/{user_id}/plan",
-        json={"plan": plan, "note": "CR035 room benchmark batch user"},
+        json={"plan": plan, "note": note},
         headers={"Authorization": f"Bearer {_admin_secret()}"},
     )
     resp.raise_for_status()
 
 
-def grant_credits(client: httpx.Client, base: str, user_id: str, delta: int) -> int:
+def grant_credits(
+    client: httpx.Client, base: str, user_id: str, delta: int,
+    note: str = "CR035 benchmark top-up (metered by CR039)",
+) -> int:
     """Top up the benchmark user's credit balance, returning the new balance.
 
     CR039 meters Convene the Room: a Trader plan gets a 150-credit monthly
@@ -104,7 +110,7 @@ def grant_credits(client: httpx.Client, base: str, user_id: str, delta: int) -> 
     """
     resp = client.post(
         f"{base}/v1/admin/users/{user_id}/credits",
-        json={"delta": delta, "note": "CR035 benchmark top-up (metered by CR039)"},
+        json={"delta": delta, "note": note},
         headers={"Authorization": f"Bearer {_admin_secret()}"},
     )
     resp.raise_for_status()
