@@ -96,6 +96,7 @@ from app.services.sim_order_push import (
 )
 from app.services.sim_trade_effects import (
     apply_post_fill_effects,
+    journal_bracket_closes,
     record_compliance_block,
 )
 from app.schemas.trade import OrderType, Side
@@ -390,10 +391,14 @@ def _sweep_position_brackets(
     closed = 0
     for uid in users:
         try:
-            closed += len(
+            updates = (
                 engine.evaluate_outcomes(uid) if market is Market.US
                 else engine.evaluate_outcomes(uid, market)
             )
+            closed += len(updates)
+            # DEF532 — a bracket close the user was not there for still reads in
+            # the Journal, in the book's own currency (CR282 deferred item 6).
+            journal_bracket_closes(uid, updates, market)
         except Exception:  # pragma: no cover — one user must not stop the sweep
             logger.exception("sim_bracket_sweep_failed", user_id=str(uid))
     return closed

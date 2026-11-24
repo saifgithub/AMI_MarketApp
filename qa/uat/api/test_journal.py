@@ -1,5 +1,6 @@
 """UAT area: decision journal, trash & the You tab (CR263, cases/journal.yaml)."""
 
+import re
 import uuid
 
 import pytest
@@ -125,3 +126,74 @@ def test_journal_is_owner_only_and_unforgeable(seed, api):
     r = b.post("/v1/journal", json=forged)
     assert r.status_code in (404, 405), r.text
     assert _list(b)["entries"] == []
+
+
+def _trader_with_room_to_trade(seed):
+    u = seed.user(plan="trader")
+    r = u.patch(f"/v1/mandate/{u.id}", json={
+        "single_name_cap_pct": 40.0, "sector_cap_pct": 100.0,
+        "max_trades_per_day": 100, "max_trades_per_week": 200,
+        "max_open_positions": 50, "post_loss_cooldown_hours": 0,
+    })
+    assert r.status_code == 200, r.text
+    return u
+
+
+def _order(u, ticker, side, quantity):
+    return u.post("/v1/sim/submit", json={
+        "user_id": u.id, "ticker": ticker, "side": side, "quantity": quantity})
+
+
+def _trade_entries(u):
+    return sorted(_list(u, entry_type="sim_trade")["entries"], key=lambda e: e["created_at"])
+
+
+@pytest.mark.uat("UAT-JRNL-013")
+def test_selling_a_us_position_journals_a_closed_entry(seed):
+    u = _trader_with_room_to_trade(seed)
+    assert _order(u, "MSFT", "buy", 2).json()["ok"] is True
+    sell = _order(u, "MSFT", "sell", 2).json()
+    assert sell["ok"] is True, sell
+    exit_px = sell["trade"]["entry_price"]
+
+    entries = _trade_entries(u)
+    closed = [e for e in entries if "closed" in e["tags"]]
+    assert len(closed) == 1, [e["title"] for e in entries]
+    e = closed[0]
+    assert re.fullmatch(r"Closed MSFT \(MANUAL\) — [+-]\$[\d,]+\.\d\d", e["title"]), e["title"]
+    assert e["summary"] == f"Sold 2 at ${exit_px:,.2f}.", e["summary"]
+    t = e["payload"]["trade"]
+    assert t["status"] == "closed" and abs(t["closed_price"] - exit_px) <= 0.005, t
+    lots = u.get(f"/v1/sim/lots/{u.id}/MSFT").json()
+    assert abs(t["realised_pnl"] - lots["totals"]["realised_pnl"]) <= 0.02, (t, lots["totals"])
+    assert not [x for x in entries if "$-" in x["title"] or "$+" in x["title"]]
+
+
+@pytest.mark.uat("UAT-JRNL-014")
+def test_bursa_fill_is_journaled_in_ringgit_when_the_switch_is_on(seed, bursa_on):
+    u = _trader_with_room_to_trade(seed)
+    buy = _order(u, "1155.KL", "buy", 100)
+    if not bursa_on:
+        assert buy.status_code == 422, buy.text
+        assert [e for e in _trade_entries(u) if e["ticker"] == "1155.KL"] == []
+        return
+    assert buy.status_code == 200, buy.text
+    res = buy.json()
+    entries = [e for e in _trade_entries(u) if e["ticker"] == "1155.KL"]
+    if res.get("resting"):
+        assert entries == [], "a resting Bursa order must not be journaled before it fills"
+        return
+    assert res["ok"] is True, res
+    assert len(entries) == 1, [e["title"] for e in entries]
+    opened = entries[0]
+    assert re.fullmatch(r"BUY 100 1155\.KL @ RM[\d,]+\.\d\d", opened["title"]), opened["title"]
+    assert "$" not in opened["title"] + opened["summary"], opened
+
+    sell = _order(u, "1155.KL", "sell", 100).json()
+    assert sell["ok"] is True, sell
+    closed = [e for e in _trade_entries(u) if e["ticker"] == "1155.KL" and "closed" in e["tags"]]
+    assert len(closed) == 1
+    assert re.fullmatch(
+        r"Closed 1155\.KL \(MANUAL\) — [+-]RM[\d,]+\.\d\d", closed[0]["title"],
+    ), closed[0]["title"]
+    assert closed[0]["summary"].startswith("Sold 100 at RM")

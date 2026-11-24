@@ -43,7 +43,8 @@ from app.db import get_session
 from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
 from app.schemas.trade import Side
 from app.services.journal_store import get_journal_store
-from app.services.sim_engine import SimTrade
+from app.services.sim_engine import SimTrade, get_sim_engine
+from app.trading_math.markets import Market, format_money, market_for
 from app.services.watchlist_store import get_watchlist_store
 
 
@@ -109,8 +110,15 @@ def _append_journal(
             trade.side.value if hasattr(trade.side, "value")
             else str(trade.side)
         ).upper()
-        stop_str = f"${trade.stop:.2f}" if trade.stop is not None else "—"
-        target_str = f"${trade.target:.2f}" if trade.target is not None else "—"
+        if side_label == "SELL":
+            try:
+                if _journal_sell_close(user_id, trade):
+                    return
+            except Exception:
+                logger.exception("journal_sell_close_failed", user_id=str(user_id))
+        market = market_for(trade.ticker)
+        stop_str = format_money(trade.stop, market) if trade.stop is not None else "—"
+        target_str = format_money(trade.target, market) if trade.target is not None else "—"
         payload: dict = {"trade": trade.to_json()}
         prereg = preregistration_record(
             thesis=thesis,
@@ -125,10 +133,10 @@ def _append_journal(
             reference_id=trade.id,
             title=(
                 f"{side_label} {trade.quantity:g} {trade.ticker} "
-                f"@ ${trade.entry_price:.2f}"
+                f"@ {format_money(trade.entry_price, market)}"
             ),
             summary=(
-                f"Opened at ${trade.entry_price:.2f}. "
+                f"Opened at {format_money(trade.entry_price, market)}. "
                 f"Stop {stop_str}. Target {target_str}."
             ),
             ticker=trade.ticker,
@@ -145,6 +153,170 @@ def _append_journal(
         get_journal_store().append(draft)
     except Exception:  # pragma: no cover
         pass
+
+
+def _journal_sell_close(user_id: UUID, sell: SimTrade) -> bool:
+    """DEF532 — a SELL that closes shares writes a CLOSED entry, not an "Opened
+    at" one. Since CR188 a sell order is the app's only manual exit, and the SELL
+    row stays `open` forever by design (DEF166), so the opened-entry text read
+    "SELL 100 X … Opened at" for what the user did to END a position and no entry
+    ever carried the realised P&L. True when the closed entry was written; False
+    (nothing written) for a sell that closed nothing, which is a short open and
+    keeps its opened entry."""
+    effect = get_sim_engine().sell_close_effect(user_id, sell)
+    if effect is None:
+        return False
+    closed_qty, realised, still_held = effect
+    market = market_for(sell.ticker)
+    price = sell.entry_price
+    closed_at = sell.opened_at.isoformat()
+    trade_json = {
+        **sell.to_json(),
+        "status": "closed",
+        "closed_at": closed_at,
+        "closed_price": price,
+        "realised_pnl": realised,
+    }
+    summary = f"Sold {closed_qty:g} at {format_money(price, market)}."
+    if still_held > 1e-6:
+        summary += f" {still_held:g} still held."
+    get_journal_store().append(JournalEntryCreate(
+        user_id=user_id,
+        entry_type=EntryType.SIM_TRADE,
+        reference_id=sell.id,
+        title=(
+            f"Closed {sell.ticker} (MANUAL) — "
+            f"{format_money(realised, market, signed=True)}"
+        ),
+        summary=summary,
+        ticker=sell.ticker,
+        tags=["sim_trade", "closed", "manual"],
+        outcome=Outcome.WIN if realised >= 0 else Outcome.LOSS,
+        payload={
+            "trade": trade_json,
+            "outcome": {
+                "status": "manual",
+                "closed_price": price,
+                "realised_pnl": realised,
+            },
+        },
+    ))
+    return True
+
+
+def closed_trade_payload(
+    *,
+    user_id: UUID,
+    trade,
+    closed_price: float | None,
+    realised_pnl: float,
+    status: str,
+) -> dict:
+    """CR222 §3 — the close entry's payload: the trade, the realised outcome,
+    and the registration the position was opened with.
+
+    ONE builder for every close path (the bracket sweep and the manual exit)
+    because they are the same event to a reader: the position ended and here is
+    how against what was expected. Two builders would diverge on the first
+    change, which is the DEF098 shape this codebase keeps meeting.
+
+    `outcome` is a fresh block rather than fields merged into `trade`: the
+    trade JSON is a shipped shape the client parses, and adding keys to it
+    would put a new fact where an old parser will not look for it.
+    """
+    payload: dict = {
+        "trade": trade.to_json(),
+        "outcome": {
+            "status": status,
+            "closed_price": closed_price,
+            "realised_pnl": realised_pnl,
+        },
+    }
+    registered = registered_preregistration(user_id, trade.id)
+    if registered is not None:
+        payload[PREREGISTRATION_PAYLOAD_KEY] = registered
+    return payload
+
+
+def journal_bracket_closes(
+    user_id: UUID, updates: list, market: Market = Market.US,
+) -> None:
+    """One Journal entry per bracket-closed trade (blocking DB I/O).
+
+    Shared by the evaluate route and the resting-order sweep so a stop that
+    fires while the user is away is journaled exactly like one that fires on
+    app open (CR282: the Bursa sweep used to discard its closes). Each update is
+    returned by `evaluate_outcomes` once, so the two callers cannot double-write.
+    """
+    if not updates:
+        return
+    store = get_journal_store()
+    trades_by_id = {
+        t.id: t for t in get_sim_engine().list_trades(user_id, market=market)
+    }
+    for u in updates:
+        t = trades_by_id.get(u.trade_id)
+        if not t:
+            continue
+        try:
+            won = u.new_status == "won"
+            store.append(JournalEntryCreate(
+                user_id=user_id,
+                entry_type=EntryType.SIM_TRADE,
+                reference_id=t.id,
+                title=(
+                    f"Closed {t.ticker} ({u.new_status.upper()}) — "
+                    f"{format_money(u.realised_pnl, market, signed=True)}"
+                ),
+                summary=(
+                    f"{'Target hit' if won else 'Stop hit'} "
+                    f"at {format_money(u.closed_price, market)}."
+                ),
+                ticker=t.ticker,
+                tags=["sim_trade", "closed", u.new_status],
+                outcome=Outcome.WIN if won else Outcome.LOSS,
+                # CR222 §3 — the realised outcome sits beside what was
+                # registered on the way in, so a review reads thesis →
+                # invalidation → what happened without a join.
+                payload=closed_trade_payload(
+                    user_id=user_id,
+                    trade=t,
+                    closed_price=u.closed_price,
+                    realised_pnl=u.realised_pnl,
+                    status=u.new_status,
+                ),
+            ))
+        except Exception:  # pragma: no cover
+            logger.exception("journal_bracket_close_failed", user_id=str(user_id))
+
+
+def journal_manual_close(user_id: UUID, closed: SimTrade) -> None:
+    """Write the Journal entry for a manual close (blocking DB I/O). Best-effort:
+    a failed write never fails the close."""
+    try:
+        market = market_for(closed.ticker)
+        get_journal_store().append(JournalEntryCreate(
+            user_id=user_id,
+            entry_type=EntryType.SIM_TRADE,
+            reference_id=closed.id,
+            title=(
+                f"Closed {closed.ticker} (MANUAL) — "
+                f"{format_money(closed.realised_pnl, market, signed=True)}"
+            ),
+            summary=f"Closed at {format_money(closed.closed_price, market)}.",
+            ticker=closed.ticker,
+            tags=["sim_trade", "closed", "manual"],
+            outcome=Outcome.WIN if closed.realised_pnl >= 0 else Outcome.LOSS,
+            payload=closed_trade_payload(
+                user_id=user_id,
+                trade=closed,
+                closed_price=closed.closed_price,
+                realised_pnl=closed.realised_pnl,
+                status="manual",
+            ),
+        ))
+    except Exception:  # pragma: no cover
+        logger.exception("journal_manual_close_failed", user_id=str(user_id))
 
 
 def preregistration_record(

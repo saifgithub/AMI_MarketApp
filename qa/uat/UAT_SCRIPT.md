@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**324 cases** — 206 api, 25 device, 93 manual; 16 blocked.
+**326 cases** — 208 api, 25 device, 93 manual; 16 blocked.
 
 ## Areas
 
@@ -21,7 +21,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 11. [Watchlist & price alerts](#watchlist-alerts) — 17 cases
 12. [Lessons, quizzes, Agent Academy unlocks & glossary](#lessons) — 10 cases
 13. [Daily challenge & reminder](#daily-challenge) — 6 cases
-14. [Decision journal, trash & the You tab](#journal) — 12 cases
+14. [Decision journal, trash & the You tab](#journal) — 14 cases
 15. [Inbox, notification centre & push](#inbox-notifications) — 8 cases
 16. [Bug reports, AMI help library & telemetry](#support) — 17 cases
 17. [Billing, plans, credits & ads](#billing) — 12 cases
@@ -2896,6 +2896,36 @@ _API (automated, live Alpha) · plans: floor_pass, trader · **BLOCKED** — Nee
 **Expected**
 1. Floor Pass list omits the old entry; trader list includes it
 
+#### UAT-JRNL-013 — Selling a whole US position writes a closed Journal entry with the realised P&L in dollars
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. Patch a permissive mandate; buy 2 MSFT, then sell 2 MSFT (POST /v1/sim/submit)
+2. GET /v1/journal/{user_id}?entry_type=sim_trade
+
+**Expected**
+1. The list holds the BUY entry (pending) and one entry tagged closed titled "Closed MSFT (MANUAL) — <+|->$<amount>" with the sign before the dollar sign
+2. Its payload trade carries status closed, closed_price equal to the sell fill, and a realised_pnl equal to the lots endpoint total
+3. The summary reads "Sold 2 at $<fill>."; no entry reads "$-" or "$+"
+
+> DEF532 (AT:B1). Off-hours market orders fill at the last close (see test_sim_trading), so this does not depend on US market hours.
+
+#### UAT-JRNL-014 — A Bursa fill is journaled in ringgit (when the switch is on) and refused when it is off
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. Place a market BUY of 100 1155.KL
+2. GET /v1/journal/{user_id}?entry_type=sim_trade
+
+**Expected**
+1. Switch off: the order is refused 422 and the Journal holds no 1155.KL entry
+2. Switch on and Bursa in session: the fill is journaled as "BUY 100 1155.KL @ RM<price>" with no $ in the title or summary; selling the 100 adds "Closed 1155.KL (MANUAL) — <+|->RM<amount>"
+3. Switch on and Bursa closed: the order rests (no fill), and nothing is journaled until it fills
+
+> DEF532 (AT:B1). Which of the last two applies depends on the time of day on Alpha; the executor asserts whichever the server reports and never skips.
+
 ### Device (automated, Appium)
 
 #### UAT-JRNL-008 — A placed trade and a blocked trade both appear in You > Journal
@@ -2911,9 +2941,9 @@ _Device (automated, Appium) · plans: floor_pass_
 **Expected**
 1. The filled buy is listed as a TRADE entry naming the ticker and price
 2. The refused order is listed as BLOCKED with its reason
-3. Opening a closed trade's entry shows Closed price as $<price> and Realised P&L as +$12.34 or -$12.34 (minus before the dollar sign, never $-12.34 and never RM)
+3. Selling the whole position adds a closed entry titled "Closed <ticker> (MANUAL) — +$12.34" or "— -$12.34" (sign before the dollar sign, never $-12.34); opening it shows Closed price as $<price> and Realised P&L as +$12.34 or -$12.34 (never RM)
 
-> CR282 lane F1 (2026-11-24): the journal detail rows use the one money formatter. The executor does not assert the format (the run's own buy is still open, so it has no Realised P&L row); read it from a closed trade's entry on the device.
+> CR282 lane F1 (2026-11-24): the journal detail rows use the one money formatter. DEF532 (AT:B1): a sell order is the app's only manual exit, and it used to leave only "SELL n X … Opened at" with no closed entry (the Android run's expectation 3 failure); it now writes the closed entry, asserted by UAT-JRNL-013. The executor of this case does not assert the format (the run's own buy is still open, so it has no Realised P&L row); read it from a closed trade's entry on the device.
 
 #### UAT-JRNL-012 — With Bursa on, a closed Bursa trade's journal entry reads its amounts in RM
 
@@ -2922,16 +2952,17 @@ _Device (automated, Appium) · plans: floor_pass_
 **Preconditions**
 1. Build 0.1.0+130 or later (TestFlight internal or Play internal), which has AMI_BURSA on; store builds keep it off
 2. Alpha with MARKET_BURSA_ENABLED=true (on since 2026-11-24)
-3. A Bursa position closed by hand (UAT-SIM-037, then close it)
+3. A Bursa position (UAT-SIM-037) sold in full from its holding, in Bursa hours
 
 **Steps**
-1. You > JOURNAL; open the closed 1155.KL trade entry
+1. You > JOURNAL; read the BUY 1155.KL entry; open the closed 1155.KL trade entry
 
 **Expected**
-1. The title and summary read "Closed 1155.KL (MANUAL) — RM<amount>" and "Closed at RM<price>"
-2. Closed price and Realised P&L rows read RM<price> and +RM<amount> or -RM<amount>; a US trade entry beside it still reads $
+1. The opened entry reads "BUY 100 1155.KL @ RM<price>" with "Opened at RM<price>" and no $ anywhere
+2. The closed entry title and summary read "Closed 1155.KL (MANUAL) — +RM<amount>" (or "— -RM<amount>") and "Sold 100 at RM<price>."
+3. Closed price and Realised P&L rows read RM<price> and +RM<amount> or -RM<amount>; a US trade entry beside it still reads $
 
-> CR282 lane C/F1: the journal text for a manual close takes its symbol from the ticker's market (backend/app/api/sim.py _ccy) and the detail rows from formatMoney. Bursa bracket closes are not journaled yet (CR282 lane C deferred item 6). Active since 2026-11-24: the backend precondition is met on Alpha, so this needs a run on build 0.1.0+130 or later (not release-blocking; a store build cannot run it).
+> CR282 lane C/F1 + DEF532 (AT:B1): journal text takes its symbol from the ticker's market (trading_math.markets.format_money) and the detail rows from formatMoney; a sell that closes shares writes the closed entry (it used to stay "SELL … Opened at $…"), and a Bursa stop/target close by the sweep is journaled too. Asserted at API level by UAT-JRNL-014 when Bursa is in session. Active since 2026-11-24: needs a run on build 0.1.0+130 or later (not release-blocking; a store build cannot run it).
 
 <a id="inbox-notifications"></a>
 ## Inbox, notification centre & push
