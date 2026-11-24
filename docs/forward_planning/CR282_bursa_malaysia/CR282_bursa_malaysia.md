@@ -96,3 +96,8 @@ On Alpha with the flag on: search `1155.KL`, convene a Room whose stored record 
 1. Phase 1 code (lanes A–F) live on Alpha in deploy #23 `alpha-2026-11-24-1` (`bda0b21e`) with `MARKET_BURSA_ENABLED` off. The UAT API cases UAT-PLAT-009, SIM-035, SIM-036, ROOM-033 and GAME-007 pass against Alpha, proving Bursa is dark there and US unchanged.
 2. Next: the flag-on acceptance run (UAT-SIM-037, ROOM-034, WATCH-017, JRNL-012) with the backend flag on in Alpha and an internal app build with `AMI_BURSA=true`.
 3. Open for Saiful before the flag goes on: the Bursa liquidity floors (lane E used the US floors at RM4.20/USD, which is strict for Bursa) and the Malaysian ERP of 6.0% (approximate).
+
+## Rulings (Saiful, 2026-11-24)
+
+1. **Bursa on in Alpha, SC list included.** `MARKET_BURSA_ENABLED=true` in Alpha's env (config-only recreate of deploy #23). The SC list ingested on first boot: 886 compliant, 18 non-compliant, as of 2026-05-29. `1155.KL` validates as Bursa Malaysia. Written SC permission is still to be requested before release to users.
+2. **Liquidity floors: Bursa-specific**, derived from real Bursa turnover, documented, confirmed by Saiful before the flag goes on for users.
