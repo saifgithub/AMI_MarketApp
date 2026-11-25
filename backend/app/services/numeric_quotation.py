@@ -165,7 +165,7 @@ theory that "no sheet" implies "everything is suspect".
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 from app.services.room_market import market_of_profile
@@ -207,11 +207,18 @@ _MAGNITUDE_MULTIPLIER = {"k": 1e3, "m": 1e6, "b": 1e9, "t": 1e12}
 # corpus never exercised, not a behavior change to anything currently
 # pinned. `risk_officer.py` imports this same, now-fixed pattern (see the
 # import at the top of that module).
+#
+# DEF547: the digits are an ATOMIC group, and a trailing "x"/"×" multiple is part
+# of the numeral. Without them "11.5x" backtracked to the integer "11" (the
+# `(?![a-zA-Z])` fails on the "x", so the engine dropped the fraction and
+# retried), and the checker then told the user the sheet's 11.5 was "not 11".
+# The same backtrack turned "6.4pp" into "6". A numeral followed by an
+# unrecognised unit word now yields no numeral at all instead of a truncated one.
 _NUMERAL_RE = re.compile(
     r"[$£€]?"
-    r"(?P<int>\d{1,3}(?:,\d{3})+|\d+)"
-    r"(?:\.(?P<frac>\d+))?"
-    r"\s?(?P<mag>[kKmMbBtT])?(?![a-zA-Z])"
+    r"(?>(?P<int>\d{1,3}(?:,\d{3})+|\d+)"
+    r"(?:\.(?P<frac>\d+))?)"
+    r"\s?(?P<mag>[kKmMbBtT])?(?:[xX×](?![a-zA-Z]))?(?![a-zA-Z])"
     r"(?P<pct>%)?"
 )
 
@@ -552,6 +559,40 @@ _DERIVATIONAL_GAP_RE = re.compile(
 )
 
 
+# DEF547 — a label that a statistic word qualifies ("4-year average FCF",
+# "median P/E", "peak margin") names a DIFFERENT figure from the sheet's scalar
+# of that name, which is the current/trailing value. The desk's multi-year
+# average FCF of RM5,273M is the mean of the sheet's own fcf_history; comparing
+# it with the TTM FCF told the user a correct figure was wrong. Such a label does
+# not bind (a figure the checker cannot pair with a sheet scalar is out of scope,
+# the same as any derived figure). The qualifier is looked for only in the same
+# clause, directly before the label or between label and numeral.
+_STAT_QUALIFIER_RE = re.compile(
+    r"\b(?:averag\w*|avg|mean|median|historic\w*|peak|trough|prior|previous|"
+    r"cumulative|normali[sz]ed|forecast\w*|projected|expected|"
+    r"multi[\s-]*year|\d+[\s-]*(?:year|yr)s?)\b",
+    re.IGNORECASE,
+)
+_CLAUSE_BREAK_RE = re.compile(
+    r"[.;:,()!?]|\b(?:vs\.?|versus|than|and|while|but|against)\b", re.IGNORECASE
+)
+_QUALIFIER_LOOKBACK_CHARS = 28
+# A sentence ends between a numeral and a label: the label belongs to the next
+# sentence's figure, not to this one ("... median of 12.6x. TTM free cash flow at ...").
+_SENTENCE_BREAK_RE = re.compile(r"[.;!?](?:\s|$)")
+
+
+def _label_is_qualified(text: str, label_start: int, numeral: _Numeral) -> bool:
+    before = text[max(0, label_start - _QUALIFIER_LOOKBACK_CHARS):label_start]
+    if _STAT_QUALIFIER_RE.search(_CLAUSE_BREAK_RE.split(before)[-1]):
+        return True
+    if label_start < numeral.start:
+        between = text[label_start:numeral.start]
+        if _STAT_QUALIFIER_RE.search(_CLAUSE_BREAK_RE.split(between)[-1]):
+            return True
+    return False
+
+
 def _label_distance(text: str, numeral: _Numeral, spec: _FieldSpec) -> int | None:
     """The character distance from `numeral` to the NEAREST occurrence of
     `spec`'s label within `spec.window_chars`, or `None` if no occurrence
@@ -607,6 +648,14 @@ def _label_distance(text: str, numeral: _Numeral, spec: _FieldSpec) -> int | Non
         # that is genuinely being labelled.
         if label_start < numeral.end and numeral.start < label_end:
             continue
+        if _label_is_qualified(text, label_start, numeral):
+            continue
+        gap_between = (
+            text[label_end:numeral.start] if label_end <= numeral.start
+            else text[numeral.end:label_start]
+        )
+        if _SENTENCE_BREAK_RE.search(gap_between):
+            continue
         # The GAP between numeral and label — whichever side the label
         # falls on — is what `_DERIVATIONAL_GAP_RE` inspects when it
         # applies (see below), not the whole window (a relational word
@@ -656,6 +705,46 @@ def _sheet_values(profile: dict[str, Any], spec: _FieldSpec) -> list[float]:
         except (TypeError, ValueError):
             continue
     return out
+
+
+# DEF547 — the numeral regex carries no sign, so "-12.6%" and "-RM15,433M" were
+# compared as 12.6 and 15,433 and the user was told the sheet's -12.6 was "not
+# 12.6%". A minus directly attached to the numeral (through an optional currency
+# token) is its sign; a hyphen inside a range or date ("2025-09-30", "45-50")
+# is not, so the character before the minus must be a boundary.
+_SIGN_BEFORE_RE = re.compile(
+    r"(?:^|[\s(\[{:=*\"'“/])[-−]\s?(?:US\$|S\$|RM|MYR|[$£€])?$", re.IGNORECASE
+)
+_NEGATIVE_WORD_RE = re.compile(
+    r"\b(?:negative|deficit|outflows?|burn(?:ing|s)?|minus)\b", re.IGNORECASE
+)
+
+
+def _explicit_minus(text: str, numeral: _Numeral) -> bool:
+    return bool(_SIGN_BEFORE_RE.search(text[max(0, numeral.start - 10):numeral.start]))
+
+
+def _described_as_negative(text: str, numeral: _Numeral) -> bool:
+    before = text[max(0, numeral.start - 48):numeral.start]
+    return bool(_NEGATIVE_WORD_RE.search(_CLAUSE_BREAK_RE.split(before)[-1]))
+
+
+def _signed(text: str, numeral: _Numeral, sheet_vals: list[float]) -> _Numeral:
+    """`numeral` with the sign the prose gave it. An explicit minus always
+    counts. The word "negative" only RESCUES: it makes an unsigned claim
+    negative when that makes it equal a negative sheet value, and never
+    manufactures a mismatch ("a negative read on the RSI of 61")."""
+    if _explicit_minus(text, numeral):
+        return replace(numeral, value=-numeral.value, raw="-" + numeral.raw.strip())
+    if (
+        any(v < 0 for v in sheet_vals)
+        and _described_as_negative(text, numeral)
+        and _numeral_is_corroborated(
+            replace(numeral, value=-numeral.value), sheet_vals
+        )
+    ):
+        return replace(numeral, value=-numeral.value)
+    return numeral
 
 
 @dataclass(frozen=True)
@@ -752,6 +841,7 @@ def find_sheet_mismatches(
             sheet_vals = _sheet_values(profile, spec)
             if not sheet_vals:
                 continue
+            numeral = _signed(text, numeral, sheet_vals)
             if _numeral_is_corroborated(numeral, sheet_vals):
                 continue
             # A genuine mismatch: report against the FIRST sheet value
