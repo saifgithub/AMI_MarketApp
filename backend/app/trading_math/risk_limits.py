@@ -46,6 +46,15 @@ DEFAULT_MAX_OPEN_RISK_FRACTION_OF_DRAWDOWN: dict[int, float] = {
     1: 0.25, 2: 0.30, 3: 0.35, 4: 0.45, 5: 0.50,
 }
 
+# CR284 — minimum reward to risk: (target - entry) / (entry - stop) a Room
+# APPROVE must clear. Keyed on `risk_score` like the tables above; the Bursa 200
+# batch (CR282 section 11) is why it exists — 2 of 24 approvals risked more than
+# they targeted. A cautious profile asks for more reward per unit risked.
+DEFAULT_MIN_REWARD_RISK: dict[int, float] = {1: 2.0, 2: 2.0, 3: 1.5, 4: 1.5, 5: 1.0}
+# Slack for a ratio that is the floor to the last float digit ("exactly at the
+# floor passes"), not a tolerance a trader could game.
+_REWARD_RISK_EPS = 1e-9
+
 
 def resolved_max_open_positions(
     risk_score: int, override: int | None = None, *, table: dict[int, int] | None = None
@@ -170,3 +179,47 @@ def position_risk_contribution(position_pct: float, entry_price: float, stop: fl
     entry), scaled by /100 so 5% size x 20% stop = 1.0 pt, matching the
     overlay's own size% x stop-distance% drawdown-contribution framing."""
     return position_pct * stop_distance_pct(entry_price, stop) / 100.0
+
+
+def resolved_min_reward_risk(
+    risk_score: int, override: float | None = None, *, table: dict[int, float] | None = None
+) -> float:
+    """Minimum reward to risk for a Room APPROVE: the explicit per-user value
+    when set (0 is a real, user-chosen "off"), else the risk-tier default (CR284)."""
+    if override is not None:
+        return float(override)
+    t = DEFAULT_MIN_REWARD_RISK if table is None else table
+    return float(_nearest_tier(t, int(risk_score)))
+
+
+def min_reward_risk_source(override: float | None) -> str:
+    """"user" when the mandate carries an explicit value, else "default" — what
+    the API says so an unset floor is never read as a silent zero (CR284)."""
+    return "default" if override is None else "user"
+
+
+def reward_risk_ratio(
+    entry: float, stop: float, target: float, *, short: bool = False
+) -> float | None:
+    """Target distance over stop distance from entry, or None when the levels
+    cannot define one (a stop on the wrong side of entry, or zero risk). Short
+    geometry mirrors the distances (CR284)."""
+    risk = (stop - entry) if short else (entry - stop)
+    if risk <= 0:
+        return None
+    reward = (entry - target) if short else (target - entry)
+    return reward / risk
+
+
+def reward_risk_below_floor(ratio: float, floor: float) -> bool:
+    return ratio + _REWARD_RISK_EPS < floor
+
+
+def format_reward_risk(value: float, *, against: float | None = None) -> str:
+    """Two decimals, one when the second is a zero (1.5, 1.0, 0.43). When the
+    two numbers in a sentence would print identically but differ, a third
+    decimal tells them apart."""
+    text = f"{value:.2f}"
+    if against is not None and value != against and text == f"{against:.2f}":
+        return f"{value:.4f}".rstrip("0")
+    return text[:-1] if text.endswith("0") else text

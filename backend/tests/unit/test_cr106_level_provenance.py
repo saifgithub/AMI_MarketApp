@@ -46,7 +46,7 @@ def _run_with_pm(pm_json: str):
     events = _collect(runner.run(
         user_id=uuid4(),
         ticker="AAPL",
-        mandate=hydrate_coach_mandate({"plan": "trader", "risk_score": 3}),
+        mandate=hydrate_coach_mandate({"plan": "trader", "risk_score": 3, "min_reward_risk": 0.0}),  # CR284: provenance, not the floor
         char_delay_min=0.0,
         char_delay_max=0.0,
     ))

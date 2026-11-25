@@ -597,6 +597,7 @@ _KEYED_MANDATE_FIELDS = {
     "max_trades_per_week", "max_option_premium_pct", "max_option_notional_pct",
     "max_assignment_exposure_pct", "min_days_to_expiry", "max_open_risk_pct",
     "max_portfolio_delta", "max_portfolio_vega", "compliance", "learning_style",
+    "min_reward_risk",
 }
 
 
@@ -614,6 +615,7 @@ def test_every_mandate_field_is_keyed_or_explicitly_excluded():
 @pytest.mark.parametrize("field,value", [
     ("risk_score", 5), ("max_drawdown_pct", 7), ("single_name_cap_pct", 12.5),
     ("max_open_positions", 3), ("locale", "ar"), ("risk_quotes", ["new"]),
+    ("min_reward_risk", 2.5),
 ])
 def test_each_keyed_mandate_field_moves_the_digest(field, value):
     m = _mandate()

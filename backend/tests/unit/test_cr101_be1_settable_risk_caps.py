@@ -336,6 +336,23 @@ def _probe_max_open_risk_pct(base_mandate: Mandate, store: MandateStore) -> None
     assert store.patch(uuid4(), {"max_open_risk_pct": 4.0}).max_open_risk_pct == 4.0  # (d)
 
 
+def _probe_min_reward_risk(base_mandate: Mandate, store: MandateStore) -> None:
+    # CR284: entry 100, stop 90, target 105 is 0.5:1 — under a 1.5 floor.
+    rr_mandate = base_mandate.model_copy(
+        update={"min_reward_risk": 1.5, "single_name_cap_pct": 100.0}
+    )
+    rr_result = check_mandate_compliance(
+        ProposedTrade(ticker="AAPL", side=Side.BUY, quantity=10, order_type=OrderType.LIMIT, limit_price=100.0),
+        portfolio_value=10_000.0, current_drawdown_pct=0.0, mandate=rr_mandate,
+        holdings=[], quotes={"AAPL": 100.0}, proposed_stop=90.0, proposed_target=105.0,
+        last_loss_closed_at=None, trade_open_timestamps=[], existing_open_risk_pct=0.0,
+    )
+    assert not rr_result.passed and rr_result.blocked_by == "reward_risk"  # (a)
+    assert any("0.5" in v and "1.5" in v for v in rr_result.violations)  # (b) own units (ratio)
+    assert "1.5:1" in generate_overlay(AgentId.PORTFOLIO_MANAGER, rr_mandate)  # (c)
+    assert store.patch(uuid4(), {"min_reward_risk": 2.5}).min_reward_risk == 2.5  # (d)
+
+
 # ── CR172 §9 (D5) — the four option limits ─────────────────────────────────
 #
 # Each probe drives the REAL floor entry point, `check_option_open`, rather
@@ -496,6 +513,7 @@ _FOUR_LEG_PROBES = {
     "max_trades_per_day": _probe_max_trades_per_day,
     "max_trades_per_week": _probe_max_trades_per_week,
     "max_open_risk_pct": _probe_max_open_risk_pct,
+    "min_reward_risk": _probe_min_reward_risk,
     "max_portfolio_delta": _probe_max_portfolio_delta,
     "max_portfolio_vega": _probe_max_portfolio_vega,
     "max_option_premium_pct": _probe_max_option_premium_pct,

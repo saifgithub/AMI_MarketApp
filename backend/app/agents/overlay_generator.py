@@ -22,9 +22,11 @@ from app.schemas.liquidity import MICROCAP_FLOOR_USD_M as _MICROCAP_FLOOR_USD_M
 from app.schemas.liquidity import microcap_floor_m, money_symbol
 from app.trading_math.risk_limits import (
     resolved_max_open_positions,
+    format_reward_risk,
     resolved_max_open_risk_pct,
     resolved_max_trades_per_day,
     resolved_max_trades_per_week,
+    resolved_min_reward_risk,
     resolved_post_loss_cooldown_hours,
 )
 from app.trading_math.sizing import resolved_sector_cap_pct, resolved_single_name_cap_pct
@@ -115,6 +117,9 @@ tickers held concurrently; adding to an existing holding doesn't count against i
 {_max_trades_per_week_text(mandate)} per week (UTC calendar day / Monday-start ISO week).
 - Total open-risk cap: {_max_open_risk_pct_text(mandate)} — the sum of (position \
 size % × stop distance %)/100 across all open positions, including this one.
+- Minimum reward to risk: {_min_reward_risk_text(mandate)} — a BUY's target must sit at \
+least that many times as far above entry as its stop sits below it; the safety floor \
+rejects an APPROVE that falls short.
 {_option_limits_block(mandate)}
 ## Compliance constraints (HARD — cannot violate)
 {_compliance_block(mandate.compliance, halal_universe=halal_universe, ticker=ticker, classification_universe=classification_universe, locale_allowed_universe=locale_allowed_universe, locale=mandate.locale)}
@@ -1204,6 +1209,11 @@ def _option_limits_block(m: Mandate) -> str:
     if not lines:
         return ""
     return "\n" + "\n".join(lines)
+
+
+def _min_reward_risk_text(m: Mandate) -> str:
+    floor = resolved_min_reward_risk(m.risk_score, m.min_reward_risk)
+    return f"{format_reward_risk(floor)}:1"
 
 
 def _max_open_risk_pct_text(m: Mandate) -> str:

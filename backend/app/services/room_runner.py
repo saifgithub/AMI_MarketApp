@@ -5475,6 +5475,9 @@ def _assemble_verdict(ctx: _RoomContext, profile: dict[str, Any]) -> Verdict:
         trade_open_timestamps=ctx.risk_trade_open_timestamps,
         existing_open_risk_pct=ctx.risk_existing_open_risk_pct,
         proposed_stop=ctx.trader_stop,
+        # CR284: the scripted verdict's own levels, so the reward:risk floor bites.
+        proposed_target=ctx.trader_target,
+        proposed_entry=ctx.trader_entry,
     )
 
     if not result.passed:
@@ -6867,6 +6870,9 @@ def _floor_pm_approve(
         trade_open_timestamps=ctx.risk_trade_open_timestamps,
         existing_open_risk_pct=ctx.risk_existing_open_risk_pct,
         proposed_stop=parsed.stop,
+        # CR284: the PM's own target and entry, for the reward:risk floor.
+        proposed_target=parsed.target,
+        proposed_entry=parsed.entry,
         # CR247 Phase 1D — an in-window 8-K Item 4.02 (non-reliance)
         # narrated by the forensic flags overlay; None = nothing to
         # block on. The floor owns the flag gate and the BUY check.

@@ -77,6 +77,7 @@ from app.schemas.mandate import Mandate
 from app.services.cio_snapshot_codec import decode_profile, encode_profile
 from app.trading_math.market_calendar import trading_date as market_trading_date
 from app.trading_math.markets import Market, market_for
+from app.trading_math.risk_limits import resolved_min_reward_risk
 from app.trading_math.session_calendar import last_us_session_date
 
 # Bump when the Room's decision logic changes in a way the assembled prompts do
@@ -275,6 +276,12 @@ def mandate_digest(mandate: Mandate) -> str:
     """Hash of the mandate's content: every field except plan state, the
     version counter and timestamps."""
     data = mandate.model_dump(mode="json", exclude=set(MANDATE_KEY_EXCLUDED))
+    # CR284: the floor the verdict was judged against, not just the raw field —
+    # an unset floor follows risk_score through a table, so a retuned default (or
+    # a changed score) must re-key a Room that a stored value alone would not.
+    data["effective_min_reward_risk"] = resolved_min_reward_risk(
+        mandate.risk_score, mandate.min_reward_risk
+    )
     return _sha256(_canonical(data))
 
 

@@ -35,13 +35,17 @@ from app.services.sector_allocation import (
 from app.trading_math.portfolio import position_pct as _position_pct
 from app.trading_math.risk_limits import (
     cooldown_lifts_at as _cooldown_lifts_at,
+    format_reward_risk as _format_reward_risk,
     in_cooldown as _in_cooldown,
     position_risk_contribution as _position_risk_contribution,
     resolved_max_open_positions as _resolved_max_open_positions,
     resolved_max_open_risk_pct as _resolved_max_open_risk_pct,
     resolved_max_trades_per_day as _resolved_max_trades_per_day,
     resolved_max_trades_per_week as _resolved_max_trades_per_week,
+    resolved_min_reward_risk as _resolved_min_reward_risk,
     resolved_post_loss_cooldown_hours as _resolved_post_loss_cooldown_hours,
+    reward_risk_below_floor as _reward_risk_below_floor,
+    reward_risk_ratio as _reward_risk_ratio,
     trades_since as _trades_since,
     utc_day_start as _utc_day_start,
     utc_week_start as _utc_week_start,
@@ -213,6 +217,8 @@ def check_mandate_compliance(
     trade_open_timestamps: list[datetime] | None = None,
     existing_open_risk_pct: float | None = None,
     proposed_stop: float | None = None,
+    proposed_target: float | None = None,
+    proposed_entry: float | None = None,
 ) -> ComplianceResult:
     """Deterministic mandate-compliance check. No LLM.
 
@@ -275,6 +281,14 @@ def check_mandate_compliance(
         which carries no stop) — this floor adds the proposed trade's own
         contribution (needs `proposed_stop`) and compares the total against
         `max_open_risk_pct`.
+    proposed_target / proposed_entry: CR284 — the Room verdict's levels. When a
+        `proposed_target` is supplied, a proposed BUY (or sell-to-open) whose
+        (target - entry) / (entry - stop) is below the mandate's minimum reward
+        to risk is blocked with a violation naming both numbers. `proposed_entry`
+        defaults to the proposal's `limit_price`. Omitting `proposed_target` skips
+        the check — a manual sim ticket carries no target (CR284 out of scope).
+        A target without a usable entry or stop is recorded in `not_evaluated`,
+        never passed silently.
     """
     violations: list[str] = []
     not_evaluated: list[str] = []
@@ -706,6 +720,34 @@ def check_mandate_compliance(
                 )
                 blocked_by = blocked_by or "open_risk"
 
+    # 6f2) Minimum reward to risk (CR284). The Room's own target must be worth
+    #   its stop: (target - entry) / (entry - stop) below the mandate floor is a
+    #   trade that risks more than it aims to make. Deterministic, same path as
+    #   the single-name cap — a prompt line asking the CIO for this would be an
+    #   instruction, not a control (CR038). Only levels the verdict itself
+    #   carries are judged; a PASS/HOLD has none, a manual ticket has no target.
+    #   A floor of 0 is the user's own "off" — nothing to judge against.
+    floor_rr = _resolved_min_reward_risk(mandate.risk_score, mandate.min_reward_risk)
+    if floor_rr > 0 and proposed_target is not None and (proposed.is_buy or sell_to_open):
+        entry_rr = proposed_entry if proposed_entry is not None else proposed.limit_price
+        short_rr = not proposed.is_buy
+        ratio_rr = (
+            _reward_risk_ratio(entry_rr, proposed_stop, proposed_target, short=short_rr)
+            if entry_rr is not None and proposed_stop is not None
+            else None
+        )
+        if ratio_rr is None:
+            not_evaluated.append(
+                "reward to risk: needs an entry, a stop on the loss side of it and a "
+                "target — the levels supplied do not define a ratio"
+            )
+        elif _reward_risk_below_floor(ratio_rr, floor_rr):
+            violations.append(
+                f"reward to risk {_format_reward_risk(ratio_rr, against=floor_rr)} is below "
+                f"your mandate minimum of {_format_reward_risk(floor_rr)}"
+            )
+            blocked_by = blocked_by or "reward_risk"
+
     # 6g) Pre-registration (CR222 §3). NOT a risk limit and not a mandate rule:
     #   nothing about the position is judged here. It asks whether the user
     #   wrote down, before the fill, what they expect and what would tell them
@@ -1056,6 +1098,8 @@ def enforce_safety_floor(
     trade_open_timestamps: list[datetime] | None = None,
     existing_open_risk_pct: float | None = None,
     proposed_stop: float | None = None,
+    proposed_target: float | None = None,
+    proposed_entry: float | None = None,
     edgar_8k_item_402: str | None = None,
 ) -> Verdict:
     """Wrap an LLM-produced verdict. If APPROVE, re-check via deterministic function.
@@ -1073,7 +1117,7 @@ def enforce_safety_floor(
 
     now / last_loss_closed_at / trade_open_timestamps / existing_open_risk_pct /
         proposed_stop: forwarded verbatim to `check_mandate_compliance` — CR101-BE2
-        round 2. This is the LLM-override wrapper; before round 2 it supplied none
+        round 2. `proposed_target` / `proposed_entry` (CR284) ride the same way. This is the LLM-override wrapper; before round 2 it supplied none
         of these, so a set post-loss cooldown / over-trading brake / open-risk cap
         was silently unenforced against the live PM's own APPROVE.
     """
@@ -1114,6 +1158,8 @@ def enforce_safety_floor(
         trade_open_timestamps=trade_open_timestamps,
         existing_open_risk_pct=existing_open_risk_pct,
         proposed_stop=proposed_stop,
+        proposed_target=proposed_target,
+        proposed_entry=proposed_entry,
     )
 
     if result.passed:
