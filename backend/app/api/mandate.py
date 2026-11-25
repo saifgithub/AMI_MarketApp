@@ -56,6 +56,8 @@ from app.trading_math.risk_limits import (
     resolved_max_open_risk_pct,
     resolved_max_trades_per_day,
     resolved_max_trades_per_week,
+    resolved_min_reward_risk,
+    min_reward_risk_source,
     resolved_post_loss_cooldown_hours,
 )
 from app.trading_math.sizing import (
@@ -251,6 +253,12 @@ def _with_plan_state(mandate: Mandate, user: User) -> Mandate:
         max_open_risk_pct=resolved_max_open_risk_pct(
             mandate.risk_score, mandate.max_drawdown_pct, mandate.max_open_risk_pct,
         ),
+        # CR284 — the reward:risk floor plus where it came from, so an unset
+        # value reads as a named default, never a silent zero.
+        min_reward_risk=resolved_min_reward_risk(
+            mandate.risk_score, mandate.min_reward_risk,
+        ),
+        min_reward_risk_source=min_reward_risk_source(mandate.min_reward_risk),
     )
     return mandate.model_copy(update={
         "plan": plan,
@@ -320,6 +328,7 @@ def patch_mandate(
             ("max_trades_per_day", "max trades/day", ""),
             ("max_trades_per_week", "max trades/week", ""),
             ("max_open_risk_pct", "total open-risk cap", "%"),
+            ("min_reward_risk", "minimum reward to risk", ":1"),
             # CR172 §9 (D5) — leg (b): a PATCH to any of these must read back
             # in its OWN units, or it falls through to the bare "Mandate
             # updated." that DEF197 filed against the CR101-BE1 pair.

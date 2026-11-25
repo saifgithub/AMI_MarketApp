@@ -34,6 +34,7 @@ from app.schemas.onboarding import (
     Message,
     OnboardingSession,
 )
+from app.trading_math.risk_limits import format_reward_risk, resolved_min_reward_risk
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -723,6 +724,9 @@ def _readback_text(summary: dict[str, Any]) -> str:
     risk = summary["risk_score"]
     drawdown = summary["max_drawdown_pct"]
     compliance = summary["compliance"]
+    # CR284: the mandate built at claim carries no explicit floor, so the
+    # risk-tier default is exactly what will be enforced — say so here.
+    floor = resolved_min_reward_risk(risk)
 
     flags: list[str] = []
     if compliance.get("halal"):
@@ -747,6 +751,9 @@ def _readback_text(summary: dict[str, Any]) -> str:
         f"🎯 Goal: {goal}\n"
         f"📅 Horizon: {horizon}\n"
         f"⚖️ Risk: {risk}/5 — {risk_level_label(risk)}.  Max drawdown {drawdown}%.\n"
+        f"📐 Reward to risk: at least {format_reward_risk(floor)}:1 — a trade's target must "
+        f"sit that many times as far above entry as its stop sits below it. "
+        f"You can change this in Settings.\n"
         f"🛡️ Constraints: {flags_text}."
     )
 

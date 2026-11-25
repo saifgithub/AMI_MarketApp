@@ -115,7 +115,8 @@ void main() {
       expect(find.text(label), findsOneWidget);
     }
     // Post-CR129 all seven follow the profile when unset — OFF never renders.
-    expect(find.text(l.settingsRiskLimitsFromProfile), findsNWidgets(7));
+    // CR284: the eighth row, minimum reward to risk, follows the profile too.
+    expect(find.text(l.settingsRiskLimitsFromProfile), findsNWidgets(8));
     expect(find.text(l.settingsRiskLimitsOff), findsNothing);
     // Anti-fabrication: without server-resolved data, no "— {value}" variant
     // may appear anywhere (the widget must not compute a preset itself).
@@ -144,6 +145,7 @@ void main() {
       maxTradesPerDay: 4,
       maxTradesPerWeek: 12,
       maxOpenRiskPct: 10.5,
+      minRewardRisk: 1.5,
     );
     await _pumpSection(tester, mandate: _mandate(resolved: resolved));
     final ctx = tester.element(find.byType(RiskLimitsSection));
@@ -157,6 +159,7 @@ void main() {
       l.settingsRiskLimitsFromProfileResolved('4'),
       l.settingsRiskLimitsFromProfileResolved('12'),
       l.settingsRiskLimitsFromProfileResolved('10.5%'),
+      l.settingsRiskLimitsFromProfileResolved('1.5:1'), // CR284
     ]) {
       expect(find.text(expected), findsOneWidget, reason: 'missing "$expected"');
     }
@@ -177,7 +180,8 @@ void main() {
 
     expect(find.text(l.settingsRiskLimitsFromProfileResolved('40%')), findsOneWidget);
     expect(find.text(l.settingsRiskLimitsFromProfileResolved('3%')), findsOneWidget);
-    expect(find.text(l.settingsRiskLimitsFromProfile), findsNWidgets(5));
+    // CR284: five of the seven plus the reward:risk row.
+    expect(find.text(l.settingsRiskLimitsFromProfile), findsNWidgets(6));
   });
 
   testWidgets(
@@ -313,7 +317,8 @@ void main() {
     // ...and its chip is the way back (an action), never "From your risk
     // profile" beside "Set by you" on the same row.
     expect(find.text(l.settingsRiskLimitsUseProfile), findsOneWidget);
-    expect(find.text(l.settingsRiskLimitsFromProfile), findsNothing);
+    // Only CR284's still-unset reward:risk row says it; the overridden row does not.
+    expect(find.text(l.settingsRiskLimitsFromProfile), findsOneWidget);
   });
 
   testWidgets(

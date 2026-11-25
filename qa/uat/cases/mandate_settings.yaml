@@ -18,6 +18,7 @@ summary: |
   (UAT-MAND-031, UAT-MAND-011); risk-limit rows say either "From your risk profile"
   or "Set by you", never both (UAT-MAND-031); MANAGE ACCOUNT opens the subscription
   tier picker (UAT-MAND-035).
+  2026-11-25 CR284: an eighth row, Minimum reward to risk (UAT-MAND-042, UAT-MAND-043), sits beside the seven but outside the Day Trader preset; its default follows the risk score and the API says whether it is the default or the user's. A Room approval below it is rejected by the safety floor (UAT-ROOM-036).
   2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy).
 cases:
   - id: UAT-MAND-001
@@ -440,3 +441,40 @@ cases:
       - 'In Arabic and Bahasa Melayu the same figures appear in the chosen language'
       - 'The Liquid-only switch is still the only control: no field to change a floor'
     notes: 'CR282, 2026-11-24. EN copy changed from "sufficient average daily volume" to the numbers; ar/ms drafted by Claude, flagged retranslate. The Bursa line is behind the AMI_BURSA dart-define.'
+
+  - id: UAT-MAND-042
+    title: The reward-to-risk floor follows the risk score until the user sets it, and says which
+    layer: api
+    plans: [trader]
+    steps:
+      - 'GET /v1/mandate/<user id> for a never-edited mandate (risk_score 3)'
+      - 'PATCH risk_score 1, then 5, reading resolved each time'
+      - 'PATCH {"min_reward_risk": 2.5}, then GET'
+      - 'PATCH {"min_reward_risk": null}, then GET'
+      - 'PATCH {"min_reward_risk": -1} and {"min_reward_risk": 99}'
+    expected:
+      - 'min_reward_risk is null on the mandate and resolved.min_reward_risk is 1.5 with resolved.min_reward_risk_source "default" (never 0, never absent)'
+      - 'At risk 1 resolved.min_reward_risk is 2.0 and at risk 5 it is 1.0, source still "default"'
+      - 'After PATCH 2.5 the mandate carries 2.5 and resolved says 2.5 with source "user", whatever the risk score'
+      - 'After PATCH null it follows the risk score again, source "default"'
+      - 'Both out-of-range PATCHes are 422 and the stored value is unchanged'
+    notes: 'CR284, 2026-11-25. backend/app/trading_math/risk_limits.py DEFAULT_MIN_REWARD_RISK is the one table (2.0 at risk 1-2, 1.5 at 3-4, 1.0 at 5). The Room itself is not convened here; the floor''s effect on a verdict is UAT-ROOM-036 and the backend unit tests.'
+
+  - id: UAT-MAND-043
+    title: Settings shows the minimum reward-to-risk row, explains it and saves a value
+    layer: device
+    status: blocked
+    blocked_on: Needs the first build that carries CR284 (not built yet) and the Appium script
+    plans: [trader]
+    steps:
+      - 'Settings > RISK LIMITS > "Set my own limits" and find Minimum reward to risk below Total open-risk cap'
+      - 'Tap the info icon beside its label'
+      - 'Type 2.5 in the field, press Save, leave Settings and come back'
+      - 'Tap the chip that now reads "Use my risk profile", then press Save'
+    expected:
+      - 'The row follows the profile and reads "From your risk profile - <N>:1" with the number from the server (2.0 at risk 1-2, 1.5 at 3-4, 1.0 at 5); the field box shows the same number as a hint'
+      - 'The sheet explains reward to risk with the 100 / 90 / 115 = 1.5 to 1 example and says a Room approval below the minimum becomes a rejection; swiping down closes it'
+      - 'After Save and a return the field reads 2.5 and the row says "Set by you"'
+      - 'After the chip and Save the row follows the risk profile again'
+      - 'The Day Trader chip is still offered and still selects (the new row is not part of the preset)'
+    notes: 'CR284. Strings settingsRiskLimitsMinRewardRisk*; AR and MS drafted by Claude, flagged retranslate.'

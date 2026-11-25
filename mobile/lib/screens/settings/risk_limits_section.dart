@@ -35,7 +35,7 @@ import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-enum LimitKind { percent, count, hours, days }
+enum LimitKind { percent, count, hours, days, ratio }
 
 /// One settable limit's shape — key names and directionality only, never a
 /// numeric cap value (that would be exactly the client-side literal CR046's
@@ -72,6 +72,16 @@ const List<LimitFieldConfig> kRiskLimitFields = [
   LimitFieldConfig(key: 'max_trades_per_day', kind: LimitKind.count, presetLinked: true, higherIsLooser: true),
   LimitFieldConfig(key: 'max_trades_per_week', kind: LimitKind.count, presetLinked: true, higherIsLooser: true),
   LimitFieldConfig(key: 'max_open_risk_pct', kind: LimitKind.percent, presetLinked: true, higherIsLooser: true),
+];
+
+/// CR284 — minimum reward to risk, kept OUT of `kRiskLimitFields` on purpose:
+/// that list is "every limit the Day Trader preset sets", and the server's
+/// preset does not touch this one — folding it in would hide the Day Trader
+/// entry (`dayTraderPresetOfferable` needs the preset to cover every listed
+/// key) and make every explicit value read as a preset mismatch. Lower is the
+/// looser setting: a smaller floor lets a thinner target through.
+const List<LimitFieldConfig> kRewardRiskField = [
+  LimitFieldConfig(key: 'min_reward_risk', kind: LimitKind.ratio, presetLinked: true, higherIsLooser: false),
 ];
 
 /// CR172 §9 (D5) — the four option limits, kept in their OWN list.
@@ -143,6 +153,8 @@ num? riskLimitServerValue(UserMandate m, String key) {
       return m.maxTradesPerWeek;
     case 'max_open_risk_pct':
       return m.maxOpenRiskPct;
+    case 'min_reward_risk':
+      return m.minRewardRisk;
     case 'max_option_premium_pct':
       return m.maxOptionPremiumPct;
     case 'max_option_notional_pct':
@@ -280,6 +292,7 @@ class RiskLimitsSection extends StatelessWidget {
         if (expanded)
           for (final cfg in [
             ...kRiskLimitFields,
+            ...kRewardRiskField,
             // Only for a mandate that actually permits derivatives.
             if (mandate.compliance.derivativesAllowed) ...kOptionLimitFields,
           ]) ...[
@@ -314,6 +327,8 @@ class RiskLimitsSection extends StatelessWidget {
         return l.settingsRiskLimitsMaxTradesPerWeekLabel;
       case 'max_open_risk_pct':
         return l.settingsRiskLimitsMaxOpenRiskLabel;
+      case 'min_reward_risk':
+        return l.settingsRiskLimitsMinRewardRiskLabel;
       case 'min_days_to_expiry':
         return l.settingsMinDteLabel;
       case 'max_assignment_exposure_pct':
@@ -343,6 +358,8 @@ class RiskLimitsSection extends StatelessWidget {
         return l.settingsRiskLimitsMaxTradesPerWeekExplain;
       case 'max_open_risk_pct':
         return l.settingsRiskLimitsMaxOpenRiskExplain;
+      case 'min_reward_risk':
+        return l.settingsRiskLimitsMinRewardRiskExplain;
       case 'max_option_premium_pct':
         return l.settingsOptionPremiumCapExplain;
       case 'max_option_notional_pct':
@@ -425,6 +442,8 @@ class _LimitFieldRowState extends State<_LimitFieldRow> {
         return '';
       case LimitKind.days:
         return 'd';
+      case LimitKind.ratio:
+        return ':1';
     }
   }
 
@@ -481,7 +500,18 @@ class _LimitFieldRowState extends State<_LimitFieldRow> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(widget.label, style: AmiTypography.body),
+          Row(
+            children: [
+              Flexible(child: Text(widget.label, style: AmiTypography.body)),
+              if (widget.config.kind == LimitKind.ratio)
+                IconButton(
+                  key: Key('riskLimitExplainSheet_${widget.config.key}'),
+                  tooltip: l.settingsRiskLimitsMinRewardRiskSheetTitle,
+                  icon: const Icon(Icons.info_outline, size: 18, color: AmiColors.textLow),
+                  onPressed: () => _showRewardRiskSheet(context),
+                ),
+            ],
+          ),
           const SizedBox(height: 2),
           Text(widget.explain, style: AmiTypography.caption.copyWith(color: AmiColors.textLow)),
           const SizedBox(height: 6),
@@ -571,6 +601,38 @@ class _LimitFieldRowState extends State<_LimitFieldRow> {
     _controller.dispose();
     super.dispose();
   }
+}
+
+/// CR284 — the longer explanation behind the reward:risk row's info icon.
+/// Same sheet shape as the compliance explanations in settings_screen.dart.
+void _showRewardRiskSheet(BuildContext context) {
+  final l = AppLocalizations.of(context);
+  showModalBottomSheet<void>(
+    context: context,
+    useRootNavigator: false,
+    backgroundColor: AmiColors.slate800,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (_) => Padding(
+      key: const Key('rewardRiskSheet'),
+      padding: const EdgeInsets.fromLTRB(
+        AmiSpacing.l, AmiSpacing.l, AmiSpacing.l, AmiSpacing.xl,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.settingsRiskLimitsMinRewardRiskSheetTitle, style: AmiTypography.h4),
+          const SizedBox(height: AmiSpacing.s),
+          Text(
+            l.settingsRiskLimitsMinRewardRiskSheetBody,
+            style: AmiTypography.body.copyWith(color: AmiColors.textMed),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 /// DEF514 — the risk-limit keys whose save triggers the holdings audit: the

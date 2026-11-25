@@ -221,6 +221,8 @@ class ComplianceResult(BaseModel):
         "compliance", "drawdown", "concentration", "long_only", "blocklist",
         "allowlist", "locale", "duplicate_verdict",
         "cooldown", "max_open_positions", "over_trading", "open_risk",
+        # CR284 — the Room verdict's target was too small for its stop.
+        "reward_risk",
         # DEF305 — NOT a mandate decision, and deliberately its own member.
         # Folding "we could not price this" into `compliance` would tell a user
         # their own risk rules blocked a trade when the market-data feed was

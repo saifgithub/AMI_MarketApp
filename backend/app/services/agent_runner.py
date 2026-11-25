@@ -560,6 +560,7 @@ def hydrate_mandate(overrides: dict[str, Any] | None) -> Mandate:
         max_trades_per_day=o.get("max_trades_per_day"),
         max_trades_per_week=o.get("max_trades_per_week"),
         max_open_risk_pct=o.get("max_open_risk_pct"),
+        min_reward_risk=o.get("min_reward_risk"),
         compliance=Compliance(**(o.get("compliance") or {})),
         learning_style=LearningStyle(o.get("learning_style", "quick")),
         plan=Plan(o.get("plan", "trial_trader")),

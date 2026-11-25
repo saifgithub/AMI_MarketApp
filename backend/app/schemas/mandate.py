@@ -5,6 +5,7 @@ See docs/initial_specs/03_onboarding/mandate_schema.md for the full spec.
 
 from datetime import datetime
 from enum import Enum
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -125,6 +126,11 @@ class ResolvedCaps(BaseModel):
     max_trades_per_day: int
     max_trades_per_week: int
     max_open_risk_pct: float
+    # CR284 — the reward:risk floor a Room APPROVE must clear, and where it came
+    # from, so an unset value reads "default" with its number and never a
+    # silent zero.
+    min_reward_risk: float = 2.0
+    min_reward_risk_source: Literal["default", "user"] = "default"
 
 
 class DayTraderPresetInfo(BaseModel):
@@ -302,6 +308,17 @@ class Mandate(BaseModel):
     # stop on the proposed trade to price its own contribution; an open
     # position with no stop contributes 0 (nothing to sum).
     max_open_risk_pct: float | None = Field(default=None, json_schema_extra={ENFORCED_LIMIT_MARKER: True})
+
+    # CR284 — minimum reward to risk, (target - entry) / (entry - stop), that a
+    # Room APPROVE must clear. `None` = not set: resolves through the risk-tier
+    # default (2.0 at risk 1-2, 1.5 at 3-4, 1.0 at 5), so existing mandates
+    # enforce it with no migration; 0 is an explicit, user-chosen "off". Enforced
+    # in `safety_floor.check_mandate_compliance` (Room verdicts only — a manual
+    # sim ticket carries no target), disclosed in its own units in the overlay,
+    # the journal diff and `resolved`, settable via PATCH.
+    min_reward_risk: float | None = Field(
+        default=None, ge=0.0, le=20.0, json_schema_extra={ENFORCED_LIMIT_MARKER: True}
+    )
 
     # CR204 — the two greek-level caps of §9.
     #
