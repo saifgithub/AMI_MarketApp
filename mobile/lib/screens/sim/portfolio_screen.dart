@@ -42,6 +42,7 @@ import 'package:ami_trade/state/alpaca_providers.dart';
 import 'package:ami_trade/state/bursa_providers.dart';
 import 'package:ami_trade/state/journal_providers.dart';
 import 'package:ami_trade/state/onboarding_providers.dart';
+import 'package:ami_trade/state/portfolio_health_providers.dart';
 import 'package:ami_trade/state/sim_providers.dart';
 import 'package:ami_trade/widgets/alpaca/alpaca_account_card.dart';
 import 'package:ami_trade/widgets/alpaca/alpaca_position_card.dart';
@@ -137,6 +138,17 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
       _runTour();
     });
 
+    // DEF544 - the equity curve, sector donut and Health card are separate
+    // autoDispose feeds that this screen keeps alive (IndexedStack), so nothing
+    // ever re-read them after a fill: the Health card kept the empty-book
+    // answer it fetched before the first buy while POSITIONS (read from
+    // `SimState`) said 1. Re-read them whenever the book itself changes.
+    ref.listen<SimState>(simNotifierProvider, (prev, next) {
+      if (prev?.portfolio == null) return;
+      if (portfolioBookSignature(prev!) == portfolioBookSignature(next)) return;
+      _invalidateBookFeeds();
+    });
+
     final usState = ref.watch(simNotifierProvider);
     // CR282 - with Bursa off (`kBursaEnabled`) this is always US and the Bursa
     // provider is never watched, so the screen is exactly the pre-CR282 one.
@@ -179,6 +191,12 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
         ),
       ),
     ));
+  }
+
+  void _invalidateBookFeeds() {
+    ref.invalidate(portfolioHistoryProvider);
+    ref.invalidate(sectorAllocationProvider);
+    ref.invalidate(portfolioHealthProvider);
   }
 
   /// CR282 - re-read the book on screen (and the US book too, which owns the
@@ -272,6 +290,7 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
           _refreshBooks(market),
           ref.read(watchlistNotifierProvider.notifier).refresh(),
         ]);
+        _invalidateBookFeeds();
         ref.invalidate(alpacaLinkedProvider);
         ref.invalidate(alpacaPortfolioProvider);
         ref.invalidate(alpacaPositionsProvider);
@@ -366,6 +385,18 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
 /// US state untouched. With it on, the book's own portfolio and trades come from
 /// [bursa] for Bursa, and the (shared, all-markets) order list in [us] is cut to
 /// this market so a US order never counts against the Bursa tab and vice versa.
+/// DEF544 - what makes the book "a different book" for the panels that read
+/// their own endpoints: positions, cash and the ledger length. Marks are
+/// deliberately absent - a price tick is not a reason to re-run the engine.
+@visibleForTesting
+String portfolioBookSignature(SimState s) {
+  final p = s.portfolio;
+  if (p == null) return '';
+  final held = [for (final h in p.holdings) '${h.ticker}:${h.quantity}'];
+  return '${held.join(',')}|${p.shorts.length}|${p.options.length}'
+      '|${p.currentCash.toStringAsFixed(2)}|${s.trades.length}';
+}
+
 SimState _viewState({
   required AppMarket market,
   required bool bursaOn,
@@ -1109,6 +1140,7 @@ class _QuoteSourcePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (portfolio.isCashOnly) return const SizedBox.shrink();
     final live = portfolio.isLivePrice;
     final color = live ? AmiColors.hexGreen : AmiColors.hexAmber;
     final l = AppLocalizations.of(context);
