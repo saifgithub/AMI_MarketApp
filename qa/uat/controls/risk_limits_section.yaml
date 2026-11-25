@@ -19,3 +19,15 @@ controls:
     state: "typing a number sets an explicit override (chip deselects, 'Set by you' caption appears, looser-than-current edits show an amber disclosure, 100% shows its own warning); clearing the field returns to profile; mandate dirty"
     line: 511
     note: "repeated x7 (+4 option limits). Digits and '.' only. Applies on every keystroke (onChanged), no submit. Keys riskLimitField_<field>."
+  - label: "Minimum reward to risk"
+    kind: field
+    expect: state
+    state: "CR284. Eighth row, after the seven preset-backed limits: a ratio in ':1' units (key riskLimitField_min_reward_risk). Unset it follows the risk profile and shows the server-resolved number ('From your risk profile - 1.5:1'); typing a number sets it ('Set by you'); a lower number than the current one shows the looser disclosure; clearing returns to the profile; 0 turns the check off. Mandate dirty. Not part of the Day Trader preset."
+    line: 532
+    note: "Same chip and field as the other rows; sits outside kRiskLimitFields so the Day Trader preset still matches. Keys riskLimitOff_min_reward_risk, riskLimitField_min_reward_risk."
+  - label: "Reward to risk info"
+    kind: icon
+    expect: sheet
+    target: ami.screen.risk_limits_section.reward_risk_sheet
+    line: 508
+    note: "CR284. Info icon beside the Minimum reward to risk label (key riskLimitExplainSheet_min_reward_risk); opens the explain sheet."

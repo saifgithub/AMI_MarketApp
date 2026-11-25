@@ -564,3 +564,21 @@ cases:
       - 'When the Chief Investment Officer''s narration contradicted the computed action (narration_overridden true) and the outcome is not APPROVE, the shown reason is the rule''s own text ("AMI''s decision rule ...")'
       - 'If the grader failed (coded_decision.error set) the outcome is UNAVAILABLE, the verdict is the decision-unavailable PASS (overridden_from_llm true, reason starting "AMI could not compute a decision for this Room"), the Room is refunded and the balance is back to 150'
     notes: 'Grader 2026-11-25 (deploy #33): Alpha switched to ROOM_GRADER=ling the same day (Saiful: "Switch now, run the batch"), so the case now pins ling; a deepinfra grade on Alpha is a config leak. Earlier the same day: an on-prem Ling grader is registered (ROOM_GRADER=ling, gateway slot vllm_fallback, thinking off); the stored grader string names which one graded the Room (deepinfra:... or ling:...|split2|...|think=off), and both use the same question plan. CR267 WP-23 (deploy #25, 2026-11-24): ROOM_CODED_RULE_ENABLED=true and ROOM_GRADER=deepinfra on Alpha (DeepInfra is the grader only; the Room desks stay on-prem). Record shape: backend/app/schemas/room.py CodedDecisionRecord, written by room_runner._coded_record. The grader_version string carries the model, temperature, averaged questions and the split-close rule, so changing any of them changes it and the policy version. A real-model Room cannot be forced to a given outcome, so which branch runs depends on the Room; the rule itself is pinned by the backend unit tests.'
+
+  - id: UAT-ROOM-036
+    title: A Room approval whose target is too small for its stop becomes a rejection naming both numbers
+    layer: manual
+    llm: true
+    plans: [trader]
+    preconditions:
+      - 'A backend and app build carrying CR284'
+      - 'Settings > RISK LIMITS > Minimum reward to risk set to 20 (the maximum), so any real Room approval falls under it'
+    steps:
+      - 'Convene a Room on a ticker the Room would otherwise approve (MSFT has done so) and wait for the verdict'
+      - 'Open the verdict card and read the reason and any violations'
+      - 'Set Minimum reward to risk back to the risk profile (chip) or to 0, save, and convene the same ticker again'
+    expected:
+      - 'If the Chief Investment Officer approves, the verdict card reads REJECT, says the mandate overrode the Room, and names both numbers: "reward to risk <ratio> is below your mandate minimum of 20.0"'
+      - 'A Room that ends PASS or HOLD is untouched and shows no reward-to-risk text (it carries no entry, stop or target); run a different ticker if so'
+      - 'With the floor back on the profile (or 0) the same approval is not rejected for reward to risk, and is a new, charged Room because the mandate changed (UAT-ROOM-029)'
+    notes: 'CR284, 2026-11-25. Forced with a high floor because a real-model Room cannot be steered to a thin target. The rule itself is pinned by backend/tests/unit/test_cr284_min_reward_risk.py, including the CR282 Bursa batch re-scored at the risk-5 default (rejects exactly 5285.KL and 4006.KL). The Room bank key carries the effective floor (WP-24).'

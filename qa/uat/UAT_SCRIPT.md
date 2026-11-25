@@ -4,16 +4,16 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**330 cases** — 209 api, 27 device, 94 manual; 16 blocked.
+**333 cases** — 210 api, 28 device, 95 manual; 17 blocked.
 
 ## Areas
 
 1. [Platform, version gate & UAT seeding](#platform) — 10 cases
 2. [Authentication, sessions & account identity](#auth) — 32 cases
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 20 cases
-4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 33 cases
+4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 35 cases
 5. [Floor tab & home shell](#floor) — 15 cases
-6. [Convene the Room](#room) — 35 cases
+6. [Convene the Room](#room) — 36 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
 8. [Brief Your Agent](#brief) — 18 cases
 9. [Sim trading & market data](#sim-trading) — 37 cases
@@ -737,6 +737,7 @@ horizon, the active path and the largest drawdown, and its chip can be deselecte
 (UAT-MAND-031, UAT-MAND-011); risk-limit rows say either "From your risk profile"
 or "Set by you", never both (UAT-MAND-031); MANAGE ACCOUNT opens the subscription
 tier picker (UAT-MAND-035).
+2026-11-25 CR284: an eighth row, Minimum reward to risk (UAT-MAND-042, UAT-MAND-043), sits beside the seven but outside the Day Trader preset; its default follows the risk score and the API says whether it is the default or the user's. A Room approval below it is rejected by the safety floor (UAT-ROOM-036).
 2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy).
 
 ### API (automated, live Alpha)
@@ -1038,6 +1039,26 @@ _API (automated, live Alpha) · plans: trader_
 
 > DEF514, 2026-11-21. Backs UAT-MAND-031 expected 4 (the Settings disclosure reads these fields). The audit keeps its earlier fields unchanged (UAT-MAND-020).
 
+#### UAT-MAND-042 — The reward-to-risk floor follows the risk score until the user sets it, and says which
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. GET /v1/mandate/<user id> for a never-edited mandate (risk_score 3)
+2. PATCH risk_score 1, then 5, reading resolved each time
+3. PATCH {"min_reward_risk": 2.5}, then GET
+4. PATCH {"min_reward_risk": null}, then GET
+5. PATCH {"min_reward_risk": -1} and {"min_reward_risk": 99}
+
+**Expected**
+1. min_reward_risk is null on the mandate and resolved.min_reward_risk is 1.5 with resolved.min_reward_risk_source "default" (never 0, never absent)
+2. At risk 1 resolved.min_reward_risk is 2.0 and at risk 5 it is 1.0, source still "default"
+3. After PATCH 2.5 the mandate carries 2.5 and resolved says 2.5 with source "user", whatever the risk score
+4. After PATCH null it follows the risk score again, source "default"
+5. Both out-of-range PATCHes are 422 and the stored value is unchanged
+
+> CR284, 2026-11-25. backend/app/trading_math/risk_limits.py DEFAULT_MIN_REWARD_RISK is the one table (2.0 at risk 1-2, 1.5 at 3-4, 1.0 at 5). The Room itself is not convened here; the floor's effect on a verdict is UAT-ROOM-036 and the backend unit tests.
+
 ### Device (automated, Appium)
 
 #### UAT-MAND-039 — A Beta build is English only and shows no language switch
@@ -1057,6 +1078,25 @@ _Device (automated, Appium) · plans: any · **BLOCKED** — Needs a build made 
 3. A default (non-Beta) build still shows the LANGUAGE section, per UAT-MAND-034
 
 > CR278 / WP-36. UAT-MAND-034 does not apply to a Beta build.
+
+#### UAT-MAND-043 — Settings shows the minimum reward-to-risk row, explains it and saves a value
+
+_Device (automated, Appium) · plans: trader · **BLOCKED** — Needs the first build that carries CR284 (not built yet) and the Appium script_
+
+**Steps**
+1. Settings > RISK LIMITS > "Set my own limits" and find Minimum reward to risk below Total open-risk cap
+2. Tap the info icon beside its label
+3. Type 2.5 in the field, press Save, leave Settings and come back
+4. Tap the chip that now reads "Use my risk profile", then press Save
+
+**Expected**
+1. The row follows the profile and reads "From your risk profile - <N>:1" with the number from the server (2.0 at risk 1-2, 1.5 at 3-4, 1.0 at 5); the field box shows the same number as a hint
+2. The sheet explains reward to risk with the 100 / 90 / 115 = 1.5 to 1 example and says a Room approval below the minimum becomes a rejection; swiping down closes it
+3. After Save and a return the field reads 2.5 and the row says "Set by you"
+4. After the chip and Save the row follows the risk profile again
+5. The Day Trader chip is still offered and still selects (the new row is not part of the preset)
+
+> CR284. Strings settingsRiskLimitsMinRewardRisk*; AR and MS drafted by Claude, flagged retranslate.
 
 <a id="floor"></a>
 ## Floor tab & home shell
@@ -4451,6 +4491,26 @@ _Manual (iPhone checklist) · plans: any · uses LLM_
 5. The Journal replay shows the same label on the same desk, and a Room opened after the app was killed and reopened (rejoin) shows it too
 
 > DEF507. Alpha run 1dec3be0 (CR267 WP-14, all desks down) rendered eight scripted turns as the desks' own calls; that run predates the fix, so its turns carry no mark. The server sends scripted:true on agent_token and agent_done and stores it on the transcript entry; the backend guard is test_def507_scripted_turn_marked.py and the app guard is def507_scripted_turn_label_test.dart. The Arabic and Malay strings are English placeholders until translated.
+
+#### UAT-ROOM-036 — A Room approval whose target is too small for its stop becomes a rejection naming both numbers
+
+_Manual (iPhone checklist) · plans: trader · uses LLM_
+
+**Preconditions**
+1. A backend and app build carrying CR284
+2. Settings > RISK LIMITS > Minimum reward to risk set to 20 (the maximum), so any real Room approval falls under it
+
+**Steps**
+1. Convene a Room on a ticker the Room would otherwise approve (MSFT has done so) and wait for the verdict
+2. Open the verdict card and read the reason and any violations
+3. Set Minimum reward to risk back to the risk profile (chip) or to 0, save, and convene the same ticker again
+
+**Expected**
+1. If the Chief Investment Officer approves, the verdict card reads REJECT, says the mandate overrode the Room, and names both numbers: "reward to risk <ratio> is below your mandate minimum of 20.0"
+2. A Room that ends PASS or HOLD is untouched and shows no reward-to-risk text (it carries no entry, stop or target); run a different ticker if so
+3. With the floor back on the profile (or 0) the same approval is not rejected for reward to risk, and is a new, charged Room because the mandate changed (UAT-ROOM-029)
+
+> CR284, 2026-11-25. Forced with a high floor because a real-model Room cannot be steered to a thin target. The rule itself is pinned by backend/tests/unit/test_cr284_min_reward_risk.py, including the CR282 Bursa batch re-scored at the risk-5 default (rejects exactly 5285.KL and 4006.KL). The Room bank key carries the effective floor (WP-24).
 
 #### UAT-ONE-008 — Locked-agent sheet, unlock celebration and chat on a real iPhone
 

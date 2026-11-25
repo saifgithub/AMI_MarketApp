@@ -390,3 +390,30 @@ def test_holdings_audit_reports_concentration_cap_breaches(trader):
     _patch(trader, {k: v for k, v in _preset(trader).items() if k in ("single_name_cap_pct", "sector_cap_pct")})
     day = trader.get(_mid(trader) + "/audit").json()
     assert day["single_name_cap_breach"] is False and day["sector_cap_breach"] is False
+
+
+@pytest.mark.uat("UAT-MAND-042")
+def test_reward_risk_floor_follows_the_risk_score_until_set_and_says_which(trader):
+    first = _get(trader)
+    assert first["min_reward_risk"] is None
+    assert (first["resolved"]["min_reward_risk"], first["resolved"]["min_reward_risk_source"]) == (1.5, "default")
+
+    for score, floor in ((1, 2.0), (5, 1.0)):
+        r = _patch(trader, {"risk_score": score})["resolved"]
+        assert (r["min_reward_risk"], r["min_reward_risk_source"]) == (floor, "default")
+
+    r = _patch(trader, {"min_reward_risk": 2.5})
+    assert r["min_reward_risk"] == 2.5
+    assert (r["resolved"]["min_reward_risk"], r["resolved"]["min_reward_risk_source"]) == (2.5, "user")
+    assert _get(trader)["resolved"]["min_reward_risk"] == 2.5
+
+    r = _patch(trader, {"min_reward_risk": None})
+    assert r["min_reward_risk"] is None
+    assert (r["resolved"]["min_reward_risk"], r["resolved"]["min_reward_risk_source"]) == (1.0, "default")
+
+    version = _get(trader)["version"]
+    for bad in (-1, 99):
+        assert trader.patch(_mid(trader), json={"min_reward_risk": bad}).status_code == 422
+    after = _get(trader)
+    assert after["version"] == version and after["min_reward_risk"] is None
+
