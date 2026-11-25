@@ -1166,6 +1166,18 @@ class Settings(BaseSettings):
     # attributable. Rollback is this flag; no migration.
     room_risk_officer_enabled: bool = False
 
+    # DEF547 (Saiful, 2026-11-25: "Dilemma + log-only meanwhile") — what the Room's
+    # numeric quotation checks do with a finding. `annotate`: today's behaviour
+    # (the "[AMI checked ... These are the figures of record.]" note on a turn and
+    # on the CIO's kill criterion, the Risk Officer's "[AMI: unverifiable]" tag and
+    # its headline demotion, a stance headline nulled). `log`: the checks still run
+    # and emit one `room_factcheck_finding` event per finding, and NO user-visible
+    # text or headline changes. A Literal on purpose (the `output_guard_mode`
+    # idiom): a typo'd mode must fail boot, never fall through to either. Keyed in
+    # the Room policy version, so a banked Room carrying old notes is not replayed
+    # after the mode changes.
+    room_factcheck_notes: Literal["annotate", "log"] = "annotate"
+
     # CR219 R58 — the RESEARCHERS phase (Bull, then Bear) always speaks in that
     # fixed order today. `05_further_improvements.md` §12: LLM judges anchor on
     # order, and the Research Manager reads both — so the fixed order is a

@@ -167,7 +167,10 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, replace
 from typing import Any
+from uuid import UUID
 
+from app.core.config import settings
+from app.core.logging import logger
 from app.services.room_market import market_of_profile
 from app.trading_math.markets import Market, spec_for
 
@@ -1022,8 +1025,97 @@ def _sheet_value_phrase(mismatch: SheetMismatch, market: Market = Market.US) -> 
     return f"{mismatch.sheet_value:g}"
 
 
+FACTCHECK_NOTES_MODES = ("annotate", "log")
+
+
+def factcheck_notes_mode() -> str:
+    """DEF547 — `Settings.room_factcheck_notes`. The setting is a Literal (a typo
+    fails boot); this re-checks anyway so a monkeypatched or hand-built Settings
+    can never silently pick a side."""
+    mode = settings.room_factcheck_notes
+    if mode not in FACTCHECK_NOTES_MODES:
+        raise ValueError(
+            f"ROOM_FACTCHECK_NOTES={mode!r}: must be one of {list(FACTCHECK_NOTES_MODES)}"
+        )
+    return mode
+
+
+def log_factcheck_finding(
+    *,
+    checker: str,
+    surface: str,
+    claimed: str,
+    sheet_field: str | None,
+    sheet_value: float | None,
+    run_id: UUID | str | None = None,
+    agent_id: Any = None,
+    **extra: Any,
+) -> None:
+    """DEF547 — one structured event per quotation-check finding, in BOTH modes
+    (`mode` and `text_changed` say what the reader saw). `agent_id` may be an
+    enum or a string."""
+    mode = factcheck_notes_mode()
+    logger.info(
+        "room_factcheck_finding",
+        checker=checker,
+        surface=surface,
+        run_id=str(run_id) if run_id is not None else None,
+        agent_id=getattr(agent_id, "value", agent_id),
+        claimed=claimed,
+        sheet_field=sheet_field,
+        sheet_value=sheet_value,
+        mode=mode,
+        text_changed=mode == "annotate",
+        **extra,
+    )
+
+
+def _log_sheet_mismatches(
+    mismatches: list[SheetMismatch],
+    *,
+    surface: str,
+    run_id: UUID | str | None,
+    agent_id: Any,
+) -> None:
+    for m in mismatches:
+        log_factcheck_finding(
+            checker="sheet_figure",
+            surface=surface,
+            claimed=m.claimed_raw.strip(),
+            sheet_field=m.field_name,
+            sheet_value=m.sheet_value,
+            run_id=run_id,
+            agent_id=agent_id,
+            claimed_value=m.claimed_value,
+        )
+
+
+def headline_conflicts_with_sheet(
+    headline: str | None,
+    profile: dict[str, Any] | None,
+    *,
+    run_id: UUID | str | None = None,
+    agent_id: Any = None,
+) -> bool:
+    """CR219 R59-F3 — True when a stance headline quotes a sheet figure wrongly
+    AND the headline should therefore be nulled. Findings are always logged; in
+    `log` mode (DEF547) the headline is kept, so this returns False."""
+    mismatches = find_sheet_mismatches(headline, profile)
+    if not mismatches:
+        return False
+    _log_sheet_mismatches(
+        mismatches, surface="stance_headline", run_id=run_id, agent_id=agent_id
+    )
+    return factcheck_notes_mode() == "annotate"
+
+
 def annotate_sheet_mismatches(
-    text: str | None, profile: dict[str, Any] | None
+    text: str | None,
+    profile: dict[str, Any] | None,
+    *,
+    surface: str = "agent_text",
+    run_id: UUID | str | None = None,
+    agent_id: Any = None,
 ) -> str | None:
     """Append one `[AMI …]` note per genuine sheet mismatch found in `text`,
     naming the sheet's own value for each. Returns `text` byte-identical
@@ -1032,6 +1124,9 @@ def annotate_sheet_mismatches(
     and `risk_officer.py`'s `_annotated_if_unverified` both already follow.
     `text=None` (e.g. F6's `kill_criterion` when the CIO stated none) passes
     straight through as `None` — nothing to check, nothing to annotate.
+
+    DEF547 — each finding is logged (`room_factcheck_finding`); with
+    `ROOM_FACTCHECK_NOTES=log` the text is returned unchanged.
 
     The claim is NOT rewritten in place (unlike the DEF095 R:R rewrite) —
     this checker has lower confidence in what the agent MEANT than the
@@ -1042,6 +1137,9 @@ def annotate_sheet_mismatches(
     """
     mismatches = find_sheet_mismatches(text, profile)
     if not mismatches:
+        return text
+    _log_sheet_mismatches(mismatches, surface=surface, run_id=run_id, agent_id=agent_id)
+    if factcheck_notes_mode() == "log":
         return text
     market = market_of_profile(profile)
     notes = []
