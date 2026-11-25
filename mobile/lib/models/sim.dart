@@ -514,6 +514,10 @@ class SimPortfolio {
   bool get isLivePrice =>
       priceSource != 'mock_walk' && priceSource != 'unavailable';
 
+  /// DEF545 - the server labels a book with nothing priced `cash`: the value is
+  /// exactly the cash balance, so there is no LIVE or MOCK claim to make.
+  bool get isCashOnly => priceSource == 'cash';
+
   factory SimPortfolio.fromJson(Map<String, dynamic> j) {
     return SimPortfolio(
       userId: j['user_id'] as String,

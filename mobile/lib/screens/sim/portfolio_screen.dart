@@ -1140,6 +1140,7 @@ class _QuoteSourcePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (portfolio.isCashOnly) return const SizedBox.shrink();
     final live = portfolio.isLivePrice;
     final color = live ? AmiColors.hexGreen : AmiColors.hexAmber;
     final l = AppLocalizations.of(context);

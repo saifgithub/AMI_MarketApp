@@ -7,7 +7,6 @@ library;
 
 import 'package:ami_trade/generated/l10n/app_localizations.dart';
 import 'package:ami_trade/models/sim.dart';
-import 'package:ami_trade/models/watchlist.dart';
 import 'package:ami_trade/screens/sim/portfolio_screen.dart';
 import 'package:ami_trade/state/alpaca_providers.dart';
 import 'package:ami_trade/state/journal_providers.dart';

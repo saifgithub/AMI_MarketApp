@@ -561,6 +561,22 @@ def _option_leg_out(leg, option_marks) -> OptionLegOut:
     )
 
 
+def _displayed_price_source(p, source: str) -> str:
+    """The label the Portfolio screen's LIVE/MOCK pill reads (DEF545).
+
+    A book holding nothing priced (no holding, short or option leg) is valued
+    from `current_cash` alone: no quote was consulted, so there is nothing to
+    call MOCK. `SimEngine._aggregate_source_from_quotes({})` answers
+    `mock_walk` for that case (right for scoring and snapshots, which key off
+    it), and the pill read MOCK straight after a full sell, over an exactly
+    known number. Third site of the same collision (CR109 NAV rows, DEF217
+    snapshot rows); named here, at the route, so those consumers are untouched.
+    """
+    if not (p.holdings or p.shorts or p.options):
+        return "cash"
+    return source
+
+
 @router.get("/portfolio/{user_id}", response_model=PortfolioSnapshot)
 async def get_portfolio(
     user_id: UUID,
@@ -624,7 +640,7 @@ async def get_portfolio(
         ],
         total_value=total_value,
         drawdown_pct=drawdown_pct,
-        price_source=price_source,
+        price_source=_displayed_price_source(p, price_source),
         cash_committed=commitment.cash_committed,
         cash_available=round(p.current_cash - commitment.cash_committed, 2),
         resting_order_count=commitment.resting_order_count,
@@ -669,7 +685,7 @@ async def _get_market_portfolio(
         ],
         total_value=total_value,
         drawdown_pct=drawdown_pct,
-        price_source=price_source,
+        price_source=_displayed_price_source(p, price_source),
         cash_committed=commitment.cash_committed,
         cash_available=round(p.current_cash - commitment.cash_committed, 2),
         resting_order_count=commitment.resting_order_count,

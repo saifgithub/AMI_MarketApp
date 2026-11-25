@@ -1194,6 +1194,14 @@ class FallbackProvider:
         q = self._primary.quote(ticker)
         if q is not None:
             return q
+        # DEF545 - the primary's own failure log covers an exception only; a
+        # None price (unknown/delisted ticker, empty fast_info) fell through to
+        # a fabricated mark with no trace anywhere in the logs.
+        logger.warn(
+            "market_data_quote_fell_back",
+            ticker=ticker, primary=self._primary.name,
+            secondary=self._secondary.name,
+        )
         return self._secondary.quote(ticker)
 
     def get_price(self, ticker: str) -> float | None:

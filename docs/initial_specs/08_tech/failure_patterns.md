@@ -2487,3 +2487,15 @@ from outside `app.` (or a dict with non-string keys) still fails that test.
 **Why the first fix did not generalise.** DEF301 forwarded the one flag it was filed against. Nothing stated the rule ("whatever feature flag the AAB gets, the APK gets"), so the next author adding a flag to the AAB command had no reason to open the APK helper.
 
 **Enforcing check:** `backend/tests/unit/test_def530_apk_aab_dart_define_parity.py` parses the `--dart-define=NAME` set of `build_playstore.sh`'s `flutter build appbundle` (expanding the alpha `CHANNEL_DEFINES` from `release_channel.sh`) and of `share_apk_to_tester.sh`'s `flutter build apk`, and fails on any define the AAB sets that the APK lacks, unless it is in the test's commented `_AAB_ONLY` allow-list (RevenueCat key, AdMob mode/unit ids/test devices/consent geography, `AMI_RELEASE_CHANNEL`: store-billing and ads config, not features). `AMI_GAMES` and `AMI_BURSA` are asserted in both; `publish_playstore.sh` is asserted to derive and forward both from `BUILD_ARGS`; stale allow-list entries fail. Mutation-checked by removing the APK's `AMI_BURSA` line. Scope: Android AAB vs APK; the iOS IPA has a single build command and no sibling to drift from.
+
+---
+
+## P44 — an all-cash book labelled `mock_walk` because "nothing was priced" shares a label with "a mock price was used"
+
+**Class:** `SimEngine._aggregate_source_from_quotes({})` answers `mock_walk` for a book with no priced position, which is right for its own job (the LIVE pill must not light up when nothing was priced) and wrong the moment a consumer reads it as "fabricated". Each consumer that forwards the raw label to a surface that asserts provenance has to name the cash case itself.
+
+**Instances.** CR109 (NAV rows voided runs: `_price_source_for_snapshot` -> `cash`). DEF217 (snapshot rows: `cash_only`). DEF545 (2026-11-25, AMI-DL-28): the Portfolio TOTAL VALUE pill read MOCK straight after a full sell; `_displayed_price_source` (api/sim.py) -> `cash`, and the pill makes no claim for it.
+
+**Why the first fixes did not generalise.** Each fix patched the one consumer it was filed against; the helper that produces the label kept its default.
+
+**Enforcing check:** `backend/tests/unit/test_def545_cash_only_price_source.py` drives the real `/v1/sim/portfolio` route to an all-cash book (a fresh book, and one sold back to cash) and requires `cash`, while a held position priced from the mock walk must still read `mock_walk`. A new consumer of the label gets its own case in that file.
