@@ -21,6 +21,7 @@ summary: |
   DEF481 (2026-11-20, build 120): the company-review detail sheet back control carries ami.nav.back. Accessibility identifiers only; nothing a
   user sees or does changed, so no case steps change.
   DEF481 (2026-11-20): the blocked-trade OPEN MY MANDATE button opens Settings scrolled to the section holding the rule that refused the order (UAT-SIM-022).
+  2026-11-25 DEF544, DEF545 (deploy #33): Portfolio's equity curve, sector donut and Health card re-read after every fill and on pull-to-refresh (UAT-SIM-028); a book holding only cash reports price source `cash` and shows no LIVE/MOCK pill (GET /v1/sim/portfolio and the market route).
   2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy). The duplicate ticker guard for Games trades moved off the loop too.
 cases:
   - id: UAT-SIM-001
@@ -379,6 +380,7 @@ cases:
       - 'The ticket confirms "Filled: BUY 1 <ticker> @ $<price>"'
       - 'Portfolio cash is lower by about the fill price and the holding is listed with "1 sh" (or its quantity rises by one)'
       - 'Money reads the same in every language and on a Malay-language phone: the $ is always a prefix, and a negative amount (a position showing a loss) reads -$12.00, never $-12.00 and never RM'
+      - 'On a book that held nothing before this buy, the Portfolio Health card no longer reads NO HOLDINGS TO MEASURE once POSITIONS shows the holding (DEF544)'
     notes: 'CR282 lane F1 (2026-11-24): one formatter for all app money, by the ticker''s market. The executor asserts the confirmation reads @ $<price> with no $- ; the negative-amount reading on Portfolio is a visual check from the run screenshots (a one-share buy is rarely a loss at once).'
 
   - id: UAT-SIM-029
