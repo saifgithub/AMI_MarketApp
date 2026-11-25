@@ -59,7 +59,9 @@ def test_default_is_v1_and_unknown_values_refuse_to_boot():
 def test_versions_only_gain_the_tag_when_on():
     base = ling.grader_version(ling_test.MODEL)
     assert "term=" not in base
-    assert ling.grader_version(ling_test.MODEL, terminal_variant=True) == base + "|term=v2"
+    assert ling.grader_version(ling_test.MODEL, terminal_variant=True) == (
+        base + "|term=v2|termchk=d1c1.00"
+    )
     assert deepinfra.grader_version("m") == (
         "m|t0|avg5:bear_objection_answered+thesis_material_directional|split2|trade=structure"
     )
@@ -196,7 +198,12 @@ def _term_wire(payload):
     return call
 
 
-def _grade(payload, ticker="0020.KL", hay=HAY):
+UNCOVERED = {  # $M: 310 due in the first bucket against 40 of cash and no FCF -> the yes stands
+    "horizon_days": 42, "ladder": [["Within 1 year", 310.0]], "total_cash": 40.0, "fcf_ttm": 0.0,
+}
+
+
+def _grade(payload, ticker="0020.KL", hay=HAY, inputs=UNCOVERED):
     wire = _term_wire(payload)
     g = ling.LingGrader(
         model=ling_test.MODEL, timeout_s=5.0, terminal_variant=True,
@@ -205,14 +212,14 @@ def _grade(payload, ticker="0020.KL", hay=HAY):
     tr = RoomTranscript(
         room_id="r", ticker=ticker, risk_score=5, horizon="long",
         turns=[{"agent_id": "bear_researcher", "content": hay}],
-        proposed_trade={"action": "buy", "size_pct": 2.0},
+        proposed_trade={"action": "buy", "size_pct": 2.0}, terminal_inputs=inputs,
     )
     return g, g.grade(tr), wire
 
 
 def test_five_terminal_calls_vary_only_the_question_line():
     g, res, wire = _grade(GOOD)
-    assert res.error is None and g.version.endswith("|think=off|bear=v2|cat=v2|term=v2")
+    assert res.error is None and g.version.endswith("|think=off|bear=v2|cat=v2|term=v2|termchk=d1c1.00")
     term = [b for b in wire.bodies if "QUESTION:" in b["messages"][-1]["content"]]
     assert len(term) == 5 and len(wire.bodies) == 17
     tails = set()

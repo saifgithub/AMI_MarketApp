@@ -30,7 +30,9 @@ grader version, so Rooms graded with it are keyed apart from Rooms graded with t
 
 Terminal question. `ROOM_GRADER_LING_TERMINAL=v2` (default `v1`) swaps the unconditional
 terminal-vulnerability veto's question for the tighter, code-validated one in `ling_terminal.py`
-(tag `term=v2`, appended to the version). DeepInfra is never touched.
+(tag `term=v2`, appended to the version). DeepInfra is never touched. A `debt_default` yes is then
+decided by code (`terminal_materiality.py`: principal due inside the horizon against cash plus
+horizon free cash flow) and carries a `termchk=` tag in the version.
 
 The grader version names the served model, so changing `VLLM_FALLBACK_MODEL` re-keys the
 policy version (and every Room keyed by it). `extra.served_model` records the model id the
@@ -48,6 +50,7 @@ from app.services.room_graders.ling_variants import (
     CATALYST_V2_TAG,
 )
 from app.services.room_graders.ling_terminal import TERMINAL_V2_TAG
+from app.services.room_graders.terminal_materiality import CHECK_TAG as TERMINAL_CHECK_TAG
 from app.services.room_graders.production_plan import ProductionPlanGrader, plan_version_suffix
 
 GRADER_NAME = "ling"
@@ -61,11 +64,13 @@ def grader_version(
 ) -> str:
     """The pinned model, the shared production plan, the thinking switch, the tag of each
     Ling-only question wording in use (`bear=v2`, `cat=v2`), in that order, and, when on, the
-    terminal-vulnerability wording (`term=v2`)."""
+    terminal-vulnerability wording (`term=v2`) with the materiality check on its `debt_default` yes
+    (`termchk=d1c<min coverage>`, `terminal_materiality.py`; one switch, since the check reads the
+    category only `term=v2` produces)."""
     base = f"{GRADER_NAME}:{model}{plan_version_suffix()}|think=off"
     tags = [t for on, t in ((bear_variant, BEAR_V2_TAG), (catalyst_variant, CATALYST_V2_TAG)) if on]
     if terminal_variant:
-        tags.append(TERMINAL_V2_TAG)
+        tags.extend((TERMINAL_V2_TAG, TERMINAL_CHECK_TAG))
     return "|".join([base, *tags])
 
 
