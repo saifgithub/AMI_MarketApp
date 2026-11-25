@@ -405,3 +405,10 @@ Found: two users have duplicate training portfolios created 40 ms apart on 2026-
 2. Bursa verdicts so far: 17 Rooms, all PASS (US 7-day ≈14% APPROVE). Saiful: run Alpha only on-prem → "Ling, after a fit run"; then a mechanical ~200-ticker Bursa batch ("go!").
 3. Built and merged: the on-prem Ling grader (`c6b4b5e3`, `ROOM_GRADER=ling`, shared question plan with DeepInfra, thinking off; verified clean JSON + logprobs), DEF543 (test-only date leak in the US golden, `7ac104a9`), the Bursa batch tooling (`34b4633b`: 1,072-symbol Yahoo KLS universe, seeded stratified sample of 200, R5 benchmark driver, report).
 4. Deploy #31 `alpha-2026-11-25-3` = `90325d90`: suite 9936/0, local gate PASS, UAT override (stale device cases), postflight PASS; `ROOM_GRADER` still deepinfra. Ling fit on the 300 WP-20 Rooms started on melehost.
+
+### 33. 2026-11-25 — Bursa 200-ticker batch result, DEF544/545
+
+1. Bursa batch `bursa282-2026-11-25` done: 200/200 completed, **24 APPROVE (12.0%)**, 176 PASS; large 19.1%, mid 10.4%, small 6.2%; all at risk 5 with filters off. 9 of 24 approvals trade under RM100k a day; 3 have geometry the grader passed (SDG reward:risk 0.43, ORIENT 0.80, HUMEIND 9.1). Results and report committed (driver log kept locally, *.log is git-ignored) under `CR282_bursa_malaysia/bursa_batch/`.
+2. Saiful: tune Ling's catalyst and thesis questions after the batch, then re-grade the 200 batch Rooms.
+3. DEF544 (Health card / equity curve / sector donut never re-read after a fill) and DEF545 (all-cash book labelled MOCK after a full sell; fallback quotes now logged) merged (`24e4a947`), held for deploy until the batch results were copied off.
+

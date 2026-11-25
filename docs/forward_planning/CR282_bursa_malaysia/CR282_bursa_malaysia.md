@@ -152,3 +152,10 @@ cd backend && .venv/bin/python -m scripts.bursa_batch_report ../docs/forward_pla
 ```
 
 10. **Unverified.** Board; whether the live server runs the coded rule (the report's Warnings block says so loudly if `coded_decision` is absent); whether the Alpha container has `ADMIN_SECRET` in its env (CR035 ran the same way); whether re-POSTing a ticker whose first run ended `failed` starts a fresh run or re-attaches. Wall time at CR035's pace (about 3 minutes a Room) is roughly 10 hours for 200.
+11. **Result (2026-11-25, `report_bursa282-2026-11-25.md`).** 200/200 completed, 0 failures, 0 cached. Ran at concurrency 2 (two benchmark users), about 1.8 minutes a Room, graded by on-prem Ling (bear=v2, thinking off). Every Room at risk score 5 with filters off, so this is the most permissive mandate the app offers, not a typical one.
+    1. **24 APPROVE, 176 PASS (12.0%).** By tercile: large 13/68 (19.1%), mid 7/67 (10.4%), small 4/65 (6.2%). By code series: 0xxx 3/68, other 21/132. Strongest sector Consumer Cyclical 7/28; Energy 0/6, Utilities 0/3, Technology 1/24.
+    2. **What blocks:** `trade_proposed` is listed for 166 of 176 PASS (first for 77); `terminal_vulnerability` first for 99.
+    3. **Pattern:** almost every APPROVE is a cheap, net-cash or high-FCF-yield stock in a technical downtrend, sized at the 5% cap.
+    4. **Liquidity:** 9 of 24 trade under RM100k a day (KITACON and LEESK about RM5k, BERTAM RM8k); 6 trade over RM1m a day (SDG, MNHLDG, TIMECOM, MTTSL, TAKAFUL, EMPIRE). The batch ran with `liquid_only` off on purpose.
+    5. **Geometry the grader did not catch:** 5285.KL SDG targets +RM0.155 against a RM0.36 stop distance (reward:risk 0.43); 4006.KL ORIENT 0.80; 5000.KL HUMEIND targets +54% in 90 days (9.1:1). 5015.KL APM approves at 1% while its own reason calls the order size impractical.
+    6. **Caveat:** Ling's catalyst and thesis questions were still lenient against DeepInfra (272 vs 170 and 172 vs 115 "yes" on the 300 fit Rooms). Saiful 2026-11-25: tune those two after the batch, then re-grade these 200 Rooms with the tuned wording.
