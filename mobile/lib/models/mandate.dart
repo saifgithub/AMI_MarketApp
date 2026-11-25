@@ -298,6 +298,8 @@ class ResolvedCaps {
     this.maxTradesPerDay,
     this.maxTradesPerWeek,
     this.maxOpenRiskPct,
+    this.minRewardRisk,
+    this.minRewardRiskSource,
   });
 
   final double? sectorCapPct;
@@ -307,6 +309,12 @@ class ResolvedCaps {
   final int? maxTradesPerDay;
   final int? maxTradesPerWeek;
   final double? maxOpenRiskPct;
+
+  /// CR284 — the reward:risk floor a Room APPROVE must clear, and whether it
+  /// is the risk-profile default (`'default'`) or the user's own (`'user'`).
+  /// Null from an older backend: unknown, never a fabricated 0.
+  final double? minRewardRisk;
+  final String? minRewardRiskSource;
 
   factory ResolvedCaps.fromJson(Map<String, dynamic> j) {
     return ResolvedCaps(
@@ -318,6 +326,8 @@ class ResolvedCaps {
       maxTradesPerDay: (j['max_trades_per_day'] as num?)?.toInt(),
       maxTradesPerWeek: (j['max_trades_per_week'] as num?)?.toInt(),
       maxOpenRiskPct: (j['max_open_risk_pct'] as num?)?.toDouble(),
+      minRewardRisk: (j['min_reward_risk'] as num?)?.toDouble(),
+      minRewardRiskSource: j['min_reward_risk_source'] as String?,
     );
   }
 
@@ -339,6 +349,8 @@ class ResolvedCaps {
         return maxTradesPerWeek;
       case 'max_open_risk_pct':
         return maxOpenRiskPct;
+      case 'min_reward_risk':
+        return minRewardRisk;
       default:
         return null;
     }
@@ -414,6 +426,7 @@ class UserMandate {
     this.maxTradesPerDay,
     this.maxTradesPerWeek,
     this.maxOpenRiskPct,
+    this.minRewardRisk,
     this.maxOptionPremiumPct,
     this.maxOptionNotionalPct,
     this.maxAssignmentExposurePct,
@@ -447,6 +460,10 @@ class UserMandate {
   final int? maxTradesPerDay;
   final int? maxTradesPerWeek;
   final double? maxOpenRiskPct;
+
+  /// CR284 — explicit reward:risk floor; null follows the risk profile (the
+  /// enforced number arrives in `resolved.minRewardRisk`).
+  final double? minRewardRisk;
 
   // CR129: server-resolved enforced values for the seven limits above.
   // Null when the backend predates DEF193 — unknown, not "off".
@@ -521,6 +538,7 @@ class UserMandate {
       maxTradesPerDay: (j['max_trades_per_day'] as num?)?.toInt(),
       maxTradesPerWeek: (j['max_trades_per_week'] as num?)?.toInt(),
       maxOpenRiskPct: (j['max_open_risk_pct'] as num?)?.toDouble(),
+      minRewardRisk: (j['min_reward_risk'] as num?)?.toDouble(),
       maxOptionPremiumPct:
           (j['max_option_premium_pct'] as num?)?.toDouble(),
       maxOptionNotionalPct:

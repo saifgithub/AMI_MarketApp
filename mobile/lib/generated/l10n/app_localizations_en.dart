@@ -1826,6 +1826,20 @@ class AppLocalizationsEn extends AppLocalizations {
       'Confirmed at trade submission — not shown as within-limits in the trade preview.';
 
   @override
+  String get settingsRiskLimitsMinRewardRiskLabel => 'Minimum reward to risk';
+
+  @override
+  String get settingsRiskLimitsMinRewardRiskExplain =>
+      'A Room\'s approved trade must aim to gain at least this many times what it risks (target distance over stop distance). AMI rejects any approval that falls short.';
+
+  @override
+  String get settingsRiskLimitsMinRewardRiskSheetTitle => 'Reward to risk';
+
+  @override
+  String get settingsRiskLimitsMinRewardRiskSheetBody =>
+      'Reward to risk compares how far a trade\'s target sits above your entry with how far its stop sits below it. Entry 100, stop 90, target 115 is 1.5 to 1: 15 to gain for every 10 at risk.\n\nYour minimum is the lowest ratio AMI will approve. If a Room\'s target is too close for its stop, the approval becomes a rejection and says which two numbers failed. Leave this on your risk profile and cautious profiles ask for more reward per unit of risk. Set your own number to override it; 0 turns the check off.\n\nThis applies to a Room\'s verdict. A trade you place yourself on the ticket has no target, so it is not checked.';
+
+  @override
   String get settingsRiskLimitsDisclosureFollowing =>
       'This replaces your risk-profile default with an explicit value, effective immediately.';
 

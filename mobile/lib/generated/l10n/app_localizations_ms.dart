@@ -1833,6 +1833,22 @@ class AppLocalizationsMs extends AppLocalizations {
       'Disahkan semasa penghantaran dagangan — tidak dipaparkan sebagai dalam had pada pratonton dagangan.';
 
   @override
+  String get settingsRiskLimitsMinRewardRiskLabel =>
+      'Nisbah ganjaran-risiko minimum';
+
+  @override
+  String get settingsRiskLimitsMinRewardRiskExplain =>
+      'Dagangan yang diluluskan oleh Bilik mesti menyasarkan keuntungan sekurang-kurangnya sekian kali ganda daripada yang dipertaruhkan (jarak sasaran berbanding jarak henti rugi). AMI menolak sebarang kelulusan yang kurang daripada itu.';
+
+  @override
+  String get settingsRiskLimitsMinRewardRiskSheetTitle =>
+      'Ganjaran berbanding risiko';
+
+  @override
+  String get settingsRiskLimitsMinRewardRiskSheetBody =>
+      'Ganjaran berbanding risiko membandingkan sejauh mana sasaran dagangan berada di atas kemasukan anda dengan sejauh mana henti rugi berada di bawahnya. Kemasukan 100, henti rugi 90, sasaran 115 ialah 1.5 kepada 1: 15 untuk diperoleh bagi setiap 10 yang dipertaruhkan.\n\nMinimum anda ialah nisbah terendah yang AMI akan luluskan. Jika sasaran Bilik terlalu dekat untuk henti ruginya, kelulusan bertukar menjadi penolakan dan menyatakan dua nombor yang gagal. Biarkan mengikut profil risiko anda dan profil berhati-hati meminta lebih ganjaran bagi setiap unit risiko. Tetapkan nombor anda sendiri untuk mengatasinya; 0 mematikan semakan ini.\n\nIni terpakai pada keputusan Bilik. Dagangan yang anda letakkan sendiri pada tiket tidak mempunyai sasaran, jadi ia tidak disemak.';
+
+  @override
   String get settingsRiskLimitsDisclosureFollowing =>
       'Ini menggantikan lalai profil risiko anda dengan nilai eksplisit, berkuat kuasa serta-merta.';
 

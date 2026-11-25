@@ -2173,6 +2173,22 @@
   "@settingsRiskLimitsMaxOpenRiskPreviewNote": {
     "description": "CR101-MOBILE, per the assign's item 3b and CR101-BE2 auditor finding M1: sim_engine.preview() has no `stop` parameter, so it cannot price a proposed trade's OWN contribution to max_open_risk_pct — a trade that would tip an under-cap portfolio over the cap shows as fine in preview and only blocks at real submit. This note sits next to the field so the trade-ticket preview is never read as authoritative for this one limit (CR046 shown-equals-enforced). retranslate:[ar,ms]"
   },
+  "settingsRiskLimitsMinRewardRiskLabel": "Minimum reward to risk",
+  "@settingsRiskLimitsMinRewardRiskLabel": {
+    "description": "CR284 `min_reward_risk`. Label of the Settings > risk limits row. A ratio, shown with a ':1' suffix (e.g. 1.5:1). 'Reward to risk' = how far a trade's target sits above entry, divided by how far its stop sits below entry. NEW key. retranslate:[ar,ms]"
+  },
+  "settingsRiskLimitsMinRewardRiskExplain": "A Room's approved trade must aim to gain at least this many times what it risks (target distance over stop distance). AMI rejects any approval that falls short.",
+  "@settingsRiskLimitsMinRewardRiskExplain": {
+    "description": "CR284 one-line caption under the min_reward_risk row label. 'AMI rejects' is deliberate: the AI is named AMI in user-facing copy. The check is the deterministic safety floor, not a prompt. NEW key. retranslate:[ar,ms]"
+  },
+  "settingsRiskLimitsMinRewardRiskSheetTitle": "Reward to risk",
+  "@settingsRiskLimitsMinRewardRiskSheetTitle": {
+    "description": "CR284 title of the explain sheet opened by the info icon on the min_reward_risk row; also its tooltip. NEW key. retranslate:[ar,ms]"
+  },
+  "settingsRiskLimitsMinRewardRiskSheetBody": "Reward to risk compares how far a trade's target sits above your entry with how far its stop sits below it. Entry 100, stop 90, target 115 is 1.5 to 1: 15 to gain for every 10 at risk.\n\nYour minimum is the lowest ratio AMI will approve. If a Room's target is too close for its stop, the approval becomes a rejection and says which two numbers failed. Leave this on your risk profile and cautious profiles ask for more reward per unit of risk. Set your own number to override it; 0 turns the check off.\n\nThis applies to a Room's verdict. A trade you place yourself on the ticket has no target, so it is not checked.",
+  "@settingsRiskLimitsMinRewardRiskSheetBody": {
+    "description": "CR284 body of the explain sheet. The worked example (100 / 90 / 115 = 1.5 to 1) must stay numerically correct in translation. 'cautious profiles ask for more' = risk 1-2 default 2.0, risk 3-4 default 1.5, risk 5 default 1.0 (numbers deliberately not in the copy: they live server-side). '0 turns the check off' is a real, user-chosen setting. NEW key. retranslate:[ar,ms]"
+  },
   "settingsRiskLimitsDisclosureFollowing": "This replaces your risk-profile default with an explicit value, effective immediately.",
   "@settingsRiskLimitsDisclosureFollowing": {
     "description": "CR101-MOBILE L3 disclosure: shown when sector_cap_pct or single_name_cap_pct moves from unset (profile preset) to an explicit value. Direction (looser/tighter than the preset) is unknowable client-side — the preset's resolved number is never returned by the API (CR101-BE1 bridge) — so this states the mechanism honestly instead of guessing a direction. retranslate:[ar,ms]"

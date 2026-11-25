@@ -3626,5 +3626,9 @@
     "floorOmniboxLookupDown": "Can't look up names right now — use the 4-digit code.",
     "floorOmniboxChooseMarket": "Which market?",
     "floorMarketChipSemantics": "Market: {market}. Tap to switch.",
-    "journalKvFees": "Fees"
+    "journalKvFees": "Fees",
+    "settingsRiskLimitsMinRewardRiskLabel": "الحد الأدنى للعائد إلى المخاطرة",
+    "settingsRiskLimitsMinRewardRiskExplain": "يجب أن تستهدف الصفقة التي توافق عليها الغرفة ربحًا لا يقل عن هذا العدد من أضعاف ما تخاطر به (المسافة إلى الهدف مقسومة على المسافة إلى وقف الخسارة). يرفض AMI أي موافقة تقصر عن ذلك.",
+    "settingsRiskLimitsMinRewardRiskSheetTitle": "العائد إلى المخاطرة",
+    "settingsRiskLimitsMinRewardRiskSheetBody": "العائد إلى المخاطرة يقارن بين بُعد هدف الصفقة فوق دخولك وبُعد وقف الخسارة تحته. الدخول 100 ووقف الخسارة 90 والهدف 115 يعني 1.5 إلى 1: ربح محتمل قدره 15 مقابل كل 10 مخاطرة.\n\nالحد الأدنى الذي تحدده هو أدنى نسبة يوافق عليها AMI. إذا كان هدف الغرفة قريبًا جدًا من وقف الخسارة، تتحول الموافقة إلى رفض ويُذكر الرقمان اللذان لم يستوفيا الشرط. اتركه على ملف المخاطر لديك فتطلب الملفات الحذرة عائدًا أكبر مقابل كل وحدة مخاطرة. اضبط رقمك الخاص لتجاوزه؛ والصفر يوقف هذا الفحص.\n\nيسري هذا على حكم الغرفة. أما صفقة تضعها بنفسك في نموذج الأمر فليس لها هدف، لذلك لا تُفحص."
 }
