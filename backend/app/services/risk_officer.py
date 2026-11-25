@@ -120,6 +120,8 @@ from app.services.numeric_quotation import (
     millions_scaled_values,
     numeral_is_corroborated_signed,
 )
+from app.services.room_market import market_of_profile
+from app.trading_math.markets import Market
 from app.trading_math.option_ladder import LadderOption
 
 RISK_OFFICER_PERSONA = (
@@ -502,26 +504,31 @@ class RenderedRiskTurn:
     argued_size_pct: float | None
 
 
-def _rung_head(r: LadderOption) -> str:
+def _rung_head(r: LadderOption, market: Market = Market.US) -> str:
     """The rung's computed figures, in `render_risk_assessment`'s exact shape —
     ladder values only, so no formatter exists that could render a payload
     number.
 
-    CR219 R59-§13(a): `dollar_risk_usd` renders beside `contribution_pts` when
+    CR219 R59-§13(a): `dollar_risk` renders beside `contribution_pts` when
     (and only when) `build_option_ladder` computed it — a rung built from a
     missing/zero `portfolio_value` carries `None` there, per that function's own
     discipline, and this renders NOTHING for it rather than a fabricated `$0`
     (the `headroom_after_pts` guard just below is the working precedent). Byte-
     identical output on every rung built without a portfolio value, so this is
     additive, not a reformat.
+
+    DEF549: the amount is in the Room's market currency (`market`), so a Bursa
+    Room reads "RM1,499 at risk", never "$1,499". The figure itself is the
+    book's own value x the rung's drawdown share, so it is already in that
+    market's currency; only the symbol was wrong.
     """
     head = f"**{r.size_pct:.1f}%** of portfolio"
     if r.contribution_pts is not None:
         head += f" (≈ {r.contribution_pts:.2f} pt of drawdown"
-        if r.dollar_risk_usd is not None:
+        if r.dollar_risk is not None:
             from app.services.room_prompts import _money  # lazy: avoids a cycle
 
-            head += f", {_money(r.dollar_risk_usd)} at risk"
+            head += f", {_money(r.dollar_risk, market)} at risk"
         if r.headroom_after_pts is not None:
             head += f", {r.headroom_after_pts:.2f} pt of cap left"
         head += ")"
@@ -556,6 +563,7 @@ def render_officer_turns(
     headline_max_chars: int,
     fallback_reason: str | None = None,
     profile: dict[str, Any] | None = None,
+    market: Market | None = None,
 ) -> list[RenderedRiskTurn]:
     """The three risk-phase display turns, rendered with no LLM involved.
 
@@ -584,6 +592,10 @@ def render_officer_turns(
     headline built only from the ladder's own computed figures, which cannot
     fail this check because nothing in it was quoted.
     """
+    # A malformed sheet (the CR219 failure-posture case) must not crash the render.
+    room_market = market if market is not None else (
+        market_of_profile(profile) if isinstance(profile, dict) else Market.US
+    )
     by_size = _options_by_size(payload or {})
     confidence = str((payload or {}).get("confidence") or "").strip().lower()
     if confidence not in _CONFIDENCE_VALUES:
@@ -600,7 +612,7 @@ def render_officer_turns(
     turns: dict[AgentId, RenderedRiskTurn] = {}
     for r in rows:
         voice = _VOICE_FOR_RUNG_LABEL[r.label]
-        head = _rung_head(r)
+        head = _rung_head(r, room_market)
 
         if fallback_reason is not None:
             text = (

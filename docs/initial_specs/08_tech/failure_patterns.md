@@ -2511,3 +2511,15 @@ from outside `app.` (or a dict with non-string keys) still fails that test.
 **Why the first fixes did not generalise.** DEF533 repaired the writer it was filed against; nothing normalised text a model wrote, and nothing stated the invariant that a figure must be compared with the sign and the unit it was written in.
 
 **Enforcing check:** `backend/tests/unit/test_def547b_548_factcheck_units_and_money_sign.py`. `normalize_money_sign` (room_market.py) is applied in `_compute_agent_text` (every desk turn, before the fact-check reads it), to the Risk Officer rows and to the CIO kill criterion; the test drives a live desk turn for a `.KL` and a US ticker through `_compute_agent_text` and requires the sign first, requires a sign-after-symbol turn not to draw a fact-check correction, and pins ranges ("RM1-2", "$10-$20"), dates, tickers and already-correct amounts as untouched. The same file pins the reader side: a ratio never pairs with an amount label, a period is not a figure, and the Risk Officer corroborates signed millions while still marking a dropped sign or a wrong figure. Mutation-checked by removing the normaliser call and by removing the unit gate.
+
+---
+
+## P46 — a coded Room line that hard-codes "$" because it was written for the one market that existed
+
+**Class:** the Room's coded text (lines AMI writes, not the desk model) formats money in many small builders, and each one that wrote `f"${x}"` or called a `$`-fixed helper ignores the Room's market. Prompt text is safe (it leaves `room_prompts` through `localize_money`), but a coded line streamed to the user is not rewritten by anything, so a 1155.KL Room showed "$1,499 at risk" beside an RM book.
+
+**Instances.** DEF531 (the signed `+$0.00` in sim output), DEF533 (a fact-check note printed "$-15,433M"), DEF549 (2026-11-26, AMI-DL-36): the Risk Officer's sizing line printed "$1,499 at risk" via `room_prompts._money`; the same sweep found the same `$` in the R:R geometry note, the direction-vs-price note, the Trader repair note and the option-structure card.
+
+**Why the first fixes did not generalise.** DEF531 and DEF533 repaired the one formatter each was filed against; the other builders kept their own `$`, and nothing listed the coded lines or stated that none may name a currency without the market.
+
+**Enforcing check:** `backend/tests/unit/test_def549_bursa_coded_lines_no_dollar.py`. `test_every_coded_line_builder_is_ringgit_on_a_bursa_room` renders every coded line builder with a Bursa market and fails on any "$" (and on a missing "RM"), with a US twin that fails on any "RM". `test_no_dollar_fstring_interpolation_in_coded_room_modules` AST-scans the Room's coded-text modules and fails on any f-string with a literal "$" directly before an interpolation, so a new builder cannot reintroduce one. A new coded money line takes the symbol from `spec_for(market).currency_symbol` (or `format_money`) and is added to `_coded_lines` in that test.

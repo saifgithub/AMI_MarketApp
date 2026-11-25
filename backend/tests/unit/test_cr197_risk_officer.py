@@ -203,7 +203,7 @@ def test_rung_head_carries_the_dollar_risk_when_portfolio_value_is_known():
     clause and the pt-of-cap-left clause, formatted by the module's existing
     money formatter (DEF234/242-safe thousands separator, no decimals)."""
     r = _rung(3.0, portfolio_value=100_000.0)
-    assert r.dollar_risk_usd == pytest.approx(180.0)
+    assert r.dollar_risk == pytest.approx(180.0)
     assert _rung_head(r) == (
         "**3.0%** of portfolio (≈ 0.18 pt of drawdown, $180 at risk, "
         "29.82 pt of cap left)"
@@ -215,7 +215,7 @@ def test_rung_head_is_byte_identical_with_no_portfolio_value():
     render NOTHING for the dollar figure, not `$0` — and the rest of the line
     must be untouched by the new clause's absence."""
     with_value = _rung(3.0, portfolio_value=None)
-    assert with_value.dollar_risk_usd is None
+    assert with_value.dollar_risk is None
     assert _rung_head(with_value) == (
         "**3.0%** of portfolio (≈ 0.18 pt of drawdown, 29.82 pt of cap left)"
     )
@@ -227,7 +227,7 @@ def test_rung_head_renders_nothing_for_a_zero_portfolio_value_never_a_dollar_zer
     """Zero is exactly the case the audit called out by name: '$0' would read
     as a measured fact ('this rung risks nothing'), not as 'unknown'."""
     r = _rung(3.0, portfolio_value=0.0)
-    assert r.dollar_risk_usd is None
+    assert r.dollar_risk is None
     text = _rung_head(r)
     assert "$0" not in text
     assert "at risk" not in text
@@ -244,7 +244,7 @@ def test_rung_head_dollar_figures_differ_per_rung():
 
 
 def test_rung_head_omits_the_dollar_clause_when_drawdown_itself_is_none():
-    """`dollar_risk_usd` is only ever meaningful nested inside the drawdown
+    """`dollar_risk` is only ever meaningful nested inside the drawdown
     clause (it IS a scaling of `contribution_pts`) — an incoherent proposal
     that leaves `contribution_pts` None must leave the whole parenthetical,
     dollar clause included, unrendered."""
@@ -253,7 +253,7 @@ def test_rung_head_omits_the_dollar_clause_when_drawdown_itself_is_none():
         portfolio_value=100_000.0,
     )
     r = next(r for r in rows if r.size_pct == 3.0)
-    assert r.contribution_pts is None and r.dollar_risk_usd is None
+    assert r.contribution_pts is None and r.dollar_risk is None
     text = _rung_head(r)
     assert text == "**3.0%** of portfolio"
     assert "$" not in text
