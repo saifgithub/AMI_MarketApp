@@ -22,7 +22,24 @@ NOT_TERMINAL = re.compile(
     r"margin|\broe\b|\broic\b|wacc|free cash flow|\bfcf\b|cash burn|\bburn|dividend|leverage|net debt|"
     r"market cap|valuation|volatil|liquidity|illiquid|sector|macro|catalyst|earnings|\bresults\b|"
     r"profitab|net loss|operating loss|loss-making|loss making|negative eps", re.I)
-DEBT_FACT = re.compile(r"matur|covenant|default|missed|refinanc|\bdue\b|repay|overdue|redeem|bond|sukuk|notes?\b", re.I)
+# Diagnostic only (not enforced in code): does the evidence/name carry a word that belongs to the category
+# it claims? "cash burn could lead to default" has none of debt_default's words.
+CATEGORY_WORDS = {
+    "debt_default": r"matur|covenant|missed|overdue|accelerat|notice of default|\bdue (in|on|by|within)\b|"
+                    r"fell due|repayment (date|schedule)",
+    "going_concern_audit": r"going.concern|audit|qualified|adverse opinion|disclaimer",
+    "pn17_gn3": r"pn17|gn3|continued.listing|deficien|delisting notice",
+    "suspension_delisting": r"suspen|delist|late (filing|report)|unable to file|\buma\b|unusual market",
+    "fraud_regulatory": r"fraud|irregular|investigat|\bsc\b|macc|\bsec\b|\bdoj\b|charged|probe|enforcement|restat|misstat",
+    "dilutive_restructuring": r"rights issue|restructur|debt.to.equity|swap|private placement|placement|share issu|convertible|dilut",
+    "revenue_loss": r"licen[cs]e|concession|terminat|lost (the )?(contract|customer)|customer",
+}
+
+
+def unsupported(r: dict) -> bool:
+    pat = CATEGORY_WORDS.get(r.get("terminal_category") or "")
+    text = f"{r.get('terminal_name') or ''} {r.get('terminal_evidence') or ''}"
+    return bool(pat) and not re.search(pat, text, re.I)
 
 
 def load(path: str | None) -> list[dict]:
@@ -84,17 +101,24 @@ def analyse(name: str, p1: list[dict], p2: list[dict]) -> tuple[list[str], dict]
              f"{sum(1 for r in ok if r['v2_answer'] == 'no' and 'evidence_not_grounded' in (r.get('terminal_rejected') or '') )}.")
     accepted_rooms = [r for r in ok if yes_flag(r)]
     leak = [r for r in accepted_rooms if NOT_TERMINAL.search(f"{r.get('terminal_name') or ''} {r.get('terminal_evidence') or ''}")]
-    weak_debt = [r for r in accepted_rooms if r.get("terminal_category") == "debt_default"
-                 and not DEBT_FACT.search(r.get("terminal_evidence") or "")]
+    leak_name = [r for r in accepted_rooms if NOT_TERMINAL.search(r.get("terminal_name") or "")]
+    unsup = [r for r in accepted_rooms if unsupported(r)]
     L += ["", "**4. Leakage**: accepted Room-level yes whose name/evidence matches the NOT TERMINAL list", ""]
     L.append(f"Keyword scan (margin, ROE/ROIC/WACC, FCF/cash burn, dividend, leverage, net debt, market cap, valuation, "
              f"volatility, liquidity, sector, macro, catalyst, earnings/results, losses): {pct(len(leak), len(accepted_rooms))} "
-             f"of accepted yes Rooms. `debt_default` accepted with no maturity/covenant/default/refinancing word in the evidence: "
-             f"{len(weak_debt)}.")
+             f"of accepted yes Rooms in name+evidence (the evidence quotes context figures, so this over-counts); "
+             f"in the one-sentence NAME alone: {pct(len(leak_name), len(accepted_rooms))}; those are listed below.")
+    L.append("")
+    cats_acc = sorted({r["terminal_category"] for r in accepted_rooms})
+    L.append("Diagnostic (not enforced in code): accepted yes Rooms whose name+evidence carry no word that belongs to the category "
+             f"claimed (e.g. debt_default with no maturity, covenant, missed or overdue payment): {pct(len(unsup), len(accepted_rooms))}. "
+             "By category: " + ", ".join(
+                 f"{c} {sum(1 for r in unsup if r['terminal_category'] == c)}/{sum(1 for r in accepted_rooms if r['terminal_category'] == c)}"
+                 for c in cats_acc) + ".")
     L.append("")
     L += table(["ticker", "run_id", "category", "name", "evidence"],
                [[r["ticker"], r["run_id"][:8], r["terminal_category"], (r["terminal_name"] or "")[:110],
-                 (r["terminal_evidence"] or "")[:110].replace("|", "/")] for r in leak] or [["(none)", "", "", "", ""]])
+                 (r["terminal_evidence"] or "")[:110].replace("|", "/")] for r in leak_name] or [["(none)", "", "", "", ""]])
     close = sum(1 for r in ok if r.get("v2_close"))
     L += ["", "**5. Close (3-2) rate**", "", f"{pct(close, n)} Rooms had a 3-2 split on the terminal question.", ""]
     L += ["**6. Repeatability (pass 1 vs pass 2, same Rooms)**", ""]

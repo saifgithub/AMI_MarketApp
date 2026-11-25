@@ -1,0 +1,31 @@
+ticker,run_id,market,why_chosen
+0217.KL,9a5af10d-9aec-47b8-a361-c25aabf66ab1,bursa,"vetoed Bursa buy (v1 terminal yes); v2 terminal=no, v2 outcome=APPROVE"
+3662.KL,8cdb104c-37be-4c31-870c-16bd08f0ef0f,bursa,"vetoed Bursa buy (v1 terminal yes); v2 terminal=no, v2 outcome=APPROVE"
+1724.KL,3b171c2c-4077-4b5e-a385-172188dbdcb3,bursa,"vetoed Bursa buy (v1 terminal yes); v2 terminal=no, v2 outcome=APPROVE"
+5180.KL,f122d564-8124-4b30-9d99-afbc5fc202fe,bursa,"vetoed Bursa buy (v1 terminal yes); v2 terminal=no, v2 outcome=APPROVE"
+0174.KL,bb919067-04f7-445b-ad68-cd48faff9f06,bursa,"vetoed Bursa buy (v1 terminal yes); v2 terminal=no, v2 outcome=APPROVE"
+5258.KL,118b710f-5073-419b-be4c-ba611044c0a3,bursa,"vetoed Bursa buy (v1 terminal yes); v2 terminal=no, v2 outcome=APPROVE"
+4405.KL,23503f0e-79bd-4c25-97c9-f357b0adb12a,bursa,Bursa wait/hold flagged by v1 and by v2 (debt_default): is it terminal?
+0116.KL,50fb6e4f-0dc0-4a1f-878d-1e0d70fdd778,bursa,Bursa wait/hold flagged by v1 and by v2 (debt_default): is it terminal?
+7854.KL,d0c8a00f-9d8a-4db5-abff-ef0729093dbe,bursa,Bursa wait/hold flagged by v1 and by v2 (debt_default): is it terminal?
+5001.KL,506eda96-a2c8-478c-99f9-0712ef3447da,bursa,Bursa wait/hold flagged by v1 and by v2 (dilutive_restructuring): is it terminal?
+5819.KL,ec9db9c7-c7a8-46de-bceb-9adcabab048f,bursa,Bursa wait/hold flagged by v1 only (v2 no): was v1 over-flagging?
+9539.KL,36e963c5-b4b4-4625-b7ca-53e6cfc42290,bursa,Bursa wait/hold flagged by v1 only (v2 no): was v1 over-flagging?
+0292.KL,82680571-a7ca-4a64-89f2-c6c49906bd0b,bursa,Bursa wait/hold flagged by v1 only (v2 no): was v1 over-flagging?
+7022.KL,02c27ce3-959a-4a4c-89a3-0652dfef712c,bursa,Bursa wait/hold flagged by v1 only (v2 no): was v1 over-flagging?
+1996.KL,68c6eec5-fde2-4bc9-bc3e-4903dfd1df8f,bursa,"Bursa unflagged by v1 and v2, large cap: should anything be flagged?"
+2453.KL,32c2aa98-0f14-4dda-acec-4bd46284384c,bursa,"Bursa unflagged by v1 and v2, large cap: should anything be flagged?"
+0261.KL,01f42b8f-da24-4aa7-8b32-d1f987d844a6,bursa,"Bursa unflagged by v1 and v2, mid cap: should anything be flagged?"
+0023.KL,468a300e-ebc6-4fca-8a90-5746fd5c7487,bursa,"Bursa unflagged by v1 and v2, mid cap: should anything be flagged?"
+7315.KL,2593a16a-6c27-4678-9a19-a6fdd31d7786,bursa,"Bursa unflagged by v1 and v2, small cap: should anything be flagged?"
+0227.KL,7446d27c-3746-4223-ab1f-ac82f71d66e1,bursa,"Bursa unflagged by v1 and v2, small cap: should anything be flagged?"
+FCEL,5915420c-e922-4c87-9b0c-2d0583ff7aea,us,US v1 yes -> v2 no: was the v1 flag terminal?
+TMO,a5649aec-023a-4064-9eef-3c56ec6f108c,us,US v1 yes -> v2 no: was the v1 flag terminal?
+SNAP,cb539fc8-198f-40fb-8738-f11c16827919,us,US v1 yes -> v2 no: was the v1 flag terminal?
+LEVI,98e0e618-0208-41ce-977f-25da53d0c167,us,US v1 yes -> v2 no: was the v1 flag terminal?
+APD,79f8f145-3593-4ad4-9b34-67da1487f3cb,us,US v1 yes -> v2 no: was the v1 flag terminal?
+XPEV,0a2eda2a-f601-4b2b-92c0-bae627b63a4c,us,US flagged by both (revenue_loss): is it terminal?
+BA,ba4c35ce-ac99-4037-86c3-d474960c5dc8,us,US flagged by both (debt_default): is it terminal?
+BGS,3f839cc3-7bee-470a-a1fa-b16358bcba1c,us,US flagged by both (debt_default): is it terminal?
+RIVN,67462c35-7911-462a-91ec-2227048f1217,us,US flagged by both (dilutive_restructuring): is it terminal?
+XPEV,2f012d41-0038-4079-a391-de7a2a56be23,us,US flagged by both (revenue_loss): is it terminal?
