@@ -219,6 +219,7 @@ from app.services.room_market import (
     localize_money,
     market_of_profile,
     my_desk_footer,
+    normalize_money_sign,
 )
 from app.trading_math import bnm_calendar
 from app.trading_math.markets import Market, market_for, spec_for
@@ -3617,7 +3618,10 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
     # may be `None` here (the CIO stated none) — `annotate_sheet_mismatches`
     # returns `None` unchanged in that case, same "nothing to check" path
     # as an empty string.
-    kill_criterion = annotate_sheet_mismatches(kill_criterion, ctx.profile)
+    kill_criterion = annotate_sheet_mismatches(
+        normalize_money_sign(kill_criterion) if kill_criterion else kill_criterion,
+        ctx.profile,
+    )
     action = _normalize_pm_action(parsed.get("action"))
     if action is None:
         return narration or text.strip(), None
@@ -11385,6 +11389,9 @@ async def _compute_agent_text(
     # what the geometry check already verified). `profile` is THIS agent's
     # own threaded sheet — a missing/empty one makes the checker a no-op,
     # never a strike (unknowable is not unverifiable).
+    # DEF548 — sign before the symbol, whatever the model wrote; before the
+    # fact-check so its sign reader sees the normalised form.
+    text = normalize_money_sign(text)
     text = annotate_sheet_mismatches(text, profile)
     desk_footer = my_desk_footer(agent_id, profile)
     if desk_footer and not _output_guard_withholds(text):
@@ -11665,7 +11672,7 @@ async def _run_risk_officer(
             agent_id=turn.agent_id,
             run_id=run_id,
             run=run,
-            text=turn.text,
+            text=normalize_money_sign(turn.text),  # DEF548
             geom_sig=None,
             char_delay_min=char_delay_min,
             char_delay_max=char_delay_max,

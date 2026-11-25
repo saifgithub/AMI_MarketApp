@@ -243,6 +243,15 @@ class _Numeral:
     decimals: int
     start: int
     end: int
+    pct: bool = False
+    currency: bool = False
+
+
+# DEF547 follow-up — a currency token the numeral regex does not carry ("RM15,433",
+# "US$5"): its presence makes the figure an AMOUNT even with no magnitude letter.
+_CURRENCY_BEFORE_RE = re.compile(
+    r"(?:US\$|S\$|RM|MYR|[$£€])\s?[-−+]?\s?$", re.IGNORECASE
+)
 
 
 def _extract_numerals(text: str) -> list[_Numeral]:
@@ -269,6 +278,11 @@ def _extract_numerals(text: str) -> list[_Numeral]:
             decimals=len(frac_part),
             start=m.start(),
             end=m.end(),
+            pct=m.group("pct") is not None,
+            currency=bool(
+                m.group(0)[:1] in "$£€"
+                or _CURRENCY_BEFORE_RE.search(text[max(0, m.start() - 8):m.start()])
+            ),
         ))
     return out
 
@@ -335,6 +349,7 @@ class _FieldSpec:
     exclude_pattern: re.Pattern[str] | None = None
     sheet_scale: float = 1.0
     window_chars: int = 24
+    unit: str | None = None  # "amount" | "pct" — DEF547 follow-up, see `_unit_compatible`
 
 
 def _label_re(*alts: str) -> re.Pattern[str]:
@@ -415,6 +430,7 @@ _FIELD_SPECS: tuple[_FieldSpec, ...] = (
         renderer_citation="room_prompts.py::_company_size_line",
         sheet_scale=1_000_000.0,
         window_chars=32,
+        unit="amount",
     ),
     # `fundamentals.py::_company_size_line` — "FCF ${..}M (TTM)". Millions.
     _FieldSpec(
@@ -423,13 +439,18 @@ _FIELD_SPECS: tuple[_FieldSpec, ...] = (
         label_pattern=_label_re(r"\bFCF\b", r"\bfree\s+cash\s+flow\b"),
         # DEF445 — "FCF yield" is the precomputed percentage field below,
         # not the raw-dollar FCF; same local-radius disambiguation as pe.
+        # DEF547 follow-up — "FCF conversion", "FCF margin" and the rest are
+        # ratios built FROM the FCF, not the FCF.
         exclude_pattern=re.compile(
-            r"\b(?:FCF|free\s+cash\s+flow)[\s-]*yield\b", re.IGNORECASE
+            r"\b(?:FCF|free\s+cash\s+flow)[\s-]*"
+            r"(?:yield|conversion|margin|growth|coverage|ratio|payout|per\s+share)\b",
+            re.IGNORECASE,
         ),
         renderer_label="FCF",
         renderer_citation="room_prompts.py::_company_size_line",
         sheet_scale=1_000_000.0,
         window_chars=32,
+        unit="amount",
     ),
     # `room_prompts.py::_format_profile` — "FCF yield {fcf_yield}%". A
     # precomputed percent (`trading_math/valuation.py::fcf_yield_pct`).
@@ -442,6 +463,7 @@ _FIELD_SPECS: tuple[_FieldSpec, ...] = (
         renderer_label="FCF yield",
         renderer_citation="room_prompts.py::_format_profile",
         window_chars=32,
+        unit="pct",
     ),
     # `fundamentals.py::_company_size_line` — "gross debt ${..}M". Millions.
     # (`net_cash`/net-debt is sign-dependent prose and excluded — see the
@@ -454,6 +476,7 @@ _FIELD_SPECS: tuple[_FieldSpec, ...] = (
         renderer_citation="room_prompts.py::_company_size_line",
         sheet_scale=1_000_000.0,
         window_chars=32,
+        unit="amount",
     ),
     # `fundamentals.py::_company_size_line` — "gross cash ${..}M". Millions.
     _FieldSpec(
@@ -464,6 +487,7 @@ _FIELD_SPECS: tuple[_FieldSpec, ...] = (
         renderer_citation="room_prompts.py::_company_size_line",
         sheet_scale=1_000_000.0,
         window_chars=32,
+        unit="amount",
     ),
     # `room_prompts.py::_format_profile` — "TTM revenue growth: {..}%".
     _FieldSpec(
@@ -473,6 +497,7 @@ _FIELD_SPECS: tuple[_FieldSpec, ...] = (
         renderer_label="TTM revenue growth",
         renderer_citation="room_prompts.py::_format_profile",
         window_chars=32,
+        unit="pct",
     ),
     # `fundamentals.py::risk_profile_line` — "Beta: {beta} vs the market …".
     _FieldSpec(
@@ -491,6 +516,7 @@ _FIELD_SPECS: tuple[_FieldSpec, ...] = (
         renderer_label="Short interest",
         renderer_citation="fundamentals.py::short_interest_line",
         window_chars=32,
+        unit="pct",
     ),
 )
 
@@ -570,7 +596,11 @@ _DERIVATIONAL_GAP_RE = re.compile(
 _STAT_QUALIFIER_RE = re.compile(
     r"\b(?:averag\w*|avg|mean|median|historic\w*|peak|trough|prior|previous|"
     r"cumulative|normali[sz]ed|forecast\w*|projected|expected|"
-    r"multi[\s-]*year|\d+[\s-]*(?:year|yr)s?)\b",
+    r"multi[\s-]*year|\d+[\s-]*(?:year|yr)s?|"
+    # DEF547 follow-up — a label pinned to a named period ("FY2024 FCF", "Q3 FCF",
+    # "in 2024 the FCF") is that period's figure, not the sheet's current scalar.
+    r"fiscal|(?:19|20)\d{2}|(?:FY|CY)\s?'?\d{2,4}|[QH][1-4]|"
+    r"last\s+year|prior[\s-]+year)\b",
     re.IGNORECASE,
 )
 _CLAUSE_BREAK_RE = re.compile(
@@ -593,6 +623,51 @@ def _label_is_qualified(text: str, label_start: int, numeral: _Numeral) -> bool:
     return False
 
 
+def _numeral_class(numeral: _Numeral) -> str:
+    if numeral.pct:
+        return "pct"
+    if numeral.multiplier != 1.0 or numeral.currency:
+        return "amount"
+    return "plain"
+
+
+def _unit_compatible(spec: _FieldSpec, numeral: _Numeral) -> bool:
+    """A percentage is never an amount and an amount is never a percentage. The
+    desk's "FCF conversion currently -152%" put a ratio next to the FCF label and
+    was told the sheet's FCF is -RM15,433M, not -152%. A unitless numeral stays
+    compatible with either (the existing label-and-value rule judges it)."""
+    if spec.unit == "amount":
+        return not numeral.pct
+    if spec.unit == "pct":
+        return _numeral_class(numeral) != "amount"
+    return True
+
+
+_PERIOD_PREFIX_RE = re.compile(r"(?:^|[^A-Za-z])(?:FY|CY|H|Q)\s?'?$", re.IGNORECASE)
+_YEAR_CONTEXT_RE = re.compile(
+    r"\b(?:in|since|during|from|until|through|fiscal|year)\s+$", re.IGNORECASE
+)
+
+
+def _is_not_a_figure(text: str, numeral: _Numeral) -> bool:
+    """A digit run that names a period or a list position, not a quantity: the
+    "2024" in "FY2024", the "3" in "Q3 2026", the "1" in "(1) FCF remains"."""
+    before = text[max(0, numeral.start - 12):numeral.start]
+    if _PERIOD_PREFIX_RE.search(before[-5:]):
+        return True
+    if before.endswith("(") and text[numeral.end:numeral.end + 1] == ")":
+        return True
+    raw = numeral.raw.strip()
+    if (
+        raw.isdigit()
+        and len(raw) == 4
+        and 1900 <= numeral.value <= 2100
+        and _YEAR_CONTEXT_RE.search(before)
+    ):
+        return True
+    return False
+
+
 def _label_distance(text: str, numeral: _Numeral, spec: _FieldSpec) -> int | None:
     """The character distance from `numeral` to the NEAREST occurrence of
     `spec`'s label within `spec.window_chars`, or `None` if no occurrence
@@ -611,6 +686,8 @@ def _label_distance(text: str, numeral: _Numeral, spec: _FieldSpec) -> int | Non
     the label almost always sits nearer the number it actually labels than
     the one it merely shares a sentence with.
     """
+    if not _unit_compatible(spec, numeral):
+        return None
     lo = max(0, numeral.start - spec.window_chars)
     hi = min(len(text), numeral.end + spec.window_chars)
     window = text[lo:hi]
@@ -632,9 +709,18 @@ def _label_distance(text: str, numeral: _Numeral, spec: _FieldSpec) -> int | Non
             # order, short enough not to reach a second, unrelated
             # mention — keeps the exclusion local to the occurrence it is
             # actually disambiguating.
-            ex_lo = max(0, m.start() - 12)
-            ex_hi = min(len(window), m.end() + 12)
-            if spec.exclude_pattern.search(window[ex_lo:ex_hi]):
+            #
+            # DEF547 follow-up — read from `text`, not the numeral-centred
+            # `window`: the window's edge cut "forward" in half ("...ward P/E"),
+            # so a forward P/E's own multiple was checked against the trailing
+            # one. A label that precedes its numeral also reads past the numeral
+            # ("P/E 11.1x (forward)").
+            ex_lo = max(0, label_start - 12)
+            ex_hi = min(
+                len(text),
+                max(label_end + 12, numeral.end + 10 if numeral.start >= label_end else 0),
+            )
+            if spec.exclude_pattern.search(text[ex_lo:ex_hi]):
                 continue
         # A label whose OWN matched text overlaps the numeral's span is not
         # "near" it, it CONTAINS it — the label text itself carries a digit
@@ -716,7 +802,9 @@ _SIGN_BEFORE_RE = re.compile(
     r"(?:^|[\s(\[{:=*\"'“/])[-−]\s?(?:US\$|S\$|RM|MYR|[$£€])?$", re.IGNORECASE
 )
 _NEGATIVE_WORD_RE = re.compile(
-    r"\b(?:negative|deficit|outflows?|burn(?:ing|s)?|minus)\b", re.IGNORECASE
+    r"\b(?:negative|deficit|outflows?|burn(?:ing|s)?|minus|down|cut|fell|"
+    r"declin(?:e|es|ed|ing)|dropp?(?:ed|s|ing)?)\b",
+    re.IGNORECASE,
 )
 
 
@@ -745,6 +833,46 @@ def _signed(text: str, numeral: _Numeral, sheet_vals: list[float]) -> _Numeral:
     ):
         return replace(numeral, value=-numeral.value)
     return numeral
+
+
+def numeral_is_corroborated_signed(
+    text: str, numeral: _Numeral, corpus: list[float]
+) -> bool:
+    """`_numeral_is_corroborated` with the sign the prose gave the numeral — the
+    Risk Officer's quotation check (`risk_officer._quotation_check`) reads the
+    sheet's raw, signed numbers, and "-RM15,433M" was being compared as +15,433.
+    The same `_signed` rule as the sheet-figure checker: an explicit minus counts,
+    a "negative"/"down" word only rescues, a dropped sign never corroborates."""
+    return _numeral_is_corroborated(_signed(text, numeral, corpus), corpus)
+
+
+# The profile keys whose value is stored IN MILLIONS of the sheet's currency (the
+# renderer adds the "M": `fundamentals.py::_company_size_line`, `cashflow_bridge_line`,
+# `capex_line`, `capital_return_line`, `_scale_line`). A magnitude-suffixed claim
+# ("-RM15,433M", "$1.2B") resolves to full units, so it can only equal one of these
+# once the sheet value is scaled up; the unscaled value stays in the corpus too.
+_MILLIONS_PROFILE_KEYS = (
+    "market_cap", "free_cash_flow", "free_cash_flow_ttm", "total_debt", "total_cash",
+    "net_cash", "operating_cash_flow_ttm", "capex_ttm", "revenue_ttm",
+    "capital_return_ttm", "dividends_paid_ttm", "shares_outstanding", "float_shares",
+)
+_MILLIONS_PROFILE_LIST_KEYS = ("fcf_history", "capex_history")
+
+
+def millions_scaled_values(profile: dict[str, Any] | None) -> list[float]:
+    """`profile`'s millions-denominated figures scaled to full units (x1e6)."""
+    out: list[float] = []
+    if not isinstance(profile, dict):
+        return out
+    for key in _MILLIONS_PROFILE_KEYS:
+        raw = profile.get(key)
+        if isinstance(raw, (int, float)) and not isinstance(raw, bool):
+            out.append(float(raw) * 1_000_000.0)
+    for key in _MILLIONS_PROFILE_LIST_KEYS:
+        for raw in profile.get(key) or []:
+            if isinstance(raw, (int, float)) and not isinstance(raw, bool):
+                out.append(float(raw) * 1_000_000.0)
+    return out
 
 
 @dataclass(frozen=True)
@@ -828,7 +956,9 @@ def find_sheet_mismatches(
     try:
         if not text or not isinstance(profile, dict) or not profile:
             return []
-        numerals = _extract_numerals(text)
+        numerals = [
+            n for n in _extract_numerals(text) if not _is_not_a_figure(text, n)
+        ]
         if not numerals:
             return []
         nearest = _nearest_numeral_per_spec(text, numerals)
