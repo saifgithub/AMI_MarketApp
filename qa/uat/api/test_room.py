@@ -614,10 +614,12 @@ def test_the_coded_decision_rule_computes_the_action_and_records_its_grader(seed
     assert outcome in CODED_OUTCOMES, coded
     assert coded["rule_version"], coded
     assert coded["policy_version"] and f"rule={coded['rule_version']}" in coded["policy_version"], coded
-    assert coded["grader"] == "deepinfra", coded
-    assert "deepseek-ai/DeepSeek-V4-Flash" in (coded.get("grader_version") or ""), coded
-    assert "split2" in (coded.get("grader_version") or ""), coded
-    assert coded["policy_version"].startswith(f"deepinfra@{coded['grader_version']}"), coded
+    # Alpha is on-prem only since 2026-11-25 (ROOM_GRADER=ling); a DeepInfra grade here is a config leak.
+    assert coded["grader"] == "ling", coded
+    gv = coded.get("grader_version") or ""
+    assert gv.startswith("ling:ling-3.0-flash-fin-fp4|"), coded
+    assert "split2" in gv and "think=off" in gv, coded
+    assert coded["policy_version"].startswith(f"ling@{gv}"), coded
 
     if coded.get("error") or outcome == "UNAVAILABLE":
         assert outcome == "UNAVAILABLE", f"a grader error must end as decision unavailable: {coded}"
