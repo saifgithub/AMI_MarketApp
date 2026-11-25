@@ -33,6 +33,7 @@ from app.services.room_grader_contract import (
 from app.services.room_graders import ling_terminal as terminal_v2
 from app.services.room_graders.hosted_llm import HostedLLMGrader, _CallFailed
 from app.services.room_graders.ling_terminal import tally_votes
+from app.services.room_graders.terminal_materiality import apply_materiality
 from app.services.room_graders.questions import Question, load_question_set, render_transcript
 
 AVERAGED_QUESTIONS: tuple[QuestionId, ...] = (
@@ -210,6 +211,14 @@ class ProductionPlanGrader(HostedLLMGrader):
                 counts = terminal_v2.rejection_counts(votes)
                 if counts:
                     tally["terminal_rejected"] = counts
+                checked = apply_materiality(by_q[q.id], transcript.terminal_inputs)
+                check = (checked.detail or {}).get("terminal_check")
+                if check is not None:
+                    tally["terminal_materiality"] = {
+                        "stood": check["stands"], "reason": check["reason"],
+                        "coverage": check["coverage"],
+                    }
+                by_q[q.id] = checked
                 continue
             by_q[q.id] = (
                 average_votes(q.id, votes, self._close_band)

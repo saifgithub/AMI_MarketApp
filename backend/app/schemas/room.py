@@ -174,6 +174,9 @@ class CodedAnswer(BaseModel):
     terminal_evidence: str | None = None
     terminal_open_because: str | None = None
     terminal_rejected: str | None = None
+    # CR267 `term=v2` materiality check on a `debt_default` yes: due within the horizon, cash plus
+    # horizon free cash flow, the coverage ratio and where each input came from. None otherwise.
+    terminal_check: dict | None = None
 
 
 class CodedDecisionRecord(BaseModel):

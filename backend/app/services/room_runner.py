@@ -117,6 +117,7 @@ from app.services.room_grader_contract import (
     RoomTranscript,
     build_cards_payload,
     build_proposed_trade,
+    build_terminal_inputs,
 )
 from app.services.room_grader_registry import resolve_grader
 from app.services.evidence_record import (
@@ -5976,6 +5977,9 @@ def _coded_transcript(
         ],
         cards=cards,
         proposed_trade=trade,
+        terminal_inputs=build_terminal_inputs(
+            ctx.profile, ctx.trader_horizon_weeks * 7,
+        ),
     )
 
 
@@ -6047,7 +6051,7 @@ async def _grade_room(
 
 _TERMINAL_DETAIL_KEYS = (
     "terminal_name", "terminal_category", "terminal_evidence",
-    "terminal_open_because", "terminal_rejected",
+    "terminal_open_because", "terminal_rejected", "terminal_check",
 )
 
 

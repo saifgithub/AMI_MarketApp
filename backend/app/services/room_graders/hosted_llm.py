@@ -303,6 +303,7 @@ class HostedLLMGrader:
             None,
         )
         terminal_rejected = tally.get("terminal_rejected")
+        terminal_materiality = tally.get("terminal_materiality")
         return GraderResult(
             grader=self.name,
             grader_version=self.version,
@@ -320,5 +321,6 @@ class HostedLLMGrader:
                 "served_model": served,
                 "calls": len(tally["calls"]),
                 **({"terminal_rejected_votes": terminal_rejected} if terminal_rejected else {}),
+                **({"terminal_materiality": terminal_materiality} if terminal_materiality else {}),
             },
         )

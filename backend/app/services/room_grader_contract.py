@@ -85,6 +85,11 @@ class RoomTranscript:
     proposed_trade: dict | None = None
     """Built by `build_proposed_trade`: {"action": ..., "size_pct", "entry", "stop",
     "target"}; `action` is omitted when the Room cannot say what the desk proposed."""
+    terminal_inputs: dict | None = None
+    """CR267 `term=v2` materiality check: the balance-sheet inputs (in $M) the code needs to decide a
+    `debt_default` terminal yes, built by `build_terminal_inputs` from
+    the Room's profile. None when the Room has no profile (an offline caller); the check then finds
+    no maturity schedule and says so."""
 
 
 class Grader(Protocol):
@@ -149,6 +154,38 @@ def build_proposed_trade(
         if value is not None:
             trade[key] = value
     return trade
+
+
+def build_terminal_inputs(profile: Mapping[str, Any] | None, horizon_days: int | None) -> dict:
+    """The `RoomTranscript.terminal_inputs` shape, in $M, taken from the Room's profile (the data
+    behind the fact sheet). A field counts only when `field_state` says it is live, as the sheet
+    itself does. Lives here, not in `room_graders`, because the runner may import only this contract."""
+    p = profile or {}
+    state = p.get("field_state") or {}
+
+    def live(key: str, *, value_key: str | None = None) -> Any:
+        return p.get(value_key or key) if state.get(key) == "live" else None
+
+    labels, values = p.get("debt_maturity_labels"), p.get("debt_maturity_values")
+    ladder = None
+    if state.get("debt_maturity") == "live" and labels and values and len(labels) == len(values):
+        ladder = [[str(a), float(b)] for a, b in zip(labels, values)]
+    fcf = live("free_cash_flow")
+    fcf_source = "free_cash_flow"
+    if fcf is None:
+        fcf = live("free_cash_flow_ttm")
+        fcf_source = "free_cash_flow_ttm"
+    return {
+        "horizon_days": horizon_days,
+        "ladder": ladder,
+        "ladder_period_end": p.get("debt_maturity_period_end") if ladder else None,
+        "short_term_borrowings": p.get("debt_maturity_excluded_st") if ladder else None,
+        "total_cash": live("total_cash"),
+        "total_debt": live("total_debt"),
+        "net_cash": live("net_cash"),
+        "fcf_ttm": fcf,
+        "fcf_field": fcf_source if fcf is not None else None,
+    }
 
 
 NO_TRADE_ACTIONS = frozenset(
