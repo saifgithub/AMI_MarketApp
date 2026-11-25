@@ -1653,6 +1653,18 @@ class Settings(BaseSettings):
     # itself (see `room_graders/ling.py`). Timeout is per grader call, as for DeepInfra, but
     # on-prem Ling is slower and shares a GPU with failover traffic.
     room_grader_ling_timeout_s: float = Field(default=60.0, ge=5.0, le=300.0)
+    # CR267 `term=v2`: which terminal-vulnerability question the Ling grader asks. `v1` is the shared
+    # one (default); `v2` the tighter, code-validated one in `room_graders/ling_terminal.py`. A value
+    # other than v1/v2 refuses to boot (never a silent fallback). Ling only; DeepInfra is unaffected.
+    room_grader_ling_terminal: str = "v1"
+
+    @field_validator("room_grader_ling_terminal")
+    @classmethod
+    def _ling_terminal_is_known(cls, v: str) -> str:
+        value = (v or "").strip().lower()
+        if value not in ("v1", "v2"):
+            raise ValueError(f"ROOM_GRADER_LING_TERMINAL must be 'v1' or 'v2', not {v!r}")
+        return value
 
     @model_validator(mode="after")
     def _ling_grader_is_configured(self) -> "Settings":

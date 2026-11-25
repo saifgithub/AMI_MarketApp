@@ -156,7 +156,8 @@ class HostedLLMGrader:
         return self._gateway or get_llm_gateway()
 
     async def _ask(
-        self, system: str, user: str, constraint: OutputConstraint, *, logprobs: bool
+        self, system: str, user: str, constraint: OutputConstraint, *, logprobs: bool,
+        max_tokens: int | None = None,
     ) -> tuple[str, dict[str, Any]]:
         overrides: dict[str, Any] = {"temperature": 0, **self._extra_overrides}
         if logprobs:
@@ -167,7 +168,7 @@ class HostedLLMGrader:
             system_prompt=system,
             messages=[ChatMessage(role="user", content=user)],
             model_tier="cheap",
-            max_tokens=self._max_tokens,
+            max_tokens=max_tokens or self._max_tokens,
             audit_flow=AUDIT_FLOW,
             meta=meta,
             constraint=constraint,
@@ -301,6 +302,7 @@ class HostedLLMGrader:
             (m.get("reported_model") for m in tally["calls"] if m.get("reported_model")),
             None,
         )
+        terminal_rejected = tally.get("terminal_rejected")
         return GraderResult(
             grader=self.name,
             grader_version=self.version,
@@ -317,5 +319,6 @@ class HostedLLMGrader:
                 "slot": self.slot,
                 "served_model": served,
                 "calls": len(tally["calls"]),
+                **({"terminal_rejected_votes": terminal_rejected} if terminal_rejected else {}),
             },
         )

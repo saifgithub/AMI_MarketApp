@@ -43,6 +43,9 @@ class QuestionAnswer:
     """True when the grader's own evidence sits near the yes/no boundary. The rule's
     Contested band reads this; graders set it from fitted cut-offs, never from consensus."""
     rationale: str = ""
+    detail: Mapping[str, Any] | None = None
+    """Structured fields a question's answer carries beyond yes/no (CR267 `term=v2`: the named
+    terminal risk, its category, evidence and why it stayed open). None for every other question."""
 
 
 @dataclass(frozen=True)
