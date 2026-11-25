@@ -199,6 +199,7 @@ class HostedLLMGrader:
         rendered: str,
         tally: dict[str, Any],
         phrasing: int | None = _SAME_PHRASING,
+        system: str | None = None,
     ) -> QuestionAnswer:
         if phrasing is _SAME_PHRASING:
             phrasing = self._phrasing
@@ -207,7 +208,7 @@ class HostedLLMGrader:
             f"yes means: {q.yes}\nno means: {q.no}"
         )
         text, meta = await self._ask(
-            _SYSTEM_YESNO, prompt, _YESNO_CONSTRAINT, logprobs=self._use_logprobs
+            system or _SYSTEM_YESNO, prompt, _YESNO_CONSTRAINT, logprobs=self._use_logprobs
         )
         tally["calls"].append(meta)
         raw = _json_field(text, "answer")

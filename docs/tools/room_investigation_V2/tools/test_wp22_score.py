@@ -808,9 +808,38 @@ class LingRoomGraderToolTests(unittest.TestCase):
         self.assertIsNone(setup.guard)
         self.assertTrue(g.version.startswith(f"ling:{self.MODEL}|t0|avg5:"))
         self.assertIn("|split2|", g.version)
+        self.assertTrue(g.version.endswith("|think=off|bear=v2"))
+        self.assertEqual(setup.describe["bear"], "v2")
         self.assertEqual((setup.describe["model"], setup.describe["base_url"]), (self.MODEL, self.URL))
         self.assertNotIn("spend", w._cap_meta(setup))
         w._report_cap(setup)  # no guard: must not raise
+
+    def test_ling_bear_shared_runs_the_question_files_wording_and_keys_apart(self):
+        v2 = self.setup().factory(None)
+        shared_setup = self.setup(ling_bear="shared")
+        shared = shared_setup.factory(None)
+        self.assertEqual(shared_setup.describe["bear"], "shared")
+        self.assertFalse(shared.version.endswith("|bear=v2"))
+        self.assertEqual(v2.version, shared.version + "|bear=v2")
+        self.assertEqual(shared._variants, {})
+        self.assertEqual(len(v2._variants), 1)
+
+    def test_the_cli_takes_ling_bear_with_v2_as_the_default(self):
+        seen = []
+
+        def spy(args, env=None):
+            seen.append(args.ling_bear)
+            raise ValueError("stop here")
+
+        base = ("--grader", "ling_room", "--trade-action", "buy", "--ling-url", self.URL,
+                "--ling-model", self.MODEL)
+        with mock.patch.object(w, "setup_grader", spy):
+            run_main(score_argv(*base), {})
+            run_main(score_argv(*base, "--ling-bear", "shared"), {})
+        self.assertEqual(seen, ["v2", "shared"])
+        with self.assertRaises(SystemExit):
+            with contextlib.redirect_stderr(io.StringIO()):
+                w.main(score_argv(*base, "--ling-bear", "bogus"))
 
     def test_it_points_the_gateway_slot_at_ling_and_allows_nothing_else(self):
         from app.core.config import settings
