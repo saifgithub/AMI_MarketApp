@@ -685,6 +685,9 @@ services:
       # vllm_fallback slot (VLLM_FALLBACK_BASE_URL / _MODEL, KIND must be vllm). Thinking
       # is switched off per call. Nothing changes until ROOM_GRADER names it.
       ROOM_GRADER_LING_TIMEOUT_S: ${ROOM_GRADER_LING_TIMEOUT_S:-60.0}
+      # CR267 term=v2 — v1 (the shared terminal question, default) or v2 (the tighter,
+      # code-validated one). Ling only. Anything else refuses to boot.
+      ROOM_GRADER_LING_TERMINAL: ${ROOM_GRADER_LING_TERMINAL:-v1}
       # CR222 §3 — pre-registration on the training trade ticket, and whether
       # it also binds long_horizon mandates. See
       # Settings.training_preregistration_required /

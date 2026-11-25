@@ -6028,6 +6028,12 @@ async def _grade_room(
     return result
 
 
+_TERMINAL_DETAIL_KEYS = (
+    "terminal_name", "terminal_category", "terminal_evidence",
+    "terminal_open_because", "terminal_rejected",
+)
+
+
 def _coded_record(
     result: GraderResult,
     decision: room_decision_rule.RuleDecision,
@@ -6045,6 +6051,7 @@ def _coded_record(
                 confidence=a.confidence,
                 close=a.close,
                 rationale=a.rationale,
+                **{k: (a.detail or {}).get(k) for k in _TERMINAL_DETAIL_KEYS},
             )
             for a in result.answers
         ],

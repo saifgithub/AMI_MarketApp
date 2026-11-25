@@ -27,6 +27,10 @@ DeepInfra's 91. Only the question's wording and system prompt differ; the plan a
 shared one. The tag is part of the grader version, so Rooms graded with it are keyed apart from
 Rooms graded with the shared wording.
 
+Terminal question. `ROOM_GRADER_LING_TERMINAL=v2` (default `v1`) swaps the unconditional
+terminal-vulnerability veto's question for the tighter, code-validated one in `ling_terminal.py`
+(tag `term=v2`, appended to the version). DeepInfra is never touched.
+
 The grader version names the served model, so changing `VLLM_FALLBACK_MODEL` re-keys the
 policy version (and every Room keyed by it). `extra.served_model` records the model id the
 server reported on the calls.
@@ -37,6 +41,7 @@ from __future__ import annotations
 from typing import Any
 
 from app.services.room_graders.ling_variants import BEAR_V2, BEAR_V2_TAG
+from app.services.room_graders.ling_terminal import TERMINAL_V2_TAG
 from app.services.room_graders.production_plan import ProductionPlanGrader, plan_version_suffix
 
 GRADER_NAME = "ling"
@@ -44,10 +49,14 @@ SLOT = "vllm_fallback"
 THINKING_OFF: dict[str, Any] = {"chat_template_kwargs": {"enable_thinking": False}}
 
 
-def grader_version(model: str, *, bear_variant: bool = True) -> str:
-    """The pinned model, the shared production plan, the thinking switch and the bear wording."""
+def grader_version(
+    model: str, *, bear_variant: bool = True, terminal_variant: bool = False,
+) -> str:
+    """The pinned model, the shared production plan, the thinking switch, the bear wording and,
+    when on, the terminal-vulnerability wording."""
     base = f"{GRADER_NAME}:{model}{plan_version_suffix()}|think=off"
-    return f"{base}|{BEAR_V2_TAG}" if bear_variant else base
+    version = f"{base}|{BEAR_V2_TAG}" if bear_variant else base
+    return f"{version}|{TERMINAL_V2_TAG}" if terminal_variant else version
 
 
 class LingGrader(ProductionPlanGrader):
@@ -55,7 +64,7 @@ class LingGrader(ProductionPlanGrader):
 
     def __init__(
         self, *, model: str, timeout_s: float = 60.0, gateway: Any = None,
-        bear_variant: bool = True,
+        bear_variant: bool = True, terminal_variant: bool = False,
     ) -> None:
         model = (model or "").strip()
         if not model or model.lower().endswith("latest"):
@@ -63,12 +72,24 @@ class LingGrader(ProductionPlanGrader):
         super().__init__(
             SLOT,
             timeout_s=timeout_s,
-            version=grader_version(model, bear_variant=bear_variant),
+            version=grader_version(
+                model, bear_variant=bear_variant, terminal_variant=terminal_variant,
+            ),
+            terminal_variant=terminal_variant,
             gateway=gateway,
             extra_request_overrides=THINKING_OFF,
             variants=(BEAR_V2,) if bear_variant else (),
         )
         self._model = model
+
+
+def terminal_variant_from_setting(value: str) -> bool:
+    """`ROOM_GRADER_LING_TERMINAL`: `v1` (the shared question) or `v2`. Anything else is an error,
+    never a silent fallback (`Settings` refuses it at boot; this guards a direct caller)."""
+    v = (value or "").strip().lower()
+    if v not in ("v1", "v2"):
+        raise ValueError(f"ROOM_GRADER_LING_TERMINAL must be 'v1' or 'v2', not {value!r}")
+    return v == "v2"
 
 
 def build_from_settings() -> LingGrader:
@@ -81,4 +102,5 @@ def build_from_settings() -> LingGrader:
     return LingGrader(
         model=settings.vllm_fallback_model,
         timeout_s=settings.room_grader_ling_timeout_s,
+        terminal_variant=terminal_variant_from_setting(settings.room_grader_ling_terminal),
     )

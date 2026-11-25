@@ -165,6 +165,15 @@ class CodedAnswer(BaseModel):
     confidence: float | None = None
     close: bool = False
     rationale: str = ""
+    # CR267 `term=v2` (Ling): the terminal-vulnerability answer's evidence, kept so a person can
+    # see what was named. `terminal_rejected` records yes votes the code refused (empty field,
+    # category outside the allowed list, evidence not found in the Room's materials). None on
+    # every other answer and on every Room graded with the shared question.
+    terminal_name: str | None = None
+    terminal_category: str | None = None
+    terminal_evidence: str | None = None
+    terminal_open_because: str | None = None
+    terminal_rejected: str | None = None
 
 
 class CodedDecisionRecord(BaseModel):

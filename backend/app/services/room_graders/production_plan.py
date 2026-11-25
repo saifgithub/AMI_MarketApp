@@ -30,7 +30,9 @@ from app.services.room_grader_contract import (
     RoomTranscript,
     trade_proposed_answer,
 )
+from app.services.room_graders import ling_terminal as terminal_v2
 from app.services.room_graders.hosted_llm import HostedLLMGrader, _CallFailed
+from app.services.room_graders.ling_terminal import tally_votes
 from app.services.room_graders.questions import Question, load_question_set, render_transcript
 
 AVERAGED_QUESTIONS: tuple[QuestionId, ...] = (
@@ -124,18 +126,36 @@ class ProductionPlanGrader(HostedLLMGrader):
 
     def __init__(
         self, slot: str, *, timeout_s: float, variants: Sequence[QuestionVariant] = (),
-        **kwargs: Any,
+        terminal_variant: bool = False, **kwargs: Any,
     ) -> None:
         super().__init__(slot, close_band=CLOSE_BAND, **kwargs)
         self._timeout_s = float(timeout_s)
+        self._terminal_variant = terminal_variant
         self._variants = {v.question.id: v for v in variants}
         for v in self._variants.values():
             if len(v.question.phrasings) < PHRASING_COUNT:
                 raise ValueError(f"variant {v.tag} needs {PHRASING_COUNT} phrasings")
 
+    async def _grade_terminal(
+        self, ticker: str, rendered: str, tally: dict[str, Any], phrasing: int,
+    ) -> QuestionAnswer:
+        """One phrasing of the `term=v2` terminal question (`ling_terminal.py`): the full-field JSON
+        reply, checked in code, no token probabilities."""
+        text, meta = await self._ask(
+            terminal_v2.SYSTEM, f"{rendered}\n\n---\n{terminal_v2.question_block(ticker, phrasing)}",
+            terminal_v2.CONSTRAINT, logprobs=False, max_tokens=terminal_v2.MAX_TOKENS,
+        )
+        tally["calls"].append(meta)
+        vote = terminal_v2.parse_vote(text, phrasing, rendered)
+        if vote.answer is Answer.NOT_COMPUTABLE:
+            tally["unparsed"] += 1
+        return vote
+
     async def _grade_all(self, transcript: RoomTranscript, tally: dict[str, Any]):
         rendered = render_transcript(transcript)
         gate = asyncio.Semaphore(MAX_CONCURRENT_CALLS)
+
+        terminal = self._terminal_variant
 
         async def vote(q: Question, phrasing: int | None) -> QuestionAnswer:
             variant = self._variants.get(q.id)
@@ -144,10 +164,12 @@ class ProductionPlanGrader(HostedLLMGrader):
             while True:
                 async with gate:
                     try:
-                        return await asyncio.wait_for(
-                            self._grade_question(asked, rendered, tally, phrasing, system),
-                            self._timeout_s,
+                        call = (
+                            self._grade_terminal(transcript.ticker, rendered, tally, phrasing)
+                            if terminal and q.id is QuestionId.TERMINAL_VULNERABILITY
+                            else self._grade_question(asked, rendered, tally, phrasing, system)
                         )
+                        return await asyncio.wait_for(call, self._timeout_s)
                     except asyncio.TimeoutError:
                         raise _CallFailed(
                             f"{q.id.value}: call timed out after {self._timeout_s:g}s"
@@ -165,7 +187,9 @@ class ProductionPlanGrader(HostedLLMGrader):
             if q.id is QuestionId.TRADE_PROPOSED:
                 continue
             phrasings: list[int | None] = (
-                list(range(PHRASING_COUNT)) if q.id in AVERAGED_QUESTIONS else [None]
+                list(range(PHRASING_COUNT))
+                if q.id in AVERAGED_QUESTIONS or (terminal and q.id is QuestionId.TERMINAL_VULNERABILITY)
+                else [None]
             )
             mine = [asyncio.ensure_future(vote(q, p)) for p in phrasings]
             tasks.extend(mine)
@@ -181,6 +205,12 @@ class ProductionPlanGrader(HostedLLMGrader):
         by_q: dict[QuestionId, QuestionAnswer] = {}
         for q, mine in plan:
             votes = [t.result() for t in mine]
+            if terminal and q.id is QuestionId.TERMINAL_VULNERABILITY:
+                by_q[q.id] = tally_votes(votes, SPLIT_CLOSE_MIN_MINORITY)
+                counts = terminal_v2.rejection_counts(votes)
+                if counts:
+                    tally["terminal_rejected"] = counts
+                continue
             by_q[q.id] = (
                 average_votes(q.id, votes, self._close_band)
                 if q.id in AVERAGED_QUESTIONS else votes[0]
