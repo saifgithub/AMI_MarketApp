@@ -463,8 +463,6 @@ cases:
   - id: UAT-MAND-043
     title: Settings shows the minimum reward-to-risk row, explains it and saves a value
     layer: device
-    status: blocked
-    blocked_on: Needs the first build that carries CR284 (not built yet) and the Appium script
     plans: [trader]
     steps:
       - 'Settings > RISK LIMITS > "Set my own limits" and find Minimum reward to risk below Total open-risk cap'

@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**333 cases** — 210 api, 28 device, 95 manual; 17 blocked.
+**333 cases** — 210 api, 28 device, 95 manual; 16 blocked.
 
 ## Areas
 
@@ -1081,7 +1081,7 @@ _Device (automated, Appium) · plans: any · **BLOCKED** — Needs a build made 
 
 #### UAT-MAND-043 — Settings shows the minimum reward-to-risk row, explains it and saves a value
 
-_Device (automated, Appium) · plans: trader · **BLOCKED** — Needs the first build that carries CR284 (not built yet) and the Appium script_
+_Device (automated, Appium) · plans: trader_
 
 **Steps**
 1. Settings > RISK LIMITS > "Set my own limits" and find Minimum reward to risk below Total open-risk cap
