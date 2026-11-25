@@ -381,10 +381,6 @@ class _PortfolioScreenState extends ConsumerState<PortfolioScreen> {
   }
 }
 
-/// CR282 - the state the screen renders for [market]. With Bursa off it is the
-/// US state untouched. With it on, the book's own portfolio and trades come from
-/// [bursa] for Bursa, and the (shared, all-markets) order list in [us] is cut to
-/// this market so a US order never counts against the Bursa tab and vice versa.
 /// DEF544 - what makes the book "a different book" for the panels that read
 /// their own endpoints: positions, cash and the ledger length. Marks are
 /// deliberately absent - a price tick is not a reason to re-run the engine.
@@ -397,6 +393,10 @@ String portfolioBookSignature(SimState s) {
       '|${p.currentCash.toStringAsFixed(2)}|${s.trades.length}';
 }
 
+/// CR282 - the state the screen renders for [market]. With Bursa off it is the
+/// US state untouched. With it on, the book's own portfolio and trades come from
+/// [bursa] for Bursa, and the (shared, all-markets) order list in [us] is cut to
+/// this market so a US order never counts against the Bursa tab and vice versa.
 SimState _viewState({
   required AppMarket market,
   required bool bursaOn,
