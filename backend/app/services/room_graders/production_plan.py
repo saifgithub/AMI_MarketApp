@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import asyncio
 import random
+from dataclasses import dataclass
 from typing import Any, Sequence
 
 from app.services.room_grader_contract import (
@@ -53,6 +54,18 @@ CLOSE_BAND = 0.2
 # Saiful 2026-11-24 (WP-23 fit, `wp23_fit_2026-11-24.md`): a 4-1 split is a clear
 # answer; only 3-2 is close. Any split (1) gave 22% Contested; 2 gives ~17%.
 SPLIT_CLOSE_MIN_MINORITY = 2
+
+
+@dataclass(frozen=True)
+class QuestionVariant:
+    """A grader-specific replacement for one question's wording: the question the model is
+    asked (text, yes/no meaning, five phrasings) and, optionally, its own system prompt. The
+    question's id, and so the plan that averages and splits it, is unchanged. Only a grader
+    that is handed a variant uses it; the shared plan's wording stays the question file's."""
+
+    tag: str
+    question: Question
+    system: str | None = None
 
 
 def is_overload(exc: BaseException) -> bool:
@@ -109,21 +122,31 @@ class ProductionPlanGrader(HostedLLMGrader):
     """`HostedLLMGrader` running the production plan above. Subclasses set `name`,
     pass `timeout_s` and supply the transport (`_gw()` / `agrade`)."""
 
-    def __init__(self, slot: str, *, timeout_s: float, **kwargs: Any) -> None:
+    def __init__(
+        self, slot: str, *, timeout_s: float, variants: Sequence[QuestionVariant] = (),
+        **kwargs: Any,
+    ) -> None:
         super().__init__(slot, close_band=CLOSE_BAND, **kwargs)
         self._timeout_s = float(timeout_s)
+        self._variants = {v.question.id: v for v in variants}
+        for v in self._variants.values():
+            if len(v.question.phrasings) < PHRASING_COUNT:
+                raise ValueError(f"variant {v.tag} needs {PHRASING_COUNT} phrasings")
 
     async def _grade_all(self, transcript: RoomTranscript, tally: dict[str, Any]):
         rendered = render_transcript(transcript)
         gate = asyncio.Semaphore(MAX_CONCURRENT_CALLS)
 
         async def vote(q: Question, phrasing: int | None) -> QuestionAnswer:
+            variant = self._variants.get(q.id)
+            asked, system = (variant.question, variant.system) if variant else (q, None)
             attempt = 0
             while True:
                 async with gate:
                     try:
                         return await asyncio.wait_for(
-                            self._grade_question(q, rendered, tally, phrasing), self._timeout_s,
+                            self._grade_question(asked, rendered, tally, phrasing, system),
+                            self._timeout_s,
                         )
                     except asyncio.TimeoutError:
                         raise _CallFailed(
