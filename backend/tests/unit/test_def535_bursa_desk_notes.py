@@ -124,11 +124,11 @@ def test_the_us_relative_strength_line_is_unchanged():
     assert "S&P 500 +20.0%" in relative_strength_line(23.0, 20.0, 3.0)
 
 
-def test_the_bursa_bank_variant_is_revision_four_and_us_is_untouched():
+def test_the_bursa_bank_variant_is_revision_five_and_us_is_untouched():
     my = room_bank.sheet_variant(
         news_state="live", social_state="live", market_withheld=False, ticker=KL,
     )
-    assert my.endswith("|my_rev=4")
+    assert my.endswith("|my_rev=5")
     us = room_bank.sheet_variant(
         news_state="live", social_state="live", market_withheld=False, ticker="NVDA",
     )

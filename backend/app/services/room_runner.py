@@ -2048,7 +2048,9 @@ def _stamp_my_macro(
             f"next MPC date is not in AMI's calendar (it ends {bnm_calendar.LAST_DATE.isoformat()}) — "
             "do not state a meeting date"
         )
-    profile["macro_cpi_line"] = opendosm_cpi.cpi_line(opendosm_cpi.fetch_cpi())
+    cpi = opendosm_cpi.fetch_cpi()
+    profile["macro_cpi_line"] = opendosm_cpi.cpi_line(cpi)
+    profile["macro_cpi_note"] = opendosm_cpi.cpi_note(cpi)
     profile["my_news_rss"] = my_news_rss.status()
 
 

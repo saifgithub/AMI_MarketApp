@@ -110,3 +110,22 @@ def cpi_line(read: CpiRead) -> str:
         f"(index {read.index} vs {read.prior_year_index} a year earlier; AMI's own quotient of "
         f"the published index). Source: {ATTRIBUTION}."
     )
+
+
+def cpi_note(read: CpiRead) -> str:
+    """The coded AMI note a Bursa Macro & Events turn ends with (DEF546).
+
+    States the reading with its reference month and the source, or says there is
+    none this call, so a desk that quotes CPI loosely (no month, no source) still
+    leaves the reader the full datum. A prompt ask for the month is not a control.
+    """
+    if read.yoy_pct is None or read.month is None:
+        return (
+            f"[AMI note: Malaysia headline CPI is not available this call ({read.reason}); "
+            "this read does not include it.]"
+        )
+    return (
+        f"[AMI note: Malaysia headline CPI is {read.yoy_pct:+.1f}% year-on-year for "
+        f"{read.month.strftime('%b %Y')}, AMI's own quotient of the index OpenDOSM published. "
+        f"Source: {ATTRIBUTION}.]"
+    )

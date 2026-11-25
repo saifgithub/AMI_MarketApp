@@ -210,8 +210,14 @@ def my_desk_footer(agent_id: AgentId, profile: dict[str, Any] | None) -> str | N
             f"[AMI note: {'; '.join(labels)} are {NOT_AVAILABLE_FOR_MARKET}; "
             "this read does not include them.]"
         )
+        parts = [note]
+        cpi = (profile or {}).get("macro_cpi_note")
+        if cpi:
+            parts.append(cpi)
         rss = my_news_rss_note((profile or {}).get("my_news_rss"))
-        return f"{note}\n\n{rss}" if rss else note
+        if rss:
+            parts.append(rss)
+        return "\n\n".join(parts)
     if agent_id is AgentId.SOCIAL_MEDIA_ANALYST:
         return (
             f"[AMI note: the put/call ratio is {NOT_AVAILABLE_NO_BURSA_POSITIONING}; "

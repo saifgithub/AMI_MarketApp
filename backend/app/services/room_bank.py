@@ -330,7 +330,8 @@ def policy_settings() -> dict[str, Any]:
 #: `.KL` sheet cannot absorb (DEF533). It is part of the variant for `.KL` only, so
 #: a new Room rebuilds the day's sheet and re-keys the bank; US keys are untouched.
 #: 4 = the Malay Mail news feed (CR282 lane E2) changed the News sheet.
-MY_SHEET_REVISION = 4
+#: 5 = the sheet carries `macro_cpi_note` for Macro & Events' coded note (DEF546).
+MY_SHEET_REVISION = 5
 
 
 def sheet_variant(
