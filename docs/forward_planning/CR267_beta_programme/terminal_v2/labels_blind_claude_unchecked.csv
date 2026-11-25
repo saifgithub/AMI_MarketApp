@@ -1,0 +1,31 @@
+ticker,run_id,market,label,category,risk_name,evidence,open_because,confidence,note
+0217.KL,9a5af10d-9aec-47b8-a361-c25aabf66ab1,bursa,no,,,,,high,
+3662.KL,8cdb104c-37be-4c31-870c-16bd08f0ef0f,bursa,no,,,,,high,
+1724.KL,3b171c2c-4077-4b5e-a385-172188dbdcb3,bursa,no,,,,,medium,"Net debt RM1,320M, coverage 3.6x, FCF RM70M; no maturity evidence."
+5180.KL,f122d564-8124-4b30-9d99-afbc5fc202fe,bursa,no,,,,,medium,"Current ratio 0.38, debt RM2,140M, but coverage 3.1x, FCF RM235M; no maturity/covenant evidence."
+0174.KL,bb919067-04f7-445b-ad68-cd48faff9f06,bursa,no,,,,,high,
+5258.KL,118b710f-5073-419b-be4c-ba611044c0a3,bursa,no,,,,,high,
+4405.KL,23503f0e-79bd-4c25-97c9-f357b0adb12a,bursa,no,,,,,low,"Net debt RM792M vs mcap RM8M, coverage -0.9x, current ratio 0.99; Bear flagged ""no debt maturity ladder"" gap. Leverage alone and no maturity/covenant/default evidence. Borderline."
+0116.KL,50fb6e4f-0dc0-4a1f-878d-1e0d70fdd778,bursa,no,,,,,low,"Distress (net debt RM115M vs mcap RM32M, coverage -0.8x, price RM0.005) but debt maturity ladder unavailable; no maturity, covenant, missed payment, PN17/GN3 trigger or audit item in materials. Refinancing risk called ""unquantifiable"" by Bear. Borderline."
+7854.KL,d0c8a00f-9d8a-4db5-abff-ef0729093dbe,bursa,no,,,,,high,
+5001.KL,506eda96-a2c8-478c-99f9-0712ef3447da,bursa,no,,,,,medium,"Quick ratio 0.38, coverage 1.4x, ""insolvency"" rhetoric is general weakness; no maturity/covenant evidence."
+5819.KL,ec9db9c7-c7a8-46de-bceb-9adcabab048f,bursa,no,,,,,high,
+9539.KL,36e963c5-b4b4-4625-b7ca-53e6cfc42290,bursa,no,,,,,high,
+0292.KL,82680571-a7ca-4a64-89f2-c6c49906bd0b,bursa,no,,,,,high,
+7022.KL,02c27ce3-959a-4a4c-89a3-0652dfef712c,bursa,no,,,,,medium,Net cash RM44M vs FCF -RM43M (~1y runway) but zero debt; no category fits.
+1996.KL,68c6eec5-fde2-4bc9-bc3e-4903dfd1df8f,bursa,no,,,,,high,
+2453.KL,32c2aa98-0f14-4dda-acec-4bd46284384c,bursa,no,,,,,high,
+0261.KL,01f42b8f-da24-4aa7-8b32-d1f987d844a6,bursa,no,,,,,high,
+0023.KL,468a300e-ebc6-4fca-8a90-5746fd5c7487,bursa,no,,,,,high,
+7315.KL,2593a16a-6c27-4678-9a19-a6fdd31d7786,bursa,no,,,,,high,
+0227.KL,7446d27c-3746-4223-ab1f-ac82f71d66e1,bursa,no,,,,,high,
+FCEL,5915420c-e922-4c87-9b0c-2d0583ff7aea,us,no,,,,,high,Cash runway ~2y ($492M net cash vs -$113M FCF); no 8-K 4.01/4.02 in 180d; no going-concern/listing item.
+TMO,a5649aec-023a-4064-9eef-3c56ec6f108c,us,no,,,,,high,"$3,528M due within 1 year vs TTM FCF $7,596M: normal ladder, met from cash flow."
+SNAP,cb539fc8-198f-40fb-8738-f11c16827919,us,no,,,,,high,
+LEVI,98e0e618-0208-41ce-977f-25da53d0c167,us,no,,,,,high,
+APD,79f8f145-3593-4ad4-9b34-67da1487f3cb,us,no,,,,,high,
+XPEV,0a2eda2a-f601-4b2b-92c0-bae627b63a4c,us,no,,,,,medium,"Proposed US legislative ban on Chinese EV makers is a regulatory/sector overhang, not fraud_regulatory (no action against the company) and not shown to be most of revenue; net cash $5,135M."
+BA,ba4c35ce-ac99-4037-86c3-d474960c5dc8,us,no,,,,,medium,"Borderline considered: $8,351M debt due within 1 year (Bear/Bull) with interest coverage 0.2x, but gross cash $20,671M (Bull) covers maturity 2.5x; no covenant/missed payment. Leverage on its own is not terminal."
+BGS,3f839cc3-7bee-470a-a1fa-b16358bcba1c,us,yes,debt_default,"Refinancing wall: $1,133M debt due Year 2","Fundamentals Analyst + Bear + Research Manager: ""$1,133M due in Year 2 and $432M in Year 3 (vs. only $4M in Year 1)""; ""$294M market cap""; ""interest coverage of just 1.2x"" (Q to 2026-09-30); TTM FCF $99M; implied cost of debt 7.6%","Raised by Fundamentals/Bear and carried by RM and Trader (""existential""). Bull only cited insider buying and FCF covering the $54M dividend; no refinancing plan, committed facility or cash figure appears anywhere in the materials. Maturity is 11x TTM FCF and 3.9x market cap, inside the 3-10y horizon; failure/dilutive refi is not stop-containable.",medium,"No cash balance stated in materials (net debt $2,029M only); judged on maturity vs FCF/coverage. US run has no fact sheet row in DB; labelled from transcript."
+RIVN,67462c35-7911-462a-91ec-2227048f1217,us,no,,,,,medium,"Dilution/raise risk is speculative (gross cash $5,502M, ~13 months burn; no maturity ladder in materials, bear said ""not explicitly detailed""); no restructuring or default evidence."
+XPEV,2f012d41-0038-4079-a391-de7a2a56be23,us,no,,,,,medium,"Proposed US legislative ban on Chinese EV makers is a regulatory/sector overhang, not fraud_regulatory (no action against the company) and not shown to be most of revenue; net cash $5,135M."
