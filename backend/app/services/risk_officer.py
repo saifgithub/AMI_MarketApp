@@ -117,6 +117,8 @@ from app.services.numeric_quotation import (
     _Numeral,
     _extract_numerals,
     _numeral_is_corroborated,
+    millions_scaled_values,
+    numeral_is_corroborated_signed,
 )
 from app.trading_math.option_ladder import LadderOption
 
@@ -321,6 +323,7 @@ def _corroborating_values(profile: dict[str, Any] | None, rows: list[LadderOptio
     (callers that have not threaded the fact sheet through yet still get
     ladder-only verification, never a crash for a missing argument)."""
     values = list(_numeric_leaves(profile)) if profile else []
+    values.extend(millions_scaled_values(profile))
     for r in rows:
         values.extend(_numeric_leaves({
             "size_pct": r.size_pct,
@@ -350,7 +353,7 @@ def _quotation_check(
         if not numerals:
             return True
         corpus = _corroborating_values(profile, rows)
-        return all(_numeral_is_corroborated(n, corpus) for n in numerals)
+        return all(numeral_is_corroborated_signed(s, n, corpus) for n in numerals)
     except Exception:  # noqa: BLE001 — degrade to UNVERIFIED, never crash a render
         return False
 
