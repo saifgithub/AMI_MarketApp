@@ -1,0 +1,16 @@
+{
+  "started_unix": 1795623298.154134,
+  "elapsed_s": 1858.5,
+  "rooms": 200,
+  "errors": 0,
+  "concurrency": 4,
+  "slot": "vllm_fallback",
+  "question_set_version": "q1",
+  "grader": "ling_room",
+  "grader_label": "Ling production grader ling:ling-3.0-flash-fin-fp4|t0|avg5:bear_objection_answered+thesis_material_directional|split2|trade=structure|think=off|bear=v2|cat=v2",
+  "model": "ling-3.0-flash-fin-fp4",
+  "base_url": "http://100.98.142.64:8004",
+  "trade_action": "each Room's own Side line",
+  "bear": "v2",
+  "catalyst": "v2"
+}

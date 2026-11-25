@@ -129,8 +129,8 @@ class ProductionPlanGrader(HostedLLMGrader):
         super().__init__(slot, close_band=CLOSE_BAND, **kwargs)
         self._timeout_s = float(timeout_s)
         self._variants = {v.question.id: v for v in variants}
-        for v in self._variants.values():
-            if len(v.question.phrasings) < PHRASING_COUNT:
+        for qid, v in self._variants.items():
+            if qid in AVERAGED_QUESTIONS and len(v.question.phrasings) < PHRASING_COUNT:
                 raise ValueError(f"variant {v.tag} needs {PHRASING_COUNT} phrasings")
 
     async def _grade_all(self, transcript: RoomTranscript, tally: dict[str, Any]):
