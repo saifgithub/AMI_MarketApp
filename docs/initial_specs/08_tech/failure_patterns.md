@@ -2499,3 +2499,15 @@ from outside `app.` (or a dict with non-string keys) still fails that test.
 **Why the first fixes did not generalise.** Each fix patched the one consumer it was filed against; the helper that produces the label kept its default.
 
 **Enforcing check:** `backend/tests/unit/test_def545_cash_only_price_source.py` drives the real `/v1/sim/portfolio` route to an all-cash book (a fresh book, and one sold back to cash) and requires `cash`, while a held position priced from the mock walk must still read `mock_walk`. A new consumer of the label gets its own case in that file.
+
+---
+
+## P45 — a money sign the model writes after the symbol, and a checker that reads the sign it was given
+
+**Class:** two writers format a negative amount (the coded formatters, the desk model) and every reader of the text (the fact-check, the Risk Officer's quotation check, the user) assumes one convention. Desk wording is model output, so a prompt asking for "-RM1,234" holds some of the time (CR038); a reader that parses the text then sees a different figure from the one the user does.
+
+**Instances.** DEF533 (2026-11-24, AMI-DL-32): a fact-check note printed "$-15,433M"; fixed in the one formatter that wrote it. DEF548 (2026-11-25, AMI-DL-33): a Bear turn printed "RM-14,077M" while every coded line wrote "-RM14,077M". The same run showed the reader side of the class (DEF547 follow-up): the checkers took an unsigned numeral and a different unit from the sheet's own (a percentage against an amount label, an unsigned "-RM15,433M" against raw signed millions), so correct figures were "corrected" or tagged "[AMI: unverifiable]".
+
+**Why the first fixes did not generalise.** DEF533 repaired the writer it was filed against; nothing normalised text a model wrote, and nothing stated the invariant that a figure must be compared with the sign and the unit it was written in.
+
+**Enforcing check:** `backend/tests/unit/test_def547b_548_factcheck_units_and_money_sign.py`. `normalize_money_sign` (room_market.py) is applied in `_compute_agent_text` (every desk turn, before the fact-check reads it), to the Risk Officer rows and to the CIO kill criterion; the test drives a live desk turn for a `.KL` and a US ticker through `_compute_agent_text` and requires the sign first, requires a sign-after-symbol turn not to draw a fact-check correction, and pins ranges ("RM1-2", "$10-$20"), dates, tickers and already-correct amounts as untouched. The same file pins the reader side: a ratio never pairs with an amount label, a period is not a figure, and the Risk Officer corroborates signed millions while still marking a dropped sign or a wrong figure. Mutation-checked by removing the normaliser call and by removing the unit gate.

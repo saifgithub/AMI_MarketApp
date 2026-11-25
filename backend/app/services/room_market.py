@@ -33,6 +33,27 @@ MY_BENCHMARK_NAME = "FBM KLCI"
 _DOLLAR_AMOUNT_RE = re.compile(r"\$(-?)(?=\d)")
 
 
+# DEF548 — the sign of a negative amount goes BEFORE the currency symbol
+# ("-RM14,077M", "-$12.00"), the way every coded line writes it. A desk turn is
+# model output and printed "RM-14,077M" once; a prompt cannot hold the form
+# (CR038), so every desk turn is rewritten here before it is stored or streamed.
+# The symbol must start a token (so "XRM-5" and "CAD$-5" are not touched) and the
+# minus must be followed by a digit (so "RM1-2", "$10-$20" and a bare "$-" are not
+# a sign). Only an ASCII hyphen or U+2212 minus counts: an en dash is a range.
+_SIGN_AFTER_SYMBOL_RE = re.compile(
+    r"(?<![A-Za-z0-9])(US\$|S\$|RM|MYR|[$£€])[ ]?([-\u2212])[ ]?(?=\d)"
+)
+
+
+def normalize_money_sign(text: str) -> str:
+    """Rewrite `RM-1,234`, `RM -1,234`, `$-12.00` and `US$-5` as `-RM1,234`,
+    `-$12.00` and `-US$5`. Market-agnostic (Bursa and US); any other text is
+    returned unchanged."""
+    if not text or ("-" not in text and "\u2212" not in text):
+        return text
+    return _SIGN_AFTER_SYMBOL_RE.sub(lambda m: f"{m.group(2)}{m.group(1)}", text)
+
+
 def market_of_profile(profile: dict[str, Any] | None) -> Market:
     """US unless the sheet says otherwise. Only a MY sheet carries the key."""
     if profile and profile.get("market") == Market.MY.value:
