@@ -2300,6 +2300,7 @@ _Device (automated, Appium) · plans: floor_pass_
 **Preconditions**
 1. Build 0.1.0+130 or later (TestFlight internal or Play internal), which has AMI_BURSA on; store builds keep it off
 2. Alpha with MARKET_BURSA_ENABLED=true (on since 2026-11-24)
+3. The mandate leaves room for the order: 100 x 1155.KL is about 2% of the RM50,000 book, so on a single-name cap below 2% use 6888.KL (about RM1.60) instead of 1155.KL everywhere below; and at least one trade is left under the daily cap (UTC day). Do not edit the mandate; if neither fits, report blocked with the refusal text (AMI-DL-32)
 
 **Steps**
 1. Portfolio: tap BURSA in the US | BURSA switch; read the tab (empty state on a book with no Bursa history); tap NEW BURSA TRADE (NEW TRADE on a used book)
