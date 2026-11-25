@@ -4025,6 +4025,7 @@ def _annotate_rr_against_levels(
     size: float | None,
     *,
     levels_trusted: bool = True,
+    market: Market = Market.US,
 ) -> tuple[str, dict[str, Any] | None]:
     """Rewrite any narrated R:R in `text` to the one `entry/stop/target` imply, and —
     on a genuine discrepancy or a ratio the levels imply but the agent omitted —
@@ -4039,6 +4040,7 @@ def _annotate_rr_against_levels(
     as unverifiable exactly as it is for a setup that does not form. Silence
     would leave the agent's own claim standing unmarked, which is the CR040
     failure this check exists to avoid, one level up."""
+    symbol = spec_for(market).currency_symbol  # DEF549 — RM on a Bursa Room, never "$"
     implied = None if not levels_trusted else risk_reward(entry, stop, target)
     stated = _extract_stated_rr(text)
     if implied is None:
@@ -4118,7 +4120,7 @@ def _annotate_rr_against_levels(
         )
     annotated += (
         f"\n\n[AMI verified the trade geometry from the stated levels "
-        f"(entry ${entry:.2f} / stop ${stop:.2f} / target ${target:.2f}): "
+        f"(entry {symbol}{entry:.2f} / stop {symbol}{stop:.2f} / target {symbol}{target:.2f}): "
         f"{'; '.join(parts)} — {tail}. These are the figures of record.]"
     )
     return annotated, {"stated_rr": stated, "implied_rr": implied}
@@ -4789,7 +4791,8 @@ def _direction_contradictions(
 
 
 def _annotate_direction_against_price(
-    text: str, close: float | None, levels: Sequence[tuple[str, float]]
+    text: str, close: float | None, levels: Sequence[tuple[str, float]],
+    market: Market = Market.US,
 ) -> tuple[str, list[dict[str, Any]]]:
     """Append AMI's reading of the price against any level the text tells the
     user to wait for from the wrong side. Returns (annotated_text, signals);
@@ -4807,16 +4810,17 @@ def _annotate_direction_against_price(
         return text, []
     first = signals[0]
     named = _STRUCTURED_LEVEL_LABELS.get(first["level_name"], "that level")
-    where = f"{named} (${first['level']:.2f})"
+    symbol = spec_for(market).currency_symbol  # DEF549
+    where = f"{named} ({symbol}{first['level']:.2f})"
     if first["price_is"] == "above":
         detail = (
-            f"the last close ${first['close']:.2f} is already "
+            f"the last close {symbol}{first['close']:.2f} is already "
             f"{abs(first['gap_pct']):.1f}% ABOVE {where}, so that "
             f"level is not something the price has yet to win back"
         )
     else:
         detail = (
-            f"the last close ${first['close']:.2f} is already "
+            f"the last close {symbol}{first['close']:.2f} is already "
             f"{abs(first['gap_pct']):.1f}% BELOW {where}, so that "
             f"level is not something the price has yet to give up"
         )
@@ -5360,6 +5364,7 @@ def _verify_and_annotate_geometry(
     *,
     size_pct: float | None = None,
     reference_close: float | None = None,
+    market: Market = Market.US,
 ) -> tuple[str, dict[str, Any] | None]:
     """Verify a level-proposing agent's OWN narrated derived figures against AMI's
     trading_math (DEF095). An agent has "proposed levels" only when it states a full
@@ -5411,9 +5416,9 @@ def _verify_and_annotate_geometry(
             max_ratio=_MAX_PLAUSIBLE_LEVEL_RATIO,
         )
         return _annotate_rr_against_levels(
-            text, entry, stop, target, size_pct, levels_trusted=False
+            text, entry, stop, target, size_pct, levels_trusted=False, market=market
         )
-    return _annotate_rr_against_levels(text, entry, stop, target, size_pct)
+    return _annotate_rr_against_levels(text, entry, stop, target, size_pct, market=market)
 
 
 # CR098 Amendment 2 — fixed, ticker-slot-only PM copy for a Market-withheld
@@ -6804,6 +6809,7 @@ async def _run_cio_step(
         verdict.reason,
         _reference_close(profile),
         _structured_levels(profile, verdict),
+        market_for(ctx.ticker),
     )
     if _dir_signals:
         logger.warning(
@@ -6858,7 +6864,7 @@ def _floor_pm_approve(
         )
         pm_text, _ = _annotate_rr_against_levels(
             pm_text, parsed.entry, parsed.stop,
-            parsed.target, parsed.size_pct,
+            parsed.target, parsed.size_pct, market=market_for(ctx.ticker),
         )
     verdict = enforce_safety_floor(
         llm_verdict=parsed, proposed=proposed,
@@ -10680,13 +10686,14 @@ async def _attempt_trader_geometry_repair(
     geometry signal, and its parsed envelope; every None path leaves the
     original flag-only annotation in place — DEF059 is untouched: a second
     opinion, never a veto, and a failed repair changes nothing downstream."""
+    symbol = spec_for(market_for(ticker)).currency_symbol  # DEF549
     detail = "; ".join(
-        f"{name} ${value:.2f} ({abs(value - reference_close) / reference_close:.0%} from the close)"
+        f"{name} {symbol}{value:.2f} ({abs(value - reference_close) / reference_close:.0%} from the close)"
         for name, value in implausible.items()
     )
     repair_note = (
         f"[AMI fact-check] The trade levels in your previous proposal are not "
-        f"plausible: {detail} — with the reference close at ${reference_close:.2f}, "
+        f"plausible: {detail} — with the reference close at {symbol}{reference_close:.2f}, "
         f"a level more than {_MAX_PLAUSIBLE_LEVEL_RATIO:g}x away from the close is "
         f"not a real price level for {ticker}. Re-issue the SAME proposal with "
         f"entry/stop/target re-placed at defensible levels near the current "
@@ -10737,6 +10744,7 @@ async def _attempt_trader_geometry_repair(
     repaired = _mark_if_truncated(repaired, agent_id=AgentId.TRADER, meta=meta)
     verified, sig = _verify_and_annotate_geometry(
         repaired, size_pct=size_pct, reference_close=reference_close,
+        market=market_for(ticker),
     )
     if _implausible_trade_levels(verified, reference_close):
         logger.warning("room_trader_geometry_repair_failed", reason="still_implausible")
@@ -11360,6 +11368,7 @@ async def _compute_agent_text(
         text,
         size_pct=ctx.trader_size_pct,
         reference_close=_reference_close(ctx.profile),
+        market=market_for(ctx.ticker),
     )
     # CR249: an implausible level from the Trader (DEF237's gate) used to
     # continue to the transcript flag-only — the debators and the PM then
@@ -11680,6 +11689,7 @@ async def _run_risk_officer(
         # degrades to ladder-only verification on an empty/malformed profile,
         # never a skip.
         profile=ctx.profile,
+        market=market_for(ctx.ticker),  # DEF549
     ):
         async for ev in _stream_agent_text(
             agent_id=turn.agent_id,

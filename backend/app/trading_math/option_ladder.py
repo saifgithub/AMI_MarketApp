@@ -51,7 +51,7 @@ class LadderOption:
     # by a portfolio value it was handed separately (and has repeatedly gotten
     # wrong doing so by hand — DEF066/DEF235/DEF241/CR166 Tier D). None, never
     # 0.0, when either factor is unusable: see `build_option_ladder`'s docstring.
-    dollar_risk_usd: float | None = None
+    dollar_risk: float | None = None
 
 
 def reward_to_risk(entry: float, stop: float, target: float) -> float | None:
@@ -93,7 +93,7 @@ def build_option_ladder(
     a figure this function cannot honestly compute stays None rather than defaulting
     to a fabricated $0 — see `_cap_in_shares_clause` (`room_prompts.py`) for the
     identical "missing/zero input renders nothing" call made for the same reason.
-    When supplied and positive, `dollar_risk_usd` is `portfolio_value *
+    When supplied and positive, `dollar_risk` is `portfolio_value *
     contribution_pts / 100` per rung — the same expression already computed once,
     for one size only, at `room_runner.py`'s option-strategist budget site — so every
     rung carries its own dollar risk and no downstream agent has to multiply it out
@@ -137,7 +137,7 @@ def build_option_ladder(
                 # carried on each row because the row is what the reader compares,
                 # and repeating it is cheaper than a footnote they must join.
                 reward_risk=rr,
-                dollar_risk_usd=dollar_risk,
+                dollar_risk=dollar_risk,
             )
         )
     return rows

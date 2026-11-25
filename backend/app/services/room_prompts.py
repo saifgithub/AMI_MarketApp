@@ -81,7 +81,7 @@ from app.services.room_market import (
     my_forward_catalyst_header,
     my_header_bullet,
 )
-from app.trading_math.markets import Market, market_for
+from app.trading_math.markets import Market, market_for, spec_for
 from app.services.edgar_filings_feed import FEED_LABEL, MAX_FILINGS, WINDOW_DAYS, recent_filings_line
 from app.services.float_liquidity import (
     FEED_LABEL as FLOAT_LIQUIDITY_LABEL,
@@ -1700,14 +1700,19 @@ def _render_option_ladder(rows: list[LadderOption], cap: float) -> str:
     return "\n".join(lines)
 
 
-def _money(value: float) -> str:
-    """A dollar total, as the card renders it. Negative reads as a credit."""
+def _money(value: float, market: Market = Market.US) -> str:
+    """A money total in the market's currency, as the card renders it. Negative
+    reads as a credit. DEF549: the symbol is the market's (RM on Bursa), never a
+    hard-coded `$`; US output is unchanged."""
+    symbol = spec_for(market).currency_symbol
     if value < 0:
-        return f"${abs(value):,.0f} credit"
-    return f"${value:,.0f}"
+        return f"{symbol}{abs(value):,.0f} credit"
+    return f"{symbol}{value:,.0f}"
 
 
-def _render_option_candidates(candidates: Sequence[Any], spot: float | None) -> str:
+def _render_option_candidates(
+    candidates: Sequence[Any], spot: float | None, market: Market = Market.US,
+) -> str:
     """CR172 §10 step 2 — the costed structure menu, as a prompt block.
 
     Rendered here for the same reason `_render_option_ladder` is: this is where
@@ -1748,24 +1753,24 @@ def _render_option_candidates(candidates: Sequence[Any], spot: float | None) -> 
             f"{c.contracts} contract{'s' if c.contracts != 1 else ''}, "
             f"expiry {c.expiry} ({c.days_to_expiry}d)"
         )
-        parts = [f"net {_money(m.net_cost)}"]
+        parts = [f"net {_money(m.net_cost, market)}"]
         if m.unbounded_loss:
             parts.append("max loss UNBOUNDED")
         elif m.covered_by_shares:
             parts.append("loss bounded by the shares held, not by the legs")
         elif m.max_loss is not None:
-            parts.append(f"max loss {_money(m.max_loss)}")
+            parts.append(f"max loss {_money(m.max_loss, market)}")
         if m.unbounded_gain:
             parts.append("max gain uncapped")
         elif m.max_gain is not None:
-            parts.append(f"max gain {_money(m.max_gain)}")
+            parts.append(f"max gain {_money(m.max_gain, market)}")
         if m.break_evens:
             parts.append(
                 "break-even "
                 + " / ".join(f"{b:,.2f}" for b in m.break_evens)
             )
         if m.collateral_required:
-            parts.append(f"collateral {_money(m.collateral_required)}")
+            parts.append(f"collateral {_money(m.collateral_required, market)}")
         lines.append(head)
         lines.append(f"  {' · '.join(parts)}")
         if c.legs:
@@ -2086,7 +2091,7 @@ def build_room_messages(
             format_instruction += _evidence_gate_block(evidence_gate)
         if option_candidates:
             option_candidate_block = _render_option_candidates(
-                option_candidates, option_spot
+                option_candidates, option_spot, room_market
             )
             # Appended, not interpolated: the structure key is meaningless
             # without the list, so the two arrive together or neither does.
