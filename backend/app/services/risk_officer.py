@@ -592,7 +592,10 @@ def render_officer_turns(
     headline built only from the ladder's own computed figures, which cannot
     fail this check because nothing in it was quoted.
     """
-    room_market = market if market is not None else market_of_profile(profile)
+    # A malformed sheet (the CR219 failure-posture case) must not crash the render.
+    room_market = market if market is not None else (
+        market_of_profile(profile) if isinstance(profile, dict) else Market.US
+    )
     by_size = _options_by_size(payload or {})
     confidence = str((payload or {}).get("confidence") or "").strip().lower()
     if confidence not in _CONFIDENCE_VALUES:
