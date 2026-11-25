@@ -808,8 +808,8 @@ class LingRoomGraderToolTests(unittest.TestCase):
         self.assertIsNone(setup.guard)
         self.assertTrue(g.version.startswith(f"ling:{self.MODEL}|t0|avg5:"))
         self.assertIn("|split2|", g.version)
-        self.assertTrue(g.version.endswith("|think=off|bear=v2"))
-        self.assertEqual(setup.describe["bear"], "v2")
+        self.assertTrue(g.version.endswith("|think=off|bear=v2|cat=v2"))
+        self.assertEqual((setup.describe["bear"], setup.describe["catalyst"]), ("v2", "v2"))
         self.assertEqual((setup.describe["model"], setup.describe["base_url"]), (self.MODEL, self.URL))
         self.assertNotIn("spend", w._cap_meta(setup))
         w._report_cap(setup)  # no guard: must not raise
@@ -819,10 +819,22 @@ class LingRoomGraderToolTests(unittest.TestCase):
         shared_setup = self.setup(ling_bear="shared")
         shared = shared_setup.factory(None)
         self.assertEqual(shared_setup.describe["bear"], "shared")
-        self.assertFalse(shared.version.endswith("|bear=v2"))
-        self.assertEqual(v2.version, shared.version + "|bear=v2")
-        self.assertEqual(shared._variants, {})
-        self.assertEqual(len(v2._variants), 1)
+        self.assertNotIn("|bear=v2", shared.version)
+        self.assertTrue(shared.version.endswith("|think=off|cat=v2"))
+        self.assertEqual(v2.version, shared.version.replace("|think=off", "|think=off|bear=v2"))
+        self.assertEqual(len(shared._variants), 1)
+        self.assertEqual(len(v2._variants), 2)
+
+    def test_ling_catalyst_shared_runs_the_question_files_wording_and_keys_apart(self):
+        full = self.setup().factory(None)
+        none = self.setup(ling_bear="shared", ling_catalyst="shared")
+        g = none.factory(None)
+        self.assertEqual(none.describe["catalyst"], "shared")
+        self.assertTrue(g.version.endswith("|think=off"))
+        self.assertEqual(g._variants, {})
+        self.assertEqual(full.version, g.version + "|bear=v2|cat=v2")
+        only_cat = self.setup(ling_bear="shared").factory(None)
+        self.assertEqual(only_cat.version, g.version + "|cat=v2")
 
     def test_the_cli_takes_ling_bear_with_v2_as_the_default(self):
         seen = []
@@ -840,6 +852,23 @@ class LingRoomGraderToolTests(unittest.TestCase):
         with self.assertRaises(SystemExit):
             with contextlib.redirect_stderr(io.StringIO()):
                 w.main(score_argv(*base, "--ling-bear", "bogus"))
+
+    def test_the_cli_takes_ling_catalyst_with_v2_as_the_default(self):
+        seen = []
+
+        def spy(args, env=None):
+            seen.append(args.ling_catalyst)
+            raise ValueError("stop here")
+
+        base = ("--grader", "ling_room", "--trade-action", "buy", "--ling-url", self.URL,
+                "--ling-model", self.MODEL)
+        with mock.patch.object(w, "setup_grader", spy):
+            run_main(score_argv(*base), {})
+            run_main(score_argv(*base, "--ling-catalyst", "shared"), {})
+        self.assertEqual(seen, ["v2", "shared"])
+        with self.assertRaises(SystemExit):
+            with contextlib.redirect_stderr(io.StringIO()):
+                w.main(score_argv(*base, "--ling-catalyst", "bogus"))
 
     def test_it_points_the_gateway_slot_at_ling_and_allows_nothing_else(self):
         from app.core.config import settings

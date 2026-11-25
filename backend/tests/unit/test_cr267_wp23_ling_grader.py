@@ -30,7 +30,7 @@ from app.services.llm_gateway import VLLMProvider, _apply_call_overrides
 from app.services.room_grader_contract import Answer, QuestionId, RoomTranscript
 from app.services.room_grader_registry import registered_graders, resolve_grader
 from app.services.room_graders import deepinfra, ling, production_plan
-from app.services.room_graders.ling_variants import BEAR_V2
+from app.services.room_graders.ling_variants import BEAR_V2, CATALYST_V2
 from app.services.room_graders.questions import load_question_set
 
 Q = QuestionId
@@ -42,8 +42,10 @@ for _q in load_question_set().questions:
     _TEXT_TO_QUESTION[_q.text] = (_q.id, None)
     for _i, _p in enumerate(_q.phrasings):
         _TEXT_TO_QUESTION[_p] = (_q.id, _i)
-for _i, _p in enumerate(BEAR_V2.question.phrasings):
-    _TEXT_TO_QUESTION[_p] = (BEAR_V2.question.id, _i)
+for _v in (BEAR_V2, CATALYST_V2):
+    _TEXT_TO_QUESTION[_v.question.text] = (_v.question.id, None)
+    for _i, _p in enumerate(_v.question.phrasings):
+        _TEXT_TO_QUESTION[_p] = (_v.question.id, _i)
 
 
 def _asked(body: dict) -> tuple[Q, int | None]:
@@ -180,7 +182,7 @@ def test_the_version_names_the_model_the_plan_and_the_thinking_switch():
     v = ling.grader_version(MODEL)
     assert v == (
         "ling:ling-3.0-flash-fin-fp4|t0|avg5:bear_objection_answered+thesis_material_directional"
-        "|split2|trade=structure|think=off|bear=v2"
+        "|split2|trade=structure|think=off|bear=v2|cat=v2"
     )
     assert ling.grader_version("other-model") != v
 

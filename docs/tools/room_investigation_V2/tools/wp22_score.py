@@ -71,9 +71,9 @@ gateway's `vllm_fallback` slot, thinking off per call). It needs no key and spen
 and model come from `--ling-url` / `--ling-model`, else `VLLM_FALLBACK_BASE_URL` /
 `VLLM_FALLBACK_MODEL`. It writes the same scores JSONL (grader `ling`, version
 `ling:<model>|...`), so `report` and `fit` compare it with a `deepinfra_room` run as they are.
-`LingGrader` asks `bear_objection_answered` in its own wording (`bear=v2`, `ling_variants.py`; the
-version ends `|bear=v2`); `--ling-bear shared` runs it on the question file's wording instead, to
-re-measure the old behaviour.
+`LingGrader` asks `bear_objection_answered` and `catalyst_in_horizon` in its own wording (`bear=v2`,
+`cat=v2`, `ling_variants.py`; the version ends with the tags in use); `--ling-bear|--ling-catalyst shared`
+runs that question on the question file's wording instead, to re-measure the old behaviour.
 """
 from __future__ import annotations
 
@@ -375,16 +375,19 @@ def _setup_ling_room(args: argparse.Namespace, env: dict | None = None) -> Grade
     settings.llm_prices_json = "{}"
     timeout_s = float(settings.room_grader_ling_timeout_s)
 
-    bear_variant = (getattr(args, "ling_bear", None) or "v2") != "shared"
+    flags = {f"{q}_variant": (getattr(args, f"ling_{q}", None) or "v2") != "shared"
+             for q in ("bear", "catalyst")}
 
     def room(_p):
         from app.services.room_graders.ling import LingGrader
-        return LingGrader(model=model, timeout_s=timeout_s, bear_variant=bear_variant)
+        return LingGrader(model=model, timeout_s=timeout_s, **flags)
     from app.services.room_graders.ling import grader_version  # noqa: PLC0415
     return GraderSetup("ling_room",
-                       f"Ling production grader {grader_version(model, bear_variant=bear_variant)}", room, None,
+                       f"Ling production grader {grader_version(model, **flags)}", room, None,
                        {"model": model, "base_url": url, "slot": HOSTED_SLOT,
-                        "trade_action": args.trade_action, "bear": "v2" if bear_variant else "shared"})
+                        "trade_action": args.trade_action,
+                        **{q: "v2" if flags[f"{q}_variant"] else "shared"
+                           for q in ("bear", "catalyst")}})
 
 
 # ── Identity, selection ─────────────────────────────────────────────────────
@@ -1693,6 +1696,9 @@ def main(argv: list[str] | None = None) -> int:
                        help="ling_room: pinned Ling model id; default $VLLM_FALLBACK_MODEL")
         p.add_argument("--ling-bear", choices=("v2", "shared"), default="v2",
                        help="ling_room: bear_objection_answered wording; v2 = Ling's own (default), "
+                            "shared = the question file's")
+        p.add_argument("--ling-catalyst", choices=("v2", "shared"), default="v2",
+                       help="ling_room: catalyst_in_horizon wording; v2 = Ling's own (default), "
                             "shared = the question file's")
         p.add_argument("--jev-version", default=JEV_DEFAULT_VERSION,
                        help="pinned Jev model id; 'latest' is refused")

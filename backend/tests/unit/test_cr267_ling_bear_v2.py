@@ -110,8 +110,9 @@ def test_every_other_ling_question_keeps_the_shared_wording_and_system_prompt():
     wire = ling_test.Wire()
     assert ling_test.make_grader(wire).grade(ling_test.transcript()).error is None
     shared = load_question_set()
-    others = [b for b in wire.bodies if ling_test._asked(b)[0] is not BEAR]
-    assert len(others) == 8
+    own = {BEAR, Q.CATALYST_IN_HORIZON}
+    others = [b for b in wire.bodies if ling_test._asked(b)[0] not in own]
+    assert len(others) == 7
     for b in others:
         qid, i = ling_test._asked(b)
         q = shared.get(qid)
@@ -124,7 +125,9 @@ def test_the_variant_is_ling_only_and_keeps_the_question_identity():
     assert (q.id, q.read_from) == (SHARED.id, SHARED.read_from)
     assert len(q.phrasings) == production_plan.PHRASING_COUNT == 5
     assert BEAR_V2.tag == BEAR_V2_TAG == "bear=v2"
-    assert set(ling.LingGrader(model=ling_test.MODEL)._variants) == {BEAR}
+    assert set(ling.LingGrader(model=ling_test.MODEL)._variants) == {BEAR, Q.CATALYST_IN_HORIZON}
+    only_bear = ling.LingGrader(model=ling_test.MODEL, catalyst_variant=False)
+    assert set(only_bear._variants) == {BEAR}
 
 
 def test_the_examples_are_invented_not_taken_from_a_room():
@@ -136,27 +139,27 @@ def test_the_examples_are_invented_not_taken_from_a_room():
 # ── 3. version string ───────────────────────────────────────────────────────
 
 
-def test_the_ling_version_ends_with_the_bear_tag_and_the_shared_wording_is_keyed_apart():
-    v2 = ling.grader_version(ling_test.MODEL)
-    shared = ling.grader_version(ling_test.MODEL, bear_variant=False)
+def test_the_ling_version_carries_the_bear_tag_and_the_shared_wording_is_keyed_apart():
+    v2 = ling.grader_version(ling_test.MODEL, catalyst_variant=False)
+    shared = ling.grader_version(ling_test.MODEL, bear_variant=False, catalyst_variant=False)
     assert v2 == shared + "|bear=v2"
     assert shared == (
         "ling:ling-3.0-flash-fin-fp4|t0|avg5:bear_objection_answered+thesis_material_directional"
         "|split2|trade=structure|think=off"
     )
-    g = ling.LingGrader(model=ling_test.MODEL, bear_variant=False)
+    g = ling.LingGrader(model=ling_test.MODEL, bear_variant=False, catalyst_variant=False)
     assert g.version == shared and g._variants == {}
-    assert ling.LingGrader(model=ling_test.MODEL).version == v2
+    assert ling.LingGrader(model=ling_test.MODEL).version == v2 + "|cat=v2"
 
 
 def test_the_ling_result_and_the_policy_key_carry_the_tag(monkeypatch):
     res = ling_test.make_grader(ling_test.Wire()).grade(ling_test.transcript())
-    assert res.grader_version.endswith("|bear=v2")
+    assert res.grader_version.endswith("|bear=v2|cat=v2")
     monkeypatch.setattr(settings, "room_coded_rule_enabled", True)
     monkeypatch.setattr(settings, "room_grader", "ling")
     monkeypatch.setattr(settings, "vllm_fallback_base_url", ling_test.BASE)
     monkeypatch.setattr(settings, "vllm_fallback_model", ling_test.MODEL)
-    assert "|think=off|bear=v2|" in room_bank.coded_rule_identity()["policy"]
+    assert "|think=off|bear=v2|cat=v2|" in room_bank.coded_rule_identity()["policy"]
 
 
 # ── 4. the plan around the variant ──────────────────────────────────────────
