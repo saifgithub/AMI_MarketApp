@@ -79,8 +79,11 @@ fake" shape CLAUDE.md's degrade-loudly rule exists to forbid — a broken checke
 must never look like a passed one.
 
 **On by default — this is a fix, not an opt-in feature.** `render_risk_assessment`
-and `render_officer_turns` run the check unconditionally; there is no flag that
-turns it off. A default-off check would be exactly the CR040 shape this whole
+and `render_officer_turns` run the check unconditionally; no flag turns the CHECK
+off. (DEF547: `ROOM_FACTCHECK_NOTES=log` keeps the check running and logging every
+miss as `room_factcheck_finding`, but stops it writing the tag or demoting the
+headline, pending the Dilemma on the checker's design.) A default-off check would
+be exactly the CR040 shape this whole
 audit is chasing: a control that exists, is fully built and tested, and never
 actually runs on the path a real user reads — the registry in
 `app.services.numeric_provenance` would keep recording `key_number`/
@@ -101,6 +104,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
+from uuid import UUID
 
 from app.schemas.agents import AgentId
 # CR219 R59-F1/F3/F6 (lane B1) — the numeral-extraction/normalization rule
@@ -117,6 +121,8 @@ from app.services.numeric_quotation import (
     _Numeral,
     _extract_numerals,
     _numeral_is_corroborated,
+    factcheck_notes_mode,
+    log_factcheck_finding,
     millions_scaled_values,
     numeral_is_corroborated_signed,
 )
@@ -358,20 +364,72 @@ def _quotation_check(
         return False
 
 
+def _uncorroborated_numerals(
+    text: str, profile: dict[str, Any] | None, rows: list[LadderOption]
+) -> list[str]:
+    """The numerals of `text` the sheet/ladder corpus cannot corroborate, for the
+    DEF547 finding log. Never raises: an internal error yields []."""
+    try:
+        corpus = _corroborating_values(profile, rows)
+        return [
+            n.raw.strip()
+            for n in _extract_numerals(text)
+            if not numeral_is_corroborated_signed(text, n, corpus)
+        ]
+    except Exception:  # noqa: BLE001 — a logging helper must not break a render
+        return []
+
+
+def _verified_for_render(
+    text: Any,
+    profile: dict[str, Any] | None,
+    rows: list[LadderOption],
+    *,
+    surface: str,
+    run_id: UUID | str | None = None,
+    agent_id: Any = None,
+) -> bool:
+    """`_quotation_check` plus the DEF547 finding log. A miss is always logged;
+    with `ROOM_FACTCHECK_NOTES=log` the string is still treated as verified, so
+    no tag is written and no headline is demoted."""
+    if _quotation_check(text, profile, rows):
+        return True
+    s = str(text or "").strip()
+    log_factcheck_finding(
+        checker="risk_quotation",
+        surface=surface,
+        claimed=s,
+        sheet_field=None,
+        sheet_value=None,
+        run_id=run_id,
+        agent_id=agent_id,
+        uncorroborated=_uncorroborated_numerals(s, profile, rows),
+    )
+    return factcheck_notes_mode() == "log"
+
+
 def _annotated_if_unverified(
     text: Any,
     profile: dict[str, Any] | None,
     rows: list[LadderOption],
+    *,
+    surface: str = "key_figure",
+    run_id: UUID | str | None = None,
+    agent_id: Any = None,
 ) -> tuple[str, bool]:
     """`(rendered_body_text, verified)`. Runs unconditionally — see the module
     docstring's "on by default" section. Empty text is vacuously verified (no
     quotation to check). A miss earns the `_annotate_rr_against_levels`-style
     loud mark in the body and a False that tells the caller to demote the
-    string from any headline/decisive-call slot."""
+    string from any headline/decisive-call slot. DEF547: with
+    `ROOM_FACTCHECK_NOTES=log` the miss is logged and the string passes
+    through unmarked and verified."""
     s = str(text or "").strip()
     if not s:
         return s, True
-    if _quotation_check(s, profile, rows):
+    if _verified_for_render(
+        s, profile, rows, surface=surface, run_id=run_id, agent_id=agent_id
+    ):
         return s, True
     return f"{s} {_UNVERIFIABLE_MARK}", False
 
@@ -556,6 +614,7 @@ def render_officer_turns(
     headline_max_chars: int,
     fallback_reason: str | None = None,
     profile: dict[str, Any] | None = None,
+    run_id: UUID | str | None = None,
 ) -> list[RenderedRiskTurn]:
     """The three risk-phase display turns, rendered with no LLM involved.
 
@@ -629,7 +688,10 @@ def render_officer_turns(
             val = str(opt.get(key) or "").strip()
             if val:
                 lines.append(f"- {label}: {val}")
-        kn, kn_verified = _annotated_if_unverified(opt.get("key_number"), profile, rows)
+        kn, kn_verified = _annotated_if_unverified(
+            opt.get("key_number"), profile, rows,
+            surface="key_figure", run_id=run_id, agent_id=voice,
+        )
         if kn:
             lines.append(f"- Key figure: {kn}")
 
@@ -642,7 +704,10 @@ def render_officer_turns(
             dn_candidate = (payload or {}).get("decisive_number")
             if dn_candidate:
                 headline_source = dn_candidate
-                headline_verified = _quotation_check(dn_candidate, profile, rows)
+                headline_verified = _verified_for_render(
+                    dn_candidate, profile, rows,
+                    surface="decisive_number_headline", run_id=run_id, agent_id=voice,
+                )
         if not headline_verified:
             # Demoted: the LLM's quotation missed the check, so the headline
             # slot falls back to a figure nothing ever quoted — see
@@ -656,7 +721,8 @@ def render_officer_turns(
                 if confidence:
                     call += f" · confidence {confidence}"
                 dn, _ = _annotated_if_unverified(
-                    (payload or {}).get("decisive_number"), profile, rows
+                    (payload or {}).get("decisive_number"), profile, rows,
+                    surface="decisive_number_call", run_id=run_id, agent_id=voice,
                 )
                 if dn:
                     call += f" · decided by {dn}"

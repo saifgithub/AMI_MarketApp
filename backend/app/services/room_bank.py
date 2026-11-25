@@ -117,6 +117,7 @@ ROOM_POLICY_SETTINGS: frozenset[str] = frozenset({
     "pm_option_ladder_enabled",
     "room_max_scripted_turns",
     "room_risk_officer_enabled",
+    "room_factcheck_notes",
     "room_debate_order_seeded",
     "room_json_constraints_enabled",
     "room_trader_regex_enabled",

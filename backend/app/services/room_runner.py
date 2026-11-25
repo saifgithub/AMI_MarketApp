@@ -173,7 +173,7 @@ from app.services.llm_json import ConflictingDecision, extract_json_object
 # field earns an `[AMI …]` annotation. See `numeric_quotation.py`'s module
 # docstring for the full design (why label-matched, why this narrow a
 # vocabulary, why never a veto).
-from app.services.numeric_quotation import annotate_sheet_mismatches, find_sheet_mismatches
+from app.services.numeric_quotation import annotate_sheet_mismatches, headline_conflicts_with_sheet
 from app.services.risk_officer import build_risk_officer_schema, render_officer_turns
 from app.services.street_comparison import build_street_comparison
 from app.services.street_view_blind import is_street_view_key
@@ -3526,7 +3526,9 @@ def _guard_pm_text(
     return pm_text, verdict
 
 
-def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None]:
+def _parse_pm_verdict(
+    text: str, ctx: _RoomContext, run_id: UUID | None = None
+) -> tuple[str, Verdict | None]:
     """Extract the PM's display narration + intended decision from its raw
     LLM response (DEF056). Returns (display_text, llm_verdict); llm_verdict
     is None when the response couldn't be trusted as a real decision — the
@@ -3621,6 +3623,9 @@ def _parse_pm_verdict(text: str, ctx: _RoomContext) -> tuple[str, Verdict | None
     kill_criterion = annotate_sheet_mismatches(
         normalize_money_sign(kill_criterion) if kill_criterion else kill_criterion,
         ctx.profile,
+        surface="kill_criterion",
+        run_id=run_id,
+        agent_id=AgentId.PORTFOLIO_MANAGER,
     )
     action = _normalize_pm_action(parsed.get("action"))
     if action is None:
@@ -6191,7 +6196,7 @@ async def _run_coded_rule_cio(
     )
     narration, parsed = "", None
     if raw:
-        narration, parsed = _parse_pm_verdict(raw, ctx)
+        narration, parsed = _parse_pm_verdict(raw, ctx, run_id)
     else:
         logger.warning("room_coded_narration_unavailable", run_id=str(run_id))
 
@@ -6363,7 +6368,7 @@ async def _run_cio_step(
                         gateway=gateway,
                         agent_timeout_s=agent_timeout_s,
                     ),
-                    lambda _rt: _parse_pm_verdict(_rt, ctx),
+                    lambda _rt: _parse_pm_verdict(_rt, ctx, run_id),
                 )
             )
             if _lost:
@@ -6475,7 +6480,7 @@ async def _run_cio_step(
             logger.error("room_pm_llm_unavailable", run_id=str(run_id))
             pm_text = verdict.reason
         else:
-            pm_text, parsed = _parse_pm_verdict(raw_text, ctx)
+            pm_text, parsed = _parse_pm_verdict(raw_text, ctx, run_id)
             if parsed is None:
                 # DEF058: the PM's shape slipped past the parser.
                 # One reformat retry re-expresses the same
@@ -6486,7 +6491,7 @@ async def _run_cio_step(
                     agent_timeout_s=agent_timeout_s,
                 )
                 if reformatted:
-                    narration, reparsed = _parse_pm_verdict(reformatted, ctx)
+                    narration, reparsed = _parse_pm_verdict(reformatted, ctx, run_id)
                     # DEF067: the reformatter exists only to
                     # RECOVER an APPROVE the parser missed. Accept
                     # its output only when it does so. A
@@ -7315,14 +7320,14 @@ async def _resurrection_rerun(
             run_id=str(run_id),
         )
         return verdict, None
-    rerun_pm_text, rerun_parsed = _parse_pm_verdict(rerun_text, ctx)
+    rerun_pm_text, rerun_parsed = _parse_pm_verdict(rerun_text, ctx, run_id)
     if rerun_parsed is None:
         reformatted = await _reformat_pm_response(
             rerun_text, ctx=ctx, gateway=gateway,
             agent_timeout_s=agent_timeout_s,
         )
         if reformatted:
-            rerun_pm_text, recovered = _parse_pm_verdict(reformatted, ctx)
+            rerun_pm_text, recovered = _parse_pm_verdict(reformatted, ctx, run_id)
             # DEF067: the reformatter exists only to RECOVER an APPROVE — a
             # recovered PASS is discarded, same rule as the main tail.
             if recovered is not None and recovered.action == VerdictAction.APPROVE:
@@ -10754,6 +10759,7 @@ async def _attempt_envelope_repair(
     max_tokens: int,
     timeout_s: float,
     profile: dict[str, Any],
+    run_id: UUID | None = None,
 ) -> tuple[str, "_StanceEnvelope"] | None:
     """CR253 — regenerate a live prose turn ONCE when it produced no parseable
     stance envelope, same provider/tier/constraint as the original call (the
@@ -10826,7 +10832,9 @@ async def _attempt_envelope_repair(
     # The retry's HEADLINE gets the same sheet-figure check the original
     # envelope got (CR219 R59-F3): an unverifiable assertion loses its
     # qualifier, never a cut or annotated claim.
-    if env.headline and find_sheet_mismatches(env.headline, profile):
+    if env.headline and headline_conflicts_with_sheet(
+        env.headline, profile, run_id=run_id, agent_id=agent_id
+    ):
         env = _dataclass_replace(env, headline=None)
     stripped = stripped.strip()
     if stripped:
@@ -10848,6 +10856,7 @@ async def _attempt_cards_repair(
     max_tokens: int,
     timeout_s: float,
     profile: dict[str, Any],
+    run_id: UUID | None = None,
 ) -> tuple[str, _StanceEnvelope, _ClaimCards] | None:
     """CR256 — regenerate a live card-desk turn ONCE when its CLAIMS channel
     is not complete, same provider/tier/constraint as the original call (the
@@ -10940,7 +10949,9 @@ async def _attempt_cards_repair(
     assert cards is not None
     # The retry's HEADLINE gets the same sheet-figure check the original
     # envelope and the CR253 retry both get (CR219 R59-F3).
-    if env.headline and find_sheet_mismatches(env.headline, profile):
+    if env.headline and headline_conflicts_with_sheet(
+        env.headline, profile, run_id=run_id, agent_id=agent_id
+    ):
         env = _dataclass_replace(env, headline=None)
     stripped = stripped.strip()
     if stripped:
@@ -11211,7 +11222,9 @@ async def _compute_agent_text(
             # one does. `profile` is THIS agent's own threaded sheet; a
             # missing/empty one makes the check a no-op (unknowable is not
             # unverifiable), same as every other call site in this module.
-            if envelope.headline and find_sheet_mismatches(envelope.headline, profile):
+            if envelope.headline and headline_conflicts_with_sheet(
+                envelope.headline, profile, run_id=run_id, agent_id=agent_id
+            ):
                 envelope = _dataclass_replace(envelope, headline=None)
             # CR253 — envelope-presence re-ask: a live prose turn that
             # produced NO parseable envelope gets ONE regeneration naming the
@@ -11235,6 +11248,7 @@ async def _compute_agent_text(
                     max_tokens=max_tokens_for(agent_id),
                     timeout_s=agent_timeout_s,
                     profile=profile,
+                    run_id=run_id,
                 )
                 # CR271 — a repair is a second LLM text; the guard binds it too.
                 # Discarding it leaves the original turn, which already passed.
@@ -11283,6 +11297,7 @@ async def _compute_agent_text(
                         max_tokens=max_tokens_for(agent_id),
                         timeout_s=agent_timeout_s,
                         profile=profile,
+                    run_id=run_id,
                     )
                     if _repaired_cards is not None and _output_guard_withholds(
                         _repaired_cards[0]
@@ -11398,7 +11413,9 @@ async def _compute_agent_text(
     # DEF548 — sign before the symbol, whatever the model wrote; before the
     # fact-check so its sign reader sees the normalised form.
     text = normalize_money_sign(text)
-    text = annotate_sheet_mismatches(text, profile)
+    text = annotate_sheet_mismatches(
+        text, profile, surface="agent_text", run_id=run_id, agent_id=agent_id
+    )
     desk_footer = my_desk_footer(agent_id, profile)
     if desk_footer and not _output_guard_withholds(text):
         # DEF533/DEF535 — a Bursa desk's turn always carries its coded market note.
@@ -11673,6 +11690,7 @@ async def _run_risk_officer(
         # degrades to ladder-only verification on an empty/malformed profile,
         # never a skip.
         profile=ctx.profile,
+        run_id=run_id,
     ):
         async for ev in _stream_agent_text(
             agent_id=turn.agent_id,
