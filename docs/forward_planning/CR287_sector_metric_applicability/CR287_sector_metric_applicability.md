@@ -1,6 +1,6 @@
 # CR287 — Sector-aware metrics: say "not applicable" where a generic figure misleads
 
-Filed 2026-11-27 (AT:B1). Owner: track B. Status: **proposed** — plan for discussion, nothing built. Parent: CR267 (Beta), CR282 (Bursa).
+Filed 2026-11-27 (AT:B1). Owner: track B. Status: **in progress** — Saiful 2026-11-27: "i agree with your plans. lets do it." Phase 1 (banks) and phase 2 (REITs, utilities) measuring; lesson (step 5) drafting; phase 3 build waits on decision A. Parent: CR267 (Beta), CR282 (Bursa).
 
 ## 1. Why
 
