@@ -332,7 +332,7 @@ class Mandate(BaseModel):
     # CR285 — the two numbers of the terminal question's `debt_default` materiality check
     # (`room_graders/terminal_materiality.py`, live only under ROOM_GRADER_LING_TERMINAL=v2).
     # `None` = not set, resolved at read time (no migration): the horizon follows the mandate
-    # horizon (6/12/24/24 months), the coverage minimum follows the risk score (1.5 at risk 1-2,
+    # horizon (6/18/24/24 months), the coverage minimum follows the risk score (1.5 at risk 1-2,
     # 1.25 at 3-4, 1.0 at 5). The check counts debt falling due within the LARGER of this horizon
     # and the Execution Desk's own stated one, and keeps a "debt default" terminal yes only when
     # cash plus cash flow cover that debt by less than the minimum. Ranges are bounded so the

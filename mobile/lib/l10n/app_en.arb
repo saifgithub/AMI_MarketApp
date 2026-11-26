@@ -2203,7 +2203,7 @@
   },
   "settingsDebtHorizonSheetBody": "When a Room asks whether a company faces a terminal risk such as a debt default, AMI adds up the debt that falls due inside this window and compares it with the cash and cash flow the company has to meet it. At 24 months it counts the next two years of maturities.\n\nLeave this on your horizon and a short horizon looks 6 months ahead, a long one 24. Set your own number, 3 to 60 months, to override it. If the Execution Desk states a longer horizon for a trade, AMI uses that one for that Room and says so.\n\nA longer window counts more debt, so more debt-default warnings stand.",
   "@settingsDebtHorizonSheetBody": {
-    "description": "CR285 body of the explain sheet. 'your horizon' = the mandate horizon (short/medium/long/very long). The 6 and 24 are examples of the defaults (short 6, medium 12, long and very long 24 months) which live server-side; the range 3 to 60 is enforced server-side. NEW key. retranslate:[ar,ms]"
+    "description": "CR285 body of the explain sheet. 'your horizon' = the mandate horizon (short/medium/long/very long). The 6 and 24 are examples of the defaults (short 6, medium 18, long and very long 24 months) which live server-side; the range 3 to 60 is enforced server-side. NEW key. retranslate:[ar,ms]"
   },
   "settingsDebtHorizonFromHorizon": "From your horizon",
   "@settingsDebtHorizonFromHorizon": {

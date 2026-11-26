@@ -19,7 +19,7 @@ The rule (only when the winning terminal answer is "yes" with `terminal_category
 
 CR285: before it, the horizon was the runner's fixed 6 weeks (the desk's was never read, DEF551)
 and the minimum a fixed 1.0x. Both are now the user's numbers: the mandate carries them
-(`debt_horizon_months`, `min_debt_coverage`; defaults 6/12/24/24 months by mandate horizon and
+(`debt_horizon_months`, `min_debt_coverage`; defaults 6/18/24/24 months by mandate horizon and
 1.5x/1.25x/1.0x by risk score), and the record and the reason text name them ("due within your
 24-month horizon ... your minimum is 1.5x"). An input that omits them (an offline caller) is
 read as before: the horizon it gives and a 1.0x minimum, recorded as such.

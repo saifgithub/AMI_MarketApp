@@ -75,7 +75,7 @@ def _mandate(risk=3, horizon="long", **kw):
 # 1. defaults and overrides
 
 
-@pytest.mark.parametrize("horizon,months", [("short", 6), ("medium", 12), ("long", 24), ("very_long", 24)])
+@pytest.mark.parametrize("horizon,months", [("short", 6), ("medium", 18), ("long", 24), ("very_long", 24)])
 def test_the_horizon_default_follows_the_mandate_horizon(horizon, months):
     assert resolved_debt_horizon_months(horizon) == months
     assert resolved_debt_horizon_months(Horizon(horizon)) == months
@@ -103,7 +103,7 @@ def test_months_map_onto_the_ladder_year():
 
 
 def test_the_tables_are_the_specs():
-    assert DEFAULT_DEBT_HORIZON_MONTHS == {"short": 6, "medium": 12, "long": 24, "very_long": 24}
+    assert DEFAULT_DEBT_HORIZON_MONTHS == {"short": 6, "medium": 18, "long": 24, "very_long": 24}
     assert DEFAULT_MIN_DEBT_COVERAGE == {1: 1.5, 2: 1.5, 3: 1.25, 4: 1.25, 5: 1.0}
 
 
@@ -333,7 +333,7 @@ def test_the_check_revision_changes_the_grader_version_so_older_rooms_key_apart(
 
 
 @pytest.mark.parametrize("horizon,risk,months,cover", [
-    ("short", 1, 6, "1.5"), ("medium", 3, 12, "1.25"), ("long", 5, 24, "1.0"),
+    ("short", 1, 6, "1.5"), ("medium", 3, 18, "1.25"), ("long", 5, 24, "1.0"),
 ])
 def test_the_onboarding_readback_names_the_defaults_under_terminal_v2(monkeypatch, horizon, risk, months, cover):
     from app.services.concierge_engine import _readback_text

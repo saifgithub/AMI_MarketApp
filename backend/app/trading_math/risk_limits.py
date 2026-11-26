@@ -230,7 +230,7 @@ def format_reward_risk(value: float, *, against: float | None = None) -> str:
 # the risk score; each is overridden by an explicit per-user value inside its range. The ranges
 # are the guard against switching the check off by accident: there is no "0 = off" here.
 DEFAULT_DEBT_HORIZON_MONTHS: dict[str, int] = {
-    "short": 6, "medium": 12, "long": 24, "very_long": 24,
+    "short": 6, "medium": 18, "long": 24, "very_long": 24,
 }
 DEFAULT_MIN_DEBT_COVERAGE: dict[int, float] = {1: 1.5, 2: 1.5, 3: 1.25, 4: 1.25, 5: 1.0}
 DEBT_HORIZON_MONTHS_RANGE: tuple[int, int] = (3, 60)

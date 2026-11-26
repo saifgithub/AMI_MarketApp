@@ -738,7 +738,7 @@ horizon, the active path and the largest drawdown, and its chip can be deselecte
 or "Set by you", never both (UAT-MAND-031); MANAGE ACCOUNT opens the subscription
 tier picker (UAT-MAND-035).
 2026-11-25 CR284: an eighth row, Minimum reward to risk (UAT-MAND-042, UAT-MAND-043), sits beside the seven but outside the Day Trader preset; its default follows the risk score and the API says whether it is the default or the user's. A Room approval below it is rejected by the safety floor (UAT-ROOM-036).
-2026-11-26 CR285: two more rows, Debt-maturity horizon and Minimum debt coverage (UAT-MAND-044, UAT-MAND-045), beside the reward-to-risk row, also outside the Day Trader preset. The horizon follows the mandate horizon (6/12/24/24 months), the coverage follows the risk score (1.5/1.25/1.0), the API says whether each is the default or the user's, and the app shows the rows only while the server says the check is active (ROOM_GRADER_LING_TERMINAL=v2). The check's effect on a verdict is UAT-ROOM-037.
+2026-11-26 CR285: two more rows, Debt-maturity horizon and Minimum debt coverage (UAT-MAND-044, UAT-MAND-045), beside the reward-to-risk row, also outside the Day Trader preset. The horizon follows the mandate horizon (6/18/24/24 months), the coverage follows the risk score (1.5/1.25/1.0), the API says whether each is the default or the user's, and the app shows the rows only while the server says the check is active (ROOM_GRADER_LING_TERMINAL=v2). The check's effect on a verdict is UAT-ROOM-037.
 2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy).
 
 ### API (automated, live Alpha)
@@ -1130,7 +1130,7 @@ _Device (automated, Appium) · plans: trader · **BLOCKED** — Needs the first 
 4. Tap the chips that now read "Use my horizon" and "Use my risk profile", then press Save
 
 **Expected**
-1. The horizon row reads "From your horizon - <N> mo" and the coverage row "From your risk profile - <X>×", both numbers from the server (6/12/24/24 months by mandate horizon; 1.5/1.25/1.0 by risk score); each field box shows the same number as a hint
+1. The horizon row reads "From your horizon - <N> mo" and the coverage row "From your risk profile - <X>×", both numbers from the server (6/18/24/24 months by mandate horizon; 1.5/1.25/1.0 by risk score); each field box shows the same number as a hint
 2. Each sheet explains its number in plain words; the coverage sheet has the worked example (minimum 1.5×, 100 due, 140 gives 1.4× and the warning stays, 150 is covered); swiping down closes it
 3. After Save and a return the fields read 36 and 2 and both rows say "Set by you"; the horizon field takes whole numbers only
 4. After the chips and Save both rows follow the horizon and the risk profile again

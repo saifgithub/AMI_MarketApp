@@ -11,7 +11,7 @@ Saiful 2026-11-26 asked whether this should follow risk tolerance, then chose **
 ## What
 
 1. Two new mandate fields, nullable, resolved at read time with a `source` flag (`default` | `user`) like CR284:
-   - **Debt-maturity horizon (months)** — default from the mandate horizon: short 6, medium 12, long 24, very long 24. The check uses the larger of this and the desk's own stated horizon.
+   - **Debt-maturity horizon (months)** — default from the mandate horizon: short 6, medium 18, long 24, very long 24 (medium was 12; Saiful 2026-11-26: "Medium = 18 months", because 12 months counts only the ladder's first bucket and misses a year-2 wall). The check uses the larger of this and the desk's own stated horizon.
    - **Minimum debt coverage (×)** — default from the risk score: 1.5 at risk 1–2, 1.25 at 3–4, 1.0 at 5.
 2. Editable in Settings > Risk limits (rows after CR284's reward-to-risk row), each with an explain sheet; onboarding readback line.
 3. The materiality check reads the user's effective values. When it keeps or refuses a `debt_default` yes, the record and the verdict show the numbers ("$1,133M due within your 24-month horizon; cash and cash flow cover 0.2×, your minimum is 1.5×").
@@ -30,7 +30,7 @@ Saiful 2026-11-26 asked whether this should follow risk tolerance, then chose **
 
 1. **DEF551 first.** The check's horizon is the larger of the user's and the Execution Desk's own stated horizon, read by `backend/app/services/stated_horizon.py` from the desk's `Time horizon:` line. Unreadable or absent falls back loudly (log + `desk_horizon_source: default` on the check). See DEF551.
 2. **Ranges.** Horizon 3-60 months (whole numbers), coverage 0.5-3.0x; out of range is a 422. No "0 = off".
-3. **Months to days.** `months x 365/12`, so 12 months is 365 days and counts the ladder's first bucket only; 24 months counts Years 1 and 2. The "at 12+ months it is caught" line in Why holds from 13 months. The medium-horizon default (12 months) therefore does not catch BGS; the long-horizon default (24) does.
+3. **Months to days.** `months x 365/12`, so 12 months is 365 days and counts the ladder's first bucket only; 24 months counts Years 1 and 2. The "at 12+ months it is caught" line in Why holds from 13 months. A 12-month medium default would therefore not catch BGS; Saiful moved it to 18 months (2026-11-26), which counts Years 1 and 2.
 4. **Shown = enforced.** `resolved.debt_check_active` is `ROOM_GRADER_LING_TERMINAL == "v2"`. Settings shows the two rows only when it is true; the onboarding readback line appears only then; the bank key carries the two effective values only then (so no key moves on Alpha at deploy).
 5. **Not an `ENFORCED_LIMIT`.** The fields are enforced by the Room's grader after the debate, not by the safety floor, and the agents are not told them (no prompt text changes, so the US golden renderings are byte-identical). They are listed in `_NON_LIMIT_NUMERIC_FIELDS` with that reason.
 6. **Version tag.** `termchk=d1c1.00` becomes `termchk=d2`: the minimum is no longer a constant, and a Room graded under the fixed 6-week, 1.0x check must not be served as if checked under the user's numbers.
