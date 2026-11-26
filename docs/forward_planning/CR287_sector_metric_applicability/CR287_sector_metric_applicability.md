@@ -57,3 +57,8 @@ About 71 stocks, roughly a third of Bursa market cap. The US has the same famili
 2. Non-family sheets unchanged (byte-identical render).
 3. Before/after measurement on the same Room sample, reported with counts.
 4. Lesson published with sources verified and AR/MS flagged.
+
+## 8. Log
+
+1. 2026-11-27 phase 1 done: `bank_fcf_measurement_2026-11-27.md` (`5ff1a6b0`, merge `153a3e6c`). 25 Bursa bank Rooms, 0 APPROVE (21/25 at R1–R4, so confounded); FCF named in CIO reason or kill criterion 88% (non-banks 82.5%); hand-read 10 bank PASS: 1 FCF decisive, 7 one of several, 2 not a factor; debt check ran in 0/231 Bursa Rooms; net debt, EV/EBITDA, interest coverage never in a bank decision.
+2. Decision A (Saiful 2026-11-27): "Act: full bank row" — FCF lines, net debt, EV/EBITDA, interest coverage not applicable for banks; debt check skipped with the reason; behind `ROOM_SECTOR_METRICS_ENABLED`. Build running.
