@@ -4,5 +4,5 @@ controls:
   - label: "<scrim / swipe down>"
     kind: link
     expect: back
-    line: 608
+    line: 680
     note: "CR284. Read-only explain sheet for the Minimum reward to risk row (title Reward to risk + body with the 100 / 90 / 115 = 1.5 to 1 example); no buttons. Dismiss by tapping outside or swiping down."

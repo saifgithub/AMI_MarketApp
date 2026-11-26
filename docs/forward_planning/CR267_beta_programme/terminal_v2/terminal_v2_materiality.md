@@ -11,8 +11,8 @@ CR267 Beta programme, track B. Branch `term-v2-materiality` (from `origin/beta/c
    - `coverage` = available / due_in_horizon. `DEBT_DEFAULT_MIN_COVERAGE = 1.0`: the yes stands only if coverage < 1.0.
    - Covered: `no`, `terminal_rejected = "debt_default covered <x.xx>× by cash and horizon free cash flow (due $…M, available $…M)"`. Nothing due in the horizon: `no`, "covered: no principal falls due within the N-day horizon". No schedule: `no`, "debt_default not evidenced: no debt-maturity schedule on the sheet". Horizon unknown: the yes stands, recorded as `skipped`.
    - A refused yes keeps Ling's name/category/evidence fields (a reviewer sees what was named), is set not-close (code decided, not a split vote), and carries `terminal_check` = `{stands, reason, horizon_days, due_in_horizon, available, coverage, cash, cash_source, fcf_ttm, fcf_source, buckets_counted, buckets_not_counted, unmapped_labels, ladder_period_end, short_term_borrowings_not_counted, min_coverage}`.
-3. Inputs reach the grader as `RoomTranscript.terminal_inputs`, built by `room_runner._coded_transcript` from `ctx.profile` (live-gated by `field_state`, as the sheet is): `debt_maturity_labels/values`, `total_cash`, `total_debt`, `net_cash`, `free_cash_flow` (else `free_cash_flow_ttm`). Horizon = `ctx.trader_horizon_weeks x 7`, which is 42 days: the runner never parses the desk's horizon into that field, so the grader's horizon equals the PM-verdict fallback. The ladder is long-term principal; short-term borrowings are excluded from it and are recorded on the check, not counted.
-4. Version tag: `…|term=v2|termchk=d1c1.00` (`d1` = check revision, `c1.00` = the coverage constant). Bound to `term=v2`, no separate switch: the check reads the category only v2 produces, and a switch that could be on without v2 would be a dead setting. Rooms graded earlier are keyed apart (a new grader version).
+3. Inputs reach the grader as `RoomTranscript.terminal_inputs`, built by `room_runner._coded_transcript` from `ctx.profile` (live-gated by `field_state`, as the sheet is): `debt_maturity_labels/values`, `total_cash`, `total_debt`, `net_cash`, `free_cash_flow` (else `free_cash_flow_ttm`). Horizon = `ctx.trader_horizon_weeks x 7`, which is 42 days: the runner never parses the desk's horizon into that field, so the grader's horizon equals the PM-verdict fallback. (Superseded: DEF551 and CR285 below. The runner now reads the desk's own horizon, the check takes the larger of it and the user's mandate horizon, and the minimum is the user's too.) The ladder is long-term principal; short-term borrowings are excluded from it and are recorded on the check, not counted.
+4. Version tag: `…|term=v2|termchk=d1c1.00` (`d1` = check revision, `c1.00` = the coverage constant). (Superseded by CR285: `…|term=v2|termchk=d2`, because the minimum is no longer a constant.) Bound to `term=v2`, no separate switch: the check reads the category only v2 produces, and a switch that could be on without v2 would be a dead setting. Rooms graded earlier are keyed apart (a new grader version).
 5. API: `CodedAnswer.terminal_check` (optional dict) beside `terminal_rejected`; `GraderResult.extra["terminal_materiality"]` = `{stood, reason, coverage}`. v1 path, DeepInfra version and DeepInfra wire are byte-identical (pinned by tests).
 6. Tests: `backend/tests/unit/test_cr267_terminal_materiality.py` (covered, uncovered, no ladder, cash derived, negative FCF, bucket edges at 1/42/365/366/730/731/1460/1461, pass-through, v1 unchanged, DeepInfra unchanged, wired end to end). `test_cr267_ling_terminal_v2.py` updated for the new version tag and gives its end-to-end helper an uncovered ladder so its existing `yes` cases still test what they were written to test.
 7. Tool: `docs/tools/room_investigation_V2/tools/terminal_v2_materiality.py` (this report's generator).
@@ -191,3 +191,109 @@ Only the maturity bucket window and the FCF share change. 365 days still counts 
 | 365 | 9/200 (4.5%) | 31/300 (10.3%) | 18 | 23 | no |
 | 366 | 9/200 (4.5%) | 51/300 (17.0%) | 38 | 15 | yes |
 | 731 | 9/200 (4.5%) | 61/300 (20.3%) | 48 | 9 | yes |
+
+# CR285: the horizon and the minimum become the user's (DEF551 and CR285)
+
+Branch `cr285-debt-coverage` (from `origin/beta/cr267` `b427b376`), 2026-11-26. Offline only: no Ling, no Room, no DB write (Alpha Postgres read-only exports of the 500 Rooms and the EDGAR facts). Behind `ROOM_GRADER_LING_TERMINAL=v2`; nothing changes on Alpha until that switch.
+
+## What changed
+
+1. DEF551. The runner now reads the Execution Desk's own `Time horizon:` line (`stated_horizon.py`: "8 weeks", "6-8 weeks" as the upper end, "3 months", "90 days", "1 quarter", "12+ months", capped at five years) into `ctx.trader_horizon_days` after the EXECUTION phase. Not readable ("3-10 years" restated from the mandate, "long", a date, empty) falls back to the 6-week default, logged (`room_desk_horizon_unread`) and recorded (`desk_horizon_source: default` on the check). A scripted desk is recorded as `scripted`.
+2. CR285. Two nullable mandate fields resolved at read time with a `source` flag: `debt_horizon_months` (default 6/12/24/24 by mandate horizon, range 3-60) and `min_debt_coverage` (default 1.5/1.25/1.0 by risk score, range 0.5-3.0; no "0 = off"). The check counts debt due within the larger of the user's horizon and the desk's, and keeps a `debt_default` yes only when coverage is below the user's minimum.
+3. The record (`terminal_check`) carries both horizons, which governed (`horizon_basis`), the minimum and every source. The verdict reasons carry the check's own sentence: "debt_default stands: $1,137M due within your 24-month horizon; cash and cash flow cover 0.63×, your minimum is 1.00× (cash $592M, available $720M)". When the desk's longer horizon governs it says "the desk's N-day horizon (longer than your M-month setting)".
+4. Version tag `termchk=d1c1.00` becomes `termchk=d2`. The tag is part of the Ling grader version, which keys the Room bank through the coded-rule policy, so a Room graded under the fixed 6-week, 1.0x check is never served as if it had been checked under the user's numbers. The two mandate values re-key a Room only under `v2` (`room_bank.mandate_digest` drops them under `v1`), so deploying this changes no bank key on Alpha.
+
+## Read this first
+
+1. At the benchmark mandate (risk 5, long horizon = 24 months, 1.0x, desk horizon read where stated) **BGS stands** ($1,137M due in years 1-2 against $720M of cash and two years of cash flow, 0.63x) and **BA is refused** (1.54x). Labelled-30 agreement 26/30 (the fixed check: 25/30); false yes 4, all in categories the check does not touch (5001.KL, XPEV x2, RIVN); false no 0.
+2. **Bursa is unchanged at 9/200 (4.5%).** Every Bursa Room has no debt schedule, so the yes is refused as "not evidenced" whatever the horizon or minimum. The new numbers act on the US only.
+3. **US flag rate 42/300 (14.0%)**, up from 32/300 (10.7%) at the fixed check. Net of the Rooms that moved: BGS (10 Rooms), SPCE (8; cash-burn against $190M due, coverage negative) and one T Room now stand; CAG's 9 Rooms are now covered (1.18x, because two years of its cash flow counts). Newly APPROVE against v2 alone falls from 25 to 18 Rooms.
+4. **12 months does not catch BGS.** A 12-month horizon is 365 days and the ladder's Year 2 starts at day 365, so only Year 1 counts (BGS has $4M there). The spec's "12+ months" holds from 13 months; the medium-horizon default of 12 months therefore behaves like the old 6 weeks for BGS. 24 months catches it.
+5. The user's minimum matters at the top of its range: at 2.0x or 3.0x BA comes back as a yes (it is covered 1.54x), and the US flag rate rises to 20-24%. At 1.25x and 1.5x BA is still refused and the US rate is 17.0%. These are the user's choices, shown to them in the explain sheet.
+6. Desk horizons: 303 of the 500 Rooms state a readable horizon (median 91 days, 5 exceed 24 months). The other 197 restate the mandate label ("3-10 years", "long") or give a date and fall back loudly to the mandate's horizon; no Room is silently defaulted.
+7. Still a reconstruction, not the sheet (section 5 above): BAC and WFC stand at 0.00x because the proxy has no cash for banks, so those six Rooms are an artifact of the proxy rather than a result of the setting.
+
+## The re-score under the user's own numbers (generated by `terminal_v2_materiality.py --cr285-md`)
+
+Benchmark mandate: long horizon, so 24 months (730 days on the ladder's 365-day year); minimum coverage 1.00x. The Execution Desk's stated horizon is read from each Room's own Trader turn (the DEF551 parse) and the larger of the two governs. Same stored v2 answers as above; pass 1.
+
+### 7. Flag rate and the labelled 30
+
+| check | Bursa flag | US flag | US debt_default stands | newly APPROVE vs v2 alone (US) | labelled-30 agree | BGS (label yes) | BA (label no) |
+|---|---|---|---|---|---|---|---|
+| old: fixed 42 days, 1.0x | 9/200 (4.5%) | 32/300 (10.7%) | 19 | 25 | 25/30 | no | no |
+| CR285 benchmark: 24 months, 1.00x, desk horizon | 9/200 (4.5%) | 42/300 (14.0%) | 29 | 18 | 26/30 | yes | no |
+
+### 8. The desks' stated horizons (DEF551)
+
+Read from the Trader turn of 303 of 500 Rooms; 197 had no readable `Time horizon:` line (unread phrases: '0 days (Re-evaluate on O', '0 weeks', '2027 Q2', '2029-11-20', '3-10 years', '3–10 years (no entry yet', '3–10 years', 'Immediate (re-evaluate 2').
+
+Days stated: min 1, p25 42, median 91, p75 365, max 1825; 5 of 303 exceed the mandate's 730 days (there the desk's horizon governs).
+
+- bursa: 99 read, median 182 days, range 1 to 1825
+- us: 204 read, median 74 days, range 5 to 1825
+
+### 9. Outcome changes, old check to the CR285 benchmark (pass 1)
+
+| set | terminal flag | outcome | Rooms |
+|---|---|---|---|
+| us | flag no->yes | outcome APPROVE->PASS | 10 |
+| us | flag no->yes | outcome CONTESTED->PASS | 3 |
+| us | flag no->yes | outcome PASS->PASS | 6 |
+| us | flag yes->no | outcome CONTESTED->APPROVE | 1 |
+| us | flag yes->no | outcome CONTESTED->CONTESTED | 1 |
+| us | flag yes->no | outcome PASS->APPROVE | 2 |
+| us | flag yes->no | outcome PASS->CONTESTED | 1 |
+| us | flag yes->no | outcome PASS->PASS | 4 |
+
+Rooms whose flag changed, by ticker:
+
+- us BGS: no->yes x10; coverage 0.63x, due $1,137M
+- us CAG: yes->no x9; coverage 1.18x, due $1,805M
+- us SPCE: no->yes x8; coverage -3.08x, due $190M
+- us T: no->yes x1; coverage 1.00x, due $17,605M
+
+### 10. The labelled 30 under the benchmark
+
+- 5001.KL 506eda96: label no, after yes. not debt_default, not checked
+- BGS 3f839cc3: label yes, after yes. debt_default stands: $1,137M due within your 24-month horizon; cash and cash flow cover 0.63×, your minimum is 1.00× (cash $592M, available $720M)
+- XPEV 2f012d41: label no, after yes. not debt_default, not checked
+- BA ba4c35ce: label no, after no. debt_default covered: $12,754M due within your 24-month horizon; cash and cash flow cover 1.54×, your minimum is 1.00× (cash $20,022M, available $19,602M)
+- XPEV 0a2eda2a: label no, after yes. not debt_default, not checked
+- RIVN 67462c35: label no, after yes. not debt_default, not checked
+
+### 11. Sensitivity to the user's numbers (pass 1; desk horizon always read)
+
+Defaults by mandate: short 6 / medium 12 / long and very long 24 months; coverage 1.5x at risk 1-2, 1.25x at 3-4, 1.0x at 5. Rows vary one number from the benchmark except the last two, which are the cautious and bold profiles.
+
+| months | min coverage | Bursa flag | US flag | US debt_default stands | newly APPROVE (US) | labelled agree | BGS | BA |
+|---|---|---|---|---|---|---|---|---|
+| 6 | 1.00x | 9/200 (4.5%) | 31/300 (10.3%) | 18 | 23 | 25/30 | no | no |
+| 12 | 1.00x | 9/200 (4.5%) | 31/300 (10.3%) | 18 | 23 | 25/30 | no | no |
+| 24 | 1.00x | 9/200 (4.5%) | 42/300 (14.0%) | 29 | 18 | 26/30 | yes | no |
+| 36 | 1.00x | 9/200 (4.5%) | 61/300 (20.3%) | 48 | 9 | 26/30 | yes | no |
+| 60 | 1.00x | 9/200 (4.5%) | 62/300 (20.7%) | 49 | 7 | 25/30 | yes | yes |
+| 24 | 1.25x | 9/200 (4.5%) | 51/300 (17.0%) | 38 | 15 | 26/30 | yes | no |
+| 24 | 1.50x | 9/200 (4.5%) | 51/300 (17.0%) | 38 | 15 | 26/30 | yes | no |
+| 24 | 2.00x | 9/200 (4.5%) | 61/300 (20.3%) | 48 | 10 | 25/30 | yes | yes |
+| 24 | 3.00x | 9/200 (4.5%) | 71/300 (23.7%) | 58 | 4 | 25/30 | yes | yes |
+| 6 | 1.50x | 9/200 (4.5%) | 40/300 (13.3%) | 27 | 20 | 25/30 | no | no |
+| 24 | 1.00x | 9/200 (4.5%) | 42/300 (14.0%) | 29 | 18 | 26/30 | yes | no |
+
+Per-Room risk defaults (each Room at its own risk score, long horizon = 24 months, the coverage default for that score):
+
+| Bursa flag | US flag | US debt_default stands | newly APPROVE (US) | labelled agree | BGS | BA |
+|---|---|---|---|---|---|---|
+| 9/200 (4.5%) | 49/300 (16.3%) | 36 | 17 | 26/30 | yes | no |
+
+### 12. Every US debt_default yes that still stands under the benchmark
+
+| ticker | Rooms | coverage | due in horizon | horizon basis |
+|---|---|---|---|---|
+| BAC | 2 | 0.00x | $82,938M | mandate |
+| BGS | 10 | 0.63x | $1,137M | mandate |
+| PLD | 1 | 0.18x | $4,814M | mandate |
+| SO | 3 | 0.10x | $9,618M | mandate |
+| SPCE | 8 | -3.08x | $190M | mandate |
+| T | 1 | 1.00x | $17,605M | mandate |
+| WFC | 4 | 0.00x | $36,790M | mandate |

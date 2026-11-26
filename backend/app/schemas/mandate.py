@@ -131,6 +131,15 @@ class ResolvedCaps(BaseModel):
     # silent zero.
     min_reward_risk: float = 2.0
     min_reward_risk_source: Literal["default", "user"] = "default"
+    # CR285 — the debt-maturity horizon (months) and minimum debt coverage (x) the terminal
+    # question's debt check uses, each with where it came from.
+    debt_horizon_months: int = 24
+    debt_horizon_months_source: Literal["default", "user"] = "default"
+    min_debt_coverage: float = 1.0
+    min_debt_coverage_source: Literal["default", "user"] = "default"
+    # CR285 — whether the Room's grader runs the debt check at all (ROOM_GRADER_LING_TERMINAL=v2).
+    # The client shows the two rows only when this is true: shown = enforced.
+    debt_check_active: bool = False
 
 
 class DayTraderPresetInfo(BaseModel):
@@ -319,6 +328,20 @@ class Mandate(BaseModel):
     min_reward_risk: float | None = Field(
         default=None, ge=0.0, le=20.0, json_schema_extra={ENFORCED_LIMIT_MARKER: True}
     )
+
+    # CR285 — the two numbers of the terminal question's `debt_default` materiality check
+    # (`room_graders/terminal_materiality.py`, live only under ROOM_GRADER_LING_TERMINAL=v2).
+    # `None` = not set, resolved at read time (no migration): the horizon follows the mandate
+    # horizon (6/12/24/24 months), the coverage minimum follows the risk score (1.5 at risk 1-2,
+    # 1.25 at 3-4, 1.0 at 5). The check counts debt falling due within the LARGER of this horizon
+    # and the Execution Desk's own stated one, and keeps a "debt default" terminal yes only when
+    # cash plus cash flow cover that debt by less than the minimum. Ranges are bounded so the
+    # check cannot be switched off by accident (3-60 months, 0.5-3.0x); there is no "0 = off".
+    # NOT marked ENFORCED_LIMIT: they are enforced by the Room's grader, after the debate, not by
+    # the safety floor, and agents are not told them (the marker's four legs assume a floor check
+    # and an overlay line). They are disclosed in `resolved`, the readback and Settings instead.
+    debt_horizon_months: int | None = Field(default=None, ge=3, le=60)
+    min_debt_coverage: float | None = Field(default=None, ge=0.5, le=3.0)
 
     # CR204 — the two greek-level caps of §9.
     #

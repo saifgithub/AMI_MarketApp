@@ -31,3 +31,22 @@ controls:
     target: ami.screen.risk_limits_section.reward_risk_sheet
     line: 508
     note: "CR284. Info icon beside the Minimum reward to risk label (key riskLimitExplainSheet_min_reward_risk); opens the explain sheet."
+  - label: "Debt-maturity horizon"
+    kind: field
+    expect: state
+    state: "CR285. Ninth/tenth rows, after Minimum reward to risk, shown ONLY while the server says the debt check is active (resolved.debt_check_active). Months, whole numbers only (key riskLimitField_debt_horizon_months, suffix ' mo'). Unset it follows the mandate horizon and shows the server-resolved number ('From your horizon - 24 mo'); typing a number sets it ('Set by you'); a smaller number than the current one shows the looser disclosure; clearing returns to the horizon. Mandate dirty. Not part of the Day Trader preset."
+    line: 574
+    note: "Same chip and field as the other rows; chip reads 'Use my horizon' once overridden. Keys riskLimitOff_debt_horizon_months, riskLimitField_debt_horizon_months."
+  - label: "Minimum debt coverage"
+    kind: field
+    expect: state
+    state: "CR285. A multiple in '×' units (key riskLimitField_min_debt_coverage), shown only while the debt check is active. Unset it follows the risk profile and shows the server-resolved number ('From your risk profile - 1.25×'); typing a number sets it ('Set by you'); clearing returns to the profile. Range 0.5-3.0 is enforced by the server (422). Mandate dirty. Not part of the Day Trader preset."
+    line: 574
+    note: "Keys riskLimitOff_min_debt_coverage, riskLimitField_min_debt_coverage."
+  - label: "Debt check info"
+    kind: icon
+    expect: sheet
+    target: ami.screen.risk_limits_section.debt_check_sheet
+    line: 550
+    note: "CR285. Info icon beside the Debt-maturity horizon and the Minimum debt coverage labels (keys riskLimitExplainSheet_debt_horizon_months / riskLimitExplainSheet_min_debt_coverage); each opens its own explain sheet."
+

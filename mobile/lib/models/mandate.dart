@@ -300,6 +300,11 @@ class ResolvedCaps {
     this.maxOpenRiskPct,
     this.minRewardRisk,
     this.minRewardRiskSource,
+    this.debtHorizonMonths,
+    this.debtHorizonMonthsSource,
+    this.minDebtCoverage,
+    this.minDebtCoverageSource,
+    this.debtCheckActive,
   });
 
   final double? sectorCapPct;
@@ -316,6 +321,17 @@ class ResolvedCaps {
   final double? minRewardRisk;
   final String? minRewardRiskSource;
 
+  /// CR285 — the debt-maturity horizon (months) and minimum debt coverage (x)
+  /// the Room's terminal question uses, each with its source (`'default'` or
+  /// `'user'`). `debtCheckActive` is false (or null from an older backend)
+  /// while the server's grader does not run the check: Settings then shows
+  /// neither row, so a row on screen is always one that is enforced.
+  final int? debtHorizonMonths;
+  final String? debtHorizonMonthsSource;
+  final double? minDebtCoverage;
+  final String? minDebtCoverageSource;
+  final bool? debtCheckActive;
+
   factory ResolvedCaps.fromJson(Map<String, dynamic> j) {
     return ResolvedCaps(
       sectorCapPct: (j['sector_cap_pct'] as num?)?.toDouble(),
@@ -328,6 +344,11 @@ class ResolvedCaps {
       maxOpenRiskPct: (j['max_open_risk_pct'] as num?)?.toDouble(),
       minRewardRisk: (j['min_reward_risk'] as num?)?.toDouble(),
       minRewardRiskSource: j['min_reward_risk_source'] as String?,
+      debtHorizonMonths: (j['debt_horizon_months'] as num?)?.toInt(),
+      debtHorizonMonthsSource: j['debt_horizon_months_source'] as String?,
+      minDebtCoverage: (j['min_debt_coverage'] as num?)?.toDouble(),
+      minDebtCoverageSource: j['min_debt_coverage_source'] as String?,
+      debtCheckActive: j['debt_check_active'] as bool?,
     );
   }
 
@@ -351,6 +372,10 @@ class ResolvedCaps {
         return maxOpenRiskPct;
       case 'min_reward_risk':
         return minRewardRisk;
+      case 'debt_horizon_months':
+        return debtHorizonMonths;
+      case 'min_debt_coverage':
+        return minDebtCoverage;
       default:
         return null;
     }
@@ -427,6 +452,8 @@ class UserMandate {
     this.maxTradesPerWeek,
     this.maxOpenRiskPct,
     this.minRewardRisk,
+    this.debtHorizonMonths,
+    this.minDebtCoverage,
     this.maxOptionPremiumPct,
     this.maxOptionNotionalPct,
     this.maxAssignmentExposurePct,
@@ -464,6 +491,12 @@ class UserMandate {
   /// CR284 — explicit reward:risk floor; null follows the risk profile (the
   /// enforced number arrives in `resolved.minRewardRisk`).
   final double? minRewardRisk;
+
+  /// CR285 — explicit debt-check horizon (months) and coverage minimum (x);
+  /// null follows the mandate horizon / risk profile (the enforced numbers
+  /// arrive in `resolved`).
+  final int? debtHorizonMonths;
+  final double? minDebtCoverage;
 
   // CR129: server-resolved enforced values for the seven limits above.
   // Null when the backend predates DEF193 — unknown, not "off".
@@ -539,6 +572,8 @@ class UserMandate {
       maxTradesPerWeek: (j['max_trades_per_week'] as num?)?.toInt(),
       maxOpenRiskPct: (j['max_open_risk_pct'] as num?)?.toDouble(),
       minRewardRisk: (j['min_reward_risk'] as num?)?.toDouble(),
+      debtHorizonMonths: (j['debt_horizon_months'] as num?)?.toInt(),
+      minDebtCoverage: (j['min_debt_coverage'] as num?)?.toDouble(),
       maxOptionPremiumPct:
           (j['max_option_premium_pct'] as num?)?.toDouble(),
       maxOptionNotionalPct:

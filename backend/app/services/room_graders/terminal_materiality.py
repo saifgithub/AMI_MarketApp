@@ -10,10 +10,19 @@ horizon.
 
 The rule (only when the winning terminal answer is "yes" with `terminal_category == "debt_default"`):
 
+    horizon        = the larger of YOUR debt-maturity horizon (mandate, months) and the
+                     Execution Desk's own stated horizon (days)           [CR285]
     due_in_horizon = sum of the ladder buckets that START inside the horizon
     available      = cash + TTM free cash flow x (horizon_days / 365)
     coverage       = available / due_in_horizon
-    the yes STANDS only if coverage < DEBT_DEFAULT_MIN_COVERAGE (1.0)
+    the yes STANDS only if coverage < YOUR minimum coverage (mandate, x)  [CR285]
+
+CR285: before it, the horizon was the runner's fixed 6 weeks (the desk's was never read, DEF551)
+and the minimum a fixed 1.0x. Both are now the user's numbers: the mandate carries them
+(`debt_horizon_months`, `min_debt_coverage`; defaults 6/12/24/24 months by mandate horizon and
+1.5x/1.25x/1.0x by risk score), and the record and the reason text name them ("due within your
+24-month horizon ... your minimum is 1.5x"). An input that omits them (an offline caller) is
+read as before: the horizon it gives and a 1.0x minimum, recorded as such.
 
 Ladder buckets (the EDGAR long-term-debt principal ladder, `debt_maturity.py`) are mapped by whole
 years from the trade date: "Within 1 year" starts at day 0, "Year k" at day (k-1) x 365. A bucket
@@ -41,11 +50,17 @@ from dataclasses import replace
 from typing import Any, Mapping
 
 from app.services.room_grader_contract import Answer, QuestionAnswer, QuestionId
+from app.trading_math.risk_limits import debt_horizon_days
 
+# The minimum an input that carries none is read with (an offline caller). The live Room always
+# passes the user's own.
 DEBT_DEFAULT_MIN_COVERAGE = 1.0
 CHECKED_CATEGORY = "debt_default"
 DAYS_PER_YEAR = 365
-CHECK_TAG = f"termchk=d1c{DEBT_DEFAULT_MIN_COVERAGE:.2f}"
+CHECK_REVISION = "d2"
+# `d2` = horizon and minimum are the mandate's (CR285). `d1c1.00` was the fixed 6-week, 1.0x check;
+# a Room graded under it is keyed apart from one graded under the user's numbers.
+CHECK_TAG = f"termchk={CHECK_REVISION}"
 
 _YEAR_N = re.compile(r"^year\s*(\d+)$", re.IGNORECASE)
 _FIRST = re.compile(r"^(within\s*(1|one)\s*year|next\s*(12|twelve)\s*months)$", re.IGNORECASE)
@@ -73,15 +88,56 @@ def _fmt(m: float) -> str:
     return f"${m:,.0f}M"
 
 
+def _times(value: float, against: float) -> str:
+    """Two decimals; four when the two figures in one sentence would print the same but differ."""
+    text = f"{value:.2f}"
+    return f"{value:.4f}" if value != against and text == f"{against:.2f}" else text
+
+
+def _horizon_phrase(check: Mapping[str, Any]) -> str:
+    """How the reason text names the horizon it counted: the user's own when theirs governed, the
+    desk's (and that it outran the user's) when the desk's did."""
+    months = check.get("mandate_horizon_months")
+    if months is None:
+        return f"the {check['horizon_days']:g}-day horizon"
+    if check.get("horizon_basis") == "desk":
+        return (f"the desk's {check['desk_horizon_days']:g}-day horizon "
+                f"(longer than your {months:g}-month setting)")
+    return f"your {months:g}-month horizon"
+
+
 def debt_default_check(inputs: Mapping[str, Any] | None) -> dict:
     """Decide a `debt_default` yes from the inputs. Returns `terminal_check`: `stands` (bool),
-    `reason`, and the numbers. Pure and deterministic."""
+    `reason`, and the numbers. Pure and deterministic.
+
+    Inputs beyond the balance sheet: `horizon_days` (the Execution Desk's stated horizon, with
+    `horizon_source` / `horizon_phrase` saying where it came from), `mandate_horizon_months` and
+    `min_coverage` (the user's, with `mandate_horizon_source` / `min_coverage_source`)."""
     i = inputs or {}
     ladder = i.get("ladder") or []
-    horizon = _num(i.get("horizon_days"))
+    desk_days = _num(i.get("horizon_days"))
+    months = _num(i.get("mandate_horizon_months"))
+    mandate_days = float(debt_horizon_days(months)) if months is not None and months > 0 else None
+    given = [d for d in (desk_days, mandate_days) if d is not None and d > 0]
+    horizon = max(given) if given else None
+    basis = None
+    if horizon is not None:
+        basis = "desk" if mandate_days is None or (desk_days or 0) > mandate_days else "mandate"
+    min_cov = _num(i.get("min_coverage"))
+    min_cov_source = i.get("min_coverage_source") if min_cov is not None else "check_default"
+    if min_cov is None:
+        min_cov = DEBT_DEFAULT_MIN_COVERAGE
     check: dict[str, Any] = {
-        "category": CHECKED_CATEGORY, "min_coverage": DEBT_DEFAULT_MIN_COVERAGE,
-        "horizon_days": horizon, "due_in_horizon": None, "available": None,
+        "category": CHECKED_CATEGORY, "min_coverage": min_cov,
+        "min_coverage_source": min_cov_source,
+        "horizon_days": horizon, "horizon_basis": basis,
+        "desk_horizon_days": desk_days,
+        "desk_horizon_source": i.get("horizon_source"),
+        "desk_horizon_phrase": i.get("horizon_phrase"),
+        "mandate_horizon_months": months,
+        "mandate_horizon_days": mandate_days,
+        "mandate_horizon_source": i.get("mandate_horizon_source") if months is not None else None,
+        "due_in_horizon": None, "available": None,
         "coverage": None, "cash": None, "cash_source": None, "fcf_ttm": None,
         "fcf_source": None, "buckets_counted": [], "buckets_not_counted": [],
         "unmapped_labels": [], "ladder_period_end": i.get("ladder_period_end"),
@@ -91,7 +147,7 @@ def debt_default_check(inputs: Mapping[str, Any] | None) -> dict:
         check.update(stands=False, reason=(
             "debt_default not evidenced: no debt-maturity schedule on the sheet"))
         return check
-    if horizon is None or horizon <= 0:
+    if horizon is None:
         check.update(stands=True, skipped=True, reason=(
             "debt_default materiality check skipped: the trade horizon is unknown"))
         return check
@@ -126,21 +182,23 @@ def debt_default_check(inputs: Mapping[str, Any] | None) -> dict:
     check.update(cash=cash, cash_source=cash_source, fcf_ttm=fcf, fcf_source=fcf_source,
                  available=available)
 
-    amounts = f"due {_fmt(due)}, available {_fmt(available)}"
+    where = _horizon_phrase(check)
+    own = "your" if min_cov_source != "check_default" else "the"
+    amounts = f"cash {_fmt(cash)}, available {_fmt(available)}"
     if due <= 0:
         check.update(stands=False, coverage=None, reason=(
-            f"debt_default covered: no principal falls due within the {horizon:g}-day horizon "
-            f"({amounts})"))
+            f"debt_default covered: no principal falls due within {where} ({amounts})"))
         return check
     coverage = available / due
     check["coverage"] = coverage
-    if coverage >= DEBT_DEFAULT_MIN_COVERAGE:
+    if coverage >= min_cov:
         check.update(stands=False, reason=(
-            f"debt_default covered {coverage:.2f}× by cash and horizon free cash flow ({amounts})"))
+            f"debt_default covered: {_fmt(due)} due within {where}; cash and cash flow cover "
+            f"{_times(coverage, min_cov)}×, {own} minimum is {min_cov:.2f}× ({amounts})"))
     else:
         check.update(stands=True, reason=(
-            f"debt_default stands: coverage {coverage:.2f}× is below "
-            f"{DEBT_DEFAULT_MIN_COVERAGE:.2f}× ({amounts})"))
+            f"debt_default stands: {_fmt(due)} due within {where}; cash and cash flow cover "
+            f"{_times(coverage, min_cov)}×, {own} minimum is {min_cov:.2f}× ({amounts})"))
     return check
 
 

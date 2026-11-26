@@ -24,6 +24,7 @@ from app.agents.safety_floor import (
     check_holdings_against_mandate,
 )
 from app.api.dependencies import get_current_user
+from app.core.config import settings
 from app.db import get_session
 from app.db.models import User
 from app.schemas import Compliance, DayTraderPresetInfo, Mandate, ResolvedCaps
@@ -58,6 +59,10 @@ from app.trading_math.risk_limits import (
     resolved_max_trades_per_week,
     resolved_min_reward_risk,
     min_reward_risk_source,
+    debt_horizon_months_source,
+    min_debt_coverage_source,
+    resolved_debt_horizon_months,
+    resolved_min_debt_coverage,
     resolved_post_loss_cooldown_hours,
 )
 from app.trading_math.sizing import (
@@ -259,6 +264,18 @@ def _with_plan_state(mandate: Mandate, user: User) -> Mandate:
             mandate.risk_score, mandate.min_reward_risk,
         ),
         min_reward_risk_source=min_reward_risk_source(mandate.min_reward_risk),
+        # CR285 — the debt-check horizon (follows the mandate horizon) and coverage
+        # minimum (follows the risk score), each with its source, from the same
+        # resolvers the Room's grader reads.
+        debt_horizon_months=resolved_debt_horizon_months(
+            mandate.horizon, mandate.debt_horizon_months,
+        ),
+        debt_horizon_months_source=debt_horizon_months_source(mandate.debt_horizon_months),
+        min_debt_coverage=resolved_min_debt_coverage(
+            mandate.risk_score, mandate.min_debt_coverage,
+        ),
+        min_debt_coverage_source=min_debt_coverage_source(mandate.min_debt_coverage),
+        debt_check_active=settings.room_grader_ling_terminal == "v2",
     )
     return mandate.model_copy(update={
         "plan": plan,
@@ -329,6 +346,8 @@ def patch_mandate(
             ("max_trades_per_week", "max trades/week", ""),
             ("max_open_risk_pct", "total open-risk cap", "%"),
             ("min_reward_risk", "minimum reward to risk", ":1"),
+            ("debt_horizon_months", "debt-maturity horizon", " months"),
+            ("min_debt_coverage", "minimum debt coverage", "×"),
             # CR172 §9 (D5) — leg (b): a PATCH to any of these must read back
             # in its OWN units, or it falls through to the bare "Mandate
             # updated." that DEF197 filed against the CR101-BE1 pair.
@@ -339,9 +358,10 @@ def patch_mandate(
         ):
             if field in updates and updates[field] != getattr(before, field):
                 old = getattr(before, field)
-                old_text = "following your risk profile" if old is None else f"{old}{suffix}"
+                unset = "following your horizon" if field == "debt_horizon_months" else "following your risk profile"
+                old_text = unset if old is None else f"{old}{suffix}"
                 new = updates[field]
-                new_text = "following your risk profile" if new is None else f"{new}{suffix}"
+                new_text = unset if new is None else f"{new}{suffix}"
                 diffs.append(f"{label} {old_text} → {new_text}")
         # CR220 — the identity/goal fields the Concierge interview sets. These
         # PATCHed successfully long before they were editable in Settings, but

@@ -1840,6 +1840,45 @@ class AppLocalizationsEn extends AppLocalizations {
       'Reward to risk compares how far a trade\'s target sits above your entry with how far its stop sits below it. Entry 100, stop 90, target 115 is 1.5 to 1: 15 to gain for every 10 at risk.\n\nYour minimum is the lowest ratio AMI will approve. If a Room\'s target is too close for its stop, the approval becomes a rejection and says which two numbers failed. Leave this on your risk profile and cautious profiles ask for more reward per unit of risk. Set your own number to override it; 0 turns the check off.\n\nThis applies to a Room\'s verdict. A trade you place yourself on the ticket has no target, so it is not checked.';
 
   @override
+  String get settingsDebtHorizonLabel => 'Debt-maturity horizon';
+
+  @override
+  String get settingsDebtHorizonExplain =>
+      'How many months ahead AMI looks for debt that falls due when it judges a debt-default risk. A longer horizon from the Execution Desk is used instead.';
+
+  @override
+  String get settingsDebtHorizonSheetTitle => 'Debt-maturity horizon';
+
+  @override
+  String get settingsDebtHorizonSheetBody =>
+      'When a Room asks whether a company faces a terminal risk such as a debt default, AMI adds up the debt that falls due inside this window and compares it with the cash and cash flow the company has to meet it. At 24 months it counts the next two years of maturities.\n\nLeave this on your horizon and a short horizon looks 6 months ahead, a long one 24. Set your own number, 3 to 60 months, to override it. If the Execution Desk states a longer horizon for a trade, AMI uses that one for that Room and says so.\n\nA longer window counts more debt, so more debt-default warnings stand.';
+
+  @override
+  String get settingsDebtHorizonFromHorizon => 'From your horizon';
+
+  @override
+  String settingsDebtHorizonFromHorizonResolved(String value) {
+    return 'From your horizon — $value';
+  }
+
+  @override
+  String get settingsDebtHorizonUseHorizon => 'Use my horizon';
+
+  @override
+  String get settingsDebtCoverageLabel => 'Minimum debt coverage';
+
+  @override
+  String get settingsDebtCoverageExplain =>
+      'AMI keeps a debt-default warning only when cash and cash flow cover the debt falling due by less than this many times.';
+
+  @override
+  String get settingsDebtCoverageSheetTitle => 'Debt coverage';
+
+  @override
+  String get settingsDebtCoverageSheetBody =>
+      'Coverage is the company\'s cash plus the free cash flow it earns over the horizon, divided by the debt that falls due in it. 1.0× means exactly enough.\n\nYour minimum is the cover below which AMI keeps a debt-default warning. With a 1.5× minimum, 100 due and 140 of cash and cash flow is 1.4×, so the warning stands; at 150 it is covered and the warning is dropped. Leave this on your risk profile and cautious profiles ask for more cover than bold ones. Set your own number, 0.5× to 3.0×, to override it.\n\nThe check cannot be switched off. It applies to a Room\'s verdict.';
+
+  @override
   String get settingsRiskLimitsDisclosureFollowing =>
       'This replaces your risk-profile default with an explicit value, effective immediately.';
 

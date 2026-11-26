@@ -597,7 +597,7 @@ _KEYED_MANDATE_FIELDS = {
     "max_trades_per_week", "max_option_premium_pct", "max_option_notional_pct",
     "max_assignment_exposure_pct", "min_days_to_expiry", "max_open_risk_pct",
     "max_portfolio_delta", "max_portfolio_vega", "compliance", "learning_style",
-    "min_reward_risk",
+    "min_reward_risk", "debt_horizon_months", "min_debt_coverage",
 }
 
 
@@ -616,8 +616,12 @@ def test_every_mandate_field_is_keyed_or_explicitly_excluded():
     ("risk_score", 5), ("max_drawdown_pct", 7), ("single_name_cap_pct", 12.5),
     ("max_open_positions", 3), ("locale", "ar"), ("risk_quotes", ["new"]),
     ("min_reward_risk", 2.5),
+    ("debt_horizon_months", 36), ("min_debt_coverage", 2.0),
 ])
-def test_each_keyed_mandate_field_moves_the_digest(field, value):
+def test_each_keyed_mandate_field_moves_the_digest(field, value, monkeypatch):
+    # CR285: the two debt-check fields key the Room only under the terminal-v2 grader.
+    from app.core.config import settings
+    monkeypatch.setattr(settings, "room_grader_ling_terminal", "v2")
     m = _mandate()
     assert room_bank.mandate_digest(m) != room_bank.mandate_digest(
         m.model_copy(update={field: value})

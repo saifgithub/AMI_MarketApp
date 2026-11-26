@@ -589,6 +589,12 @@ _NON_LIMIT_NUMERIC_FIELDS: dict[str, str] = {
     "credit_allowance": "entitlement state stamped server-side; client-unwritable",
     "room_cost": "pricing, stamped server-side; client-unwritable",
     "room_live_data_surcharge_max": "pricing ceiling, stamped server-side; client-unwritable",
+    "debt_horizon_months": "CR285 terminal-question debt check, enforced by the Room's GRADER after "
+                           "the debate (room_graders/terminal_materiality.py), not by the safety "
+                           "floor; agents are told nothing, so there is no overlay leg. Disclosed in "
+                           "`resolved`, the onboarding readback and Settings; pinned by "
+                           "test_cr285_debt_coverage.py",
+    "min_debt_coverage": "CR285 — same as debt_horizon_months",
 }
 
 # Files where an enforced limit's business logic actually reads

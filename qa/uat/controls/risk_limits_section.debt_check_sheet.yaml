@@ -1,0 +1,8 @@
+screen: ami.screen.risk_limits_section.debt_check_sheet
+source: mobile/lib/screens/settings/risk_limits_section.dart
+controls:
+  - label: "<scrim / swipe down>"
+    kind: link
+    expect: back
+    line: 680
+    note: "CR285. Read-only explain sheet for the Debt-maturity horizon and Minimum debt coverage rows (title + plain-words body; the coverage body has the 1.5× / 100 due / 140 = 1.4× worked example); no buttons. Dismiss by tapping outside or swiping down."
