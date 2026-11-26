@@ -77,7 +77,11 @@ from app.schemas.mandate import Mandate
 from app.services.cio_snapshot_codec import decode_profile, encode_profile
 from app.trading_math.market_calendar import trading_date as market_trading_date
 from app.trading_math.markets import Market, market_for
-from app.trading_math.risk_limits import resolved_min_reward_risk
+from app.trading_math.risk_limits import (
+    resolved_debt_horizon_months,
+    resolved_min_debt_coverage,
+    resolved_min_reward_risk,
+)
 from app.trading_math.session_calendar import last_us_session_date
 
 # Bump when the Room's decision logic changes in a way the assembled prompts do
@@ -284,6 +288,21 @@ def mandate_digest(mandate: Mandate) -> str:
     data["effective_min_reward_risk"] = resolved_min_reward_risk(
         mandate.risk_score, mandate.min_reward_risk
     )
+    # CR285: the two debt-check numbers, as the check resolves them (the horizon default
+    # follows `horizon`, the coverage default follows `risk_score`). They only exist for a Room
+    # graded under `ROOM_GRADER_LING_TERMINAL=v2`; under v1 they are dropped so every banked key
+    # stays byte-identical until that switch, which re-keys everything through the policy anyway.
+    from app.core.config import settings
+
+    data.pop("debt_horizon_months", None)
+    data.pop("min_debt_coverage", None)
+    if settings.room_grader_ling_terminal == "v2":
+        data["effective_debt_horizon_months"] = resolved_debt_horizon_months(
+            mandate.horizon, mandate.debt_horizon_months
+        )
+        data["effective_min_debt_coverage"] = resolved_min_debt_coverage(
+            mandate.risk_score, mandate.min_debt_coverage
+        )
     return _sha256(_canonical(data))
 
 

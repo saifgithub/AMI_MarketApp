@@ -223,3 +223,54 @@ def format_reward_risk(value: float, *, against: float | None = None) -> str:
     if against is not None and value != against and text == f"{against:.2f}":
         return f"{value:.4f}".rstrip("0")
     return text[:-1] if text.endswith("0") else text
+
+
+# CR285 — the two numbers the terminal question's `debt_default` materiality check reads
+# (`room_graders/terminal_materiality.py`). Horizon follows the mandate horizon, coverage follows
+# the risk score; each is overridden by an explicit per-user value inside its range. The ranges
+# are the guard against switching the check off by accident: there is no "0 = off" here.
+DEFAULT_DEBT_HORIZON_MONTHS: dict[str, int] = {
+    "short": 6, "medium": 12, "long": 24, "very_long": 24,
+}
+DEFAULT_MIN_DEBT_COVERAGE: dict[int, float] = {1: 1.5, 2: 1.5, 3: 1.25, 4: 1.25, 5: 1.0}
+DEBT_HORIZON_MONTHS_RANGE: tuple[int, int] = (3, 60)
+MIN_DEBT_COVERAGE_RANGE: tuple[float, float] = (0.5, 3.0)
+# A mandate horizon with no table entry (a value added to the enum later) falls to the longest
+# default, never to a shorter window that would quietly narrow the check.
+_DEBT_HORIZON_FALLBACK_MONTHS = 24
+
+
+def resolved_debt_horizon_months(horizon: object, override: int | None = None) -> int:
+    """Months of debt maturities the terminal check counts: the user's explicit value when set,
+    else the mandate-horizon default (CR285)."""
+    if override is not None:
+        return int(override)
+    key = str(getattr(horizon, "value", horizon))
+    return DEFAULT_DEBT_HORIZON_MONTHS.get(key, _DEBT_HORIZON_FALLBACK_MONTHS)
+
+
+def debt_horizon_months_source(override: int | None) -> str:
+    """"user" when the mandate carries an explicit value, else "default" (CR285)."""
+    return "default" if override is None else "user"
+
+
+def resolved_min_debt_coverage(
+    risk_score: int, override: float | None = None, *, table: dict[int, float] | None = None
+) -> float:
+    """Minimum cash-plus-cash-flow coverage of debt falling due inside the horizon: the user's
+    explicit value when set, else the risk-tier default (CR285)."""
+    if override is not None:
+        return float(override)
+    t = DEFAULT_MIN_DEBT_COVERAGE if table is None else table
+    return float(_nearest_tier(t, int(risk_score)))
+
+
+def min_debt_coverage_source(override: float | None) -> str:
+    """"user" when the mandate carries an explicit value, else "default" (CR285)."""
+    return "default" if override is None else "user"
+
+
+def debt_horizon_days(months: int | float) -> int:
+    """Calendar days in `months`, on the same 365-day year the maturity ladder is mapped by, so
+    12 months is 365 days (the first ladder bucket only) and 24 months is 730 (Years 1 and 2)."""
+    return int(round(float(months) * 365.0 / 12.0))

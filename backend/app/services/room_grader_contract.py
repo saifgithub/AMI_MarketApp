@@ -156,10 +156,25 @@ def build_proposed_trade(
     return trade
 
 
-def build_terminal_inputs(profile: Mapping[str, Any] | None, horizon_days: int | None) -> dict:
+def build_terminal_inputs(
+    profile: Mapping[str, Any] | None,
+    horizon_days: int | None,
+    *,
+    horizon_source: str | None = None,
+    horizon_phrase: str | None = None,
+    mandate_horizon_months: int | None = None,
+    mandate_horizon_source: str | None = None,
+    min_coverage: float | None = None,
+    min_coverage_source: str | None = None,
+) -> dict:
     """The `RoomTranscript.terminal_inputs` shape, in $M, taken from the Room's profile (the data
     behind the fact sheet). A field counts only when `field_state` says it is live, as the sheet
-    itself does. Lives here, not in `room_graders`, because the runner may import only this contract."""
+    itself does. Lives here, not in `room_graders`, because the runner may import only this contract.
+
+    `horizon_days` is the Execution Desk's stated horizon (DEF551; None when it stated none the
+    code could read), `horizon_source` says whether it was read from the desk or defaulted, and
+    `horizon_phrase` is the text read. `mandate_horizon_months` / `min_coverage` are the user's
+    own debt-check numbers (CR285), each with its source ("default" or "user")."""
     p = profile or {}
     state = p.get("field_state") or {}
 
@@ -177,6 +192,12 @@ def build_terminal_inputs(profile: Mapping[str, Any] | None, horizon_days: int |
         fcf_source = "free_cash_flow_ttm"
     return {
         "horizon_days": horizon_days,
+        "horizon_source": horizon_source,
+        "horizon_phrase": horizon_phrase,
+        "mandate_horizon_months": mandate_horizon_months,
+        "mandate_horizon_source": mandate_horizon_source,
+        "min_coverage": min_coverage,
+        "min_coverage_source": min_coverage_source,
         "ladder": ladder,
         "ladder_period_end": p.get("debt_maturity_period_end") if ladder else None,
         "short_term_borrowings": p.get("debt_maturity_excluded_st") if ladder else None,

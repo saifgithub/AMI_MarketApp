@@ -52,8 +52,8 @@ def test_covered_yes_becomes_no_with_the_reason_and_numbers():
     out = M.apply_materiality(_yes(), BA)
     assert out.answer is Answer.NO
     assert out.detail["terminal_rejected"] == (
-        "debt_default covered 2.47× by cash and horizon free cash flow "
-        "(due $8,351M, available $20,627M)"
+        "debt_default covered: $8,351M due within the 42-day horizon; cash and cash flow cover "
+        "2.47×, the minimum is 1.00× (cash $20,671M, available $20,627M)"
     )
     c = out.detail["terminal_check"]
     assert c["stands"] is False and c["due_in_horizon"] == 8351.0
@@ -69,7 +69,7 @@ def test_uncovered_yes_stands_and_records_the_numbers():
     assert out.answer is Answer.YES
     c = out.detail["terminal_check"]
     assert c["stands"] is True and c["coverage"] == pytest.approx((2000 - 386 * 42 / 365) / 8351)
-    assert "below 1.00×" in c["reason"]
+    assert "cover 0.23×, the minimum is 1.00×" in c["reason"]
     assert out.detail["terminal_rejected"] is None
 
 
@@ -234,12 +234,12 @@ def test_a_dark_schedule_gives_no_ladder(profile):
 # 6. wiring
 
 
-def test_the_tag_carries_the_coverage_constant_and_only_rides_term_v2():
-    assert M.CHECK_TAG == "termchk=d1c1.00"
+def test_the_tag_carries_the_check_revision_and_only_rides_term_v2():
+    assert M.CHECK_TAG == "termchk=d2"
     base = ling.grader_version(ling_test.MODEL)
     assert "termchk" not in base
     assert ling.grader_version(ling_test.MODEL, terminal_variant=True) == (
-        base + "|term=v2|termchk=d1c1.00"
+        base + "|term=v2|termchk=d2"
     )
     assert "termchk" not in deepinfra.grader_version("m")
 

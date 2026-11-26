@@ -120,6 +120,7 @@ from app.services.room_grader_contract import (
     build_terminal_inputs,
 )
 from app.services.room_grader_registry import resolve_grader
+from app.services.stated_horizon import desk_horizon_days
 from app.services.evidence_record import (
     EvidenceGateDecision,
     build_gate_decision,
@@ -226,6 +227,12 @@ from app.trading_math import bnm_calendar
 from app.trading_math.markets import Market, market_for, spec_for
 from app.trading_math.portfolio import shares_for_size
 from app.trading_math.risk import drawdown_contribution
+from app.trading_math.risk_limits import (
+    debt_horizon_months_source,
+    min_debt_coverage_source,
+    resolved_debt_horizon_months,
+    resolved_min_debt_coverage,
+)
 from app.trading_math.sizing import resolved_single_name_cap_pct, risk_debator_sizes
 from app.trading_math.trade import risk_reward, rr_is_coherent, trade_asymmetry
 from app.trading_math.valuation import multiple_compression_downside, net_position_phrase
@@ -558,6 +565,14 @@ class _RoomContext:
     trader_stop: float = 96.0
     trader_target: float = 115.0
     trader_horizon_weeks: int = 6
+    # DEF551 — the horizon the Execution Desk stated on its `Time horizon:` line, in days, once
+    # its turn has been read (`_adopt_desk_horizon`, after the EXECUTION phase). None until then,
+    # and None when the desk stated none the code could read, in which case every consumer that
+    # takes "the trade's horizon" falls back to `trader_horizon_weeks` (the 6-week default) and
+    # `trader_horizon_source` says so: "desk" | "default" | "scripted".
+    trader_horizon_days: int | None = None
+    trader_horizon_source: str = "default"
+    trader_horizon_phrase: str | None = None
     aggressive_size_pct: float = 5.0
     conservative_size_pct: float = 1.5
     neutral_size_pct: float = 3.0
@@ -3700,7 +3715,8 @@ def _parse_pm_verdict(
     try:
         horizon_days = int(parsed.get("horizon_days"))
     except (TypeError, ValueError):
-        horizon_days = ctx.trader_horizon_weeks * 7
+        # DEF551: the Execution Desk's own stated horizon when it gave one, else the default.
+        horizon_days = _trade_horizon_days(ctx)
     # CR219 R59 F4: clamp time_horizon_days to plausible band [1, 365] with disclosure.
     # 365 mirrors _MAX_EVIDENCED_HORIZON_DAYS — the widest window on the fact sheet.
     _horizon_clamped = False
@@ -5529,7 +5545,7 @@ def _assemble_verdict(ctx: _RoomContext, profile: dict[str, Any]) -> Verdict:
         entry=ctx.trader_entry,
         target=ctx.trader_target,
         stop=ctx.trader_stop,
-        time_horizon_days=ctx.trader_horizon_weeks * 7,
+        time_horizon_days=_trade_horizon_days(ctx),
         reason=(
             f"Synthesis defended; sizing consistent with risk_score "
             f"{ctx.mandate.risk_score}; mandate checks pass."
@@ -5604,6 +5620,10 @@ def _build_cio_context_snapshot(
         for field_name in _CIO_SNAPSHOT_SCALAR_FIELDS
     }
     snapshot["ticker"] = ctx.ticker
+    # DEF551 — the desk's stated horizon; absent from snapshots stored before it existed.
+    snapshot["trader_horizon_days"] = ctx.trader_horizon_days
+    snapshot["trader_horizon_source"] = ctx.trader_horizon_source
+    snapshot["trader_horizon_phrase"] = ctx.trader_horizon_phrase
     snapshot["withheld"] = [a.value for a in ctx.withheld]
     snapshot["scripted_turns"] = [a.value for a in ctx.scripted_turns]
     snapshot["profile"] = encode_profile(profile)
@@ -5665,6 +5685,9 @@ def _rebuild_ctx_from_snapshot(
     for field_name in _CIO_SNAPSHOT_SCALAR_FIELDS:
         setattr(ctx, field_name, snapshot[field_name])
     ctx.scripted_turns = [AgentId(v) for v in snapshot["scripted_turns"]]
+    ctx.trader_horizon_days = snapshot.get("trader_horizon_days")
+    ctx.trader_horizon_source = snapshot.get("trader_horizon_source", "default")
+    ctx.trader_horizon_phrase = snapshot.get("trader_horizon_phrase")
     return ctx
 
 
@@ -5931,6 +5954,45 @@ def _coded_decision_text(decision: room_decision_rule.RuleDecision) -> str:
     return f"AMI's decision rule passes on this trade: {why}. No trade was opened."
 
 
+def _trade_horizon_days(ctx: "_RoomContext") -> int:
+    """DEF551 — the horizon, in days, of the trade this Room is about. The Execution Desk's stated
+    one when `_adopt_desk_horizon` read it, else the runner's default (`trader_horizon_weeks`).
+    The option menu is NOT a consumer: it is built before the desk speaks, so it keeps the
+    default by construction (and the CIO retry rebuilds the same menu from it)."""
+    if ctx.trader_horizon_days is not None:
+        return ctx.trader_horizon_days
+    return ctx.trader_horizon_weeks * 7
+
+
+def _adopt_desk_horizon(ctx: "_RoomContext", run: RoomRun, run_id: UUID | None = None) -> None:
+    """DEF551 — read the Execution Desk's `Time horizon:` line into the context, once, after the
+    EXECUTION phase. A scripted desk turn states the default itself, so it is recorded as
+    "scripted" and never read back. A live turn with no readable horizon keeps the default and
+    says so (log + `trader_horizon_source = "default"`, which the terminal check records); it is
+    never guessed."""
+    ctx.trader_horizon_days = None
+    ctx.trader_horizon_phrase = None
+    if AgentId.TRADER in ctx.scripted_turns:
+        ctx.trader_horizon_source = "scripted"
+        return
+    phrase = None
+    for m in reversed(run.transcript):
+        if getattr(m.agent_id, "value", m.agent_id) == AgentId.TRADER.value:
+            days, phrase = desk_horizon_days(m.content)
+            ctx.trader_horizon_phrase = phrase
+            if days is not None:
+                ctx.trader_horizon_days = days
+                ctx.trader_horizon_source = "desk"
+                return
+            break
+    ctx.trader_horizon_source = "default"
+    logger.warning(
+        "room_desk_horizon_unread",
+        run_id=str(run_id) if run_id else None, ticker=ctx.ticker,
+        phrase=phrase, default_days=ctx.trader_horizon_weeks * 7,
+    )
+
+
 _TRADER_SIDE_RE = re.compile(r"(?im)^[ \t*]*Side:[ \t*]*(BUY|HOLD|WAIT)\b")
 
 
@@ -5978,7 +6040,18 @@ def _coded_transcript(
         cards=cards,
         proposed_trade=trade,
         terminal_inputs=build_terminal_inputs(
-            ctx.profile, ctx.trader_horizon_weeks * 7,
+            ctx.profile,
+            ctx.trader_horizon_days,
+            horizon_source=ctx.trader_horizon_source,
+            horizon_phrase=ctx.trader_horizon_phrase,
+            mandate_horizon_months=resolved_debt_horizon_months(
+                ctx.mandate.horizon, ctx.mandate.debt_horizon_months,
+            ),
+            mandate_horizon_source=debt_horizon_months_source(ctx.mandate.debt_horizon_months),
+            min_coverage=resolved_min_debt_coverage(
+                ctx.mandate.risk_score, ctx.mandate.min_debt_coverage,
+            ),
+            min_coverage_source=min_debt_coverage_source(ctx.mandate.min_debt_coverage),
         ),
     )
 
@@ -6120,7 +6193,7 @@ def _verdict_from_rule(
                     "entry": None,
                     "stop": ctx.trader_stop,
                     "target": ctx.trader_target,
-                    "horizon_days": ctx.trader_horizon_weeks * 7,
+                    "horizon_days": _trade_horizon_days(ctx),
                     "narration": code_text,
                 }),
                 ctx,
@@ -6153,6 +6226,26 @@ def _verdict_from_rule(
     ), overridden
 
 
+def _with_terminal_check_reasons(
+    decision: room_decision_rule.RuleDecision, result: GraderResult,
+) -> room_decision_rule.RuleDecision:
+    """CR285 — when the terminal question's `debt_default` check ran, its own sentence (the
+    amount due within the user's horizon, the coverage, the user's minimum) joins the decision's
+    reasons, so the verdict text and the CIO's narration carry the numbers whichever way the
+    check went. Nothing else about the decision changes."""
+    if decision.outcome == room_decision_rule.Outcome.UNAVAILABLE:
+        return decision
+    extra = [
+        check["reason"]
+        for a in result.answers
+        for check in [(a.detail or {}).get("terminal_check")]
+        if check and not check.get("skipped") and check.get("reason")
+    ]
+    if not extra:
+        return decision
+    return _dataclass_replace(decision, reasons=(*decision.reasons, *extra))
+
+
 async def _run_coded_rule_cio(
     *,
     run_id: UUID,
@@ -6177,7 +6270,9 @@ async def _run_coded_rule_cio(
     except room_decision_rule.PolicyConfigError:
         policy = room_decision_rule.DEFAULT_POLICY
         logger.error("room_coded_rule_policy_invalid", run_id=str(run_id))
-    decision = room_decision_rule.decide(result, ctx.mandate.risk_score, policy)
+    decision = _with_terminal_check_reasons(
+        room_decision_rule.decide(result, ctx.mandate.risk_score, policy), result,
+    )
     logger.info(
         "room_coded_decision",
         run_id=str(run_id), ticker=ctx.ticker, outcome=decision.outcome.value,
@@ -9867,6 +9962,9 @@ class RoomRunner:
                     ):
                         yield ev
                     _deferred_verdict = run.verdict
+                if phase.label == "EXECUTION":
+                    # DEF551 — what the desk just said its horizon is, for every later reader.
+                    _adopt_desk_horizon(ctx, run, run_id)
                 await asyncio.sleep(_PHASE_GAP_S)
                 if (
                     _failover is not None

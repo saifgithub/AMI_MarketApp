@@ -34,7 +34,13 @@ from app.schemas.onboarding import (
     Message,
     OnboardingSession,
 )
-from app.trading_math.risk_limits import format_reward_risk, resolved_min_reward_risk
+from app.core.config import settings
+from app.trading_math.risk_limits import (
+    format_reward_risk,
+    resolved_debt_horizon_months,
+    resolved_min_debt_coverage,
+    resolved_min_reward_risk,
+)
 
 
 # ──────────────────────────────────────────────────────────────────────────
@@ -728,6 +734,18 @@ def _readback_text(summary: dict[str, Any]) -> str:
     # risk-tier default is exactly what will be enforced — say so here.
     floor = resolved_min_reward_risk(risk)
 
+    # CR285: the debt check is live only under the Ling terminal-v2 grader, so a readback
+    # that names it appears only then (shown = enforced).
+    debt_line = ""
+    if settings.room_grader_ling_terminal == "v2":
+        months = resolved_debt_horizon_months(summary["horizon"])
+        cover = resolved_min_debt_coverage(risk)
+        debt_line = (
+            f"🏦 Debt cover: debt falling due within {months} months must be covered at least "
+            f"{format_reward_risk(cover)}× by cash and cash flow, or AMI treats it as a "
+            f"default risk. You can change this in Settings.\n"
+        )
+
     flags: list[str] = []
     if compliance.get("halal"):
         flags.append("halal-compliant only")
@@ -754,6 +772,7 @@ def _readback_text(summary: dict[str, Any]) -> str:
         f"📐 Reward to risk: at least {format_reward_risk(floor)}:1 — a trade's target must "
         f"sit that many times as far above entry as its stop sits below it. "
         f"You can change this in Settings.\n"
+        f"{debt_line}"
         f"🛡️ Constraints: {flags_text}."
     )
 
