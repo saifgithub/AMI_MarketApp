@@ -14,6 +14,8 @@ from dataclasses import asdict, dataclass, field, is_dataclass
 from enum import Enum
 from typing import Any, Mapping, Protocol, Sequence
 
+from app.services import sector_metrics
+
 QUESTION_SET_VERSION = "q1"
 
 
@@ -190,7 +192,7 @@ def build_terminal_inputs(
     if fcf is None:
         fcf = live("free_cash_flow_ttm")
         fcf_source = "free_cash_flow_ttm"
-    return {
+    out = {
         "horizon_days": horizon_days,
         "horizon_source": horizon_source,
         "horizon_phrase": horizon_phrase,
@@ -207,6 +209,12 @@ def build_terminal_inputs(
         "fcf_ttm": fcf,
         "fcf_field": fcf_source if fcf is not None else None,
     }
+    # CR287 — a family the debt check does not apply to (banks, regulated utilities): the key is added only then, so
+    # every other Room's inputs are what they were.
+    rule = sector_metrics.rule_for(p)
+    if rule is not None:
+        out["not_applicable_family"] = rule.family
+    return out
 
 
 NO_TRADE_ACTIONS = frozenset(

@@ -1259,6 +1259,16 @@ class Settings(BaseSettings):
     # shipped `interest_coverage` gets wrong. ON since 2026-09-29 (CR247 Phase 1A).
     room_cost_of_debt_enabled: bool = True
 
+    # CR287 — sector-aware metrics: for a bank (the sheet's own `industry` tag), free cash flow
+    # and everything derived from it, net debt / net cash, EV/EBITDA and interest coverage are
+    # removed from the fact sheet and stated "not applicable for banks"; the CR285 debt check
+    # records "not applicable: bank" and does not compute. A regulated utility (Yahoo "Utilities -
+    # Regulated Electric/Gas/Water") keeps every figure, gains one context line, and its debt check is
+    # skipped the same way. Default off = byte-identical sheets.
+    # On, the sheet variant moves (`|sector=1`) so a banked Room never serves the old sheet.
+    # See `app/services/sector_metrics.py`.
+    room_sector_metrics_enabled: bool = False
+
     # CR221 C3/C4 — the cash-flow bridge (operating cash flow, capex, the
     # derived free cash flow) plus the working-capital detail behind it. Nine
     # request lines from six agents, every operand already on the frame the

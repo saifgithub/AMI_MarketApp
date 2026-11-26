@@ -173,6 +173,7 @@ ROOM_SETTINGS_NOT_KEYED: dict[str, str] = {
     "room_turn_pace_cap_s": "stream pacing",
     "room_pace_cap_s": "stream pacing",
     "room_dedup_running_minutes": "reattach window, not content",
+    "room_sector_metrics_enabled": "keyed through the sheet variant (`|sector=1`) and the sheet hash: on, a listed-family sheet differs and is stored under its own variant; a policy part would move every key at deploy",
     "room_bank_enabled": "the bank's own off switch",
     "room_model_root_ttl_s": "cache lifetime of the keyed model root",
     "room_cio_retry_max_age_minutes": "retry eligibility, not content",
@@ -379,6 +380,13 @@ def sheet_variant(
 
         if settings.my_news_rss_enabled:
             variant += "|my_news=on"
+    # CR287 — the sector-metrics switch changes a bank's sheet (US and Bursa), and the sheet is
+    # frozen per variant, so on it must not read a sheet stored while it was off. Off = no suffix:
+    # every variant, and so every key, is what it was.
+    from app.services import sector_metrics
+
+    if sector_metrics.enabled():
+        variant += "|sector=1"
     return variant
 
 

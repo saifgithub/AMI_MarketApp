@@ -111,6 +111,7 @@ from app.services.cio_snapshot_codec import decode_profile, encode_profile
 from app.services import flip_explainer
 from app.services import room_bank
 from app.services import room_decision_rule
+from app.services import sector_metrics
 from app.services.room_grader_contract import (
     QUESTION_SET_VERSION as _GRADER_QUESTION_SET_VERSION,
     GraderResult,
@@ -2581,6 +2582,9 @@ def _profile_for_ticker(
         )
         profile["bear_risk"] = "live fundamentals are not available to size this risk"
         profile["bear_quant"] = "insufficient live data for a downside estimate"
+    # CR287 — last, so every overlay above has run: a company in a listed industry family
+    # (banks) has the figures that do not apply to it removed and marked, once, here.
+    sector_metrics.apply_to_profile(profile)
     return profile
 
 
@@ -5726,7 +5730,12 @@ def _build_pm_formatter(
     # f-strings to (mis-)do: R:R (M06), upside/downside asymmetry (M08).
     _rr = risk_reward(ctx.trader_entry, ctx.trader_stop, ctx.trader_target)
     _asym = trade_asymmetry(ctx.trader_entry, ctx.trader_stop, ctx.trader_target)
-    _net_phrase = net_position_phrase(profile.get("net_cash")) or "net cash n/a"
+    _sector_rule = sector_metrics.not_applicable(profile)
+    _net_phrase = (
+        f"net debt and net cash are not applicable for {_sector_rule.label}"
+        if _sector_rule is not None
+        else net_position_phrase(profile.get("net_cash")) or "net cash n/a"
+    )
 
     # Run-context sent into f-string formatters; we merge per-template
     formatter = dict(profile)
@@ -8029,6 +8038,9 @@ def _build_next_convene_delta(
             for f in sorted(prior_sheet)
             if f in this_sheet and this_sheet[f] != prior_sheet[f]
             and not is_street_view_key(f)
+            # CR287: a figure that stopped applying (a bank's FCF) is not a change in the data;
+            # naming it would point the CIO at the very number the sheet no longer carries.
+            and this_sheet[f] != sector_metrics.NOT_APPLICABLE_STATE
         ]
 
     return NextConveneDelta(

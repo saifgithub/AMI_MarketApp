@@ -36,7 +36,9 @@ cash); when neither, zero and `cash_source = "unknown"`. FCF absent counts as ze
 borrowings; their size is recorded on the check (`short_term_borrowings_not_counted`), not counted.
 
 No ladder at all (every Bursa Room today: the schedule is dark for `.KL`) means the yes cannot be
-evidenced and becomes "no". A yes whose horizon is unknown stands, recorded as skipped. Every
+evidenced and becomes "no". A yes whose horizon is unknown stands, recorded as skipped. CR287: for a bank or a regulated utility
+the check does not compute at all: recorded as skipped, "not applicable: bank" / "not applicable:
+regulated utility", and the yes is refused; no verdict note is written for a skipped check. Every
 outcome is written to `terminal_check` on the answer, and a refused yes is written to
 `terminal_rejected`. Other categories are untouched. The tag goes into the Ling grader version
 (bound to `term=v2`, no separate switch: the check reads the category only v2 produces).
@@ -49,6 +51,7 @@ import re
 from dataclasses import replace
 from typing import Any, Mapping
 
+from app.services import sector_metrics
 from app.services.room_grader_contract import Answer, QuestionAnswer, QuestionId
 from app.trading_math.risk_limits import debt_horizon_days
 
@@ -185,6 +188,16 @@ def _decide(inputs: Mapping[str, Any] | None) -> dict:
         "unmapped_labels": [], "ladder_period_end": i.get("ladder_period_end"),
         "short_term_borrowings_not_counted": _num(i.get("short_term_borrowings")),
     }
+    family = i.get("not_applicable_family")
+    if family:
+        # CR287: for a bank the sheet carries none of the figures this check counts, and for a
+        # regulated utility high debt is normal, so a maturity wall is no signal. It does not
+        # compute; the record says why, in the open.
+        rule = sector_metrics.FAMILY_RULES.get(str(family))
+        check.update(stands=False, skipped=True, reason=(
+            "debt_default materiality check skipped: "
+            f"{rule.check_reason if rule else f'not applicable: {family}'}"))
+        return check
     if not ladder:
         check.update(stands=False, reason=(
             "debt_default not evidenced: no debt-maturity schedule on the sheet"))
