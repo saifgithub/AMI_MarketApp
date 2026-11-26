@@ -594,6 +594,16 @@ class SimTrade {
   bool get isOpen => status == 'open';
 
   factory SimTrade.fromJson(Map<String, dynamic> j) {
+    // DEF552 - a buy whose every share a SELL order has taken keeps status
+    // 'open' in the ledger by design (DEF316); the server marks it with
+    // `lot_close` (net of fees, the Journal's figure). Fold it in here so every
+    // reader - the History badge, the CLOSED/WON/LOST header - sees a closed
+    // trade. A row without the key is read exactly as before.
+    final stored = j['status'] as String? ?? 'open';
+    final lc = stored == 'open' && j['lot_close'] is Map<String, dynamic>
+        ? j['lot_close'] as Map<String, dynamic>
+        : null;
+    final closedAt = lc != null ? lc['closed_at'] : j['closed_at'];
     return SimTrade(
       id: j['id'] as String,
       userId: j['user_id'] as String,
@@ -605,11 +615,14 @@ class SimTrade {
       target: (j['target'] as num?)?.toDouble(),
       horizonDays: (j['horizon_days'] as num?)?.toInt(),
       openedAt: DateTime.parse(j['opened_at'] as String),
-      closedAt: j['closed_at'] == null ? null : DateTime.parse(j['closed_at'] as String),
-      closedPrice: (j['closed_price'] as num?)?.toDouble(),
-      status: j['status'] as String? ?? 'open',
+      closedAt: closedAt == null ? null : DateTime.parse(closedAt as String),
+      closedPrice:
+          ((lc != null ? lc['closed_price'] : j['closed_price']) as num?)?.toDouble(),
+      status: lc != null ? 'closed' : stored,
       verdictRef: j['verdict_ref'] as String?,
-      realisedPnl: (j['realised_pnl'] as num? ?? 0).toDouble(),
+      realisedPnl:
+          ((lc != null ? lc['realised_pnl'] : j['realised_pnl']) as num? ?? 0)
+              .toDouble(),
     );
   }
 }

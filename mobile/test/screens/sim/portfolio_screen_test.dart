@@ -1122,4 +1122,62 @@ void main() {
       expect(find.text('W001'), findsOneWidget);
     });
   });
+
+  group('DEF552 — a hand-closed round trip reads CLOSED in History', () {
+    // The wire shape of GET /v1/sim/trades for a buy + sell of 6888.KL: the
+    // buy keeps status "open" in the ledger (DEF316) and carries `lot_close`.
+    Map<String, dynamic> row(String id, String side, {Map<String, dynamic>? lotClose}) => {
+          'id': id,
+          'user_id': 'u1',
+          'ticker': '6888.KL',
+          'side': side,
+          'quantity': 100,
+          'entry_price': 1.58,
+          'opened_at': side == 'buy' ? '2026-11-26T03:21:22+00:00' : '2026-11-26T03:25:01+00:00',
+          'status': 'open',
+          'realised_pnl': 0,
+          if (lotClose != null) 'lot_close': lotClose,
+        };
+
+    SimState roundTrip() => SimState(
+          portfolio: _portfolio(holdings: const []),
+          trades: [
+            SimTrade.fromJson(row('s1', 'sell')),
+            SimTrade.fromJson(row('b1', 'buy', lotClose: {
+              'closed_at': '2026-11-26T03:25:01+00:00',
+              'closed_price': 1.58,
+              'realised_pnl': -16.42,
+              'fees': 16.42,
+            })),
+          ],
+        );
+
+    test('lot_close folds into a closed trade at the net P&L; plain rows are unchanged', () {
+      final t = SimTrade.fromJson(row('b1', 'buy', lotClose: {
+        'closed_at': '2026-11-26T03:25:01+00:00',
+        'closed_price': 1.58,
+        'realised_pnl': -16.42,
+        'fees': 16.42,
+      }));
+      expect(t.isOpen, isFalse);
+      expect(t.status, 'closed');
+      expect(t.realisedPnl, -16.42);
+      expect(t.closedPrice, 1.58);
+      final plain = SimTrade.fromJson(row('b2', 'buy'));
+      expect(plain.isOpen, isTrue);
+      expect(plain.realisedPnl, 0);
+    });
+
+    testWidgets('badge reads CLOSED and the header counts the lost trade', (tester) async {
+      await _pump(tester, sim: roundTrip(), watchlist: const WatchlistState(items: []));
+      await tester.tap(find.textContaining('HISTORY 2'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('CLOSED'), findsOneWidget);
+      expect(find.textContaining('ACROSS ALL 1 CLOSED'), findsOneWidget);
+      expect(find.textContaining('-RM'), findsWidgets);
+      expect(tester.takeException(), isNull);
+    });
+  });
 }

@@ -64,7 +64,13 @@ from app.db.models import (
     SimShortPositionRow,
     SimTradeRow,
 )
-from app.services.cost_basis_lots import Lot, compute_lots_fifo
+from app.services.cost_basis_lots import (
+    HandClosedLot,
+    Lot,
+    compute_lots_fifo,
+    hand_closed_lots,
+    prorated_fee,
+)
 from app.schemas import Mandate
 from app.schemas.alpaca import AccountSnapshotIn
 from app.schemas.trade import (
@@ -584,16 +590,6 @@ class OutcomeUpdate:
     #: sold + the exit fee charged). `realised_pnl` stays GROSS (price-only):
     #: outcome scoring reads it. The journal nets it.
     fees: float = 0.0
-
-
-def prorated_fee(fee_total: float | None, qty_total: float, qty_part: float) -> float:
-    """DEF542 — the share of one fill's stored fee that belongs to `qty_part` of
-    its `qty_total` shares. The ONE pro-rating rule: the FIFO sell path and both
-    bracket/manual close paths all call it, so the journal's fees cannot drift
-    between exits. NULL fee (fill predates the toll) is 0, never an estimate."""
-    if not fee_total or qty_total <= 0 or qty_part <= 0:
-        return 0.0
-    return float(fee_total) * min(qty_part, qty_total) / qty_total
 
 
 # ── Engine ────────────────────────────────────────────────────────────────
@@ -1365,6 +1361,31 @@ class SimEngine:
                 stmt = stmt.limit(limit)
             rows = s.execute(stmt).scalars().all()
             return [SimTrade.from_row(r) for r in rows]
+
+    def hand_closed_lots(
+        self, user_id: UUID, tickers: Iterable[str], *, market: Market = Market.US,
+    ) -> dict[str, HandClosedLot]:
+        """DEF552 - `{buy trade id: HandClosedLot}` for the given tickers: buy
+        rows whose every share a SELL order has since taken (their stored
+        `status` stays `open` by design, DEF316). Reads each ticker's WHOLE
+        ledger, never a page of it, because FIFO needs every earlier buy."""
+        wanted = sorted({t.upper().strip() for t in tickers})
+        if not wanted:
+            return {}
+        with get_session() as s:
+            rows = s.execute(
+                select(SimTradeRow)
+                .where(training_trade_scope(user_id, market))
+                .where(SimTradeRow.ticker.in_(wanted))
+                .order_by(SimTradeRow.opened_at.asc())
+            ).scalars().all()
+        by_ticker: dict[str, list[SimTrade]] = defaultdict(list)
+        for r in rows:
+            by_ticker[r.ticker].append(SimTrade.from_row(r))
+        out: dict[str, HandClosedLot] = {}
+        for trades in by_ticker.values():
+            out.update(hand_closed_lots(trades))
+        return out
 
     def count_trades(
         self, user_id: UUID, *, status: TradeStatus | None = None,

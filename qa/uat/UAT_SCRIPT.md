@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**333 cases** — 210 api, 28 device, 95 manual; 17 blocked.
+**335 cases** — 211 api, 29 device, 95 manual; 18 blocked.
 
 ## Areas
 
@@ -16,7 +16,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 6. [Convene the Room](#room) — 36 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
 8. [Brief Your Agent](#brief) — 18 cases
-9. [Sim trading & market data](#sim-trading) — 37 cases
+9. [Sim trading & market data](#sim-trading) — 39 cases
 10. [Portfolio health & sector analytics](#portfolio-health) — 15 cases
 11. [Watchlist & price alerts](#watchlist-alerts) — 17 cases
 12. [Lessons, quizzes, Agent Academy unlocks & glossary](#lessons) — 10 cases
@@ -2300,6 +2300,21 @@ _API (automated, live Alpha) · plans: trader_
 
 > CR282 phase 1 (2026-11-24), backend/app/api/sim.py. PortfolioSnapshot gained currency and market fields (always USD / US for the US book); the preview response gained market, currency and fees (US, USD, null). The Bursa book itself is exercised by UAT-SIM-035 (previews) and UAT-SIM-037 (device). Alpha has had the switch on since 2026-11-24; the executor reads the switch state once per run.
 
+#### UAT-SIM-038 — A position bought and then sold in full reads as a closed trade in the trade ledger
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. Patch a permissive mandate; buy 2 KO, then sell 2 KO (POST /v1/sim/submit)
+2. GET /v1/sim/trades/{user_id} after the buy, then again after the sell
+
+**Expected**
+1. After the buy the KO buy row has no lot_close key (the position is still held)
+2. After the sell the KO buy row carries lot_close with closed_price equal to the sell fill and realised_pnl equal to the lots endpoint realised total minus lot_close.fees; its own status stays "open"
+3. The SELL row never carries lot_close, and rows that are not hand-closed keep their exact key set
+
+> DEF552 (AT:B1). A buy consumed by sell orders keeps status open by design (DEF316), so History could not tell a finished round trip from a held position; the ledger now says it per row, net of fees like the Journal (DEF542). The Bursa book is the same route with market=MY; the device view is UAT-SIM-039.
+
 ### Device (automated, Appium)
 
 #### UAT-SIM-028 — A one-share buy fills, appears as a holding and takes cash out of the portfolio
@@ -2357,6 +2372,27 @@ _Device (automated, Appium) · plans: floor_pass_
 4. Switching to US shows the dollar book untouched, and every amount there still reads $
 
 > CR282 phase 1 acceptance (docs/forward_planning/CR282_bursa_malaysia/CR282_bursa_malaysia.md). Fee figures are UNVERIFIED research figures per that doc; do not assert amounts. Active since 2026-11-24: the backend precondition is met on Alpha, so this needs a run on build 0.1.0+130 or later (not release-blocking; a store build cannot run it). The API side is UAT-SIM-035 and UAT-SIM-036.
+
+#### UAT-SIM-039 — With Bursa on, a Bursa position sold in full reads CLOSED in History and is counted in the header
+
+_Device (automated, Appium) · plans: floor_pass · **BLOCKED** — No Appium script for the Bursa round trip yet; run by hand through the device lab until one is written_
+
+**Preconditions**
+1. A build with the DEF552 mobile change (after 137), on TestFlight internal or Play internal, with AMI_BURSA on; store builds keep it off
+2. Alpha with MARKET_BURSA_ENABLED=true and the DEF552 backend deployed
+3. Bursa in session; room under the mandate for 100 x 6888.KL (about RM1.60) bought and sold again
+
+**Steps**
+1. Portfolio: tap BURSA; buy 100 6888.KL, then sell 100 from the position
+2. Tap the HISTORY tab and read the header and the 6888.KL rows
+3. You > JOURNAL; read the "Closed 6888.KL (MANUAL)" entry
+
+**Expected**
+1. The BUY 100 6888.KL row reads CLOSED (not OPEN) with the closed price and a P&L in RM; the header reads "ACROSS ALL 1 CLOSED" with LOST 1 (or WON 1 when the net is above zero), never "0 CLOSED, WON 0, LOST 0"
+2. The row's P&L and the header net equal the Journal entry's Realised P&L, both net of fees (a round trip sold at the buy price reads -RM16.42, not RM0.00)
+3. A US book in the same state still lists its rows exactly as before: a still-held buy reads OPEN
+
+> DEF552 (AT:B1), found on AMI-DL-34 / build 137. The API side is UAT-SIM-038.
 
 <a id="portfolio-health"></a>
 ## Portfolio health & sector analytics

@@ -1109,8 +1109,35 @@ def list_trades(
         if limit is None and offset == 0
         else sim.count_trades(user_id, status=status_filter, market=book)  # type: ignore[arg-type]
     )
+    trade_json = [t.to_json() for t in trades]
+    # DEF552 - a buy whose every share a SELL order has taken keeps `status`
+    # "open" in the ledger by design (DEF316), so the History tab read every
+    # hand-closed round trip as OPEN. Say so on the row, additively: only rows
+    # that ARE hand-closed gain `lot_close`, so every other row keeps its exact
+    # shape, and the ledger's own `status`/`realised_pnl` stay as stored.
+    open_buys = [
+        t for t in trades
+        if t.status == "open" and getattr(t.side, "value", t.side) == "buy"
+    ]
+    if open_buys:
+        closed_lots = sim.hand_closed_lots(
+            user_id, {t.ticker for t in open_buys}, market=book,
+        )
+        if closed_lots:
+            for row in trade_json:
+                lot = closed_lots.get(row["id"])
+                if lot is not None and row["status"] == "open":
+                    row["lot_close"] = {
+                        "closed_at": (
+                            lot.closed_at.isoformat()
+                            if hasattr(lot.closed_at, "isoformat") else None
+                        ),
+                        "closed_price": lot.closed_price,
+                        "realised_pnl": lot.realised_pnl,
+                        "fees": lot.fees,
+                    }
     payload = TradeListResponse(
-        trades=[t.to_json() for t in trades], total=total, limit=limit, offset=offset,
+        trades=trade_json, total=total, limit=limit, offset=offset,
     ).model_dump()
     if book is not Market.US:
         # CR282 — the US ledger keeps its exact pre-CR282 key set.
