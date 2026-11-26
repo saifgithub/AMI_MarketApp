@@ -391,6 +391,8 @@ services:
       OPENDOSM_CPI_ENABLED: ${OPENDOSM_CPI_ENABLED:-false}
       # CR282 lane E2 — Malay Mail Money RSS as a Bursa Room news source; off unless set.
       MY_NEWS_RSS_ENABLED: ${MY_NEWS_RSS_ENABLED:-false}
+      # CR286 — weekly Bursa PN17/GN3 list read (scripts/bursa_pn17_refresh.py, host cron); off unless set.
+      BURSA_PN17_REFRESH_ENABLED: ${BURSA_PN17_REFRESH_ENABLED:-false}
       # CR239 / WP-38 — scoped device-UAT 503 switch; empty = off, inert outside alpha/staging.
       UAT_FAULT_INJECT: ${UAT_FAULT_INJECT:-}
       # CR035 ablation toggle — hides the Street consensus line from the

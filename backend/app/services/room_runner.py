@@ -215,7 +215,7 @@ from app.services.entitlements import (
 from app.services.tier_policy import pick_tier
 from app.services.sim_engine import get_sim_engine
 from app.services.verdict_outcomes import bank_verdict_outcome
-from app.services import my_news_rss, opendosm_cpi
+from app.services import bursa_pn17, my_news_rss, opendosm_cpi
 from app.services.room_market import (
     NOT_AVAILABLE_FOR_MARKET,
     localize_money,
@@ -2071,6 +2071,21 @@ def _stamp_my_macro(
     profile["my_news_rss"] = my_news_rss.status()
 
 
+def _stamp_my_pn17(
+    profile: dict[str, Any], ticker: str, today: date, *, historical: bool,
+) -> None:
+    """CR286 — the Bursa PN17/GN3 status line and its coded desk note.
+
+    Read from AMI's stored copy of Bursa's list (`bursa_pn17`), never fetched here. A
+    historical sheet cannot honestly carry a current list, so it says unavailable. The
+    line goes to the Fundamentals lane of the sheet; the note ends the Fundamentals turn
+    so it reaches the transcript the terminal-question grader reads.
+    """
+    status = bursa_pn17.historical_status() if historical else bursa_pn17.status_for(ticker, today)
+    profile["my_pn17_line"] = bursa_pn17.line(status)
+    profile["my_pn17_note"] = bursa_pn17.note(status)
+
+
 def _profile_for_ticker(
     ticker: str,
     *,
@@ -2165,6 +2180,10 @@ def _profile_for_ticker(
     is_my_sheet = market_for(ticker) is Market.MY
     if is_my_sheet:
         _stamp_my_macro(profile, field_state, today)
+        _stamp_my_pn17(
+            profile, ticker, today,
+            historical=as_of is not None and as_of < datetime.now(UTC).date(),
+        )
     # The clock is unconditionally live — there is no "unavailable" state for
     # today's date. Recorded explicitly rather than assumed, so the taint
     # guard (test_cr104_no_fabricated_numeric_reaches_room_prompt.py) sees a

@@ -359,7 +359,8 @@ def policy_settings() -> dict[str, Any]:
 #: a new Room rebuilds the day's sheet and re-keys the bank; US keys are untouched.
 #: 4 = the Malay Mail news feed (CR282 lane E2) changed the News sheet.
 #: 5 = the sheet carries `macro_cpi_note` for Macro & Events' coded note (DEF546).
-MY_SHEET_REVISION = 5
+#: 6 = the sheet carries the Bursa PN17/GN3 status line and note (CR286).
+MY_SHEET_REVISION = 6
 
 
 def sheet_variant(

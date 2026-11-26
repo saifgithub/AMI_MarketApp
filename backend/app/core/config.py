@@ -850,6 +850,11 @@ class Settings(BaseSettings):
     # permission is being requested; this switch is how the feed is turned off.
     my_news_rss_enabled: bool = False
 
+    # CR286 — weekly read of Bursa Malaysia's public PN17/GN3 page (`scripts/bursa_pn17_refresh.py`)
+    # feeding the Bursa sheet's status line. Default off in code; the host cron runs the script.
+    # Off, the script exits non-zero and says so, and the sheet line ages to "stale".
+    bursa_pn17_refresh_enabled: bool = False
+
     # CR239 / WP-38 — device-UAT fault switch: JSON {"<user-uuid>": ["GET /v1/messages"]}.
     # Empty = off. Inert (logged as refused) outside local/dev/staging; malformed
     # JSON stops the boot. See app/services/uat_fault_inject.py.

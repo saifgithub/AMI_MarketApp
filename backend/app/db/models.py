@@ -3115,3 +3115,77 @@ class RoomRatingRow(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=_utcnow, nullable=False,
     )
+
+
+class BursaPn17CurrentRow(Base):
+    """CR286 — one issuer on Bursa's PN17/GN3 list as of the last successful read.
+
+    Facts only: stock code, company name, market, a normalised status category and group,
+    when AMI first and last saw it. No Bursa page text is stored. A row leaves this table
+    when a later read no longer lists the issuer (uplifted, delisted or moved off the list);
+    the departure is kept in `bursa_pn17_changes`. `stock_code` is NOT NULL so the unique
+    key is real on both dialects (ISS001); rows are written through `claim()`.
+    """
+
+    __tablename__ = "bursa_pn17_current"
+    __table_args__ = (UniqueConstraint("stock_code", name="uq_bursa_pn17_current_code"),)
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    stock_code: Mapped[str] = mapped_column(String, nullable=False)
+    company_name: Mapped[str] = mapped_column(String, nullable=False)
+    market: Mapped[str] = mapped_column(String, nullable=False)
+    status_category: Mapped[str] = mapped_column(String, nullable=False)
+    status_group: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    first_seen: Mapped[date] = mapped_column(Date, nullable=False)
+    last_seen: Mapped[date] = mapped_column(Date, nullable=False)
+    source_url: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class BursaPn17ChangeRow(Base):
+    """CR286 — append-only history of the PN17/GN3 list: added, category_changed, removed.
+
+    Never updated or deleted. `observed_on` is the date of the read that saw the change, so
+    a `removed` row's date is when AMI first noticed the issuer gone, not when Bursa acted.
+    """
+
+    __tablename__ = "bursa_pn17_changes"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    run_id: Mapped[UUID] = mapped_column(Uuid(), index=True, nullable=False)
+    change_type: Mapped[str] = mapped_column(String, nullable=False)
+    stock_code: Mapped[str] = mapped_column(String, index=True, nullable=False)
+    company_name: Mapped[str] = mapped_column(String, nullable=False)
+    market: Mapped[str] = mapped_column(String, nullable=False)
+    status_category: Mapped[str] = mapped_column(String, nullable=False)
+    status_group: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    previous_category: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    observed_on: Mapped[date] = mapped_column(Date, nullable=False)
+    source_url: Mapped[str] = mapped_column(String, nullable=False)
+
+
+class BursaPn17RunRow(Base):
+    """CR286 — one refresh attempt, ok or not, so a stale list is visible and explainable.
+
+    `outcome`: ok | refused | parse_failed | fetch_failed. `trigger`: weekly | manual
+    (a human-entered seed). Only an `ok` run moves the list; every other outcome leaves it
+    untouched.
+    """
+
+    __tablename__ = "bursa_pn17_runs"
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid4)
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False, index=True,
+    )
+    finished_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=_utcnow, nullable=False,
+    )
+    trigger: Mapped[str] = mapped_column(String, nullable=False)
+    outcome: Mapped[str] = mapped_column(String, nullable=False)
+    http_status: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    rows_found: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    added: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    changed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    removed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    detail: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    source_url: Mapped[str] = mapped_column(String, nullable=False)
