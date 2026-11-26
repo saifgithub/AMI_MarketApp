@@ -449,11 +449,11 @@ def test_a_us_sheet_gets_no_note_no_key_and_the_same_bank_variant(monkeypatch):
     assert "my_" not in off
 
 
-def test_the_bursa_bank_variant_is_revision_five_and_carries_the_switch(monkeypatch):
+def test_the_bursa_bank_variant_is_revision_six_and_carries_the_switch(monkeypatch):
     kw = dict(news_state="live", social_state="live", market_withheld=False, ticker=KL)
-    assert room_bank.MY_SHEET_REVISION == 5
+    assert room_bank.MY_SHEET_REVISION == 6
     off = room_bank.sheet_variant(**kw)
-    assert off.endswith("|my_rev=5")
+    assert off.endswith("|my_rev=6")
     monkeypatch.setattr(settings, "my_news_rss_enabled", True)
     on = room_bank.sheet_variant(**kw)
     assert on == off + "|my_news=on" and on != off

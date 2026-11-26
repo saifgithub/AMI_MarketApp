@@ -1,0 +1,12 @@
+# CR286 — weekly read of Bursa Malaysia's public PN17/GN3 list (feeds the Bursa fact-sheet status line).
+# Install on melehost as the `ami` user (after /promote-to-alpha has rsync'd this file to
+# ~/ami_trade/infra/cron/):  (crontab -l; cat ~/ami_trade/infra/cron/cr286_bursa_pn17_refresh.cron) | crontab -
+# NOT installed by the repo. Needs BURSA_PN17_REFRESH_ENABLED=true in the api-alpha environment
+# (otherwise the script exits 3 and logs why: nothing is fetched).
+#
+# Monday 02:17 server-local, one request per run (no retry, no second request). The exit code
+# is non-zero on a refusal / unreadable page / store error and the FAILED line makes that greppable:
+#     grep -c FAILED ~/ami_trade/logs/cr286_bursa_pn17_refresh.log
+# A failed run leaves the stored list untouched; the sheet line reads "unavailable ... stale"
+# once the last success is more than 14 days old.
+17 2 * * 1 cd $HOME/ami_trade && mkdir -p logs && { date -u +"[\%FT\%TZ] cr286 pn17 refresh start"; docker compose exec -T api-alpha python -m scripts.bursa_pn17_refresh || echo "[$(date -u +\%FT\%TZ)] cr286 pn17 refresh FAILED rc=$?"; } >> $HOME/ami_trade/logs/cr286_bursa_pn17_refresh.log 2>&1

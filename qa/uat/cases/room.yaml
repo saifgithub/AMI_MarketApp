@@ -601,3 +601,23 @@ cases:
       - 'A Room whose debt-default flag is dropped says "debt_default covered" with the same three numbers in the same words'
       - 'The same ticker is a new, charged Room because the mandate changed (UAT-ROOM-029); with the loosest numbers a flag that stood before is more likely to be covered'
     notes: 'CR285, 2026-11-26. A real-model Room cannot be steered to a debt-default flag, so the forced settings only make the numbers easy to see. The rule is pinned by backend/tests/unit/test_cr285_debt_coverage.py and the offline re-score in docs/forward_planning/CR267_beta_programme/terminal_v2/terminal_v2_materiality.md. Off on Alpha until ROOM_GRADER_LING_TERMINAL=v2.'
+
+  - id: UAT-ROOM-038
+    title: A Bursa Room states the stock's PN17/GN3 status with the date of the list, or says it is unavailable
+    layer: manual
+    llm: true
+    plans: [trader]
+    preconditions:
+      - 'A backend carrying CR286 deployed to Alpha, with MARKET_BURSA_ENABLED=true and a Bursa app build'
+      - 'The weekly refresh has run on melehost at least once (ssh melehost "tail ~/ami_trade/logs/cr286_bursa_pn17_refresh.log"; its last line is the run result) or a human-entered seed was loaded with --from-file'
+    steps:
+      - 'Convene a Room on a 1155.KL (a stock that is not on Bursa''s PN17/GN3 list) and wait for the verdict'
+      - 'Read the end of the Fundamentals Analyst''s turn'
+      - 'If the refresh has not succeeded in the last 14 days, or has never succeeded, repeat and read the same line'
+      - 'If any stock on the list is available (the refresh log or the sheet names one), convene a Room on it and read the same line'
+    expected:
+      - 'The Fundamentals Analyst''s turn ends with an AMI note beginning "Bursa PN17/GN3 status:" that says either "not on Bursa''s PN17/GN3 list as of <date>" or, for a listed stock, the category (PN17, GN3 or affected listed issuer under paragraph 8.03A), when AMI first saw it on the list, and "list as of <date>"'
+      - 'When the last successful read is more than 14 days old, or none is on record, the note says "unavailable" with the last successful read date (or that none is on record) and never a status; if the latest attempt failed it names why (Bursa''s site refused the request, the page could not be read as a list, or could not be fetched)'
+      - 'Every Bursa-dated line is a date, not a relative phrase; no Bursa announcement text appears in the Room'
+      - 'A US Room carries no such note'
+    notes: 'CR286, 2026-11-26. No admin route exposes the refresh-run record (table bursa_pn17_runs on melehost), so the run result is read from the cron log. Bursa refused the 2026-11-26 probe with a Cloudflare challenge: until a run is accepted (or a seed loaded) the expected line is "unavailable ... no successful read". Bursa sheet revision 6 (a Bursa Room banked before the deploy is re-run once). Pinned by backend/tests/unit/test_cr286_bursa_pn17.py.'

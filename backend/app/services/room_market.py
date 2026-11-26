@@ -201,6 +201,9 @@ def my_desk_footer(agent_id: AgentId, profile: dict[str, Any] | None) -> str | N
     if not is_my(profile):
         return None
     if agent_id is AgentId.FUNDAMENTALS_ANALYST:
+        pn17 = (profile or {}).get("my_pn17_note")
+        if pn17:
+            return f"{my_fundamentals_footer()}\n\n{pn17}"
         return my_fundamentals_footer()
     if agent_id is AgentId.MARKET_ANALYST:
         state = (profile or {}).get("field_state") or {}

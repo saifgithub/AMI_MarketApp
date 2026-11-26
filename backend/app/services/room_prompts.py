@@ -3744,6 +3744,8 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
         ))
         if _in_lane("news") and profile.get("macro_cpi_line"):
             lines.append(profile["macro_cpi_line"])
+        if _in_lane("fundamentals") and profile.get("my_pn17_line"):
+            lines.append(profile["my_pn17_line"])
     # CR151 Tier A — the asymmetry, from two numbers already on the sheet.
     # Rendered for the FULL-SHEET agents only, which is the reconciliation
     # CR151 asked for explicitly ("say so in CR145 Tier C's matrix rather than
