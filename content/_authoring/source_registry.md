@@ -55,6 +55,9 @@ release/rule/report, not the institution alone.
 | IMF · World Bank | cross-country macro |
 | U.S. SEC — Rule 35d-1 (the fund "Names Rule"), Sept-2023 amendments | fund naming, the 80% investment policy, ESG-suggestive names |
 | EU — Regulation (EU) 2019/2088 (SFDR), Articles 8 / 9 | sustainability-related product disclosure |
+| Inland Revenue Board of Malaysia — Public Rulings (e.g. PR 1/2021, s.61A Income Tax Act 1967) | Malaysian REIT tax-exemption and distribution rule (CR287) |
+| Energy Commission Malaysia — Incentive-Based Regulation (IBR) pages and guidelines | how Malaysia's regulated electricity tariff is built: capex, opex and a return on the regulated asset base (CR287) |
+| FDIC — working papers and Quarterly Banking Profile | bank-ratio definitions such as net interest margin (CR287) |
 
 ## Tier 2 — Standard-setters & professional bodies
 
@@ -69,6 +72,12 @@ release/rule/report, not the institution alone.
 | Index rulebooks — S&P, MSCI, FTSE, Dow Jones Islamic | indices, Shariah screening |
 | Institute for Supply Management — PMI | macro indicators |
 | The Conference Board — Leading Economic Index | macro indicators |
+| IFRS Foundation — IAS 7 Statement of Cash Flows, IAS 40 Investment Property | accounting-standard text for cash-flow classification and investment-property measurement (CR287) |
+| Malaysian Accounting Standards Board — MFRS Framework | Malaysian standards identical to IFRS for non-private entities (CR287) |
+| FASB — Accounting Standards Codification (ASC 230, ASC 942-230) | US GAAP cash-flow classification for banks; read via a Big-4 handbook reproducing the Codification text (CR287) |
+| Basel Committee on Banking Supervision — Basel Framework | minimum capital ratios (CET1, buffers) (CR287) |
+| Nareit — FFO definition and FFO White Paper | REIT funds from operations, why depreciation is added back (CR287) |
+| Triple-I — Insurance Information Institute publications | insurance ratios such as the combined ratio (CR287) |
 
 ## Tier 3 — Canonical texts (the CR054 canon)
 
@@ -88,6 +97,8 @@ release/rule/report, not the institution alone.
 | Pascal & Fermat — problem of points (1654) | expected value origin |
 | Tetlock & Gardner — *Superforecasting* (2015) | calibration, resolution, Brier scoring — **note: reports Brier on the 0–2 scale (0.5 = chance); the single-event convention is 0–1 (0.25 = chance). Always name which convention a figure uses.** |
 | Annie Duke — *Thinking in Bets* (2018) | "resulting" — judging decision quality by outcome quality |
+| Buffett — Berkshire Hathaway Chairman's Letters (e.g. 1997) | the definition of insurance float and its cost (CR287) |
+| Regulatory Assistance Project — Lazar, *Electricity Regulation in the US: A Guide* (2nd ed., 2016) | rate base, allowed return and the revenue requirement for regulated utilities (CR287) |
 | Gary Klein — "Performing a Project Premortem", *HBR* (Sept 2007) | the pre-mortem / prospective hindsight |
 | Mauboussin — *The Success Equation* (2012) | luck vs skill, sample size, reversion to the mean |
 | Parasuraman & Riley (1997), "Humans and Automation: Use, Misuse, Disuse, Abuse", *Human Factors* 39(2) | automation bias, cognitive offloading |
