@@ -6265,6 +6265,27 @@ def _with_terminal_check_reasons(
     return _dataclass_replace(decision, reasons=(*decision.reasons, *extra))
 
 
+def _append_debt_check_note(
+    text: str, verdict: Verdict, result: GraderResult, ticker: str,
+) -> tuple[str, Verdict]:
+    """DEF553 — the CIO narration is an LLM and drops the debt check's numbers, so when the check
+    ran the verdict reason and the Room text each end with one AMI note stating them, built from
+    the check's fields. Once only; a market's own currency symbol."""
+    note = next(
+        (n for a in result.answers
+         for n in [((a.detail or {}).get("terminal_check") or {}).get("verdict_note")] if n),
+        "",
+    )
+    if not note:
+        return text, verdict
+    note = f"[{localize_money(note, market_for(ticker))}]"
+
+    def add(body: str) -> str:
+        return body if note in body else f"{body}\n\n{note}"
+
+    return add(text), verdict.model_copy(update={"reason": add(verdict.reason)})
+
+
 async def _run_coded_rule_cio(
     *,
     run_id: UUID,
@@ -6345,6 +6366,7 @@ async def _run_coded_rule_cio(
         pm_text, verdict = _floor_pm_approve(
             verdict, pm_text, run_id=run_id, ctx=ctx, mandate=mandate, profile=profile,
         )
+    pm_text, verdict = _append_debt_check_note(pm_text, verdict, result, ctx.ticker)
     return pm_text, verdict.model_copy(update={"coded_decision": record})
 
 

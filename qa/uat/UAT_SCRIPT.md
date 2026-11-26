@@ -1131,12 +1131,12 @@ _Device (automated, Appium) · plans: trader · **BLOCKED** — Needs the first 
 
 **Expected**
 1. The horizon row reads "From your horizon - <N> mo" and the coverage row "From your risk profile - <X>×", both numbers from the server (6/18/24/24 months by mandate horizon; 1.5/1.25/1.0 by risk score); each field box shows the same number as a hint
-2. Each sheet explains its number in plain words; the coverage sheet has the worked example (minimum 1.5×, 100 due, 140 gives 1.4× and the warning stays, 150 is covered); swiping down closes it
+2. Each sheet explains its number in plain words; the coverage sheet has the worked example (minimum 1.5×, 100 due, 140 gives 1.4× and the warning stays, 150 is covered); dragging it down from its top edge closes it (a swipe on the body scrolls the text)
 3. After Save and a return the fields read 36 and 2 and both rows say "Set by you"; the horizon field takes whole numbers only
 4. After the chips and Save both rows follow the horizon and the risk profile again
 5. Against a backend without the check (ROOM_GRADER_LING_TERMINAL=v1) neither row is shown
 
-> CR285. Strings settingsDebtHorizon* and settingsDebtCoverage*; AR and MS drafted by Claude, flagged retranslate.
+> CR285. Strings settingsDebtHorizon* and settingsDebtCoverage*; AR and MS drafted by Claude, flagged retranslate. 2026-11-26: both phones observed that a swipe on the body of a sheet scrolls it and only a drag from the top edge closes it.
 
 <a id="floor"></a>
 ## Floor tab & home shell
@@ -4606,11 +4606,12 @@ _Manual (iPhone checklist) · plans: trader · uses LLM_
 3. Set Debt-maturity horizon to 6 and Minimum debt coverage to 0.5 (the minimums), save, and convene the same ticker again
 
 **Expected**
-1. If the Room passes on a debt default, the reason names the amount due within "your 60-month horizon" (or the desk's own horizon when longer), the cover as a multiple, and "your minimum is 3.00×"
-2. A Room whose debt-default flag is dropped says "debt_default covered" with the same three numbers in the same words
-3. The same ticker is a new, charged Room because the mandate changed (UAT-ROOM-029); with the loosest numbers a flag that stood before is more likely to be covered
+1. If the Room passes on a debt default, the reason ends with an AMI note in brackets, "AMI debt check: <amount> falls due within your 60-month horizon; cash and cash flow cover <X>×, below your minimum of 3.00×, so the debt risk counts against this trade." (the desk's own horizon reads "the desk's <N>-day horizon (longer than your 60-month setting)" when it is longer); the note is written by AMI itself, so it is there however the CIO worded the rest of the reason
+2. A Room whose debt-default flag is dropped ends its reason with the same note in the same words, "... cash and cash flow cover <X>×, at or above your minimum of <Y>×, so the debt risk was not counted."; with nothing due in the horizon it says "no principal falls due within your <N>-month horizon", and with no maturity schedule "no debt-maturity schedule is available for this company"
+3. The note appears once, with no "debt_default" wording, and on a Bursa (.KL) Room its amounts are in RM
+4. The same ticker is a new, charged Room because the mandate changed (UAT-ROOM-029); with the loosest numbers a flag that stood before is more likely to be covered
 
-> CR285, 2026-11-26. A real-model Room cannot be steered to a debt-default flag, so the forced settings only make the numbers easy to see. The rule is pinned by backend/tests/unit/test_cr285_debt_coverage.py and the offline re-score in docs/forward_planning/CR267_beta_programme/terminal_v2/terminal_v2_materiality.md. Off on Alpha until ROOM_GRADER_LING_TERMINAL=v2.
+> CR285, 2026-11-26. A real-model Room cannot be steered to a debt-default flag, so the forced settings only make the numbers easy to see. The rule is pinned by backend/tests/unit/test_cr285_debt_coverage.py and the offline re-score in docs/forward_planning/CR267_beta_programme/terminal_v2/terminal_v2_materiality.md. Off on Alpha until ROOM_GRADER_LING_TERMINAL=v2. DEF553, 2026-11-26: Android AMI-DL-41 failed this case because the CIO's narration dropped the numbers (the check stood, 0.36× against a 3.00× minimum, but the reason never said so); the runner now appends the AMI debt-check note itself, pinned by backend/tests/unit/test_def553_debt_check_note.py. A Room banked before the deploy lacks the note (grader tag termchk=d3 re-runs it once).
 
 #### UAT-ROOM-038 — A Bursa Room states the stock's PN17/GN3 status with the date of the list, or says it is unavailable
 

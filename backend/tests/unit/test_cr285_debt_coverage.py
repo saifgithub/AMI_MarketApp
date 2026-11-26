@@ -325,7 +325,7 @@ def test_the_bank_key_is_unchanged_under_v1(monkeypatch):
 
 def test_the_check_revision_changes_the_grader_version_so_older_rooms_key_apart():
     v = ling.grader_version(ling_test.MODEL, terminal_variant=True)
-    assert v.endswith("|term=v2|termchk=d2") and "d1c1.00" not in v
+    assert v.endswith("|term=v2|termchk=d3") and "d1c1.00" not in v
     assert "termchk" not in ling.grader_version(ling_test.MODEL)
 
 

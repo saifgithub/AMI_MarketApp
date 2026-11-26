@@ -511,8 +511,8 @@ cases:
       - 'Tap the chips that now read "Use my horizon" and "Use my risk profile", then press Save'
     expected:
       - 'The horizon row reads "From your horizon - <N> mo" and the coverage row "From your risk profile - <X>×", both numbers from the server (6/18/24/24 months by mandate horizon; 1.5/1.25/1.0 by risk score); each field box shows the same number as a hint'
-      - 'Each sheet explains its number in plain words; the coverage sheet has the worked example (minimum 1.5×, 100 due, 140 gives 1.4× and the warning stays, 150 is covered); swiping down closes it'
+      - 'Each sheet explains its number in plain words; the coverage sheet has the worked example (minimum 1.5×, 100 due, 140 gives 1.4× and the warning stays, 150 is covered); dragging it down from its top edge closes it (a swipe on the body scrolls the text)'
       - 'After Save and a return the fields read 36 and 2 and both rows say "Set by you"; the horizon field takes whole numbers only'
       - 'After the chips and Save both rows follow the horizon and the risk profile again'
       - 'Against a backend without the check (ROOM_GRADER_LING_TERMINAL=v1) neither row is shown'
-    notes: 'CR285. Strings settingsDebtHorizon* and settingsDebtCoverage*; AR and MS drafted by Claude, flagged retranslate.'
+    notes: 'CR285. Strings settingsDebtHorizon* and settingsDebtCoverage*; AR and MS drafted by Claude, flagged retranslate. 2026-11-26: both phones observed that a swipe on the body of a sheet scrolls it and only a drag from the top edge closes it.'
