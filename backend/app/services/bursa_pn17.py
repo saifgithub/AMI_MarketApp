@@ -51,6 +51,10 @@ CATEGORY_GN3 = "gn3"
 CATEGORY_AFFECTED = "affected_listed_issuer_8_03a"
 CATEGORY_UNCLASSIFIED = "unclassified"
 
+TRADING = "trading"
+SUSPENDED = "suspended"
+_TRADING_STATUSES = (TRADING, SUSPENDED)
+
 OUTCOME_OK = "ok"
 OUTCOME_REFUSED = "refused"
 OUTCOME_PARSE_FAILED = "parse_failed"
@@ -79,6 +83,15 @@ class Row:
     market: str  # Main | ACE | Unknown
     status_category: str
     status_group: str | None = None
+    trading_status: str | None = None  # trading | suspended | None (not known)
+
+
+@dataclass(frozen=True)
+class Seed:
+    """A parsed human-entered seed: the rows plus Bursa's own "Last updated" date, if given."""
+
+    rows: list[Row]
+    bursa_updated: date | None = None
 
 
 def classify_response(status_code: int, body: str) -> str | None:
@@ -266,14 +279,22 @@ def parse_page(html: str) -> list[Row]:
     return list(out.values())
 
 
-def parse_csv(text: str) -> list[Row]:
-    """A human-entered seed (CR286 What 4): `stock_code,company_name,market,status_category[,status_group]`."""
+def parse_seed(text: str, *, today: date | None = None) -> Seed:
+    """A human-entered seed (CR286 What 4):
+    `stock_code,company_name,market,status_category[,status_group][,trading_status][,bursa_updated]`.
+
+    `bursa_updated` is Bursa's own "Last updated" date (ISO). It must be one date across every
+    row that carries it, well formed and not after `today`; anything else is refused, never
+    guessed. Old files without the two newer columns stay valid.
+    """
+    today = today or datetime.now(timezone.utc).date()
     reader = csv.DictReader(io.StringIO(text))
     need = {"stock_code", "company_name", "market", "status_category"}
     if not reader.fieldnames or not need <= set(reader.fieldnames):
         raise ParseFailed("seed_columns")
     categories = {CATEGORY_PN17, CATEGORY_GN3, CATEGORY_AFFECTED, CATEGORY_UNCLASSIFIED}
     out: dict[str, Row] = {}
+    updated: set[date] = set()
     for r in reader:
         code = (r["stock_code"] or "").strip().upper()
         if not _CODE_RE.match(code):
@@ -282,15 +303,33 @@ def parse_csv(text: str) -> list[Row]:
             raise ParseFailed("duplicate_stock_code")
         cat = (r["status_category"] or "").strip()
         market = (r["market"] or "").strip()
+        trading = (r.get("trading_status") or "").strip().lower() or None
         if cat not in categories or market not in ("Main", "ACE", "Unknown"):
             raise ParseFailed("seed_vocabulary")
+        if trading is not None and trading not in _TRADING_STATUSES:
+            raise ParseFailed("seed_vocabulary")
+        raw_date = (r.get("bursa_updated") or "").strip()
+        if raw_date:
+            try:
+                parsed = date.fromisoformat(raw_date)
+            except ValueError:
+                raise ParseFailed("seed_bursa_updated") from None
+            if parsed > today:
+                raise ParseFailed("seed_bursa_updated")
+            updated.add(parsed)
         out[code] = Row(
             code, _norm(r["company_name"] or "")[:120], market, cat,
-            (r.get("status_group") or "").strip() or None,
+            (r.get("status_group") or "").strip() or None, trading,
         )
+    if len(updated) > 1:
+        raise ParseFailed("seed_bursa_updated")
     if not out:
         raise ParseFailed("zero_rows")
-    return list(out.values())
+    return Seed(list(out.values()), next(iter(updated), None))
+
+
+def parse_csv(text: str, *, today: date | None = None) -> list[Row]:
+    return parse_seed(text, today=today).rows
 
 
 # --------------------------------------------------------------------------- storage
@@ -320,11 +359,15 @@ def apply_snapshot(
 
     added = changed = removed = 0
 
-    def log_change(kind: str, r: Row | BursaPn17CurrentRow, previous: str | None = None) -> None:
+    def log_change(
+        kind: str, r: Row | BursaPn17CurrentRow, previous: str | None = None,
+        previous_trading: str | None = None,
+    ) -> None:
         session.add(BursaPn17ChangeRow(
             run_id=run_id, change_type=kind, stock_code=r.stock_code, company_name=r.company_name,
             market=r.market, status_category=r.status_category, status_group=r.status_group,
-            previous_category=previous, observed_on=today, source_url=source_url,
+            previous_category=previous, trading_status=r.trading_status,
+            previous_trading_status=previous_trading, observed_on=today, source_url=source_url,
         ))
 
     for row in snapshot.values():
@@ -333,6 +376,7 @@ def apply_snapshot(
             values={
                 "company_name": row.company_name, "market": row.market,
                 "status_category": row.status_category, "status_group": row.status_group,
+                "trading_status": row.trading_status,
                 "first_seen": today, "last_seen": today, "source_url": source_url,
             },
         )
@@ -345,10 +389,15 @@ def apply_snapshot(
         if previous != row.status_category:
             changed += 1
             log_change("category_changed", row, previous)
+        previous_trading = current.trading_status
+        if previous_trading and row.trading_status and previous_trading != row.trading_status:
+            changed += 1
+            log_change("trading_changed", row, previous_trading=previous_trading)
         current.company_name = row.company_name
         current.market = row.market
         current.status_category = row.status_category
         current.status_group = row.status_group
+        current.trading_status = row.trading_status
         current.last_seen = today
         current.source_url = source_url
 
@@ -364,12 +413,14 @@ def record_run(
     session: Session, *, run_id: uuid.UUID, trigger: str, outcome: str, started_at: datetime,
     http_status: int | None = None, rows_found: int = 0, applied: Applied | None = None,
     detail: str | None = None, source_url: str = SOURCE_URL, finished_at: datetime | None = None,
+    bursa_updated: date | None = None,
 ) -> None:
     session.add(BursaPn17RunRow(
         id=run_id, started_at=started_at, finished_at=finished_at or datetime.now(timezone.utc),
         trigger=trigger, outcome=outcome, http_status=http_status, rows_found=rows_found,
         added=applied.added if applied else 0, changed=applied.changed if applied else 0,
-        removed=applied.removed if applied else 0, detail=(detail or None), source_url=source_url,
+        removed=applied.removed if applied else 0, detail=(detail or None),
+        bursa_updated_on=bursa_updated if outcome == OUTCOME_OK else None, source_url=source_url,
     ))
 
 
@@ -411,6 +462,7 @@ class Status:
     baseline: date | None = None
     reason: str | None = None
     last_failure: tuple[date, str] | None = None
+    bursa_updated: date | None = None
 
 
 def stock_code_of(ticker: str) -> str:
@@ -446,19 +498,29 @@ def _status(session: Session, ticker: str, today: date) -> Status:
         )
     as_of = ok[0].finished_at.date()
     baseline = ok[-1].finished_at.date()
+    bursa_updated = ok[0].bursa_updated_on
     if (today - as_of).days > STALE_AFTER_DAYS:
         logger.warn("bursa_pn17_list_stale", as_of=as_of.isoformat(), today=today.isoformat())
-        return Status(STATE_STALE, as_of=as_of, baseline=baseline, last_failure=last_failure)
+        return Status(
+            STATE_STALE, as_of=as_of, baseline=baseline, last_failure=last_failure,
+            bursa_updated=bursa_updated,
+        )
     code = stock_code_of(ticker)
     cur = session.execute(
         select(BursaPn17CurrentRow).where(BursaPn17CurrentRow.stock_code == code)
     ).scalars().first()
     if cur is None:
-        return Status(STATE_NOT_LISTED, as_of=as_of, baseline=baseline, last_failure=last_failure)
+        return Status(
+            STATE_NOT_LISTED, as_of=as_of, baseline=baseline, last_failure=last_failure,
+            bursa_updated=bursa_updated,
+        )
     return Status(
         STATE_LISTED, as_of=as_of, baseline=baseline, first_seen=cur.first_seen,
-        row=Row(cur.stock_code, cur.company_name, cur.market, cur.status_category, cur.status_group),
-        last_failure=last_failure,
+        row=Row(
+            cur.stock_code, cur.company_name, cur.market, cur.status_category, cur.status_group,
+            cur.trading_status,
+        ),
+        last_failure=last_failure, bursa_updated=bursa_updated,
     )
 
 
@@ -469,13 +531,22 @@ def historical_status() -> Status:
     )
 
 
+def _read_phrase(st: Status) -> str:
+    """How current Bursa's list is, and when AMI read it. Bursa's date is stated only when known."""
+    read = f"read by AMI {st.as_of.isoformat()}" if st.as_of else "read by AMI"
+    if st.bursa_updated:
+        return f"Bursa's list updated {st.bursa_updated.isoformat()}, {read}"
+    return read
+
+
 def line(st: Status) -> str:
     """The sheet line. The same words, bracketed, are the desk footer note (`note`)."""
     if st.state == STATE_LISTED and st.row and st.as_of:
         r = st.row
         where = f"{r.market} Market" if r.market in ("Main", "ACE") else None
         grp = _GROUPS.get(r.status_group or "")
-        paren = ", ".join(p for p in (where, grp) if p)
+        trading = {SUSPENDED: "trading suspended", TRADING: "trading"}.get(r.trading_status or "")
+        paren = ", ".join(p for p in (where, grp, trading) if p)
         seen = st.first_seen.isoformat() if st.first_seen else "unknown"
         since = (
             f"already on Bursa's list when AMI first read it ({seen})"
@@ -484,12 +555,12 @@ def line(st: Status) -> str:
         )
         body = (
             f"Bursa PN17/GN3 status: {_LABELS.get(r.status_category, _LABELS[CATEGORY_UNCLASSIFIED])}"
-            f"{f' ({paren})' if paren else ''}; {since}; list as of {st.as_of.isoformat()}. {_SOURCE_PHRASE}"
+            f"{f' ({paren})' if paren else ''}; {since}; {_read_phrase(st)}. {_SOURCE_PHRASE}"
         )
     elif st.state == STATE_NOT_LISTED and st.as_of:
         body = (
-            f"Bursa PN17/GN3 status: not on Bursa's PN17/GN3 list as of {st.as_of.isoformat()}. "
-            f"{_SOURCE_PHRASE}"
+            "Bursa PN17/GN3 status: not on Bursa's PN17/GN3 list "
+            f"({_read_phrase(st)}). {_SOURCE_PHRASE}"
         )
     elif st.state == STATE_STALE and st.as_of:
         body = (

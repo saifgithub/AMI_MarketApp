@@ -12,7 +12,7 @@ scheduled job that silently did nothing would leave the sheet stale with no one 
 
 `--from-file seed.csv` is the human-entered seed (CR286 What 4): the same plausibility rules,
 recorded as `manual`, no network. Columns: stock_code,company_name,market,status_category
-[,status_group]. `--accept-shrink` waives only the shrink check, for a real mass uplift.
+[,status_group][,trading_status][,bursa_updated]. `--accept-shrink` waives only the shrink check, for a real mass uplift.
 
 Usage (in the backend image, from /app):
     python -m scripts.bursa_pn17_refresh [--from-file seed.csv] [--accept-shrink]
@@ -64,6 +64,7 @@ def run(
     outcome = pn17.OUTCOME_OK
     detail: str | None = None
     rows: list[pn17.Row] = []
+    bursa_updated = None
 
     if not manual and not settings.bursa_pn17_refresh_enabled:
         logger.error(
@@ -75,7 +76,8 @@ def run(
 
     if manual:
         try:
-            rows = pn17.parse_csv(from_file.read_text(encoding="utf-8"))
+            seed = pn17.parse_seed(from_file.read_text(encoding="utf-8"), today=started.date())
+            rows, bursa_updated = seed.rows, seed.bursa_updated
         except pn17.ParseFailed as exc:
             outcome, detail = pn17.OUTCOME_PARSE_FAILED, exc.reason
         except OSError as exc:
@@ -112,7 +114,7 @@ def run(
             pn17.record_run(
                 s, run_id=run_id, trigger=trigger, outcome=outcome, started_at=started,
                 http_status=http_status, rows_found=len(rows), applied=applied, detail=detail,
-                finished_at=now,
+                finished_at=now, bursa_updated=bursa_updated,
             )
     except Exception as exc:
         logger.error("bursa_pn17_refresh_store_error", error=f"{type(exc).__name__}: {exc}"[:300])

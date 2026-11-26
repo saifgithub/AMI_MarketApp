@@ -57,3 +57,19 @@ Monday 02:17 server-local (melehost's zone not checked; 02:17 MYT if it is on MY
 **Tests**: `backend/tests/unit/test_cr286_bursa_pn17.py` (parse, change detection, stale at 14/15 days, refusal, never-wipe, manual seed, sheet and footer, grounding, bank variant, compose/beta wiring). UAT: manual case `UAT-ROOM-038` (no admin route exposes the run record; the run result is read from the cron log).
 
 **Still open (acceptance 3):** one live run on melehost after deploy, its result reported, and the schedule installed.
+
+## Follow-up 2026-11-26 (AT:B1): Bursa's own update date and trading status
+
+The first real load exposed two gaps; both fixed.
+
+1. **Bursa's own "Last updated" date.** The page states when Bursa last changed the list, which can be weeks before AMI reads it. The line used to say "list as of <AMI read date>", overstating how current Bursa's data is. The seed CSV gains an optional `bursa_updated` column (ISO date, identical on every row that has it; a mixed, malformed or future date refuses the load with `seed_bursa_updated`), stored on the run record (`bursa_pn17_runs.bursa_updated_on`). Staleness stays keyed on AMI's read date.
+2. **Trading status.** The page shows each issuer as Trading or Suspended. The seed CSV gains an optional `trading_status` column (`trading` | `suspended`, case-insensitive on input, stored lowercase; anything else refuses the load with `seed_vocabulary`), stored on `bursa_pn17_current.trading_status`. A change between two known values is logged in `bursa_pn17_changes` as `trading_changed` (with `previous_trading_status`); learning a previously unknown value is not a change.
+
+Old five-column files stay valid; an unknown date or status is stored as null and never invented. Migration `cr286b1c2d3e4` (after `cr286a0b0c0d1`): additive nullable columns only, with downgrade. `MY_SHEET_REVISION` 6 to 7 (the sheet text changed).
+
+New wording (the note wraps the same text):
+1. listed: `Bursa PN17/GN3 status: listed as a PN17 issuer (Main Market, plan pending, trading suspended); already on Bursa's list when AMI first read it (2026-11-26); Bursa's list updated 2026-10-30, read by AMI 2026-11-26. Source: Bursa Malaysia PN17 and GN3 list, read weekly by AMI.` ("trading suspended" / "trading" only when known.)
+2. not listed: `Bursa PN17/GN3 status: not on Bursa's PN17/GN3 list (Bursa's list updated 2026-10-30, read by AMI 2026-11-26). Source: ...`
+3. Bursa date unknown (old files): `... read by AMI 2026-11-26`, no Bursa date.
+
+Seed columns are now `stock_code,company_name,market,status_category[,status_group][,trading_status][,bursa_updated]`; `pn17_weekly_template.csv` carries the full header.

@@ -360,7 +360,8 @@ def policy_settings() -> dict[str, Any]:
 #: 4 = the Malay Mail news feed (CR282 lane E2) changed the News sheet.
 #: 5 = the sheet carries `macro_cpi_note` for Macro & Events' coded note (DEF546).
 #: 6 = the sheet carries the Bursa PN17/GN3 status line and note (CR286).
-MY_SHEET_REVISION = 6
+#: 7 = the PN17 line states Bursa's own "Last updated" date and the issuer's trading status (CR286 follow-up).
+MY_SHEET_REVISION = 7
 
 
 def sheet_variant(

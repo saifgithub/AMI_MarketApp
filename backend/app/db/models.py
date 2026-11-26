@@ -3136,6 +3136,7 @@ class BursaPn17CurrentRow(Base):
     market: Mapped[str] = mapped_column(String, nullable=False)
     status_category: Mapped[str] = mapped_column(String, nullable=False)
     status_group: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    trading_status: Mapped[Optional[str]] = mapped_column(String, nullable=True)  # trading | suspended
     first_seen: Mapped[date] = mapped_column(Date, nullable=False)
     last_seen: Mapped[date] = mapped_column(Date, nullable=False)
     source_url: Mapped[str] = mapped_column(String, nullable=False)
@@ -3159,6 +3160,8 @@ class BursaPn17ChangeRow(Base):
     status_category: Mapped[str] = mapped_column(String, nullable=False)
     status_group: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     previous_category: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    trading_status: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    previous_trading_status: Mapped[Optional[str]] = mapped_column(String, nullable=True)
     observed_on: Mapped[date] = mapped_column(Date, nullable=False)
     source_url: Mapped[str] = mapped_column(String, nullable=False)
 
@@ -3188,4 +3191,5 @@ class BursaPn17RunRow(Base):
     changed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     removed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     detail: Mapped[Optional[str]] = mapped_column(String, nullable=True)
+    bursa_updated_on: Mapped[Optional[date]] = mapped_column(Date, nullable=True)  # Bursa's own "Last updated"
     source_url: Mapped[str] = mapped_column(String, nullable=False)
