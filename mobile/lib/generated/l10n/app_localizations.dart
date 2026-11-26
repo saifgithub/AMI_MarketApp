@@ -3196,6 +3196,72 @@ abstract class AppLocalizations {
   /// **'Reward to risk compares how far a trade\'s target sits above your entry with how far its stop sits below it. Entry 100, stop 90, target 115 is 1.5 to 1: 15 to gain for every 10 at risk.\n\nYour minimum is the lowest ratio AMI will approve. If a Room\'s target is too close for its stop, the approval becomes a rejection and says which two numbers failed. Leave this on your risk profile and cautious profiles ask for more reward per unit of risk. Set your own number to override it; 0 turns the check off.\n\nThis applies to a Room\'s verdict. A trade you place yourself on the ticket has no target, so it is not checked.'**
   String get settingsRiskLimitsMinRewardRiskSheetBody;
 
+  /// CR285 `debt_horizon_months`. Label of the Settings > risk limits row for how many months ahead AMI looks for debt falling due when the Room asks about a debt-default risk. Shown with an 'mo' suffix (e.g. 24 mo). NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Debt-maturity horizon'**
+  String get settingsDebtHorizonLabel;
+
+  /// CR285 one-line caption under the debt_horizon_months row label. 'AMI' is deliberate: the AI is named AMI in user-facing copy. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'How many months ahead AMI looks for debt that falls due when it judges a debt-default risk. A longer horizon from the Execution Desk is used instead.'**
+  String get settingsDebtHorizonExplain;
+
+  /// CR285 title of the explain sheet opened by the info icon on the debt_horizon_months row; also its tooltip. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Debt-maturity horizon'**
+  String get settingsDebtHorizonSheetTitle;
+
+  /// CR285 body of the explain sheet. 'your horizon' = the mandate horizon (short/medium/long/very long). The 6 and 24 are examples of the defaults (short 6, medium 12, long and very long 24 months) which live server-side; the range 3 to 60 is enforced server-side. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'When a Room asks whether a company faces a terminal risk such as a debt default, AMI adds up the debt that falls due inside this window and compares it with the cash and cash flow the company has to meet it. At 24 months it counts the next two years of maturities.\n\nLeave this on your horizon and a short horizon looks 6 months ahead, a long one 24. Set your own number, 3 to 60 months, to override it. If the Execution Desk states a longer horizon for a trade, AMI uses that one for that Room and says so.\n\nA longer window counts more debt, so more debt-default warnings stand.'**
+  String get settingsDebtHorizonSheetBody;
+
+  /// CR285. Selected chip label on the debt-horizon row when it follows the mandate horizon and the server sent no resolved number. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'From your horizon'**
+  String get settingsDebtHorizonFromHorizon;
+
+  /// CR285. Selected chip label on the debt-horizon row when it follows the mandate horizon: {value} is pre-formatted with its unit ('24 mo'), taken verbatim from mandate `resolved`, never computed client-side. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'From your horizon — {value}'**
+  String settingsDebtHorizonFromHorizonResolved(String value);
+
+  /// CR285. Label of the (unselected) chip on the debt-horizon row when it carries an explicit value: tapping it clears the value so the row follows the mandate horizon again. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Use my horizon'**
+  String get settingsDebtHorizonUseHorizon;
+
+  /// CR285 `min_debt_coverage`. Label of the Settings > risk limits row. A multiple, shown with a '×' suffix (e.g. 1.5×). 'Coverage' = the company's cash plus its free cash flow over the horizon, divided by the debt falling due in it. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Minimum debt coverage'**
+  String get settingsDebtCoverageLabel;
+
+  /// CR285 one-line caption under the min_debt_coverage row label. 'AMI' is deliberate: the AI is named AMI in user-facing copy. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'AMI keeps a debt-default warning only when cash and cash flow cover the debt falling due by less than this many times.'**
+  String get settingsDebtCoverageExplain;
+
+  /// CR285 title of the explain sheet opened by the info icon on the min_debt_coverage row; also its tooltip. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Debt coverage'**
+  String get settingsDebtCoverageSheetTitle;
+
+  /// CR285 body of the explain sheet. The worked example (minimum 1.5x; 100 due; 140 cash and cash flow = 1.4x, warning stands; 150 = 1.5x, covered) must stay numerically correct in translation. 'cautious profiles ask for more' = risk 1-2 default 1.5x, risk 3-4 1.25x, risk 5 1.0x (numbers deliberately not in the copy: they live server-side). The range 0.5x to 3.0x is enforced server-side. NEW key. retranslate:[ar,ms]
+  ///
+  /// In en, this message translates to:
+  /// **'Coverage is the company\'s cash plus the free cash flow it earns over the horizon, divided by the debt that falls due in it. 1.0× means exactly enough.\n\nYour minimum is the cover below which AMI keeps a debt-default warning. With a 1.5× minimum, 100 due and 140 of cash and cash flow is 1.4×, so the warning stands; at 150 it is covered and the warning is dropped. Leave this on your risk profile and cautious profiles ask for more cover than bold ones. Set your own number, 0.5× to 3.0×, to override it.\n\nThe check cannot be switched off. It applies to a Room\'s verdict.'**
+  String get settingsDebtCoverageSheetBody;
+
   /// CR101-MOBILE L3 disclosure: shown when sector_cap_pct or single_name_cap_pct moves from unset (profile preset) to an explicit value. Direction (looser/tighter than the preset) is unknowable client-side — the preset's resolved number is never returned by the API (CR101-BE1 bridge) — so this states the mechanism honestly instead of guessing a direction. retranslate:[ar,ms]
   ///
   /// In en, this message translates to:

@@ -35,7 +35,7 @@ import 'package:ami_trade/theme/ami_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-enum LimitKind { percent, count, hours, days, ratio }
+enum LimitKind { percent, count, hours, days, ratio, months, multiple }
 
 /// One settable limit's shape — key names and directionality only, never a
 /// numeric cap value (that would be exactly the client-side literal CR046's
@@ -82,6 +82,18 @@ const List<LimitFieldConfig> kRiskLimitFields = [
 /// looser setting: a smaller floor lets a thinner target through.
 const List<LimitFieldConfig> kRewardRiskField = [
   LimitFieldConfig(key: 'min_reward_risk', kind: LimitKind.ratio, presetLinked: true, higherIsLooser: false),
+];
+
+/// CR285 — the two numbers of the terminal question's debt-default check:
+/// the maturity horizon in months (follows the mandate horizon) and the
+/// minimum coverage multiple (follows the risk profile). Kept out of
+/// `kRiskLimitFields` for the CR284 reason, and rendered only while the server
+/// says the check is active (`resolved.debtCheckActive`): a row on screen is
+/// one that is enforced. A longer horizon and a higher minimum both keep MORE
+/// debt-default warnings alive, so a larger number is the tighter one.
+const List<LimitFieldConfig> kDebtCheckFields = [
+  LimitFieldConfig(key: 'debt_horizon_months', kind: LimitKind.months, presetLinked: true, higherIsLooser: false),
+  LimitFieldConfig(key: 'min_debt_coverage', kind: LimitKind.multiple, presetLinked: true, higherIsLooser: false),
 ];
 
 /// CR172 §9 (D5) — the four option limits, kept in their OWN list.
@@ -155,6 +167,10 @@ num? riskLimitServerValue(UserMandate m, String key) {
       return m.maxOpenRiskPct;
     case 'min_reward_risk':
       return m.minRewardRisk;
+    case 'debt_horizon_months':
+      return m.debtHorizonMonths;
+    case 'min_debt_coverage':
+      return m.minDebtCoverage;
     case 'max_option_premium_pct':
       return m.maxOptionPremiumPct;
     case 'max_option_notional_pct':
@@ -293,6 +309,8 @@ class RiskLimitsSection extends StatelessWidget {
           for (final cfg in [
             ...kRiskLimitFields,
             ...kRewardRiskField,
+            // CR285 — only while the server's grader runs the check.
+            if (mandate.resolved?.debtCheckActive == true) ...kDebtCheckFields,
             // Only for a mandate that actually permits derivatives.
             if (mandate.compliance.derivativesAllowed) ...kOptionLimitFields,
           ]) ...[
@@ -329,6 +347,10 @@ class RiskLimitsSection extends StatelessWidget {
         return l.settingsRiskLimitsMaxOpenRiskLabel;
       case 'min_reward_risk':
         return l.settingsRiskLimitsMinRewardRiskLabel;
+      case 'debt_horizon_months':
+        return l.settingsDebtHorizonLabel;
+      case 'min_debt_coverage':
+        return l.settingsDebtCoverageLabel;
       case 'min_days_to_expiry':
         return l.settingsMinDteLabel;
       case 'max_assignment_exposure_pct':
@@ -360,6 +382,10 @@ class RiskLimitsSection extends StatelessWidget {
         return l.settingsRiskLimitsMaxOpenRiskExplain;
       case 'min_reward_risk':
         return l.settingsRiskLimitsMinRewardRiskExplain;
+      case 'debt_horizon_months':
+        return l.settingsDebtHorizonExplain;
+      case 'min_debt_coverage':
+        return l.settingsDebtCoverageExplain;
       case 'max_option_premium_pct':
         return l.settingsOptionPremiumCapExplain;
       case 'max_option_notional_pct':
@@ -425,7 +451,8 @@ class _LimitFieldRowState extends State<_LimitFieldRow> {
   String _formatForEdit(num? v) {
     if (v == null) return '';
     if (widget.config.kind == LimitKind.count ||
-        widget.config.kind == LimitKind.days) {
+        widget.config.kind == LimitKind.days ||
+        widget.config.kind == LimitKind.months) {
       return v.toInt().toString();
     }
     final d = v.toDouble();
@@ -444,6 +471,10 @@ class _LimitFieldRowState extends State<_LimitFieldRow> {
         return 'd';
       case LimitKind.ratio:
         return ':1';
+      case LimitKind.months:
+        return ' mo';
+      case LimitKind.multiple:
+        return '×';
     }
   }
 
@@ -481,13 +512,24 @@ class _LimitFieldRowState extends State<_LimitFieldRow> {
     // selected chip reads "From your risk profile"; overridden -> the same
     // chip is the way back, so it reads as that action, and the caption below
     // says "Set by you". The two never describe one row at once.
+    // CR285: the debt horizon follows the mandate HORIZON, not the risk
+    // profile, so its chip says so.
+    final followsHorizon = widget.config.key == 'debt_horizon_months';
+    final resolvedText =
+        '${_formatForEdit(widget.resolvedValue)}${_unitSuffix()}';
     final followingLabel = showResolvedNumber
-        ? l.settingsRiskLimitsFromProfileResolved(
-            '${_formatForEdit(widget.resolvedValue)}${_unitSuffix()}')
-        : l.settingsRiskLimitsFromProfile;
+        ? (followsHorizon
+            ? l.settingsDebtHorizonFromHorizonResolved(resolvedText)
+            : l.settingsRiskLimitsFromProfileResolved(resolvedText))
+        : (followsHorizon
+            ? l.settingsDebtHorizonFromHorizon
+            : l.settingsRiskLimitsFromProfile);
+    final useLabel = followsHorizon
+        ? l.settingsDebtHorizonUseHorizon
+        : l.settingsRiskLimitsUseProfile;
     final offLabel = !widget.config.presetLinked
         ? l.settingsRiskLimitsOff
-        : (isOff ? followingLabel : l.settingsRiskLimitsUseProfile);
+        : (isOff ? followingLabel : useLabel);
     final disclosure = classifyLimitEdit(
       widget.config,
       oldValue: widget.serverValue,
@@ -503,12 +545,12 @@ class _LimitFieldRowState extends State<_LimitFieldRow> {
           Row(
             children: [
               Flexible(child: Text(widget.label, style: AmiTypography.body)),
-              if (widget.config.kind == LimitKind.ratio)
+              if (_explainSheetFor(l, widget.config.key) != null)
                 IconButton(
                   key: Key('riskLimitExplainSheet_${widget.config.key}'),
-                  tooltip: l.settingsRiskLimitsMinRewardRiskSheetTitle,
+                  tooltip: _explainSheetFor(l, widget.config.key)!.title,
                   icon: const Icon(Icons.info_outline, size: 18, color: AmiColors.textLow),
-                  onPressed: () => _showRewardRiskSheet(context),
+                  onPressed: () => _showExplainSheet(context, widget.config.key),
                 ),
             ],
           ),
@@ -533,7 +575,12 @@ class _LimitFieldRowState extends State<_LimitFieldRow> {
                   controller: _controller,
                   enabled: true,
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                      // Months are a whole number: the server field is an int.
+                      RegExp(widget.config.kind == LimitKind.months ? r'[0-9]' : r'[0-9.]'),
+                    ),
+                  ],
                   style: AmiTypography.labelMono.copyWith(color: AmiColors.hexCyan),
                   decoration: InputDecoration(
                     isDense: true,
@@ -603,10 +650,37 @@ class _LimitFieldRowState extends State<_LimitFieldRow> {
   }
 }
 
-/// CR284 — the longer explanation behind the reward:risk row's info icon.
-/// Same sheet shape as the compliance explanations in settings_screen.dart.
-void _showRewardRiskSheet(BuildContext context) {
+/// The explain sheet's text for a row's info icon, or null when the row has none.
+({String title, String body})? _explainSheetFor(AppLocalizations l, String key) {
+  switch (key) {
+    case 'min_reward_risk':
+      return (
+        title: l.settingsRiskLimitsMinRewardRiskSheetTitle,
+        body: l.settingsRiskLimitsMinRewardRiskSheetBody,
+      );
+    case 'debt_horizon_months':
+      return (
+        title: l.settingsDebtHorizonSheetTitle,
+        body: l.settingsDebtHorizonSheetBody,
+      );
+    case 'min_debt_coverage':
+      return (
+        title: l.settingsDebtCoverageSheetTitle,
+        body: l.settingsDebtCoverageSheetBody,
+      );
+    default:
+      return null;
+  }
+}
+
+/// CR284 / CR285 — the longer explanation behind a row's info icon. Same sheet
+/// shape as the compliance explanations in settings_screen.dart. The reward:risk
+/// sheet keeps its CR284 key (`rewardRiskSheet`); the debt rows' is
+/// `explainSheet_<field>`.
+void _showExplainSheet(BuildContext context, String fieldKey) {
   final l = AppLocalizations.of(context);
+  final text = _explainSheetFor(l, fieldKey);
+  if (text == null) return;
   showModalBottomSheet<void>(
     context: context,
     useRootNavigator: false,
@@ -615,21 +689,23 @@ void _showRewardRiskSheet(BuildContext context) {
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
     builder: (_) => Padding(
-      key: const Key('rewardRiskSheet'),
+      key: Key(fieldKey == 'min_reward_risk' ? 'rewardRiskSheet' : 'explainSheet_$fieldKey'),
       padding: const EdgeInsets.fromLTRB(
         AmiSpacing.l, AmiSpacing.l, AmiSpacing.l, AmiSpacing.xl,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(l.settingsRiskLimitsMinRewardRiskSheetTitle, style: AmiTypography.h4),
-          const SizedBox(height: AmiSpacing.s),
-          Text(
-            l.settingsRiskLimitsMinRewardRiskSheetBody,
-            style: AmiTypography.body.copyWith(color: AmiColors.textMed),
-          ),
-        ],
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(text.title, style: AmiTypography.h4),
+            const SizedBox(height: AmiSpacing.s),
+            Text(
+              text.body,
+              style: AmiTypography.body.copyWith(color: AmiColors.textMed),
+            ),
+          ],
+        ),
       ),
     ),
   );
