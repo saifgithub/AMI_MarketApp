@@ -235,11 +235,11 @@ def test_a_dark_schedule_gives_no_ladder(profile):
 
 
 def test_the_tag_carries_the_check_revision_and_only_rides_term_v2():
-    assert M.CHECK_TAG == "termchk=d2"
+    assert M.CHECK_TAG == "termchk=d3"
     base = ling.grader_version(ling_test.MODEL)
     assert "termchk" not in base
     assert ling.grader_version(ling_test.MODEL, terminal_variant=True) == (
-        base + "|term=v2|termchk=d2"
+        base + "|term=v2|termchk=d3"
     )
     assert "termchk" not in deepinfra.grader_version("m")
 

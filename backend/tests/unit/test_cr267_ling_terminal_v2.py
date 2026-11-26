@@ -60,7 +60,7 @@ def test_versions_only_gain_the_tag_when_on():
     base = ling.grader_version(ling_test.MODEL)
     assert "term=" not in base
     assert ling.grader_version(ling_test.MODEL, terminal_variant=True) == (
-        base + "|term=v2|termchk=d2"
+        base + "|term=v2|termchk=d3"
     )
     assert deepinfra.grader_version("m") == (
         "m|t0|avg5:bear_objection_answered+thesis_material_directional|split2|trade=structure"
@@ -219,7 +219,7 @@ def _grade(payload, ticker="0020.KL", hay=HAY, inputs=UNCOVERED):
 
 def test_five_terminal_calls_vary_only_the_question_line():
     g, res, wire = _grade(GOOD)
-    assert res.error is None and g.version.endswith("|think=off|bear=v2|cat=v2|term=v2|termchk=d2")
+    assert res.error is None and g.version.endswith("|think=off|bear=v2|cat=v2|term=v2|termchk=d3")
     term = [b for b in wire.bodies if "QUESTION:" in b["messages"][-1]["content"]]
     assert len(term) == 5 and len(wire.bodies) == 17
     tails = set()

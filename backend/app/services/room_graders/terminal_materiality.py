@@ -57,9 +57,10 @@ from app.trading_math.risk_limits import debt_horizon_days
 DEBT_DEFAULT_MIN_COVERAGE = 1.0
 CHECKED_CATEGORY = "debt_default"
 DAYS_PER_YEAR = 365
-CHECK_REVISION = "d2"
-# `d2` = horizon and minimum are the mandate's (CR285). `d1c1.00` was the fixed 6-week, 1.0x check;
-# a Room graded under it is keyed apart from one graded under the user's numbers.
+CHECK_REVISION = "d3"
+# `d3` = the verdict states the check's numbers as an AMI note (DEF553); a Room banked under `d2`
+# lacks it. `d2` = horizon and minimum are the mandate's (CR285). `d1c1.00` was the fixed 6-week,
+# 1.0x check; a Room graded under it is keyed apart from one graded under the user's numbers.
 CHECK_TAG = f"termchk={CHECK_REVISION}"
 
 _YEAR_N = re.compile(r"^year\s*(\d+)$", re.IGNORECASE)
@@ -106,7 +107,48 @@ def _horizon_phrase(check: Mapping[str, Any]) -> str:
     return f"your {months:g}-month horizon"
 
 
+def verdict_note(check: Mapping[str, Any] | None) -> str:
+    """DEF553: the check's outcome in plain words for the verdict text, built from the check's
+    fields (never by parsing `reason`). Empty when no check ran, it was skipped, or its fields
+    are not there."""
+    if not check or check.get("skipped") or not check.get("reason"):
+        return ""
+    min_cov = _num(check.get("min_coverage"))
+    if check.get("due_in_horizon") is None:
+        return ("AMI debt check: no debt-maturity schedule is available for this company, so a "
+                "debt-default risk could not be counted.")
+    if check.get("horizon_days") is None:
+        return ""
+    where = _horizon_phrase(check)
+    due = _num(check["due_in_horizon"])
+    if due is None:
+        return ""
+    if due <= 0:
+        return (f"AMI debt check: no principal falls due within {where}, so the debt risk was "
+                "not counted.")
+    coverage = _num(check.get("coverage"))
+    if coverage is None or min_cov is None:
+        return ""
+    own = "your" if check.get("min_coverage_source") != "check_default" else "the"
+    head = (f"AMI debt check: {_fmt(due)} falls due within {where}; cash and cash flow cover "
+            f"{_times(coverage, min_cov)}×, ")
+    if check.get("stands"):
+        return (f"{head}below {own} minimum of {min_cov:.2f}×, so the debt risk counts against "
+                "this trade.")
+    return f"{head}at or above {own} minimum of {min_cov:.2f}×, so the debt risk was not counted."
+
+
 def debt_default_check(inputs: Mapping[str, Any] | None) -> dict:
+    """The check, with its plain-words verdict note (`verdict_note`) stored beside the numbers so the
+    Room runner, which never imports a grader, can state it. See `_decide`."""
+    check = _decide(inputs)
+    note = verdict_note(check)
+    if note:
+        check["verdict_note"] = note
+    return check
+
+
+def _decide(inputs: Mapping[str, Any] | None) -> dict:
     """Decide a `debt_default` yes from the inputs. Returns `terminal_check`: `stands` (bool),
     `reason`, and the numbers. Pure and deterministic.
 
