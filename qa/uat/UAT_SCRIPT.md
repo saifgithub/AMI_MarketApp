@@ -4627,12 +4627,13 @@ _Manual (iPhone checklist) · plans: trader · uses LLM_
 4. If any stock on the list is available (the refresh log or the sheet names one), convene a Room on it and read the same line
 
 **Expected**
-1. The Fundamentals Analyst's turn ends with an AMI note beginning "Bursa PN17/GN3 status:" that says either "not on Bursa's PN17/GN3 list as of <date>" or, for a listed stock, the category (PN17, GN3 or affected listed issuer under paragraph 8.03A), when AMI first saw it on the list, and "list as of <date>"
-2. When the last successful read is more than 14 days old, or none is on record, the note says "unavailable" with the last successful read date (or that none is on record) and never a status; if the latest attempt failed it names why (Bursa's site refused the request, the page could not be read as a list, or could not be fetched)
-3. Every Bursa-dated line is a date, not a relative phrase; no Bursa announcement text appears in the Room
-4. A US Room carries no such note
+1. The Fundamentals Analyst's turn ends with an AMI note beginning "Bursa PN17/GN3 status:" that says either "not on Bursa's PN17/GN3 list (Bursa's list updated <date>, read by AMI <date>)" or, for a listed stock, the category (PN17, GN3 or affected listed issuer under paragraph 8.03A), the plan stage, "trading suspended" when Bursa shows the company suspended, when AMI first saw it on the list, and "Bursa's list updated <date>, read by AMI <date>"
+2. The two dates differ when Bursa has not updated its list since an earlier month (Bursa's date is the page's "Last updated" date, not the day AMI read it); a load without Bursa's date says only "read by AMI <date>"
+3. When the last successful read is more than 14 days old, or none is on record, the note says "unavailable" with the last successful read date (or that none is on record) and never a status; if the latest attempt failed it names why (Bursa's site refused the request, the page could not be read as a list, or could not be fetched)
+4. Every Bursa-dated line is a date, not a relative phrase; no Bursa announcement text appears in the Room
+5. A US Room carries no such note
 
-> CR286, 2026-11-26. No admin route exposes the refresh-run record (table bursa_pn17_runs on melehost), so the run result is read from the cron log. Bursa refused the 2026-11-26 probe with a Cloudflare challenge: until a run is accepted (or a seed loaded) the expected line is "unavailable ... no successful read". Bursa sheet revision 6 (a Bursa Room banked before the deploy is re-run once). Pinned by backend/tests/unit/test_cr286_bursa_pn17.py.
+> CR286, 2026-11-26. No admin route exposes the refresh-run record (table bursa_pn17_runs on melehost), so the run result is read from the cron log. Bursa refused the 2026-11-26 probe with a Cloudflare challenge: until a run is accepted (or a seed loaded) the expected line is "unavailable ... no successful read". First list loaded 2026-11-26 by hand (--from-file; 12 companies, Bursa list updated 2026-10-30); a listed stock to try is 5040.KL (PN17, suspended). Follow-up 2026-11-26: Bursa's own update date and trading status on the line, sheet revision 7 (a Bursa Room banked before the deploy is re-run once). Pinned by backend/tests/unit/test_cr286_bursa_pn17.py.
 
 #### UAT-ONE-008 — Locked-agent sheet, unlock celebration and chat on a real iPhone
 
