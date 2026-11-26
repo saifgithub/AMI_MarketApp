@@ -123,6 +123,7 @@ def test_manual_close_returns_the_closed_trade_under_trade(client: TestClient) -
     assert body["ok"] is True
     assert body["trade"]["id"] == trade_id
     assert body["trade"]["realised_pnl"] is not None
+    assert "lot_close" in body["trade"] and body["trade"]["lot_close"] is None  # DEF552
 
 
 def test_submit_sell_to_open_returns_the_short_branch(

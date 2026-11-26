@@ -1225,7 +1225,10 @@ async def close_trade(
             "trade not found or already closed",
         )
     await asyncio.to_thread(journal_manual_close, user_id, closed)
-    return {"ok": True, "trade": closed.to_json()}
+    # DEF552: SimTrade reads `lot_close` (a buy fully sold by hand, folded in by
+    # GET /trades). A trade closed here is closed on its own row, so it never has
+    # one; say so explicitly rather than leave the key unobservable on this route.
+    return {"ok": True, "trade": {**closed.to_json(), "lot_close": None}}
 
 
 @router.get("/lots/{user_id}/{ticker}")
