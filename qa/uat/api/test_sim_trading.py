@@ -775,3 +775,25 @@ def test_myr_book_matches_the_switch_state_and_us_book_answers_as_before(trader,
     )
 
     _assert_us_preview_unchanged(trader)
+
+
+@pytest.mark.uat("UAT-SIM-038")
+def test_a_bought_and_sold_position_reads_closed_in_the_trade_ledger(trader):
+    buy = _submit(trader, "KO", side="buy", quantity=2)
+    assert buy["ok"] is True, buy
+    held = next(t for t in trader.get(f"/v1/sim/trades/{trader.id}").json()["trades"]
+                if t["ticker"] == "KO" and t["side"] == "buy")
+    assert "lot_close" not in held, "a still-held buy must not read as closed"
+
+    sell = _submit(trader, "KO", side="sell", quantity=2)
+    assert sell["ok"] is True, sell
+    exit_px = sell["trade"]["entry_price"]
+
+    rows = [t for t in trader.get(f"/v1/sim/trades/{trader.id}").json()["trades"] if t["ticker"] == "KO"]
+    row = next(t for t in rows if t["id"] == held["id"])
+    assert row["status"] == "open", "the ledger's own status is not rewritten (DEF316)"
+    lc = row["lot_close"]
+    assert abs(lc["closed_price"] - exit_px) <= 0.005, (lc, exit_px)
+    lots = trader.get(f"/v1/sim/lots/{trader.id}/KO").json()
+    assert abs(lc["realised_pnl"] - (lots["totals"]["realised_pnl"] - lc["fees"])) <= TOL, (lc, lots["totals"])
+    assert not [t for t in rows if t["side"] == "sell" and "lot_close" in t]

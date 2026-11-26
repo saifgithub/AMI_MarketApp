@@ -85,6 +85,11 @@ class _LotAcc:
     quantity_closed: float
     realised_pnl: float
     self_closed: bool = False
+    #: DEF552 - what the sells that drew this lot cost and brought in, so a
+    #: hand-closed lot can be read net of fees. `compute_lots_fifo` never reads them.
+    exit_fees: float = 0.0
+    exit_proceeds: float = 0.0
+    last_exit_at: object = None
 
 
 def _side_str(side: object) -> str:
@@ -98,7 +103,22 @@ def _is_self_closed_buy(trade: object) -> bool:
     return str(getattr(trade, "status", "open")).lower() in {"won", "lost", "closed"}
 
 
-def _apply_sell(lots: list[_LotAcc], sell_qty: float, sell_price: float) -> None:
+def prorated_fee(fee_total: float | None, qty_total: float, qty_part: float) -> float:
+    """DEF542 - the share of one fill's stored fee that belongs to `qty_part` of
+    its `qty_total` shares. The ONE pro-rating rule: the FIFO sell path and both
+    bracket/manual close paths all call it, so the journal's fees cannot drift
+    between exits. NULL fee (fill predates the toll) is 0, never an estimate.
+    Lives here (re-exported by `sim_engine`) so the lot walk can use it without
+    importing the engine."""
+    if not fee_total or qty_total <= 0 or qty_part <= 0:
+        return 0.0
+    return float(fee_total) * min(qty_part, qty_total) / qty_total
+
+
+def _apply_sell(
+    lots: list[_LotAcc], sell_qty: float, sell_price: float,
+    *, sell_fee: float | None = None, sell_at: object = None,
+) -> None:
     """Draw `sell_qty` at `sell_price` from the open buy lots, FIFO."""
     open_refs = [
         lot for lot in lots if lot.quantity_open > _EPS and not lot.self_closed
@@ -122,6 +142,9 @@ def _apply_sell(lots: list[_LotAcc], sell_qty: float, sell_price: float) -> None
         lot.quantity_open = round(lot.quantity_open - close.quantity_closed, 6)
         lot.quantity_closed = round(lot.quantity_closed + close.quantity_closed, 6)
         lot.realised_pnl = round(lot.realised_pnl + close.realised_pnl, 2)
+        lot.exit_fees += prorated_fee(sell_fee, sell_qty, close.quantity_closed)
+        lot.exit_proceeds += sell_price * close.quantity_closed
+        lot.last_exit_at = sell_at
     if result.quantity_unmatched > _EPS:
         # A sell that outran the open lots. The engine's submit() guards
         # against overselling a holding, so this only fires on ledger
@@ -238,6 +261,11 @@ def compute_lots_fifo(
     educational data point). See the module docstring for how `sell` orders
     and self-closed buys are reconciled.
     """
+    return [_freeze(acc, current_price) for acc in _walk(trades)]
+
+
+def _walk(trades: Iterable[object]) -> list[_LotAcc]:
+    """The FIFO walk behind `compute_lots_fifo`, returning the live accumulators."""
     lots: list[_LotAcc] = []
     by_id: dict[str, _LotAcc] = {}
     for kind, _ts, _seq, t in _event_stream(trades):
@@ -255,7 +283,11 @@ def compute_lots_fifo(
             lots.append(acc)
             by_id[acc.entry_trade_id] = acc
         elif kind == _SELL:
-            _apply_sell(lots, float(t.quantity), float(t.entry_price))
+            _apply_sell(
+                lots, float(t.quantity), float(t.entry_price),
+                sell_fee=getattr(t, "toll_charged", None),
+                sell_at=getattr(t, "opened_at", None),
+            )
         elif kind == _SELF_CLOSE:
             # DEF319 — the self-close takes what is LEFT of the lot, not the
             # quantity the buy originally opened. See `_event_stream`.
@@ -268,7 +300,52 @@ def compute_lots_fifo(
             )
             acc.self_closed = True
 
-    return [_freeze(acc, current_price) for acc in lots]
+    return lots
+
+
+class HandClosedLot(NamedTuple):
+    """DEF552 - a buy lot that SELL orders have fully drawn down, read the way
+    the Journal reads it: net of the round trip's fees (DEF542)."""
+
+    entry_trade_id: str
+    closed_at: object  # when the last sell drew the lot (a datetime)
+    closed_price: float  # quantity-weighted average exit price
+    realised_pnl: float  # NET of fees, 2 dp
+    fees: float  # buy leg (pro-rated to the shares sold) + the sells' shares
+
+
+def hand_closed_lots(trades: Iterable[object]) -> dict[str, HandClosedLot]:
+    """`{buy trade id: HandClosedLot}` for one ticker's ledger.
+
+    Since CR188 a sell ORDER is the app's only manual exit and the buy row it
+    consumes stays `open` by design (DEF316: writing `closed` to it would
+    double-subtract the exit), so a History built from `status` read a fully
+    round-tripped position as OPEN forever (DEF552). This is the read-time
+    answer, over the same FIFO walk as the lot cards and the Journal, so the
+    three cannot disagree. Self-closed buys (won/lost/closed) already say so on
+    their own row and are not repeated here; a lot with shares still held is not
+    closed and is omitted.
+    """
+    out: dict[str, HandClosedLot] = {}
+    ts_list = list(trades)
+    buy_fee = {
+        str(getattr(t, "id", "")): getattr(t, "toll_charged", None) for t in ts_list
+    }
+    for acc in _walk(ts_list):
+        if acc.self_closed or acc.quantity_open > _EPS or acc.quantity_closed <= _EPS:
+            continue
+        buy_leg = prorated_fee(
+            buy_fee.get(acc.entry_trade_id), acc.quantity, acc.quantity_closed,
+        )
+        fees = round(buy_leg + acc.exit_fees, 2)
+        out[acc.entry_trade_id] = HandClosedLot(
+            entry_trade_id=acc.entry_trade_id,
+            closed_at=acc.last_exit_at,
+            closed_price=round(acc.exit_proceeds / acc.quantity_closed, 4),
+            realised_pnl=round(acc.realised_pnl - fees, 2),
+            fees=fees,
+        )
+    return out
 
 
 def open_quantity(trades: Iterable[object]) -> float:
