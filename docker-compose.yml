@@ -535,6 +535,9 @@ services:
       # flag so §7 can attribute per item. ON since 2026-09-29 (CR247 Phase 1A).
       # See Settings.room_cost_of_debt_enabled.
       ROOM_COST_OF_DEBT_ENABLED: ${ROOM_COST_OF_DEBT_ENABLED:-true}
+      # CR287 — banks: FCF, net debt, EV/EBITDA, interest coverage stated "not applicable"
+      # instead of shown; debt check skipped. Off unless set. See Settings.room_sector_metrics_enabled.
+      ROOM_SECTOR_METRICS_ENABLED: ${ROOM_SECTOR_METRICS_ENABLED:-false}
       # CR221 C3/C4 — cash-flow bridge + working-capital detail on the fact
       # sheet. ON since 2026-09-29 (CR247 Phase 1A).
       # See Settings.room_cashflow_bridge_enabled.

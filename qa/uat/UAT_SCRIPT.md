@@ -4,7 +4,7 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**339 cases** — 212 api, 30 device, 97 manual; 19 blocked.
+**342 cases** — 213 api, 30 device, 99 manual; 19 blocked.
 
 ## Areas
 
@@ -13,7 +13,7 @@ Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 20 cases
 4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 37 cases
 5. [Floor tab & home shell](#floor) — 15 cases
-6. [Convene the Room](#room) — 38 cases
+6. [Convene the Room](#room) — 41 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
 8. [Brief Your Agent](#brief) — 18 cases
 9. [Sim trading & market data](#sim-trading) — 39 cases
@@ -1577,6 +1577,24 @@ _API (automated, live Alpha) · plans: trader · uses LLM_
 6. If the grader failed (coded_decision.error set) the outcome is UNAVAILABLE, the verdict is the decision-unavailable PASS (overridden_from_llm true, reason starting "AMI could not compute a decision for this Room"), the Room is refunded and the balance is back to 150
 
 > Grader 2026-11-25 (deploy #33): Alpha switched to ROOM_GRADER=ling the same day (Saiful: "Switch now, run the batch"), so the case now pins ling; a deepinfra grade on Alpha is a config leak. Earlier the same day: an on-prem Ling grader is registered (ROOM_GRADER=ling, gateway slot vllm_fallback, thinking off); the stored grader string names which one graded the Room (deepinfra:... or ling:...|split2|...|think=off), and both use the same question plan. CR267 WP-23 (deploy #25, 2026-11-24): ROOM_CODED_RULE_ENABLED=true and ROOM_GRADER=deepinfra on Alpha (DeepInfra is the grader only; the Room desks stay on-prem). Record shape: backend/app/schemas/room.py CodedDecisionRecord, written by room_runner._coded_record. The grader_version string carries the model, temperature, averaged questions and the split-close rule, so changing any of them changes it and the policy version. A real-model Room cannot be forced to a given outcome, so which branch runs depends on the Room; the rule itself is pinned by the backend unit tests.
+
+#### UAT-ROOM-040 — A Room on a bank records the not-applicable figures in its sheet state and never computes a debt check
+
+_API (automated, live Alpha) · plans: trader · uses LLM_
+
+**Preconditions**
+1. A Trader user holding 150 credits; Alpha with MARKET_BURSA_ENABLED=true and ROOM_SECTOR_METRICS_ENABLED=true (a switch-off backend fails this case on purpose: the sheet would still carry the figures)
+
+**Steps**
+1. POST /v1/room/stream for 1155.KL and read the stream to the end
+2. GET /v1/room/{run_id} and read verdict.sheet_state and the coded_decision answers
+
+**Expected**
+1. verdict.sheet_state marks free_cash_flow, fcf_yield, net_cash, total_debt, ev_to_ebitda and interest_coverage "not_applicable" (none "live")
+2. If the terminal-vulnerability answer carries a terminal_check it is skipped, its reason ends "not applicable: bank", and it holds no coverage, due or available figure
+3. The verdict reason contains no "AMI debt check" note
+
+> CR287 phase 3, 2026-11-27. Skipped when Bursa is off (no .KL Room can run) or when the sheet did not record the industry as live (a Yahoo gap: the bank cannot be told from the tag). One real Room on 1155.KL. The sheet text is covered by UAT-ROOM-039 and backend/tests/unit/test_cr287_sector_metrics.py.
 
 ### Device (automated, Appium)
 
@@ -4635,6 +4653,49 @@ _Manual (iPhone checklist) · plans: trader · uses LLM_
 5. A US Room carries no such note
 
 > CR286, 2026-11-26. No admin route exposes the refresh-run record (table bursa_pn17_runs on melehost), so the run result is read from the cron log. Bursa refused the 2026-11-26 probe with a Cloudflare challenge: until a run is accepted (or a seed loaded) the expected line is "unavailable ... no successful read". First list loaded 2026-11-26 by hand (--from-file; 12 companies, Bursa list updated 2026-10-30); a listed stock to try is 5040.KL (PN17, suspended). Follow-up 2026-11-26: Bursa's own update date and trading status on the line, sheet revision 7 (a Bursa Room banked before the deploy is re-run once). Pinned by backend/tests/unit/test_cr286_bursa_pn17.py.
+
+#### UAT-ROOM-039 — A bank Room's fact sheet says free cash flow, net debt, EV/EBITDA and interest coverage are not applicable for banks, and a non-bank Room is unchanged
+
+_Manual (iPhone checklist) · plans: trader · uses LLM_
+
+**Preconditions**
+1. A backend carrying CR287 deployed to Alpha with ROOM_SECTOR_METRICS_ENABLED=true, MARKET_BURSA_ENABLED=true, and a Bursa app build
+2. Room credits for two Rooms
+
+**Steps**
+1. Convene the Room on 1155.KL (Maybank, industry "Banks - Regional") and wait for the verdict
+2. Read the Fundamentals Analyst turn, the Bear Researcher turn, the Risk Officer rows and the Chief Investment Officer verdict card
+3. Convene the Room on 6888.KL (Axiata, not a bank) and read the same turns
+
+**Expected**
+1. The 1155.KL Room cites no free cash flow figure (no "-RM15,433M"), no FCF yield, FCF conversion or FCF history, no net debt or net cash amount, no gross debt or gross cash, no EV/EBITDA and no interest coverage ratio, in any desk turn, the Risk Officer rows or the verdict card; return on equity, dividend yield and payout ratio are still quoted
+2. Where a desk speaks to these figures it says they are not applicable for banks (the sheet line reads "Free cash flow, net debt, EV/EBITDA, interest coverage: not applicable for banks — a bank's operating cash flow and debt mostly reflect customer loans and deposits.")
+3. The verdict reason carries no "AMI debt check" note, and a debt-default flag on the bank is never counted from numbers
+4. The 6888.KL Room is unchanged: it quotes free cash flow, net debt and interest coverage where its sheet has them, and no desk says "not applicable for banks"
+5. A US bank (BAC, JPM or WFC) shows the same behaviour as 1155.KL
+
+> CR287 phase 3, 2026-11-27 (Saiful decision A: "Act: full bank row"). Evidence: docs/forward_planning/CR282_bursa_malaysia/bank_fcf_measurement_2026-11-27.md (16 of 17 Maybank Rooms argued FCF; 0 of 17 APPROVE). A bank is identified by the sheet's own industry tag (Yahoo "Banks - Regional" / "Banks - Diversified", US and Bursa alike). A Room banked before the switch is re-run once (the sheet variant moves). API half is UAT-ROOM-040. Pinned by backend/tests/unit/test_cr287_sector_metrics.py. The fact sheet text itself is not served by any API; the desks' turns are the visible proof.
+
+#### UAT-ROOM-041 — A regulated-utility Room's fact sheet keeps its figures and adds one context line, and a renewable utility is unchanged
+
+_Manual (iPhone checklist) · plans: trader · uses LLM_
+
+**Preconditions**
+1. A backend carrying CR287 deployed to Alpha with ROOM_SECTOR_METRICS_ENABLED=true; a Bursa app build for the .KL half
+2. Room credits for two Rooms
+
+**Steps**
+1. Convene the Room on SO (Southern Company, industry "Utilities - Regulated Electric"), or on 5347.KL (Tenaga, "Utilities—Regulated Electric"), and wait for the verdict
+2. Read the Fundamentals Analyst turn, the Bear Researcher turn and the Chief Investment Officer verdict card
+3. Convene the Room on a renewable utility (one tagged "Utilities - Renewable", such as BEP or CWEN) and read the same turns
+
+**Expected**
+1. The regulated-utility Room still quotes free cash flow, debt and interest coverage where its sheet has them: nothing is "not applicable"
+2. The sheet carries one line: "Context: negative free cash flow from regulated capital spending, and high debt, are normal for a regulated utility; its returns are set on a regulated asset base."; the desks read the figures with that context
+3. The verdict reason carries no "AMI debt check" note, and a debt-default flag on the utility is never counted from numbers (the check is skipped, "not applicable: regulated utility")
+4. The renewable-utility Room is unchanged: no context line, its debt check runs as before (an "AMI debt check" note appears when a debt-default flag was considered), and negative free cash flow shows as it is
+
+> CR287 decision B, 2026-11-27. A context row, not a not-applicable row: real cash burn at a renewable or diversified utility must still show. Only Yahoo "Utilities - Regulated Electric", "Utilities - Regulated Gas" and "Utilities - Regulated Water" (hyphen or em-dash form) are in the row; REITs are not. Pinned by backend/tests/unit/test_cr287_sector_metrics.py. A Room banked before the switch is re-run once. Confirm the renewable ticker's industry tag on its sheet before the run.
 
 #### UAT-ONE-008 — Locked-agent sheet, unlock celebration and chat on a real iPhone
 

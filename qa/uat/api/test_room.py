@@ -647,3 +647,43 @@ def test_the_coded_decision_rule_computes_the_action_and_records_its_grader(seed
     # a CIO narration that contradicted the rule is replaced by the rule's own text
     if coded.get("narration_overridden") and outcome != "APPROVE":
         assert "AMI's decision rule" in verdict["reason"], verdict["reason"]
+
+
+BANK_NOT_APPLICABLE_KEYS = (
+    "free_cash_flow", "fcf_yield", "net_cash", "total_debt", "ev_to_ebitda", "interest_coverage",
+)
+
+
+@pytest.mark.uat("UAT-ROOM-040")
+@pytest.mark.llm
+def test_a_bank_room_records_the_not_applicable_figures_and_never_computes_a_debt_check(
+    seed, bursa_on,
+):
+    """CR287. One real Room on Maybank (1155.KL, "Banks - Regional"). Needs
+    ROOM_SECTOR_METRICS_ENABLED on Alpha: a backend with it off fails here on
+    purpose, because its sheet would still carry the figures."""
+    if not bursa_on:
+        pytest.skip("Bursa is off: no .KL Room can run")
+    r = _run_room(seed, "trader", "1155.KL", 150)
+    assert_clean_stream(r)
+    run = get_run(r)
+    verdict = run["verdict"]
+    state = verdict.get("sheet_state") or {}
+    if state.get("industry") != "live":
+        pytest.skip("the sheet did not record the industry (a Yahoo gap): a bank cannot be told from its tag")
+    live = [k for k in BANK_NOT_APPLICABLE_KEYS if state.get(k) == "live"]
+    assert not live, (
+        f"a bank sheet still carries live {live}: ROOM_SECTOR_METRICS_ENABLED is not on for this Room"
+    )
+    for key in BANK_NOT_APPLICABLE_KEYS:
+        assert state.get(key) == "not_applicable", (key, state.get(key))
+
+    assert "AMI debt check" not in (verdict.get("reason") or ""), verdict["reason"]
+    coded = verdict.get("coded_decision") or {}
+    for answer in coded.get("answers") or []:
+        check = answer.get("terminal_check")
+        if not check:
+            continue
+        assert check.get("skipped") is True, check
+        assert str(check.get("reason", "")).endswith("not applicable: bank"), check
+        assert not any(check.get(k) is not None for k in ("coverage", "due_in_horizon", "available")), check

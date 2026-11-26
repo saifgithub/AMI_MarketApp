@@ -73,6 +73,7 @@ from app.core.config import settings
 from app.services.edgar_8k import EXEC_CHANGE_LABEL, executive_change_line
 from app.services.analyst_targets import analyst_split_line, analyst_tape_line
 from app.services.street_view_blind import blind_profile
+from app.services import sector_metrics
 from app.services.room_market import (
     MY_BENCHMARK_NAME,
     is_my,
@@ -3245,6 +3246,10 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
             else "TTM revenue growth: not available"
         )
         lines.append(_net_position_line(profile))
+        # CR287 — a `context` family (regulated utilities) keeps every figure and adds one line.
+        family_context = sector_metrics.context_line(profile)
+        if family_context:
+            lines.append(family_context)
         size_line = _company_size_line(profile)
         if size_line:
             lines.append(size_line)
@@ -3851,6 +3856,10 @@ def _net_position_line(profile: dict[str, Any]) -> str:
     unreachable-today bug guarded by nothing is how CR104's other presence-only
     residue survived to be found here.
     """
+    rule = sector_metrics.not_applicable(profile)
+    if rule is not None:
+        # CR287 — the one line that stands in for every figure the family does not have.
+        return rule.line
     net_cash = profile.get("net_cash") if _field_is_live(profile, "net_cash") else None
     phrase = net_position_phrase(net_cash)
     if phrase is None:
