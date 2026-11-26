@@ -14,6 +14,13 @@ You are contributing an independent solution to **ISS003**, a documented "Dilemm
 repository — a recurring problem where our own attempts have failed twice and we do not trust our
 framing enough to just try again.
 
+**Work in this checkout, not the repo root.** ISS003 and the code it describes live on branch
+`beta/cr267`, checked out at `/Volumes/Extreme Pro/AMI_MarketApp/.claude/worktrees/cr267-beta/`.
+The repo root (`/Volumes/Extreme Pro/AMI_MarketApp/`) is on `main`, which has neither this brief nor
+the three rounds of fact-check fixes. Every path below is relative to the worktree. If
+`ISS003_problem_statement.md` is not where the next line says, stop and say so; do not answer
+without it.
+
 **Read these two files first, in full:**
 
 1. `docs/dilemmas/ISS003_ROOM_FACTCHECK_FALSE_CORRECTIONS/ISS003_problem_statement.md` — the problem, the complete
