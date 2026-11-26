@@ -19,6 +19,7 @@ summary: |
   or "Set by you", never both (UAT-MAND-031); MANAGE ACCOUNT opens the subscription
   tier picker (UAT-MAND-035).
   2026-11-25 CR284: an eighth row, Minimum reward to risk (UAT-MAND-042, UAT-MAND-043), sits beside the seven but outside the Day Trader preset; its default follows the risk score and the API says whether it is the default or the user's. A Room approval below it is rejected by the safety floor (UAT-ROOM-036).
+  2026-11-26 CR285: two more rows, Debt-maturity horizon and Minimum debt coverage (UAT-MAND-044, UAT-MAND-045), beside the reward-to-risk row, also outside the Day Trader preset. The horizon follows the mandate horizon (6/12/24/24 months), the coverage follows the risk score (1.5/1.25/1.0), the API says whether each is the default or the user's, and the app shows the rows only while the server says the check is active (ROOM_GRADER_LING_TERMINAL=v2). The check's effect on a verdict is UAT-ROOM-037.
   2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy).
 cases:
   - id: UAT-MAND-001
@@ -478,3 +479,40 @@ cases:
       - 'After the chip and Save the row follows the risk profile again'
       - 'The Day Trader chip is still offered and still selects (the new row is not part of the preset)'
     notes: 'CR284. Strings settingsRiskLimitsMinRewardRisk*; AR and MS drafted by Claude, flagged retranslate.'
+
+  - id: UAT-MAND-044
+    title: The debt-check horizon and minimum coverage follow the mandate horizon and risk score until the user sets them, and say which
+    layer: api
+    plans: [trader]
+    steps:
+      - 'GET /v1/mandate/<user id> for a never-edited mandate'
+      - 'PATCH horizon short, medium, long, very_long, reading resolved each time'
+      - 'PATCH risk_score 1, 3, then 5, reading resolved each time'
+      - 'PATCH {"debt_horizon_months": 36, "min_debt_coverage": 2.0}, then PATCH both back to null'
+      - 'PATCH debt_horizon_months 2 and 61, min_debt_coverage 0.4, 3.1 and 0'
+    expected:
+      - 'Both fields are null on the mandate; resolved carries debt_horizon_months, debt_horizon_months_source, min_debt_coverage, min_debt_coverage_source and a boolean debt_check_active (never absent, never 0)'
+      - 'resolved.debt_horizon_months is 6, 12, 24, 24 for short, medium, long, very_long with source "default"'
+      - 'resolved.min_debt_coverage is 1.5, 1.25, 1.0 at risk 1, 3, 5 with source "default"'
+      - 'After the PATCH the mandate carries 36 and 2.0 and resolved says 36 and 2.0 with source "user"; after null both follow the horizon and risk score again, source "default"'
+      - 'All five out-of-range PATCHes are 422 and the stored values are unchanged (the check cannot be switched off)'
+    notes: 'CR285, 2026-11-26. backend/app/trading_math/risk_limits.py DEFAULT_DEBT_HORIZON_MONTHS and DEFAULT_MIN_DEBT_COVERAGE are the one pair of tables; ranges 3-60 months and 0.5-3.0×. debt_check_active is false on Alpha until ROOM_GRADER_LING_TERMINAL=v2, so this case does not assert its value. The check itself runs only in a Room and is UAT-ROOM-037 plus backend/tests/unit/test_cr285_debt_coverage.py.'
+
+  - id: UAT-MAND-045
+    title: Settings shows the debt-horizon and minimum-debt-coverage rows only while the check is active, explains them and saves values
+    layer: device
+    status: blocked
+    blocked_on: Needs the first build that carries CR285, a backend on ROOM_GRADER_LING_TERMINAL=v2 (the rows are hidden otherwise) and the Appium script
+    plans: [trader]
+    steps:
+      - 'Settings > RISK LIMITS > "Set my own limits" and find Debt-maturity horizon and Minimum debt coverage below Minimum reward to risk'
+      - 'Tap the info icon beside each label'
+      - 'Type 36 in the horizon field and 2 in the coverage field, press Save, leave Settings and come back'
+      - 'Tap the chips that now read "Use my horizon" and "Use my risk profile", then press Save'
+    expected:
+      - 'The horizon row reads "From your horizon - <N> mo" and the coverage row "From your risk profile - <X>×", both numbers from the server (6/12/24/24 months by mandate horizon; 1.5/1.25/1.0 by risk score); each field box shows the same number as a hint'
+      - 'Each sheet explains its number in plain words; the coverage sheet has the worked example (minimum 1.5×, 100 due, 140 gives 1.4× and the warning stays, 150 is covered); swiping down closes it'
+      - 'After Save and a return the fields read 36 and 2 and both rows say "Set by you"; the horizon field takes whole numbers only'
+      - 'After the chips and Save both rows follow the horizon and the risk profile again'
+      - 'Against a backend without the check (ROOM_GRADER_LING_TERMINAL=v1) neither row is shown'
+    notes: 'CR285. Strings settingsDebtHorizon* and settingsDebtCoverage*; AR and MS drafted by Claude, flagged retranslate.'

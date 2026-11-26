@@ -4,16 +4,16 @@
 Source of truth: `qa/uat/cases/*.yaml` (CR263). Automated cases run via
 `scripts/uat/run_uat.sh`; manual cases are the iPhone checklist at the end.
 
-**333 cases** — 210 api, 28 device, 95 manual; 17 blocked.
+**336 cases** — 211 api, 29 device, 96 manual; 18 blocked.
 
 ## Areas
 
 1. [Platform, version gate & UAT seeding](#platform) — 10 cases
 2. [Authentication, sessions & account identity](#auth) — 32 cases
 3. [Onboarding interview (Concierge) & mandate creation](#onboarding) — 20 cases
-4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 35 cases
+4. [Mandate, risk limits, compliance & Settings](#mandate-settings) — 37 cases
 5. [Floor tab & home shell](#floor) — 15 cases
-6. [Convene the Room](#room) — 36 cases
+6. [Convene the Room](#room) — 37 cases
 7. [1-on-1 agent chat](#one-on-one) — 9 cases
 8. [Brief Your Agent](#brief) — 18 cases
 9. [Sim trading & market data](#sim-trading) — 37 cases
@@ -738,6 +738,7 @@ horizon, the active path and the largest drawdown, and its chip can be deselecte
 or "Set by you", never both (UAT-MAND-031); MANAGE ACCOUNT opens the subscription
 tier picker (UAT-MAND-035).
 2026-11-25 CR284: an eighth row, Minimum reward to risk (UAT-MAND-042, UAT-MAND-043), sits beside the seven but outside the Day Trader preset; its default follows the risk score and the API says whether it is the default or the user's. A Room approval below it is rejected by the safety floor (UAT-ROOM-036).
+2026-11-26 CR285: two more rows, Debt-maturity horizon and Minimum debt coverage (UAT-MAND-044, UAT-MAND-045), beside the reward-to-risk row, also outside the Day Trader preset. The horizon follows the mandate horizon (6/12/24/24 months), the coverage follows the risk score (1.5/1.25/1.0), the API says whether each is the default or the user's, and the app shows the rows only while the server says the check is active (ROOM_GRADER_LING_TERMINAL=v2). The check's effect on a verdict is UAT-ROOM-037.
 2026-11-22 DEF200 (deploy #20): this area's request handlers now run their blocking DB/file calls in the threadpool instead of on the event loop; no change to any response, status or behaviour, so its cases stand as written (the API cases re-run after the deploy).
 
 ### API (automated, live Alpha)
@@ -1059,6 +1060,26 @@ _API (automated, live Alpha) · plans: trader_
 
 > CR284, 2026-11-25. backend/app/trading_math/risk_limits.py DEFAULT_MIN_REWARD_RISK is the one table (2.0 at risk 1-2, 1.5 at 3-4, 1.0 at 5). The Room itself is not convened here; the floor's effect on a verdict is UAT-ROOM-036 and the backend unit tests.
 
+#### UAT-MAND-044 — The debt-check horizon and minimum coverage follow the mandate horizon and risk score until the user sets them, and say which
+
+_API (automated, live Alpha) · plans: trader_
+
+**Steps**
+1. GET /v1/mandate/<user id> for a never-edited mandate
+2. PATCH horizon short, medium, long, very_long, reading resolved each time
+3. PATCH risk_score 1, 3, then 5, reading resolved each time
+4. PATCH {"debt_horizon_months": 36, "min_debt_coverage": 2.0}, then PATCH both back to null
+5. PATCH debt_horizon_months 2 and 61, min_debt_coverage 0.4, 3.1 and 0
+
+**Expected**
+1. Both fields are null on the mandate; resolved carries debt_horizon_months, debt_horizon_months_source, min_debt_coverage, min_debt_coverage_source and a boolean debt_check_active (never absent, never 0)
+2. resolved.debt_horizon_months is 6, 12, 24, 24 for short, medium, long, very_long with source "default"
+3. resolved.min_debt_coverage is 1.5, 1.25, 1.0 at risk 1, 3, 5 with source "default"
+4. After the PATCH the mandate carries 36 and 2.0 and resolved says 36 and 2.0 with source "user"; after null both follow the horizon and risk score again, source "default"
+5. All five out-of-range PATCHes are 422 and the stored values are unchanged (the check cannot be switched off)
+
+> CR285, 2026-11-26. backend/app/trading_math/risk_limits.py DEFAULT_DEBT_HORIZON_MONTHS and DEFAULT_MIN_DEBT_COVERAGE are the one pair of tables; ranges 3-60 months and 0.5-3.0×. debt_check_active is false on Alpha until ROOM_GRADER_LING_TERMINAL=v2, so this case does not assert its value. The check itself runs only in a Room and is UAT-ROOM-037 plus backend/tests/unit/test_cr285_debt_coverage.py.
+
 ### Device (automated, Appium)
 
 #### UAT-MAND-039 — A Beta build is English only and shows no language switch
@@ -1097,6 +1118,25 @@ _Device (automated, Appium) · plans: trader · **BLOCKED** — The Appium scrip
 5. The Day Trader chip is still offered and still selects (the new row is not part of the preset)
 
 > CR284. Strings settingsRiskLimitsMinRewardRisk*; AR and MS drafted by Claude, flagged retranslate.
+
+#### UAT-MAND-045 — Settings shows the debt-horizon and minimum-debt-coverage rows only while the check is active, explains them and saves values
+
+_Device (automated, Appium) · plans: trader · **BLOCKED** — Needs the first build that carries CR285, a backend on ROOM_GRADER_LING_TERMINAL=v2 (the rows are hidden otherwise) and the Appium script_
+
+**Steps**
+1. Settings > RISK LIMITS > "Set my own limits" and find Debt-maturity horizon and Minimum debt coverage below Minimum reward to risk
+2. Tap the info icon beside each label
+3. Type 36 in the horizon field and 2 in the coverage field, press Save, leave Settings and come back
+4. Tap the chips that now read "Use my horizon" and "Use my risk profile", then press Save
+
+**Expected**
+1. The horizon row reads "From your horizon - <N> mo" and the coverage row "From your risk profile - <X>×", both numbers from the server (6/12/24/24 months by mandate horizon; 1.5/1.25/1.0 by risk score); each field box shows the same number as a hint
+2. Each sheet explains its number in plain words; the coverage sheet has the worked example (minimum 1.5×, 100 due, 140 gives 1.4× and the warning stays, 150 is covered); swiping down closes it
+3. After Save and a return the fields read 36 and 2 and both rows say "Set by you"; the horizon field takes whole numbers only
+4. After the chips and Save both rows follow the horizon and the risk profile again
+5. Against a backend without the check (ROOM_GRADER_LING_TERMINAL=v1) neither row is shown
+
+> CR285. Strings settingsDebtHorizon* and settingsDebtCoverage*; AR and MS drafted by Claude, flagged retranslate.
 
 <a id="floor"></a>
 ## Floor tab & home shell
@@ -4513,6 +4553,26 @@ _Manual (iPhone checklist) · plans: trader · uses LLM_
 3. With the floor back on the profile (or 0) the same approval is not rejected for reward to risk, and is a new, charged Room because the mandate changed (UAT-ROOM-029)
 
 > CR284, 2026-11-25. Forced with a high floor because a real-model Room cannot be steered to a thin target. The rule itself is pinned by backend/tests/unit/test_cr284_min_reward_risk.py, including the CR282 Bursa batch re-scored at the risk-5 default (rejects exactly 5285.KL and 4006.KL). The Room bank key carries the effective floor (WP-24).
+
+#### UAT-ROOM-037 — A debt-default warning names the user's own horizon and minimum coverage, and a covered one is dropped with the same numbers
+
+_Manual (iPhone checklist) · plans: trader · uses LLM_
+
+**Preconditions**
+1. A backend and app build carrying CR285, with the Ling grader on ROOM_GRADER_LING_TERMINAL=v2
+2. Settings > RISK LIMITS > Debt-maturity horizon set to 60 and Minimum debt coverage set to 3.0 (the maximums), so any company with debt due in five years is held to the strictest test
+
+**Steps**
+1. Convene a Room on a US ticker with a debt-maturity schedule on its fact sheet (BGS, CAG or SO have drawn a debt-default flag) and wait for the verdict
+2. Open the verdict card and read the reason
+3. Set Debt-maturity horizon to 6 and Minimum debt coverage to 0.5 (the minimums), save, and convene the same ticker again
+
+**Expected**
+1. If the Room passes on a debt default, the reason names the amount due within "your 60-month horizon" (or the desk's own horizon when longer), the cover as a multiple, and "your minimum is 3.00×"
+2. A Room whose debt-default flag is dropped says "debt_default covered" with the same three numbers in the same words
+3. The same ticker is a new, charged Room because the mandate changed (UAT-ROOM-029); with the loosest numbers a flag that stood before is more likely to be covered
+
+> CR285, 2026-11-26. A real-model Room cannot be steered to a debt-default flag, so the forced settings only make the numbers easy to see. The rule is pinned by backend/tests/unit/test_cr285_debt_coverage.py and the offline re-score in docs/forward_planning/CR267_beta_programme/terminal_v2/terminal_v2_materiality.md. Off on Alpha until ROOM_GRADER_LING_TERMINAL=v2.
 
 #### UAT-ONE-008 — Locked-agent sheet, unlock celebration and chat on a real iPhone
 

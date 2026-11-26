@@ -25,3 +25,14 @@ Saiful 2026-11-26 asked whether this should follow risk tolerance, then chose **
 1. Unit tests: defaults per horizon and risk score; user override; desk horizon longer than the mandate horizon wins; ranges enforced; bank key moves with either value.
 2. Offline re-score of the 500 stored v2 answers under the defaults for the benchmark mandates (risk 5, long horizon): BGS stands; report the US and Bursa flag rates and outcome changes.
 3. UAT cases for the two Settings rows and the verdict wording.
+
+## Build notes (2026-11-26, AT:B1)
+
+1. **DEF551 first.** The check's horizon is the larger of the user's and the Execution Desk's own stated horizon, read by `backend/app/services/stated_horizon.py` from the desk's `Time horizon:` line. Unreadable or absent falls back loudly (log + `desk_horizon_source: default` on the check). See DEF551.
+2. **Ranges.** Horizon 3-60 months (whole numbers), coverage 0.5-3.0x; out of range is a 422. No "0 = off".
+3. **Months to days.** `months x 365/12`, so 12 months is 365 days and counts the ladder's first bucket only; 24 months counts Years 1 and 2. The "at 12+ months it is caught" line in Why holds from 13 months. The medium-horizon default (12 months) therefore does not catch BGS; the long-horizon default (24) does.
+4. **Shown = enforced.** `resolved.debt_check_active` is `ROOM_GRADER_LING_TERMINAL == "v2"`. Settings shows the two rows only when it is true; the onboarding readback line appears only then; the bank key carries the two effective values only then (so no key moves on Alpha at deploy).
+5. **Not an `ENFORCED_LIMIT`.** The fields are enforced by the Room's grader after the debate, not by the safety floor, and the agents are not told them (no prompt text changes, so the US golden renderings are byte-identical). They are listed in `_NON_LIMIT_NUMERIC_FIELDS` with that reason.
+6. **Version tag.** `termchk=d1c1.00` becomes `termchk=d2`: the minimum is no longer a constant, and a Room graded under the fixed 6-week, 1.0x check must not be served as if checked under the user's numbers.
+7. **Verdict wording.** The check's own sentence joins the decision's reasons (`_with_terminal_check_reasons`): "debt_default stands: $1,137M due within your 24-month horizon; cash and cash flow cover 0.63x, your minimum is 1.00x (cash ..., available ...)". Where the desk's horizon governs: "the desk's N-day horizon (longer than your M-month setting)".
+8. **Re-score.** Offline, 500 stored v2 answers, benchmark mandate (risk 5, long = 24 months, 1.0x): BGS stands, BA refused, labelled-30 26/30, Bursa 9/200 unchanged, US 42/300 (was 32/300). Full tables in `CR267_beta_programme/terminal_v2/terminal_v2_materiality.md`.

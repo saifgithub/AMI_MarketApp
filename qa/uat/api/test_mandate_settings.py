@@ -417,3 +417,33 @@ def test_reward_risk_floor_follows_the_risk_score_until_set_and_says_which(trade
     after = _get(trader)
     assert after["version"] == version and after["min_reward_risk"] is None
 
+
+@pytest.mark.uat("UAT-MAND-044")
+def test_debt_check_numbers_follow_the_horizon_and_risk_score_until_set_and_say_which(trader):
+    first = _get(trader)
+    assert first["debt_horizon_months"] is None and first["min_debt_coverage"] is None
+    assert isinstance(first["resolved"]["debt_check_active"], bool)
+
+    for horizon, months in (("short", 6), ("medium", 12), ("long", 24), ("very_long", 24)):
+        r = _patch(trader, {"horizon": horizon})["resolved"]
+        assert (r["debt_horizon_months"], r["debt_horizon_months_source"]) == (months, "default")
+    for score, cover in ((1, 1.5), (3, 1.25), (5, 1.0)):
+        r = _patch(trader, {"risk_score": score})["resolved"]
+        assert (r["min_debt_coverage"], r["min_debt_coverage_source"]) == (cover, "default")
+
+    r = _patch(trader, {"debt_horizon_months": 36, "min_debt_coverage": 2.0})
+    assert (r["debt_horizon_months"], r["min_debt_coverage"]) == (36, 2.0)
+    assert (r["resolved"]["debt_horizon_months"], r["resolved"]["debt_horizon_months_source"]) == (36, "user")
+    assert (r["resolved"]["min_debt_coverage"], r["resolved"]["min_debt_coverage_source"]) == (2.0, "user")
+
+    r = _patch(trader, {"debt_horizon_months": None, "min_debt_coverage": None})
+    assert r["debt_horizon_months"] is None and r["min_debt_coverage"] is None
+    assert r["resolved"]["debt_horizon_months_source"] == "default"
+    assert r["resolved"]["min_debt_coverage_source"] == "default"
+
+    version = _get(trader)["version"]
+    for bad in ({"debt_horizon_months": 2}, {"debt_horizon_months": 61},
+                {"min_debt_coverage": 0.4}, {"min_debt_coverage": 3.1}, {"min_debt_coverage": 0}):
+        assert trader.patch(_mid(trader), json=bad).status_code == 422
+    after = _get(trader)
+    assert after["version"] == version and after["debt_horizon_months"] is None

@@ -23,10 +23,16 @@ Input provenance, per Room:
     investments, debt anchor + components, TTM OCF - capex), gated on the same recorded `sheet_state`
     keys. The live sheet used Yahoo for those; the figures the desks quoted are compared to the
     reconstruction in the report (`--quotes`), so a reader can see how close the proxy is.
-  - Horizon: 42 days, which is what the runner passes (`ctx.trader_horizon_weeks` is never parsed
-    from the desk and defaults to 6 weeks).
+  - Horizon: 42 days, which is what the runner passed before DEF551 (`ctx.trader_horizon_weeks`
+    was never parsed from the desk and defaulted to 6 weeks).
+  - CR285 (`--cr285-md F`): the same stored answers re-scored with the user's own numbers: the
+    mandate horizon in months (`--months`, default 24 = a long-horizon mandate), the minimum
+    coverage (`--min-coverage`, default 1.0 = risk 5), and the Execution Desk's stated horizon read
+    from each Room's own Trader turn by `app.services.stated_horizon` (the DEF551 parse), with the
+    larger of the two governing, exactly as `terminal_materiality.debt_default_check` does.
 
 usage: terminal_v2_materiality.py --runs F --facts F --out-jsonl F --out-md F [--horizon 42]
+       [--cr285-md F [--months 24] [--min-coverage 1.0]]
 """
 from __future__ import annotations
 
@@ -51,8 +57,10 @@ from app.services.room_grader_contract import (  # noqa: E402
     QUESTION_SET_VERSION, Answer, GraderResult, QuestionAnswer, QuestionId,
 )
 from app.services.room_graders import terminal_materiality as M  # noqa: E402
+from app.services.stated_horizon import desk_horizon_days  # noqa: E402
 from app.trading_math.risk_limits import (  # noqa: E402
-    resolved_min_reward_risk, reward_risk_below_floor, reward_risk_ratio,
+    DEFAULT_MIN_DEBT_COVERAGE, debt_horizon_days, resolved_min_reward_risk,
+    reward_risk_below_floor, reward_risk_ratio,
 )
 
 TERM_DIR = REPO / "docs/forward_planning/CR267_beta_programme/terminal_v2"
@@ -185,6 +193,9 @@ def main() -> int:
     ap.add_argument("--out-jsonl", required=True)
     ap.add_argument("--out-md", required=True)
     ap.add_argument("--horizon", type=int, default=42)
+    ap.add_argument("--cr285-md", help="also write the CR285 section (user's own numbers) here")
+    ap.add_argument("--months", type=int, default=24)
+    ap.add_argument("--min-coverage", type=float, default=1.0)
     a = ap.parse_args()
 
     runs = {r["id"]: r for r in jl(a.runs)}
@@ -197,10 +208,24 @@ def main() -> int:
     sens = {h: build_rows(h, runs, facts, labels, quick=True) for h in (365, 366, 731)}
     Path(a.out_jsonl).write_text("\n".join(json.dumps(r, default=str) for r in rows) + "\n")
     Path(a.out_md).write_text(report(rows, a.horizon, sens))
+    if a.cr285_md:
+        Path(a.cr285_md).write_text(cr285_report(rows, runs, facts, labels, a.months, a.min_coverage))
     return 0
 
 
-def build_rows(horizon, runs, facts, labels, quick=False):
+def desk_horizon(run: dict):
+    """(days, phrase) the Execution Desk stated on its own `Time horizon:` line, from the stored
+    transcript; (None, None) when it has no turn or no line. The DEF551 parse, unchanged."""
+    for t in reversed(run["transcript"]):
+        if t["agent_id"] == "trader":
+            return desk_horizon_days(t["content"])
+    return None, None
+
+
+def build_rows(horizon, runs, facts, labels, quick=False, user=None):
+    """`user` = {"months", "min_coverage", "desk"}: score with the user's own numbers (CR285)
+    instead of the fixed `horizon` and 1.0x. `desk` False leaves the desk's horizon out, to show
+    what the user's numbers do alone."""
     rows = []
     for mkt in ("bursa", "us"):
         for p in ((1,) if quick else (1, 2)):
@@ -215,8 +240,18 @@ def build_rows(horizon, runs, facts, labels, quick=False):
                 else:
                     as_of = DAY(run["triggered_at"][:10])
                     inputs, aux = us_inputs(facts.get(room["ticker"], []), as_of, state, horizon)
-                    if not quick:
+                    if not quick and user is None:
                         aux.update(quote_check(run["transcript"]))
+                dd, phrase = desk_horizon(run)
+                aux["desk_days"], aux["desk_phrase"] = dd, phrase
+                if user is not None:
+                    inputs = {**inputs,
+                              "horizon_days": dd if user.get("desk") else None,
+                              "horizon_source": "desk" if dd else "default",
+                              "mandate_horizon_months": user["months"],
+                              "mandate_horizon_source": "benchmark",
+                              "min_coverage": user["min_coverage"],
+                              "min_coverage_source": "benchmark"}
                 after = M.apply_materiality(prior, inputs)
                 chk = (after.detail or {}).get("terminal_check")
                 lv = room["levels"] or {}
@@ -275,7 +310,7 @@ def report(rows, horizon, sens) -> str:
         d = [r for r in s if r["v2_answer"] == "yes" and r["category"] == "debt_default"]
         nos = sum(1 for r in d if (r["terminal_rejected"] or "").startswith("debt_default not evidenced"))
         nothing = sum(1 for r in d if "no principal falls due" in (r["terminal_rejected"] or ""))
-        cov = sum(1 for r in d if r["after_answer"] == "no" and "covered " in (r["terminal_rejected"] or "")
+        cov = sum(1 for r in d if r["after_answer"] == "no" and "debt_default covered" in (r["terminal_rejected"] or "")
                   and "no principal" not in (r["terminal_rejected"] or ""))
         st = sum(r["after_answer"] == "yes" for r in d)
         o.append(f"| {name} | {len(d)} | {nos} | {cov} | {nothing} | {st} |")
@@ -406,6 +441,146 @@ def report(rows, horizon, sens) -> str:
         o.append(f"| {h} | {rate(b_, 'after_answer')} | {rate(u_, 'after_answer')} | {st} | {na} | {bgs} |")
     o.append("")
     return "\n".join(o)
+
+
+# -- CR285: the user's own numbers ----------------------------------------------------------------
+
+def _stats(rr):
+    s1 = [r for r in rr if r["pass"] == 1]
+    b_ = [r for r in s1 if r["set"] == "bursa"]
+    u_ = [r for r in s1 if r["set"] == "us"]
+    stands = sum(1 for r in u_ if r["after_answer"] == "yes" and r["category"] == "debt_default")
+    newly = sum(1 for r in u_ if r["after_outcome"] == "APPROVE" and r["v2_outcome"] != "APPROVE")
+    lab = [r for r in s1 if r["label"]]
+    agree = sum(r["after_answer"] == r["label"] for r in lab)
+    by = {r["ticker"]: r["after_answer"] for r in lab if r["ticker"] in ("BGS", "BA")}
+    return {"bursa": rate(b_, "after_answer"), "us": rate(u_, "after_answer"), "stands": stands,
+            "newly": newly, "agree": f"{agree}/{len(lab)}", "bgs": by.get("BGS", "?"),
+            "ba": by.get("BA", "?"), "s1": s1, "u": u_, "b": b_}
+
+
+def cr285_report(old_rows, runs, facts, labels, months, min_cov) -> str:
+    o = ["# CR285: the check under the user's own numbers (offline re-score, no Ling calls)", "",
+         f"Benchmark mandate: long horizon, so {months} months ({debt_horizon_days(months)} days on the "
+         f"ladder's 365-day year); minimum coverage {min_cov:.2f}x. The Execution Desk's stated horizon "
+         "is read from each Room's own Trader turn (the DEF551 parse) and the larger of the two governs. "
+         "Same stored v2 answers as above; pass 1.", ""]
+    new_rows = build_rows(42, runs, facts, labels, user={"months": months, "min_coverage": min_cov, "desk": True})
+    old, new = _stats(old_rows), _stats(new_rows)
+
+    o += ["## 7. Flag rate and the labelled 30", "",
+          "| check | Bursa flag | US flag | US debt_default stands | newly APPROVE vs v2 alone (US) | labelled-30 agree | BGS (label yes) | BA (label no) |",
+          "|---|---|---|---|---|---|---|---|",
+          f"| old: fixed 42 days, 1.0x | {old['bursa']} | {old['us']} | {old['stands']} | {old['newly']} | {old['agree']} | {old['bgs']} | {old['ba']} |",
+          f"| CR285 benchmark: {months} months, {min_cov:.2f}x, desk horizon | {new['bursa']} | {new['us']} | {new['stands']} | {new['newly']} | {new['agree']} | {new['bgs']} | {new['ba']} |", ""]
+
+    # desk horizons
+    s1 = [r for r in new_rows if r["pass"] == 1]
+    days = sorted(r["aux"]["desk_days"] for r in s1 if r["aux"].get("desk_days"))
+    unread = [r for r in s1 if not r["aux"].get("desk_days")]
+    o += ["## 8. The desks' stated horizons (DEF551)", "",
+          f"Read from the Trader turn of {len(days)} of {len(s1)} Rooms; {len(unread)} had no readable `Time horizon:` line "
+          f"(unread phrases: " + (", ".join(sorted({repr(r['aux'].get('desk_phrase')) for r in unread})[:8]) or "none") + ").", ""]
+    if days:
+        q = lambda f: days[min(len(days) - 1, int(f * len(days)))]  # noqa: E731
+        o += [f"Days stated: min {days[0]}, p25 {q(.25)}, median {q(.5)}, p75 {q(.75)}, max {days[-1]}; "
+              f"{sum(d > debt_horizon_days(months) for d in days)} of {len(days)} exceed the mandate's {debt_horizon_days(months)} days "
+              f"(there the desk's horizon governs).", ""]
+    for mkt in ("bursa", "us"):
+        d = [r["aux"]["desk_days"] for r in s1 if r["set"] == mkt and r["aux"].get("desk_days")]
+        if d:
+            d.sort()
+            o.append(f"- {mkt}: {len(d)} read, median {d[len(d) // 2]} days, range {d[0]} to {d[-1]}")
+    o.append("")
+
+    # outcome changes vs the old check
+    p1_old = {(r["set"], r["run_id"]): r for r in old_rows if r["pass"] == 1}
+    ch = Counter()
+    for r in s1:
+        b = p1_old[(r["set"], r["run_id"])]
+        if b["after_outcome"] != r["after_outcome"] or b["after_answer"] != r["after_answer"]:
+            ch[(r["set"], f"flag {b['after_answer']}->{r['after_answer']}",
+                f"outcome {b['after_outcome']}->{r['after_outcome']}")] += 1
+    o += ["## 9. Outcome changes, old check to the CR285 benchmark (pass 1)", "",
+          "| set | terminal flag | outcome | Rooms |", "|---|---|---|---|"]
+    for (st, a_, b_), n in sorted(ch.items()):
+        o.append(f"| {st} | {a_} | {b_} | {n} |")
+    if not ch:
+        o.append("| (none changed) | | | 0 |")
+    o += ["", "Rooms whose flag changed, by ticker:", ""]
+    flips = defaultdict(Counter)
+    for r in s1:
+        b = p1_old[(r["set"], r["run_id"])]
+        if b["after_answer"] != r["after_answer"]:
+            c = r["terminal_check"] or {}
+            flips[(r["set"], r["ticker"])][f"{b['after_answer']}->{r['after_answer']}"] += 1
+            flips[(r["set"], r["ticker"])]["_cov"] = c.get("coverage")
+            flips[(r["set"], r["ticker"])]["_due"] = c.get("due_in_horizon")
+    for (st, tk), c in sorted(flips.items()):
+        mv = ", ".join(f"{k} x{v}" for k, v in c.items() if not k.startswith("_"))
+        cov = c.get("_cov")
+        o.append(f"- {st} {tk}: {mv}" + (f"; coverage {cov:.2f}x, due ${c['_due']:,.0f}M" if cov is not None and c.get("_due") is not None else ""))
+    o.append("")
+
+    # the labelled rooms
+    o += ["## 10. The labelled 30 under the benchmark", ""]
+    for r in s1:
+        if r["label"] and (r["ticker"] in ("BGS", "BA") or r["after_answer"] != r["label"]):
+            c = r["terminal_check"] or {}
+            o.append(f"- {r['ticker']} {r['run_id'][:8]}: label {r['label']}, after {r['after_answer']}. "
+                     f"{r['terminal_rejected'] or c.get('reason') or 'not debt_default, not checked'}")
+    o.append("")
+
+    # sensitivity
+    o += ["## 11. Sensitivity to the user's numbers (pass 1; desk horizon always read)", "",
+          "Defaults by mandate: short 6 / medium 12 / long and very long 24 months; coverage 1.5x at risk 1-2, "
+          "1.25x at 3-4, 1.0x at 5. Rows vary one number from the benchmark except the last two, which are the cautious and bold profiles.", "",
+          "| months | min coverage | Bursa flag | US flag | US debt_default stands | newly APPROVE (US) | labelled agree | BGS | BA |",
+          "|---|---|---|---|---|---|---|---|---|"]
+    grid = [(6, min_cov), (12, min_cov), (months, min_cov), (36, min_cov), (60, min_cov),
+            (months, 1.25), (months, 1.5), (months, 2.0), (months, 3.0),
+            (6, DEFAULT_MIN_DEBT_COVERAGE[1]), (24, DEFAULT_MIN_DEBT_COVERAGE[5])]
+    for m_, c_ in grid:
+        rr = new_rows if (m_, c_) == (months, min_cov) else build_rows(
+            42, runs, facts, labels, quick=True, user={"months": m_, "min_coverage": c_, "desk": True})
+        st = _stats(rr)
+        o.append(f"| {m_} | {c_:.2f}x | {st['bursa']} | {st['us']} | {st['stands']} | {st['newly']} | {st['agree']} | {st['bgs']} | {st['ba']} |")
+    o += ["", "Per-Room risk defaults (each Room at its own risk score, long horizon = 24 months, the coverage default for that score):", ""]
+    own = build_rows_risk_default(runs, facts, labels, months)
+    st = _stats(own)
+    o += ["| Bursa flag | US flag | US debt_default stands | newly APPROVE (US) | labelled agree | BGS | BA |",
+          "|---|---|---|---|---|---|---|",
+          f"| {st['bursa']} | {st['us']} | {st['stands']} | {st['newly']} | {st['agree']} | {st['bgs']} | {st['ba']} |", ""]
+
+    # US tickers that still stand
+    o += ["## 12. Every US debt_default yes that still stands under the benchmark", "",
+          "| ticker | Rooms | coverage | due in horizon | horizon basis |", "|---|---|---|---|---|"]
+    stand = defaultdict(list)
+    for r in new_rows:
+        if r["pass"] == 1 and r["set"] == "us" and r["after_answer"] == "yes" and r["category"] == "debt_default":
+            stand[r["ticker"]].append(r["terminal_check"] or {})
+    for tk, cs in sorted(stand.items()):
+        c = cs[0]
+        cov = c.get("coverage")
+        o.append(f"| {tk} | {len(cs)} | {'n/a' if cov is None else f'{cov:.2f}x'} | "
+                 f"{'n/a' if c.get('due_in_horizon') is None else f'${c['due_in_horizon']:,.0f}M'} | {c.get('horizon_basis')} |")
+    o.append("")
+    return "\n".join(o)
+
+
+def build_rows_risk_default(runs, facts, labels, months):
+    """Each Room scored at the coverage default for its OWN risk score."""
+    out = []
+    base = build_rows(42, runs, facts, labels, quick=True,
+                      user={"months": months, "min_coverage": 1.0, "desk": True})
+    by_cover = {c: build_rows(42, runs, facts, labels, quick=True,
+                              user={"months": months, "min_coverage": c, "desk": True})
+                for c in sorted(set(DEFAULT_MIN_DEBT_COVERAGE.values()))}
+    index = {c: {(r["set"], r["run_id"]): r for r in rows} for c, rows in by_cover.items()}
+    for r in base:
+        cover = DEFAULT_MIN_DEBT_COVERAGE[max(1, min(5, int(r["risk"])))]
+        out.append(index[cover][(r["set"], r["run_id"])])
+    return out
 
 
 if __name__ == "__main__":

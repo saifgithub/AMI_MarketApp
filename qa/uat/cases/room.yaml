@@ -583,3 +583,21 @@ cases:
       - 'A Room that ends PASS or HOLD is untouched and shows no reward-to-risk text (it carries no entry, stop or target); run a different ticker if so'
       - 'With the floor back on the profile (or 0) the same approval is not rejected for reward to risk, and is a new, charged Room because the mandate changed (UAT-ROOM-029)'
     notes: 'CR284, 2026-11-25. Forced with a high floor because a real-model Room cannot be steered to a thin target. The rule itself is pinned by backend/tests/unit/test_cr284_min_reward_risk.py, including the CR282 Bursa batch re-scored at the risk-5 default (rejects exactly 5285.KL and 4006.KL). The Room bank key carries the effective floor (WP-24).'
+
+  - id: UAT-ROOM-037
+    title: A debt-default warning names the user's own horizon and minimum coverage, and a covered one is dropped with the same numbers
+    layer: manual
+    llm: true
+    plans: [trader]
+    preconditions:
+      - 'A backend and app build carrying CR285, with the Ling grader on ROOM_GRADER_LING_TERMINAL=v2'
+      - 'Settings > RISK LIMITS > Debt-maturity horizon set to 60 and Minimum debt coverage set to 3.0 (the maximums), so any company with debt due in five years is held to the strictest test'
+    steps:
+      - 'Convene a Room on a US ticker with a debt-maturity schedule on its fact sheet (BGS, CAG or SO have drawn a debt-default flag) and wait for the verdict'
+      - 'Open the verdict card and read the reason'
+      - 'Set Debt-maturity horizon to 6 and Minimum debt coverage to 0.5 (the minimums), save, and convene the same ticker again'
+    expected:
+      - 'If the Room passes on a debt default, the reason names the amount due within "your 60-month horizon" (or the desk''s own horizon when longer), the cover as a multiple, and "your minimum is 3.00×"'
+      - 'A Room whose debt-default flag is dropped says "debt_default covered" with the same three numbers in the same words'
+      - 'The same ticker is a new, charged Room because the mandate changed (UAT-ROOM-029); with the loosest numbers a flag that stood before is more likely to be covered'
+    notes: 'CR285, 2026-11-26. A real-model Room cannot be steered to a debt-default flag, so the forced settings only make the numbers easy to see. The rule is pinned by backend/tests/unit/test_cr285_debt_coverage.py and the offline re-score in docs/forward_planning/CR267_beta_programme/terminal_v2/terminal_v2_materiality.md. Off on Alpha until ROOM_GRADER_LING_TERMINAL=v2.'
