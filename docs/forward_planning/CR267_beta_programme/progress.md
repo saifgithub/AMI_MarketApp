@@ -412,3 +412,20 @@ Found: two users have duplicate training portfolios created 40 ms apart on 2026-
 2. Saiful: tune Ling's catalyst and thesis questions after the batch, then re-grade the 200 batch Rooms.
 3. DEF544 (Health card / equity curve / sector donut never re-read after a fill) and DEF545 (all-cash book labelled MOCK after a full sell; fallback quotes now logged) merged (`24e4a947`), held for deploy until the batch results were copied off.
 
+
+## 2026-11-26 (evening): terminal v2 on Alpha, AMI-DL-41/42, DEF553
+
+1. **Terminal v2 switched on.** Saiful's team checked the 15 labelled Rooms (all OK). Saiful:
+   "Switch v2 on now" → `ROOM_GRADER_LING_TERMINAL=v2` in `infra/alpha.env`; deploy #40
+   (`alpha-2026-11-26-7` = `4d7799aa`, env only): suite 10363/0, local gate PASS, postflight PASS,
+   container reads v2, alpha-post PASS; UAT gate override logged (stale device cases on build 138).
+2. **AMI-DL-42 (iPhone, build 138):** Settings debt rows pass (24 mo, 1.25×; info sheets; save 36/2;
+   chips restore). UAT-ROOM-038 passed on 5040.KL: "listed as a PN17 issuer (Main Market, plan
+   pending, trading suspended) … Bursa's list updated 2026-10-30, read by AMI 2026-11-26".
+3. **AMI-DL-41 (Android, build 138):** Settings debt rows pass (24 mo, 1.5×). UAT-ROOM-037 **failed**
+   on BGS (Room `e47bb2d8`, horizon 60, minimum 3.0): the check stood at 0.36× on Alpha, but the
+   verdict text (CIO narration) never stated the numbers → **DEF553** (`a7b7be00`).
+4. **DEF553 fixed** (`0e964878`, merge `33bf1212`, row `781e0cae`): the check's plain-words note is
+   appended by code as "[AMI debt check: …]" to the verdict reason and CIO text after the safety
+   floor; `termchk=d3`. Worker full suite 10374 passed, exit 0. Deploy #41 (`alpha-2026-11-26-8` = `781e0cae`) live: suite 10376/0, postflight PASS. BGS re-run
+   on Android to book after it.
