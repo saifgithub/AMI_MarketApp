@@ -269,7 +269,8 @@ def test_listed_names_the_category_first_seen_and_the_as_of_date(enabled):
     text = pn17.line(st)
     assert "listed as a PN17 issuer (Main Market)" in text
     assert f"first seen on Bursa's list {D2.date().isoformat()}" in text
-    assert f"list as of {D2.date().isoformat()}" in text
+    assert f"read by AMI {D2.date().isoformat()}" in text
+    assert "Bursa's list updated" not in text
     early = pn17.line(_status("1001.KL", D2.date()))
     assert f"already on Bursa's list when AMI first read it ({D1.date().isoformat()})" in early
     assert "plan under review" in early
@@ -285,7 +286,9 @@ def test_not_listed_carries_the_as_of_date(enabled):
     script.run(client=_client(200, _FIXTURE), now=D1)
     st = _status("5555.KL", D1.date())
     assert st.state == pn17.STATE_NOT_LISTED
-    assert pn17.line(st).startswith(f"Bursa PN17/GN3 status: not on Bursa's PN17/GN3 list as of {D1.date().isoformat()}")
+    assert pn17.line(st).startswith(
+        f"Bursa PN17/GN3 status: not on Bursa's PN17/GN3 list (read by AMI {D1.date().isoformat()}). Source:"
+    )
 
 
 def test_after_fourteen_days_without_a_success_the_answer_is_stale_for_every_ticker(enabled):
@@ -328,7 +331,7 @@ def test_no_page_text_is_stored_only_the_closed_vocabulary():
     cols = {c.name for c in BursaPn17CurrentRow.__table__.columns}
     assert cols == {
         "id", "stock_code", "company_name", "market", "status_category", "status_group",
-        "first_seen", "last_seen", "source_url",
+        "trading_status", "first_seen", "last_seen", "source_url",
     }
     for text in pn17._GROUPS.values():
         assert len(text) < 40
@@ -396,8 +399,8 @@ def test_the_runner_stamps_the_line_and_note_for_a_bursa_ticker(enabled):
 
 
 def test_the_bursa_bank_variant_is_bumped_and_us_is_untouched():
-    assert room_bank.MY_SHEET_REVISION == 6
-    assert "my_rev=6" in room_bank.sheet_variant(
+    assert room_bank.MY_SHEET_REVISION == 7
+    assert "my_rev=7" in room_bank.sheet_variant(
         news_state="live", social_state="live", market_withheld=False, ticker="1155.KL",
     )
     assert "my_rev" not in room_bank.sheet_variant(
@@ -418,3 +421,187 @@ def test_the_cron_line_in_the_repo_matches_the_script_and_is_not_installed_by_it
     cron = (_REPO / "infra" / "cron" / "cr286_bursa_pn17_refresh.cron").read_text()
     assert "python -m scripts.bursa_pn17_refresh" in cron
     assert "17 2 * * 1" in cron
+
+
+# ── follow-up 2026-11-26: Bursa's own update date + trading status ───────────
+
+_SEED2 = (
+    "stock_code,company_name,market,status_category,status_group,trading_status,bursa_updated\n"
+    "1001,Alpha Fixture Berhad,Main,pn17,pending_plan,Suspended,2026-10-30\n"
+    "1002,Beta Fixture Berhad,ACE,gn3,,TRADING,2026-10-30\n"
+    "1003,Gamma Fixture Berhad,Main,pn17,,,\n"
+)
+TODAY = date(2026, 11, 26)
+
+
+def test_parse_seed_reads_trading_status_lowercased_and_one_bursa_date():
+    seed = pn17.parse_seed(_SEED2, today=TODAY)
+    assert seed.bursa_updated == date(2026, 10, 30)
+    assert [r.trading_status for r in seed.rows] == ["suspended", "trading", None]
+
+
+def test_an_old_five_column_seed_is_still_valid_and_carries_no_date():
+    seed = pn17.parse_seed(_SEED, today=TODAY)
+    assert seed.bursa_updated is None
+    assert seed.rows == [pn17.Row("1001", "Alpha Fixture Berhad", "Main", pn17.CATEGORY_PN17, "plan_under_review")]
+    assert pn17.parse_csv(_SEED, today=TODAY) == seed.rows
+
+
+_HDR = "stock_code,company_name,market,status_category,trading_status,bursa_updated\n"
+
+
+@pytest.mark.parametrize("body,reason", [
+    ("1001,X,Main,pn17,trading,2026-10-30\n1002,Y,Main,pn17,trading,2026-10-29\n", "seed_bursa_updated"),
+    ("1001,X,Main,pn17,trading,30/10/2026\n", "seed_bursa_updated"),
+    ("1001,X,Main,pn17,trading,2026-11-27\n", "seed_bursa_updated"),
+    ("1001,X,Main,pn17,halted,2026-10-30\n", "seed_vocabulary"),
+])
+def test_a_bad_bursa_date_or_trading_value_is_refused_with_its_reason(body, reason):
+    with pytest.raises(pn17.ParseFailed) as exc:
+        pn17.parse_seed(_HDR + body, today=TODAY)
+    assert exc.value.reason == reason
+
+
+def test_bursa_date_today_is_accepted_and_rows_may_omit_it():
+    seed = pn17.parse_seed(_HDR + "1001,X,Main,pn17,trading,2026-11-26\n1002,Y,Main,pn17,,\n", today=TODAY)
+    assert seed.bursa_updated == TODAY
+
+
+def _seed_file(tmp_path, text):
+    f = tmp_path / "seed.csv"
+    f.write_text(text)
+    return f
+
+
+def test_the_seed_stores_trading_status_and_the_run_keeps_bursas_date(tmp_path):
+    assert script.run(from_file=_seed_file(tmp_path, _SEED2), now=D1) == 0
+    cur = _current()
+    assert (cur["1001"].trading_status, cur["1002"].trading_status, cur["1003"].trading_status) == (
+        "suspended", "trading", None,
+    )
+    assert _runs()[-1].bursa_updated_on == date(2026, 10, 30)
+    assert all(c.change_type == "added" for c in _changes())
+
+
+def test_a_bad_dated_seed_fails_and_leaves_the_list(tmp_path):
+    bad = _SEED2.replace("2026-10-30", "2027-01-01", 1)
+    assert script.run(from_file=_seed_file(tmp_path, bad), now=D1) == 1
+    assert not _current()
+    last = _runs()[-1]
+    assert (last.outcome, last.detail, last.bursa_updated_on) == ("parse_failed", "seed_bursa_updated", None)
+
+
+def test_a_trading_status_change_is_recorded_like_any_other_change(tmp_path):
+    script.run(from_file=_seed_file(tmp_path, _SEED2), now=D1)
+    later = _SEED2.replace("pending_plan,Suspended", "pending_plan,trading")
+    assert script.run(from_file=_seed_file(tmp_path, later), now=D2) == 0
+    (chg,) = [c for c in _changes() if c.change_type == "trading_changed"]
+    assert (chg.stock_code, chg.previous_trading_status, chg.trading_status) == ("1001", "suspended", "trading")
+    assert chg.observed_on == D2.date()
+    assert _current()["1001"].trading_status == "trading"
+    assert _runs()[-1].changed == 1
+
+
+def test_learning_a_trading_status_that_was_unknown_is_not_a_recorded_change(tmp_path):
+    script.run(from_file=_seed_file(tmp_path, _SEED), now=D1)
+    script.run(from_file=_seed_file(tmp_path, _SEED2), now=D2)
+    assert not [c for c in _changes() if c.change_type == "trading_changed"]
+    assert _current()["1001"].trading_status == "suspended"
+
+
+def _listed(trading: str | None, bursa_updated: date | None = date(2026, 10, 30)) -> pn17.Status:
+    return pn17.Status(
+        pn17.STATE_LISTED, as_of=TODAY, first_seen=TODAY, baseline=TODAY, bursa_updated=bursa_updated,
+        row=pn17.Row("1001", "Alpha Fixture Berhad", "Main", pn17.CATEGORY_PN17, "pending_plan", trading),
+    )
+
+
+_SRC = "Source: Bursa Malaysia PN17 and GN3 list, read weekly by AMI."
+
+
+def test_listed_line_with_trading_suspended_and_bursas_date():
+    assert pn17.line(_listed("suspended")) == (
+        "Bursa PN17/GN3 status: listed as a PN17 issuer (Main Market, plan pending, trading suspended); "
+        "already on Bursa's list when AMI first read it (2026-11-26); "
+        f"Bursa's list updated 2026-10-30, read by AMI 2026-11-26. {_SRC}"
+    )
+
+
+def test_listed_line_says_trading_when_trading_and_omits_it_when_unknown():
+    assert "(Main Market, plan pending, trading);" in pn17.line(_listed("trading"))
+    unknown = pn17.line(_listed(None))
+    assert "(Main Market, plan pending);" in unknown and "trading" not in unknown.split(";")[0]
+
+
+def test_not_listed_line_states_bursas_date_and_the_read_date():
+    st = pn17.Status(pn17.STATE_NOT_LISTED, as_of=TODAY, bursa_updated=date(2026, 10, 30))
+    assert pn17.line(st) == (
+        "Bursa PN17/GN3 status: not on Bursa's PN17/GN3 list "
+        f"(Bursa's list updated 2026-10-30, read by AMI 2026-11-26). {_SRC}"
+    )
+
+
+def test_an_unknown_bursa_date_is_never_invented():
+    listed = pn17.line(_listed("suspended", bursa_updated=None))
+    assert "read by AMI 2026-11-26. Source" in listed and "Bursa's list updated" not in listed
+    st = pn17.Status(pn17.STATE_NOT_LISTED, as_of=TODAY)
+    assert pn17.line(st) == (
+        f"Bursa PN17/GN3 status: not on Bursa's PN17/GN3 list (read by AMI 2026-11-26). {_SRC}"
+    )
+
+
+def test_stale_stays_keyed_on_amis_read_date_not_bursas(tmp_path):
+    script.run(from_file=_seed_file(tmp_path, _SEED2), now=D1)
+    fresh = _status("1001.KL", D1.date() + timedelta(days=14))
+    assert fresh.state == pn17.STATE_LISTED and fresh.bursa_updated == date(2026, 10, 30)
+    stale = _status("1001.KL", D1.date() + timedelta(days=15))
+    assert stale.state == pn17.STATE_STALE
+    assert "Bursa's list updated" not in pn17.line(stale)
+    assert f"last successful read {D1.date().isoformat()}" in pn17.line(stale)
+
+
+def test_the_stored_status_renders_trading_and_bursas_date_on_the_line(tmp_path):
+    script.run(from_file=_seed_file(tmp_path, _SEED2), now=D1)
+    text = pn17.line(_status("1001.KL", D1.date()))
+    assert "(Main Market, plan pending, trading suspended)" in text
+    assert f"Bursa's list updated 2026-10-30, read by AMI {D1.date().isoformat()}" in text
+
+
+def test_the_follow_up_migration_is_additive_idempotent_and_reversible(tmp_path):
+    import importlib.util
+
+    import sqlalchemy as sa
+    from alembic.migration import MigrationContext
+    from alembic.operations import Operations
+
+    path = _BACKEND / "alembic" / "versions" / "cr286b1c2d3e4_bursa_pn17_trading_and_update_date.py"
+    spec = importlib.util.spec_from_file_location("cr286b_mig", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    assert mod.down_revision == "cr286a0b0c0d1"
+    engine = sa.create_engine(f"sqlite:///{tmp_path / 'mig.db'}")
+    with engine.begin() as conn:
+        for t in ("bursa_pn17_current", "bursa_pn17_changes", "bursa_pn17_runs"):
+            conn.execute(sa.text(f"CREATE TABLE {t} (id VARCHAR PRIMARY KEY)"))
+        ops = Operations(MigrationContext.configure(conn))
+        with Operations.context(ops.migration_context):
+            mod.upgrade()
+            mod.upgrade()
+        for model in (BursaPn17CurrentRow, BursaPn17ChangeRow, BursaPn17RunRow):
+            db_cols = {c["name"]: c for c in sa.inspect(conn).get_columns(model.__tablename__)}
+            for name in ("trading_status", "previous_trading_status", "bursa_updated_on"):
+                if name in model.__table__.columns:
+                    assert name in db_cols and db_cols[name]["nullable"] is True
+        with Operations.context(ops.migration_context):
+            mod.downgrade()
+        for t in ("bursa_pn17_current", "bursa_pn17_changes", "bursa_pn17_runs"):
+            assert {c["name"] for c in sa.inspect(conn).get_columns(t)} == {"id"}
+
+
+def test_single_alembic_head_is_the_follow_up_migration():
+    from alembic.config import Config
+    from alembic.script import ScriptDirectory
+
+    cfg = Config(str(_BACKEND / "alembic.ini"))
+    cfg.set_main_option("script_location", str(_BACKEND / "alembic"))
+    assert ScriptDirectory.from_config(cfg).get_heads() == ["cr286b1c2d3e4"]
