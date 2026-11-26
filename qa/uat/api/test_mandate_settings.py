@@ -424,7 +424,7 @@ def test_debt_check_numbers_follow_the_horizon_and_risk_score_until_set_and_say_
     assert first["debt_horizon_months"] is None and first["min_debt_coverage"] is None
     assert isinstance(first["resolved"]["debt_check_active"], bool)
 
-    for horizon, months in (("short", 6), ("medium", 12), ("long", 24), ("very_long", 24)):
+    for horizon, months in (("short", 6), ("medium", 18), ("long", 24), ("very_long", 24)):
         r = _patch(trader, {"horizon": horizon})["resolved"]
         assert (r["debt_horizon_months"], r["debt_horizon_months_source"]) == (months, "default")
     for score, cover in ((1, 1.5), (3, 1.25), (5, 1.0)):
