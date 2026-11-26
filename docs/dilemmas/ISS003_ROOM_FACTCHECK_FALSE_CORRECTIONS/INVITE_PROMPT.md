@@ -36,13 +36,13 @@ framing enough to just try again.
 - **The problem statement deliberately contains no proposed solution**, including from the agent that
   wrote it. That is not an oversight — do not go looking for "the intended answer". There isn't one
   yet.
-- **You may propose changes to anything** in your write-up: the database layer, the session factory,
-  the test guards, migrations, conventions, tooling. New third-party dependencies are allowed **if
+- **You may propose changes to anything** in your write-up: the fact-check itself, how desks write
+  figures, the fact sheet, the Room pipeline, the UI, tests, conventions, tooling. New third-party dependencies are allowed **if
   you justify them** — name the library, why it earns a place in a deliberately lean stack, and what
   it costs.
 - **You cannot run the app.** This machine is an editor only — no backend, no database, no Docker.
-  Backend unit tests do run (`cd backend && .venv/bin/python -m pytest tests/unit/ -q`, ~8.5 min,
-  sqlite tempfile). If your proposal needs proving, write a self-contained demonstration **inside
+  Backend unit tests do run (`cd backend && .venv/bin/python -m pytest tests/unit/ -q`, ~30 min,
+  sqlite tempfile; the fact-check tests alone: `tests/unit/test_def547*.py`, seconds). If your proposal needs proving, write a self-contained demonstration **inside
   your own folder** rather than modifying the real suite.
 
 ## What to produce
@@ -50,27 +50,29 @@ framing enough to just try again.
 A file `SOLUTION.md` in your folder. Cover, at minimum:
 
 1. **What you propose**, concretely enough to implement — and state whether it **prevents**,
-   **detects**, or **makes impossible** a new instance.
-2. **How it handles per-site differences.** The last fix needed four *different* collision behaviours
-   across seven sites (§3.5 of the brief). A design assuming one universal behaviour will not survive
-   contact.
-3. **How a reviewer verifies your claims.** If you assert coverage, cost, or performance, say how it
-   is checked. An untestable claim will be treated as unsupported.
-4. **What your solution would MISS.** This is not a formality. Every previous attempt here was
-   confident and incomplete; a submission claiming total coverage without naming its own blind spot
-   reads as not having looked for one.
-5. **What it costs the next developer** writing an ordinary insert, and what happens when your
-   control is wrong — loudly or silently?
-6. **Retrofit plan** for the 11 open sites listed in the brief, including the four `User` inserts on
-   the authentication path.
+   **detects**, or **makes impossible** a false correction reaching a user.
+2. **The false-correction rate** you would accept for a user-visible note in AMI's voice, and how it
+   is measured on a population of Rooms (US and Bursa), not on the one ticker in the brief.
+3. **What happens to a fabricated or altered figure** under your proposal (the CR038 protection the
+   check exists for). If you weaken it, say by how much and why that is acceptable.
+4. **How it works when a market's sheet has fewer fields** (Bursa today), and for figures that are not
+   sheet figures at all (a mandate cap, a multiple of a sheet figure, a figure from the debate).
+5. **How a reviewer verifies your claims**, and how the next unseen phrasing is caught before users
+   see it, plus how a regression is detected in production. An untestable claim is treated as
+   unsupported.
+6. **What your solution would MISS.** Every previous round here was confident and incomplete; a
+   submission claiming total coverage without naming its own blind spot reads as not having looked.
+7. **What it costs** (latency, model calls, developer effort per new sheet field), and what happens
+   when your control is wrong: loudly or silently? House rules: degrade loudly (CR040), prompt
+   instructions are not controls (CR038), users see the name AMI, on-prem models only on Alpha.
 
 Anything else you want alongside it — prototype code, tests, a benchmark, a diagram, a comparison of
 approaches you rejected — is welcome. Files may be named freely; only `SOLUTION.md` is required.
 
 ## How you will be judged
 
-Not on elegance. On whether your solution plausibly stops the **21st instance**, and on whether a
-reviewer can check that it does. A modest proposal with an honest account of its limits will beat an
+Not on elegance. On whether your solution plausibly stops **round 4** (the next unseen phrasing),
+and on whether a reviewer can check that it does. A modest proposal with an honest account of its limits will beat an
 ambitious one that claims to solve everything.
 
 Be direct and terse. Numbers and tradeoffs, not sales language. If you think the problem is framed
