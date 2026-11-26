@@ -1,0 +1,43 @@
+{
+  "qwen": {
+    "KL-30-fundamentals_analyst": "kept",
+    "KL-35-bull_researcher": "kept",
+    "KL-20-portfolio_manager": "thinned",
+    "KL-28-aggressive_debator": "kept",
+    "US-06-fundamentals_analyst": "kept",
+    "US-02-bear_researcher": "kept",
+    "US-16-bull_researcher": "thinned",
+    "KL-26-bull_researcher": "kept",
+    "US-15-fundamentals_analyst": "thinned",
+    "US-01-neutral_debator": "dodged"
+  },
+  "ling": {
+    "US-14-research_manager": "thinned",
+    "KL-33-trader": "thinned",
+    "KL-25-research_manager": "kept",
+    "KL-37-aggressive_debator": "thinned",
+    "US-11-bear_researcher": "kept",
+    "US-00-aggressive_debator": "thinned",
+    "KL-27-neutral_debator": "dodged",
+    "US-18-aggressive_debator": "thinned",
+    "US-05-research_manager": "kept",
+    "KL-24-trader": "kept"
+  },
+  "deepseek": {
+    "KL-26-bull_researcher": "kept",
+    "KL-20-portfolio_manager": "kept",
+    "KL-29-portfolio_manager": "kept",
+    "US-07-bull_researcher": "thinned",
+    "US-06-fundamentals_analyst": "thinned",
+    "KL-23-bear_researcher": "thinned",
+    "KL-25-research_manager": "kept",
+    "US-05-research_manager": "thinned",
+    "KL-21-fundamentals_analyst": "kept",
+    "KL-28-aggressive_debator": "kept"
+  },
+  "_misbound": {
+    "qwen": ["KL-20-portfolio_manager", "US-02-bear_researcher", "US-16-bull_researcher", "US-15-fundamentals_analyst", "US-01-neutral_debator"],
+    "ling": ["US-14-research_manager", "KL-33-trader", "KL-37-aggressive_debator", "KL-27-neutral_debator", "US-05-research_manager", "KL-24-trader"],
+    "deepseek": ["KL-26-bull_researcher", "US-07-bull_researcher", "US-06-fundamentals_analyst", "KL-23-bear_researcher", "KL-21-fundamentals_analyst"]
+  }
+}
