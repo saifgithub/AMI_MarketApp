@@ -61,6 +61,7 @@ from app.core.config import settings
 from app.core.llm_allowlist import slot_allowed
 from app.core.logging import logger
 from app.services import output_guard
+from app.services.cio_framing_scrub import scrub_cio_framing
 from app.core.time import now_utc, relative_day_phrase
 from app.db import get_session, init_schema
 from app.db.ami_claim import Collision, claim, unclaimed
@@ -3542,6 +3543,13 @@ def _guard_pm_text(
     flagged one with the labelled AMI sentinel. Never touches the action.
     """
     common = {"agent_id": AgentId.PORTFOLIO_MANAGER.value, "run_id": run_id}
+    # DEF554 — the prompt's classroom framing is removed first, so the guard
+    # judges (and the user reads) the same text.
+    pm_text = scrub_cio_framing(pm_text)
+    if verdict.reason:
+        scrubbed = scrub_cio_framing(verdict.reason)
+        if scrubbed != verdict.reason:
+            verdict = verdict.model_copy(update={"reason": scrubbed})
     text_result = output_guard.inspect(pm_text, surface="room_verdict", **common)
     if text_result.withhold:
         pm_text = output_guard.withheld_notice(text_result, "explanation")
