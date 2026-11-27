@@ -58,6 +58,9 @@ class FamilyRule:
     # removes nothing).
     fields: frozenset[str] = frozenset()
     reason: str = ""
+    # Case-insensitive regex naming the dropped figures in free text (not_applicable only);
+    # a data-gap item that matches it is dropped, so the one sheet line stays the only mention.
+    mention: str = ""
     # The whole line, for a context row.
     context: str = ""
 
@@ -107,6 +110,12 @@ FAMILY_RULES: dict[str, FamilyRule] = {
         figures=("Free cash flow", "net debt", "EV/EBITDA", "interest coverage"),
         fields=_BANK_FIELDS,
         reason="a bank's operating cash flow and debt mostly reflect customer loans and deposits",
+        mention=(
+            r"free[- ]cash[- ]flow|\bfcf\b|operating cash[- ]flow|cash flow from operations"
+            r"|\bocf\b|net debt|net cash|total debt|gross debt|\bev\s*/\s*ebitda\b"
+            r"|enterprise value|interest coverage|coverage ratio|debt maturity|maturity ladder"
+            r"|cost of debt|debt split|\bsbc\b|stock[- ]based comp|working capital"
+        ),
     ),
     REGULATED_UTILITY: FamilyRule(
         family=REGULATED_UTILITY,
@@ -213,3 +222,19 @@ def apply_to_profile(profile: dict[str, Any]) -> FamilyRule | None:
             state[key] = NOT_APPLICABLE_STATE
     profile[FAMILY_KEY] = rule.family
     return rule
+
+
+def drop_not_applicable_gaps(
+    items: list[str] | None, profile: Mapping[str, Any] | None,
+) -> list[str] | None:
+    """Drop the data-gap items that name a figure the sheet marked not applicable.
+
+    A bank desk that asks for "interest coverage" or "SBC-adjusted FCF" is not missing data, the
+    sheet said those do not apply; listing them as gaps would tell the data roadmap otherwise.
+    None stays None (the tail was never parsed); every other sheet returns `items` unchanged.
+    """
+    rule = not_applicable(profile)
+    if items is None or rule is None or not rule.mention:
+        return items
+    pattern = re.compile(rule.mention, re.IGNORECASE)
+    return [item for item in items if not pattern.search(item)]

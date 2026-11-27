@@ -3782,7 +3782,7 @@ def _format_profile(profile: dict[str, Any], agent_id: AgentId | None = None) ->
         # is named as not available for this market, never dropped in silence.
         lines.extend(my_dark_lines(
             news=_in_lane("news"), fundamentals=_in_lane("fundamentals"),
-            social=_in_lane("social"),
+            social=_in_lane("social"), profile=profile,
         ))
         if _in_lane("news") and profile.get("macro_cpi_line"):
             lines.append(profile["macro_cpi_line"])

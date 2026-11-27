@@ -109,9 +109,31 @@ def my_forward_catalyst_header() -> str:
     )
 
 
-def my_dark_lines(*, news: bool, fundamentals: bool, social: bool) -> list[str]:
+#: The inputs behind the "Filed-statement detail" line, each with the sheet field whose
+#: CR287 not-applicable mark removes it from that list (None: always listed). One string
+#: joined with ", " is byte-identical to the line's text before CR287.
+_FILED_DETAIL_ITEMS: tuple[tuple[str, str | None], ...] = (
+    ("debt maturity ladder", "debt_maturity"),
+    ("cost of debt", "cost_of_debt"),
+    ("debt split", "debt_split"),
+    ("segment and geographic revenue", None),
+    ("SBC-adjusted free cash flow", "sbc"),
+    ("ROIC", None),
+    ("buyback average price and dividend growth", None),
+)
+
+
+def my_dark_lines(
+    *, news: bool, fundamentals: bool, social: bool, profile: dict[str, Any] | None = None,
+) -> list[str]:
     """The SEC-dark inputs a desk with these lanes would otherwise have been shown,
-    each named as not available for this market rather than omitted."""
+    each named as not available for this market rather than omitted.
+
+    CR287 — `profile` only matters on a sheet whose family marks figures not applicable
+    (banks): a figure the sheet says does not apply is not also listed here as unavailable.
+    """
+    from app.services import sector_metrics
+
     from app.services.edgar_8k import EXEC_CHANGE_LABEL
     from app.services.edgar_filings_feed import FEED_LABEL as FILINGS_LABEL
     from app.services.edgar_forensics import (
@@ -126,11 +148,12 @@ def my_dark_lines(*, news: bool, fundamentals: bool, social: bool) -> list[str]:
         out.append(na_line(
             "Peer comparison", "the same-industry peer basket is built from SEC SIC codes",
         ))
+        detail = ", ".join(
+            name for name, key in _FILED_DETAIL_ITEMS
+            if key is None or not sector_metrics.is_not_applicable(key, profile)
+        )
         out.append(na_line(
-            "Filed-statement detail",
-            "debt maturity ladder, cost of debt, debt split, segment and geographic revenue, "
-            "SBC-adjusted free cash flow, ROIC, buyback average price and dividend growth "
-            "are read from SEC XBRL filings",
+            "Filed-statement detail", f"{detail} are read from SEC XBRL filings",
         ))
     if news or fundamentals:
         out.append(na_line(FILINGS_LABEL))

@@ -4670,9 +4670,10 @@ _Manual (iPhone checklist) · plans: trader · uses LLM_
 **Expected**
 1. The 1155.KL Room cites no free cash flow figure (no "-RM15,433M"), no FCF yield, FCF conversion or FCF history, no net debt or net cash amount, no gross debt or gross cash, no EV/EBITDA and no interest coverage ratio, in any desk turn, the Risk Officer rows or the verdict card; return on equity, dividend yield and payout ratio are still quoted
 2. Where a desk speaks to these figures it says they are not applicable for banks (the sheet line reads "Free cash flow, net debt, EV/EBITDA, interest coverage: not applicable for banks — a bank's operating cash flow and debt mostly reflect customer loans and deposits.")
-3. The verdict reason carries no "AMI debt check" note, and a debt-default flag on the bank is never counted from numbers
-4. The 6888.KL Room is unchanged: it quotes free cash flow, net debt and interest coverage where its sheet has them, and no desk says "not applicable for banks"
-5. A US bank (BAC, JPM or WFC) shows the same behaviour as 1155.KL
+3. No desk turn lists those figures as missing data (no "data gap" or "not available" mention of SBC-adjusted free cash flow, interest coverage, operating cash flow versus net income or the debt maturity ladder); the bank's one "not applicable for banks" line is the only mention, while the sheet still says segment revenue, ROIC and buyback detail are not available for this market
+4. The verdict reason carries no "AMI debt check" note, and a debt-default flag on the bank is never counted from numbers
+5. The 6888.KL Room is unchanged: it quotes free cash flow, net debt and interest coverage where its sheet has them, and no desk says "not applicable for banks"
+6. A US bank (BAC, JPM or WFC) shows the same behaviour as 1155.KL
 
 > CR287 phase 3, 2026-11-27 (Saiful decision A: "Act: full bank row"). Evidence: docs/forward_planning/CR282_bursa_malaysia/bank_fcf_measurement_2026-11-27.md (16 of 17 Maybank Rooms argued FCF; 0 of 17 APPROVE). A bank is identified by the sheet's own industry tag (Yahoo "Banks - Regional" / "Banks - Diversified", US and Bursa alike). A Room banked before the switch is re-run once (the sheet variant moves). API half is UAT-ROOM-040. Pinned by backend/tests/unit/test_cr287_sector_metrics.py. The fact sheet text itself is not served by any API; the desks' turns are the visible proof.
 
