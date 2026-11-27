@@ -1269,6 +1269,14 @@ class Settings(BaseSettings):
     # See `app/services/sector_metrics.py`.
     room_sector_metrics_enabled: bool = False
 
+    # CR288 (ISS003) — figure provenance in SHADOW. When on, each live desk turn is checked,
+    # after the fact, for which of its figures the desk was actually shown (the sheet, the
+    # mandate, the feed, coded lines; earlier turns count separately) and one
+    # `room_figure_provenance` event is logged. Nothing user-visible changes: Room text,
+    # verdicts, stream, transcript and bank are byte-identical on or off. A failure inside the
+    # shadow logs `room_figure_provenance_error` and the Room carries on. Default off.
+    room_figure_provenance_shadow: bool = False
+
     # CR221 C3/C4 — the cash-flow bridge (operating cash flow, capex, the
     # derived free cash flow) plus the working-capital detail behind it. Nine
     # request lines from six agents, every operand already on the frame the

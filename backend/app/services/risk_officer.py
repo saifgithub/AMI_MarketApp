@@ -391,9 +391,12 @@ def _verified_for_render(
     run_id: UUID | str | None = None,
     agent_id: Any = None,
 ) -> bool:
-    """`_quotation_check` plus the DEF547 finding log. A miss is always logged;
-    with `ROOM_FACTCHECK_NOTES=log` the string is still treated as verified, so
-    no tag is written and no headline is demoted."""
+    """`_quotation_check` plus the DEF547 finding log. A miss is always logged and
+    always returns False, in BOTH `ROOM_FACTCHECK_NOTES` modes (CR288): whether a
+    figure may be promoted to the headline never depends on whether AMI is allowed
+    to write a note about it. The corpus is the sheet and the ladder only, never an
+    earlier debate turn, so the debate cannot corroborate a headline. What `log`
+    mode suppresses is the TEXT (see `_annotated_if_unverified`), not the demotion."""
     if _quotation_check(text, profile, rows):
         return True
     s = str(text or "").strip()
@@ -405,9 +408,10 @@ def _verified_for_render(
         sheet_value=None,
         run_id=run_id,
         agent_id=agent_id,
+        profile=profile,
         uncorroborated=_uncorroborated_numerals(s, profile, rows),
     )
-    return factcheck_notes_mode() == "log"
+    return False
 
 
 def _annotated_if_unverified(
@@ -425,7 +429,8 @@ def _annotated_if_unverified(
     loud mark in the body and a False that tells the caller to demote the
     string from any headline/decisive-call slot. DEF547: with
     `ROOM_FACTCHECK_NOTES=log` the miss is logged and the string passes
-    through unmarked and verified."""
+    through unmarked. CR288: it is still returned as NOT verified, so the
+    caller demotes it from the headline exactly as in annotate mode."""
     s = str(text or "").strip()
     if not s:
         return s, True
@@ -433,6 +438,8 @@ def _annotated_if_unverified(
         s, profile, rows, surface=surface, run_id=run_id, agent_id=agent_id
     ):
         return s, True
+    if factcheck_notes_mode() == "log":
+        return s, False
     return f"{s} {_UNVERIFIABLE_MARK}", False
 
 
@@ -600,6 +607,24 @@ def _capped_headline(candidate: Any, max_chars: int) -> str | None:
     if not text or len(text) > max_chars:
         return None
     return text
+
+
+def risk_officer_prose(payload: dict[str, Any] | None) -> str:
+    """CR288 — the officer's own words, one line each, for the figure-provenance shadow:
+    the case each way and the two quoted figures. Sizes and the recommendation are keys of
+    the ladder, not claims, and are left out."""
+    lines: list[str] = []
+    for opt in (payload or {}).get("options") or []:
+        if not isinstance(opt, dict):
+            continue
+        for key in ("case_for", "case_against", "key_number"):
+            val = str(opt.get(key) or "").strip()
+            if val:
+                lines.append(val)
+    decisive = str((payload or {}).get("decisive_number") or "").strip()
+    if decisive:
+        lines.append(decisive)
+    return "\n".join(lines)
 
 
 def _rung_derived_headline(r: LadderOption) -> str | None:
