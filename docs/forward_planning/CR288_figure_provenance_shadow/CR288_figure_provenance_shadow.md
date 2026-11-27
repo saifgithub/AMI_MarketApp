@@ -26,3 +26,7 @@ Showing any note to users; retiring `annotate` mode or the field-spec matcher (a
 2. Shadow event emitted once per desk turn with counts by outcome, listed figures, ledger size, market, ticker; Room text and verdict byte-identical with it on or off.
 3. Invariant test in the suite.
 4. Step 2 report with counts.
+
+## Log
+
+1. 2026-11-27 step 1 built (`ac3c62b8`, merge `e0912cd4`): worker full suite 10490 passed, exit 0; post-merge 127 targeted passed. Risk Officer: headline promoted only when the sheet or ladder corroborates it, in both modes; log mode writes no tag. Shadow: `room_figure_provenance` per live desk turn (counts by outcome, own figures, ledger size, breaker at >6), behind `ROOM_FIGURE_PROVENANCE_SHADOW` (default off). `room_factcheck_finding` gains market and ticker. Release invariant test in the suite. Not shadowed: the CIO's JSON verdict turn (self-consistency path). Conditional exclusion only when "if/unless/provided that/in case" precedes the figure. Not deployed (Saiful 2026-11-27: let processes finish, start nothing new).
