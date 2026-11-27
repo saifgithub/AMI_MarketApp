@@ -27,7 +27,8 @@ from app.agents.safety_floor import CONTEXT_NOT_SUPPLIED
 from app.schemas import AgentId, AgentMessage, Mandate, agent_display_name
 from app.schemas.mandate import Horizon, Plan
 from app.schemas.room import NextConveneDelta
-from app.services.agent_prompts import build_agent_prompt
+from app.services.agent_prompts import build_agent_prompt, load_base_prompt
+from app.services.figure_provenance import PromptCapture
 from app.services.fundamentals import (
     analyst_consensus_line,
     balance_sheet_line,
@@ -2023,6 +2024,11 @@ def build_room_messages(
     # byte-identical to pre-CR266. A fail-closed gate never reaches here —
     # the runner does not call the CIO on that path at all.
     evidence_gate: Any = None,
+    # CR288 — filled with the assembled prompt and its static segments so the
+    # figure-provenance shadow can build its ledger from what this desk actually
+    # received. None (the default, and every call while the shadow is off) leaves
+    # this function exactly as it was.
+    prompt_capture: PromptCapture | None = None,
 ) -> tuple[str, list[ChatMessage]]:
     """Compose (system_prompt, [user_message]) for one agent's Room turn.
 
@@ -2330,6 +2336,19 @@ def build_room_messages(
     if _lane_for(agent_id) == _ALL_DOMAINS:
         sector_line = _format_sector_allocation(sector_weights) + "\n"
 
+    # The static instruction tail of the turn (the ask, the length, the machine-channel
+    # format). Built apart from `room_addition` only so CR288's shadow can name it as
+    # "not a figure the desk was shown"; the concatenation is byte-identical.
+    turn_tail = (
+        f"\nYour turn. Speak as the {agent_display_name(agent_id)}. "
+        f"Write {length}. Use specific numbers wherever possible — but ONLY "
+        f"numbers from the data block above. Do NOT cite figures (P/E, growth, "
+        f"price targets, market cap) from training memory; if a number isn't "
+        f"in the block above, qualify your claim or omit it. {collaboration_line} "
+        f"Do not preface with 'As the X' or 'Speaking as'. Speak directly.\n"
+        f"{format_instruction}"
+    )
+
     room_addition = (
         f"\n\n─── CONVENE THE ROOM — {phase} PHASE ───\n"
         f"Ticker: {ticker}\n"
@@ -2371,13 +2390,7 @@ def build_room_messages(
         f"{delta_block}"
         f"Transcript so far:\n{transcript_text}\n"
         f"{journal_note}"
-        f"\nYour turn. Speak as the {agent_display_name(agent_id)}. "
-        f"Write {length}. Use specific numbers wherever possible — but ONLY "
-        f"numbers from the data block above. Do NOT cite figures (P/E, growth, "
-        f"price targets, market cap) from training memory; if a number isn't "
-        f"in the block above, qualify your claim or omit it. {collaboration_line} "
-        f"Do not preface with 'As the X' or 'Speaking as'. Speak directly.\n"
-        f"{format_instruction}"
+        f"{turn_tail}"
     )
 
     # CR156 D — `base` already ends with `append_safety_floor(...)`, so on THIS
@@ -2392,6 +2405,16 @@ def build_room_messages(
     # `enforce_safety_floor()` is. CR038 measured prompt-level instructions at
     # ~30%, so "it is last, therefore it wins" is exactly the belief P2 forbids.
     system_prompt = base + localize_money(room_addition, room_market)
+    if prompt_capture is not None:
+        prompt_capture.fill(
+            system_prompt,
+            static=[
+                localize_money(load_base_prompt(agent_id, room_market), room_market),
+                localize_money(turn_tail, room_market),
+            ],
+            sheet=localize_money(profile_block, room_market),
+            debate=localize_money(transcript_text, room_market),
+        )
     user_message = ChatMessage(role="user", content=f"Convene on {ticker}.")
     return system_prompt, [user_message]
 
@@ -2410,6 +2433,7 @@ def build_risk_officer_messages(
     last_loss_closed_at: Any = None,
     trade_open_timestamps: Any = None,
     portfolio_value: float | None = None,
+    prompt_capture: PromptCapture | None = None,
 ) -> tuple[str, list[ChatMessage], list[LadderOption]]:
     """CR201 — the structured Risk Officer's one prompt, plus the ladder it fills in.
 
@@ -2498,6 +2522,8 @@ def build_risk_officer_messages(
     sector_line = _format_sector_allocation(sector_weights) + "\n"
     portfolio_block = f"{portfolio_snapshot}\n\n" if portfolio_snapshot else ""
 
+    transcript_text = _format_transcript(transcript)
+    risk_instruction = build_risk_officer_instruction(rows)
     system_prompt = (
         f"{RISK_OFFICER_PERSONA}\n\n"
         f"─── CONVENE THE ROOM — RISK PHASE ───\n"
@@ -2515,11 +2541,22 @@ def build_risk_officer_messages(
         f"\n"
         f"{_render_option_ladder(rows, mandate.max_drawdown_pct)}\n"
         f"\n"
-        f"Transcript so far:\n{_format_transcript(transcript)}\n"
-        f"{build_risk_officer_instruction(rows)}"
+        f"Transcript so far:\n{transcript_text}\n"
+        f"{risk_instruction}"
     )
     # CR282 lane E — the Bursa Room's risk prompt is in RM; US is returned as-is.
     system_prompt = localize_money(system_prompt, market_for(ticker))
+    if prompt_capture is not None:
+        _m = market_for(ticker)
+        prompt_capture.fill(
+            system_prompt,
+            static=[
+                localize_money(RISK_OFFICER_PERSONA, _m),
+                localize_money(risk_instruction, _m),
+            ],
+            sheet=localize_money(profile_block, _m),
+            debate=localize_money(transcript_text, _m),
+        )
     return (
         system_prompt,
         [ChatMessage(role="user", content=f"Assess risk on {ticker}.")],

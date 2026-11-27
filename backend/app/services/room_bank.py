@@ -174,6 +174,7 @@ ROOM_SETTINGS_NOT_KEYED: dict[str, str] = {
     "room_pace_cap_s": "stream pacing",
     "room_dedup_running_minutes": "reattach window, not content",
     "room_sector_metrics_enabled": "keyed through the sheet variant (`|sector=1`) and the sheet hash: on, a listed-family sheet differs and is stored under its own variant; a policy part would move every key at deploy",
+    "room_figure_provenance_shadow": "logging only: Room text, verdicts, stream, transcript and the banked Room are byte-identical on or off, so nothing a key could distinguish",
     "room_bank_enabled": "the bank's own off switch",
     "room_model_root_ttl_s": "cache lifetime of the keyed model root",
     "room_cio_retry_max_age_minutes": "retry eligibility, not content",
@@ -258,6 +259,7 @@ ROOM_INPUT_CLASSES: dict[str, dict[str, str]] = {
         "prior_convene": "excluded:the previous Room is the bank's own output",
         "cards_envelope": "keyed:policy (room_cards_envelope_enabled)",
         "evidence_gate": "excluded:derived from the transcript and keyed policy settings",
+        "prompt_capture": "excluded:CR288 shadow sink, written to and never read by the builder; the prompt is identical with or without it",
     },
 }
 

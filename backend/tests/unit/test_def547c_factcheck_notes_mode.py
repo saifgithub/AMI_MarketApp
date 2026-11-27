@@ -4,7 +4,7 @@ logging, and (in `log` mode) stop writing into user-visible Room text.
 Saiful, 2026-11-25: "Dilemma + log-only meanwhile". `annotate` is the code default
 (today's behaviour); Alpha sets `log`. Covered here: every surface the checks write
 to (the agent-text note, the CIO's kill criterion, a nulled stance headline, the Risk
-Officer's `[AMI: unverifiable]` tag and headline demotion), the finding log's fields,
+Officer's `[AMI: unverifiable]` tag; CR288: the Risk Officer's headline demotion happens in both modes), the finding log's fields,
 the unknown-value refusal, and that the mode rides in the Room policy version.
 """
 
@@ -216,7 +216,7 @@ def test_risk_officer_tags_and_demotes_in_annotate_mode(mode):
     assert press.headline == _rung_derived_headline(_ROWS[2])
 
 
-def test_risk_officer_log_mode_no_tag_no_demotion_and_logs(mode):
+def test_risk_officer_log_mode_no_tag_but_demoted_and_logs(mode):
     mode("log")
     run_id = uuid4()
     payload = _payload()
@@ -227,7 +227,8 @@ def test_risk_officer_log_mode_no_tag_no_demotion_and_logs(mode):
         )
     assert _UNVERIFIABLE_MARK not in press.text
     assert "Key figure: a made-up 987.6" in press.text
-    assert press.headline == "a made-up 987.6"
+    # CR288: no text is written, but an uncorroborated figure is never the headline.
+    assert press.headline == _rung_derived_headline(_ROWS[2])
     (f,) = _findings(logs)
     assert f["checker"] == "risk_quotation"
     assert f["surface"] == "key_figure"
@@ -238,7 +239,7 @@ def test_risk_officer_log_mode_no_tag_no_demotion_and_logs(mode):
     assert f["mode"] == "log" and f["text_changed"] is False
 
 
-def test_risk_officer_log_mode_decisive_number_untouched(mode):
+def test_risk_officer_log_mode_decisive_number_unmarked_but_not_promoted(mode):
     mode("log")
     payload = _payload(decisive_number="a fabricated 555.5")
     with structlog.testing.capture_logs() as logs:
@@ -246,7 +247,7 @@ def test_risk_officer_log_mode_decisive_number_untouched(mode):
     neu = next(t for t in turns if t.agent_id is AgentId.NEUTRAL_DEBATOR)
     assert _UNVERIFIABLE_MARK not in neu.text
     assert "decided by a fabricated 555.5" in neu.text
-    assert neu.headline == "a fabricated 555.5"
+    assert neu.headline != "a fabricated 555.5"
     assert {f["surface"] for f in _findings(logs)} == {
         "decisive_number_headline", "decisive_number_call",
     }

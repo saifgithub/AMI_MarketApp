@@ -1049,18 +1049,23 @@ def log_factcheck_finding(
     sheet_value: float | None,
     run_id: UUID | str | None = None,
     agent_id: Any = None,
+    profile: dict[str, Any] | None = None,
     **extra: Any,
 ) -> None:
     """DEF547 — one structured event per quotation-check finding, in BOTH modes
     (`mode` and `text_changed` say what the reader saw). `agent_id` may be an
-    enum or a string."""
+    enum or a string. CR288 — `market` and `ticker` come off the fact sheet so a
+    US and a Bursa gate can be measured without a join on the run."""
     mode = factcheck_notes_mode()
+    ticker = profile.get("ticker") if isinstance(profile, dict) else None
     logger.info(
         "room_factcheck_finding",
         checker=checker,
         surface=surface,
         run_id=str(run_id) if run_id is not None else None,
         agent_id=getattr(agent_id, "value", agent_id),
+        market=market_of_profile(profile).value,
+        ticker=ticker,
         claimed=claimed,
         sheet_field=sheet_field,
         sheet_value=sheet_value,
@@ -1076,6 +1081,7 @@ def _log_sheet_mismatches(
     surface: str,
     run_id: UUID | str | None,
     agent_id: Any,
+    profile: dict[str, Any] | None = None,
 ) -> None:
     for m in mismatches:
         log_factcheck_finding(
@@ -1086,6 +1092,7 @@ def _log_sheet_mismatches(
             sheet_value=m.sheet_value,
             run_id=run_id,
             agent_id=agent_id,
+            profile=profile,
             claimed_value=m.claimed_value,
         )
 
@@ -1104,7 +1111,8 @@ def headline_conflicts_with_sheet(
     if not mismatches:
         return False
     _log_sheet_mismatches(
-        mismatches, surface="stance_headline", run_id=run_id, agent_id=agent_id
+        mismatches, surface="stance_headline", run_id=run_id, agent_id=agent_id,
+        profile=profile,
     )
     return factcheck_notes_mode() == "annotate"
 
@@ -1138,7 +1146,9 @@ def annotate_sheet_mismatches(
     mismatches = find_sheet_mismatches(text, profile)
     if not mismatches:
         return text
-    _log_sheet_mismatches(mismatches, surface=surface, run_id=run_id, agent_id=agent_id)
+    _log_sheet_mismatches(
+        mismatches, surface=surface, run_id=run_id, agent_id=agent_id, profile=profile
+    )
     if factcheck_notes_mode() == "log":
         return text
     market = market_of_profile(profile)

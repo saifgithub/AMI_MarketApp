@@ -538,6 +538,9 @@ services:
       # CR287 — banks: FCF, net debt, EV/EBITDA, interest coverage stated "not applicable"
       # instead of shown; debt check skipped. Off unless set. See Settings.room_sector_metrics_enabled.
       ROOM_SECTOR_METRICS_ENABLED: ${ROOM_SECTOR_METRICS_ENABLED:-false}
+      # CR288 — figure provenance in shadow: one room_figure_provenance log event per live desk
+      # turn, nothing user-visible. Off unless set. See Settings.room_figure_provenance_shadow.
+      ROOM_FIGURE_PROVENANCE_SHADOW: ${ROOM_FIGURE_PROVENANCE_SHADOW:-false}
       # CR221 C3/C4 — cash-flow bridge + working-capital detail on the fact
       # sheet. ON since 2026-09-29 (CR247 Phase 1A).
       # See Settings.room_cashflow_bridge_enabled.

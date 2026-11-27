@@ -176,8 +176,13 @@ from app.services.llm_json import ConflictingDecision, extract_json_object
 # field earns an `[AMI …]` annotation. See `numeric_quotation.py`'s module
 # docstring for the full design (why label-matched, why this narrow a
 # vocabulary, why never a veto).
+from app.services.figure_provenance import PromptCapture, log_turn_provenance
 from app.services.numeric_quotation import annotate_sheet_mismatches, headline_conflicts_with_sheet
-from app.services.risk_officer import build_risk_officer_schema, render_officer_turns
+from app.services.risk_officer import (
+    build_risk_officer_schema,
+    render_officer_turns,
+    risk_officer_prose,
+)
 from app.services.street_comparison import build_street_comparison
 from app.services.street_view_blind import is_street_view_key
 from app.services.room_prompts import (
@@ -11276,6 +11281,12 @@ async def _compute_agent_text(
             run_id=run_id,
         ).withhold
 
+    # CR288 — figure provenance in shadow: only when the switch is on does the prompt
+    # builder hand back what this desk was shown. With it off the call below is exactly
+    # the call it always was.
+    prov_capture = PromptCapture() if settings.room_figure_provenance_shadow else None
+    prov_kw = {"prompt_capture": prov_capture} if prov_capture is not None else {}
+
     if live:
         # Pass ctx.user_id so build_agent_prompt picks up the user's
         # active Brief overlay (was user_id=None — AT:R27 bugfix).
@@ -11330,6 +11341,7 @@ async def _compute_agent_text(
             # The PM's own call site below omits it: the PM is not a card
             # desk, and the gate inside build_room_messages is agent-scoped.
             cards_envelope=settings.room_cards_envelope_enabled,
+            **prov_kw,
         )
         # DEF125: the provider reports its terminal stop reason here.
         stream_meta: dict[str, Any] = {}
@@ -11571,6 +11583,17 @@ async def _compute_agent_text(
                 text, geom_sig, _env = _repaired
                 if _env.stance:
                     envelope = _env
+    # CR288 — the shadow reads the desk's finished prose (after every repair, before
+    # AMI's own fact-check note is appended) and only logs. It cannot change `text`.
+    if prov_capture is not None and live and agent_id not in ctx.scripted_turns:
+        log_turn_provenance(
+            capture=prov_capture,
+            text=text,
+            run_id=run_id,
+            agent_id=agent_id,
+            market=market_for(ctx.ticker),
+            ticker=ctx.ticker,
+        )
     # CR219 R59-F1 — the sheet-figure checker: a labelled restatement of a
     # sheet field ("the P/E is 25", "RSI at 61") that disagrees with the
     # fact sheet's own value for that field earns a loud annotation, in
@@ -11748,6 +11771,8 @@ async def _run_risk_officer(
     payload: dict[str, Any] | None = None
     fallback_reason: str | None = None
     rows = None
+    prov_capture = PromptCapture() if settings.room_figure_provenance_shadow else None
+    prov_kw = {"prompt_capture": prov_capture} if prov_capture is not None else {}
     try:
         system_prompt, messages, rows = build_risk_officer_messages(
             mandate=ctx.mandate,
@@ -11772,6 +11797,7 @@ async def _run_risk_officer(
             # source `_build_room_option_candidates`'s budget line and
             # `_cap_in_shares_clause` already read above in this module.
             portfolio_value=ctx.portfolio_value,
+            **prov_kw,
         )
         stream_meta: dict[str, Any] = {}
         chunks = await asyncio.wait_for(
@@ -11826,6 +11852,19 @@ async def _run_risk_officer(
             error=str(exc)[:200],
         )
         fallback_reason = "the call failed"
+
+    # CR288 — the officer's own words (the case each way, the quoted figures) against the
+    # ledger of the prompt it was shown. Logs only; the payload is not touched.
+    if prov_capture is not None and payload is not None and fallback_reason is None:
+        log_turn_provenance(
+            capture=prov_capture,
+            text=risk_officer_prose(payload),
+            run_id=run_id,
+            agent_id=AgentId.RISK_OFFICER,
+            market=market_for(ctx.ticker),
+            ticker=ctx.ticker,
+            surface="risk_officer_payload",
+        )
 
     if rows is None:
         # The prompt/ladder itself could not be built (incoherent reference
