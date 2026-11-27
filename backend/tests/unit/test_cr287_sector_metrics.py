@@ -38,6 +38,7 @@ from app.services import (
     put_call,
     risk_officer,
     room_bank,
+    room_market,
     room_runner,
     sector_metrics,
 )
@@ -635,3 +636,77 @@ def test_the_fact_check_still_pairs_a_regulated_utilitys_fcf(sector_on):
     sector_metrics.apply_to_profile(profile)
     found = numeric_quotation.find_sheet_mismatches("The FCF of -RM9,999M is a burn.", profile)
     assert [m.field_name for m in found] == ["free_cash_flow"]
+
+
+# ── 8. bank sheets do not list the dropped figures as missing data (CR287 follow-up) ─────────
+
+_FILED_DETAIL_BEFORE = (
+    "Filed-statement detail: not available for this market (Bursa Malaysia filings are not yet "
+    "ingested) (debt maturity ladder, cost of debt, debt split, segment and geographic revenue, "
+    "SBC-adjusted free cash flow, ROIC, buyback average price and dividend growth are read from "
+    "SEC XBRL filings). Do not supply it from memory."
+)
+
+
+def _filed_detail(sheet) -> list[str]:
+    return [
+        ln for ln in _format_profile(sheet, AgentId.FUNDAMENTALS_ANALYST).splitlines()
+        if ln.startswith("Filed-statement detail")
+    ]
+
+
+def test_a_bursa_bank_sheet_has_no_not_available_line_naming_a_dropped_figure(bursa_bank_sheet):
+    for agent in [None, *AgentId]:
+        text = _format_profile(bursa_bank_sheet, agent)
+        for ln in text.splitlines():
+            if ln == LINE or "not available" not in ln.lower():
+                continue
+            for dropped in ("SBC-adjusted", "debt maturity", "cost of debt", "debt split",
+                            "interest coverage", "free cash flow", "net debt", "EV/EBITDA"):
+                assert dropped.lower() not in ln.lower(), (agent, dropped, ln)
+    full = _format_profile(bursa_bank_sheet)
+    assert full.count(LINE) == 1
+    assert "SBC-adjusted" not in full
+    # what is still genuinely not read from Bursa stays named, in the same line
+    (detail,) = _filed_detail(bursa_bank_sheet)
+    assert "segment and geographic revenue, ROIC, buyback average price and dividend growth" in detail
+    assert "not available for this market" in detail
+
+
+def test_a_non_bank_bursa_sheet_keeps_its_filed_statement_line_unchanged(bursa_bank_sheet):
+    sheet = dict(bursa_bank_sheet)
+    sheet.pop("sector_family")
+    sheet["industry"] = "Telecom Services"
+    assert _filed_detail(sheet) == [_FILED_DETAIL_BEFORE]
+    assert room_market.my_dark_lines(news=False, fundamentals=True, social=False) == (
+        room_market.my_dark_lines(news=False, fundamentals=True, social=False, profile=sheet)
+    )
+
+
+def test_a_regulated_utility_bursa_sheet_keeps_its_filed_statement_line_unchanged():
+    profile = {"sector_family": "regulated_utility", "market": "MY"}
+    lines = room_market.my_dark_lines(
+        news=False, fundamentals=True, social=False, profile=profile,
+    )
+    assert _FILED_DETAIL_BEFORE in lines
+
+
+_BANK_GAPS = [
+    "Operating cash flow vs net income", "Interest coverage ratio", "SBC-adjusted FCF",
+    "Debt maturity ladder", "5-year historical P/E band", "Net interest margin trend",
+]
+_KEPT_GAPS = ["5-year historical P/E band", "Net interest margin trend"]
+
+
+def test_a_bank_desks_data_gaps_drop_the_not_applicable_figures(bursa_bank_sheet):
+    assert sector_metrics.drop_not_applicable_gaps(list(_BANK_GAPS), bursa_bank_sheet) == _KEPT_GAPS
+    assert sector_metrics.drop_not_applicable_gaps([], bursa_bank_sheet) == []
+    assert sector_metrics.drop_not_applicable_gaps(None, bursa_bank_sheet) is None
+
+
+def test_non_bank_and_switch_off_data_gaps_are_returned_unchanged(bursa_bank_sheet):
+    items = list(_BANK_GAPS)
+    off = {k: v for k, v in bursa_bank_sheet.items() if k != "sector_family"}
+    assert sector_metrics.drop_not_applicable_gaps(items, off) is items
+    assert sector_metrics.drop_not_applicable_gaps(items, None) is items
+    assert sector_metrics.drop_not_applicable_gaps(items, {"sector_family": "regulated_utility"}) is items

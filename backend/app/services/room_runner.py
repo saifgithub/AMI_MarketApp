@@ -11497,6 +11497,7 @@ async def _compute_agent_text(
             # already sets for the envelope).
             if agent_id in PHASES[0].agents:
                 text, data_gaps = parse_data_gaps(text)
+                data_gaps = sector_metrics.drop_not_applicable_gaps(data_gaps, ctx.profile)
             # DEF147: with the envelope leading the turn, a generation that
             # stopped right after it leaves no prose at all. Same destination as
             # an empty stream two lines up, rather than a blank contribution.
