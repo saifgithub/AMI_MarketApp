@@ -8175,9 +8175,6 @@ class RoomRunner:
         # _pump finally. Avoids a race where the DB INSERT hasn't fired yet
         # but a second request arrives for the same user+ticker.
         self._active_by_key: dict[tuple[UUID, str], UUID] = {}
-        # CR289 — run_id -> the desk-model pin it was started with. In-memory
-        # only: a Room that outlives a restart (respawn, sweep) is not pinned.
-        self._desk_pin_by_run: dict[UUID, str] = {}
         # Rows claimed by _sweep_stuck_runs for auto-retry on next boot
         # (AT:R34, eeeb866f). Drained by resume_pending_retries() which
         # runs from the FastAPI lifespan — splitting sync claim from async
@@ -8830,13 +8827,8 @@ class RoomRunner:
         roster: AnalystRoster,
         decision: "_FeedDecision",
         alpaca_key: str = "none",
-        desk_provider: str | None = None,
     ) -> "_BankPrep":
         """CR267 WP-24 — freeze today's fact sheet and compute the Room key.
-
-        CR289: a Room pinned to [desk_provider] keys on THAT slot's model root,
-        never the default's, so an arm can only ever be handed a Room its own
-        model ran. An unreadable root is the same loud unbanked path as ever.
 
         Never raises: a failure anywhere here must not stop a convene, but it is
         never silent either. When a key cannot be built the Room runs unbanked
@@ -8864,7 +8856,7 @@ class RoomRunner:
             reason: str | None = None
             gateway = self._llm or get_llm_gateway()
             root = (
-                await gateway.room_model_root(desk_provider)
+                await gateway.room_model_root()
                 if isinstance(gateway, LLMGateway) else None
             )
             policy = await asyncio.to_thread(room_bank.policy_version)
@@ -9214,13 +9206,8 @@ class RoomRunner:
         alpaca_snapshot: str | None = None,
         bank_outcome: dict[str, Any] | None = None,
         alpaca_key: str = "none",
-        desk_provider: str | None = None,
     ) -> UUID:
         """Start a room run as a detached background task. Returns run_id immediately.
-
-        CR289 `desk_provider`: pins every desk call of this Room, and its review,
-        to that provider slot. No failover, no restart on another model, never
-        the default. The API gates who may pass it; None is today's behaviour.
 
         CR267 WP-24 `bank_outcome`: an optional out-parameter. When the returned
         run_id is a finished Room handed over because the convene's inputs match
@@ -9358,16 +9345,6 @@ class RoomRunner:
         if existing is None:
             existing = await asyncio.to_thread(self._find_active_run, user_id, ticker)
         if existing is not None:
-            if desk_provider is not None and self._desk_pin_by_run.get(existing) != desk_provider:
-                logger.warning(
-                    "room_pinned_attach_refused",
-                    run_id=str(existing),
-                    user_id=str(user_id),
-                    ticker=ticker,
-                    desk_provider=desk_provider,
-                    detail="the running Room was not started on this pin",
-                )
-                raise RoomAlreadyInSession(existing, ticker.upper())
             logger.info(
                 "room_dedup_attached_running",
                 run_id=str(existing),
@@ -9392,7 +9369,6 @@ class RoomRunner:
             bank_prep = await self._prepare_bank(
                 user_id=user_id, ticker=ticker, mandate=mandate,
                 roster=roster, decision=decision, alpaca_key=alpaca_key,
-                desk_provider=desk_provider,
             )
             if bank_prep.key is not None:
                 hit = await asyncio.to_thread(self._lookup_bank, bank_prep.key)
@@ -9485,8 +9461,6 @@ class RoomRunner:
         q = _RunEventChannel()
         self._active_queues[run_id] = q
         self._active_by_key[key] = run_id  # register before task starts
-        if desk_provider is not None:
-            self._desk_pin_by_run[run_id] = desk_provider
 
         async def _pump() -> None:
             try:
@@ -9511,7 +9485,6 @@ class RoomRunner:
                     bank=(
                         (bank_prep.key, bank_prep.parts) if reserved else None
                     ),
-                    desk_provider=desk_provider,
                 ):
                     await q.put(ev)
             except Exception as exc:
@@ -9521,7 +9494,6 @@ class RoomRunner:
                 await q.put(None)  # sentinel — unblocks any waiting subscribe() call
                 self._active_queues.pop(run_id, None)
                 self._active_by_key.pop(key, None)  # deregister dedup key
-                self._desk_pin_by_run.pop(run_id, None)
                 # DEF425 round 2 (auditor U68, MINOR-1): `run()` re-raises
                 # CancelledError/GeneratorExit on shutdown — a BaseException,
                 # not caught by the `except Exception` above — so this
@@ -9606,13 +9578,8 @@ class RoomRunner:
         alpaca_snapshot: str | None = None,
         frozen_profile: dict[str, Any] | None = None,
         bank: tuple[str, dict[str, str]] | None = None,
-        desk_provider: str | None = None,
     ) -> AsyncIterator[RoomEvent]:
         """Run a Room session, yielding events as agents speak.
-
-        CR289: `desk_provider` arms a strict pin for the whole run (see
-        `RoomFailoverState.strict_pin`); a provider failure here is never retried
-        on, or restarted onto, another model.
 
         CR267 WP-24: `frozen_profile` is the trading day's frozen fact sheet
         (start_run built and hashed it for the Room key); when given, it is used
@@ -9909,18 +9876,7 @@ class RoomRunner:
         _failover: RoomFailoverState | None = None
         _attempt_snapshot: tuple[dict[str, Any], dict[str, Any]] | None = None
         _backup_restarted = False
-        _desk_pinned = desk_provider is not None
-        if _desk_pinned:
-            if not (isinstance(gateway, LLMGateway) and gateway.has_provider(desk_provider)):
-                raise RuntimeError(
-                    f"desk_provider {desk_provider!r} is not registered on the gateway; "
-                    "a pinned Room never runs on another model"
-                )
-            _failover = RoomFailoverState(
-                pinned_provider=desk_provider, strict_pin=True,
-            )
-            arm_room_failover(_failover)
-        elif (
+        if (
             live
             and isinstance(gateway, LLMGateway)
             and gateway.has_backup_provider() is True
@@ -10114,7 +10070,6 @@ class RoomRunner:
                     _failover is not None
                     and _failover.tripped_reason
                     and not _backup_restarted
-                    and not _desk_pinned
                 ):
                     if (
                         phase.label == "VERDICT"

@@ -195,7 +195,6 @@ ROOM_INPUT_CLASSES: dict[str, dict[str, str]] = {
         "mandate_override": "keyed:mandate (only read when no mandate is stored; hydrated into the mandate)",
         "locale": "keyed:mandate (copied onto the mandate before the digest)",
         "alpaca": "keyed:alpaca",
-        "desk_provider": "keyed:model_root (the pinned slot's served model root, CR289)",
     },
     "RoomRunner.start_run": {
         "user_id": "keyed:user_id",
@@ -211,7 +210,6 @@ ROOM_INPUT_CLASSES: dict[str, dict[str, str]] = {
         "alpaca_snapshot": "keyed:alpaca (rendered from the payload alpaca_key hashes)",
         "bank_outcome": "excluded:out-parameter",
         "alpaca_key": "keyed:alpaca",
-        "desk_provider": "keyed:model_root (the pinned slot's served model root, CR289)",
     },
     "RoomRunner.run": {
         "run_id": "excluded:identity",
@@ -234,7 +232,6 @@ ROOM_INPUT_CLASSES: dict[str, dict[str, str]] = {
         "alpaca_snapshot": "keyed:alpaca",
         "frozen_profile": "keyed:fact_sheet",
         "bank": "excluded:the key itself",
-        "desk_provider": "keyed:model_root (the pinned slot's served model root, CR289)",
     },
     "build_room_messages": {
         "agent_id": "excluded:the desk",

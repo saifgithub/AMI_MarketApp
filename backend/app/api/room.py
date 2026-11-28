@@ -48,7 +48,6 @@ from app.schemas.journal import EntryType, JournalEntryCreate, Outcome
 from app.schemas.room import RoomRun, Verdict
 from app.services.journal_store import get_journal_store
 from app.services.mandate_store import resolve_mandate
-from app.services.llm_gateway import get_llm_gateway
 from app.services.llm_spend import LLMBudgetExhausted, budget_http_exception
 from app.services.room_runner import (
     ROOM_IN_SESSION_MESSAGE,
@@ -89,13 +88,6 @@ router = APIRouter(
 # eeeb866f) can re-fire the journal write after a container restart
 # without an upward import from services → api.
 _build_journal_entry = build_journal_entry_for_run
-
-# CR289 — the desk-model pin. Benchmark batches only: a Room pinned to one named
-# provider slot, never failing over to another. The allow-set is a constant, not a
-# setting, so widening it is a code change someone reviews; `deepseek` is the
-# CheapLLM testing slot, which no live-traffic pick can ever select.
-PINNABLE_DESK_PROVIDERS: frozenset[str] = frozenset({"vllm_fallback", "deepseek"})
-BENCHMARK_APP_VERSION = "room-benchmark"
 
 
 CIO_RETRY_CRASHED_MESSAGE = (
@@ -156,36 +148,6 @@ class RoomStartRequest(BaseModel):
     # prompts after this handler has returned, so there is no later moment at
     # which the device can be asked. Absent = no linked account = no overlay.
     alpaca: AlpacaSnapshotIn | None = None
-    # CR289 — benchmark-only desk-model pin; see `_check_desk_provider`.
-    desk_provider: str | None = None
-
-
-def _check_desk_provider(req: RoomStartRequest, current_user: User) -> str | None:
-    """CR289 — gate the desk-model pin. Returns the validated provider (or None).
-
-    Runs before any charge or `start_run`. Every refusal is a loud 4xx: a pin
-    that silently fell back to the default model would hand a benchmark arm
-    another arm's Room and call it a clean run.
-    """
-    desk_provider = req.desk_provider
-    if desk_provider is None:
-        return None
-    if getattr(current_user, "last_app_version", None) != BENCHMARK_APP_VERSION:
-        raise HTTPException(
-            status.HTTP_403_FORBIDDEN, "desk_provider is not available to this account",
-        )
-    if desk_provider not in PINNABLE_DESK_PROVIDERS:
-        raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_ENTITY,
-            f"desk_provider {desk_provider!r} is not pinnable; "
-            f"allowed: {sorted(PINNABLE_DESK_PROVIDERS)}",
-        )
-    if not get_llm_gateway().has_provider(desk_provider):
-        raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_ENTITY,
-            f"desk_provider {desk_provider!r} is not registered on this backend",
-        )
-    return desk_provider
 
 
 @router.post("/stream", dependencies=[Depends(room_stream_rate_limit)])
@@ -200,7 +162,6 @@ async def stream_room(
     # another user's identity, polluting their journal and burning credits.
     if current_user.id != req.user_id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "access denied")
-    desk_provider = _check_desk_provider(req, current_user)
     """Run a Room session and stream events via SSE.
 
     The run executes as a background task independent of the SSE connection —
@@ -301,7 +262,6 @@ async def stream_room(
             alpaca_snapshot=render_snapshot(req.alpaca),
             bank_outcome=bank_outcome,
             alpaca_key=room_bank.alpaca_digest(req.alpaca),
-            **({"desk_provider": desk_provider} if desk_provider else {}),
         )
     except RoomAlreadyInSession as e:
         # CR270 — 409: the request is well-formed but conflicts with the user's

@@ -1374,10 +1374,6 @@ class RoomFailoverState:
     pinned_provider: str | None = None
     tripped_reason: str | None = None
     tripped_provider: str | None = None
-    # CR289 — a benchmark desk pin: the whole Room, review included, stays on
-    # `pinned_provider`. Distinct from a failover pin, whose second-pass review
-    # may still go to another model.
-    strict_pin: bool = False
 
     def trip(self, reason: str, *, provider: str, agent_id: str | None) -> None:
         if self.tripped_reason is not None:
@@ -1765,10 +1761,6 @@ class LLMGateway:
         if isinstance(provider, VLLMProvider) and provider.kind == "vllm":
             await provider.log_prefix_cache_status()
 
-    def has_provider(self, name: str) -> bool:
-        """CR289 — is the slot [name] registered. Config fact, not liveness."""
-        return name in self._providers
-
     def has_backup_provider(self) -> bool:
         """CR272 — is the failover slot registered. Config fact, not liveness."""
         return FALLBACK_PROVIDER_NAME in self._providers
@@ -1883,12 +1875,6 @@ class LLMGateway:
         """
         desk = self._review_desk()
         state = _ROOM_FAILOVER.get()
-        if (
-            state is not None
-            and state.strict_pin
-            and state.pinned_provider in self._providers
-        ):
-            return state.pinned_provider
         tripped = state.tripped_provider if state is not None else None
         for name in self._PREFERENCE:
             if name in ("mock", "anthropic") or name == desk or name == tripped:
@@ -2049,11 +2035,6 @@ class LLMGateway:
             provider = self._providers[provider_name]
         elif state is not None and state.pinned_provider in self._providers:
             provider = self._providers[state.pinned_provider]  # type: ignore[index]
-        elif state is not None and state.strict_pin:
-            raise ValueError(
-                f"stream_chat: pinned provider {state.pinned_provider!r} is not "
-                "registered; a pinned Room never falls through to the default model"
-            )
         else:
             provider = self._pick_provider(
                 locale, model_tier, plan=plan, agent_id=agent_id

@@ -7,23 +7,10 @@ top-up-on-402 credit path (`POST /v1/admin/users/{id}/credits`; see
 `room_benchmark.grant_credits` for why a top-up cannot be done up-front), the same
 detached stream-POST + poll. What is new here:
 
-- Mandate: `BURSA_MANDATE_OVERRIDE` — risk score 5 by default (`--risk-score N`, 1-5,
-  CR289), every compliance filter off (`liquid_only` included), sent as the Room
-  request's `mandate_override`, exactly as CR035 does. `long_only` stays at its
-  schema default (True): the Room only ever opens buys and Bursa has no short
-  selling, so it blocks nothing here.
-- Desk model (CR289): `--desk-provider vllm_fallback|deepseek` sends `desk_provider`
-  in the request body, pinning every desk call of the Room to that provider slot
-  (server side: benchmark users only, never failed over). Unset = the backend's
-  default model, byte-identical to before. Every record carries `desk_provider`
-  and `risk_score`. A 403/422 about the pin stops the WHOLE batch loudly (exit 2,
-  nothing recorded for that ticker): a refused pin is a configuration fault, not
-  a bad ticker, and retrying it would fill the file with unusable records. With a
-  pin set, a Room that completes but was refunded as a provider outage is a failed
-  attempt (retried), never a result for the arm.
-- Tickers: a sampled `sample_<seed>.csv`, the full universe CSV
-  (`CR282_bursa_malaysia/bursa_batch/universe_2026-11-25.csv`, `symbol` column) or a
-  one-per-line file; `--limit N` runs only the first N pending.
+- Mandate: `BURSA_MANDATE_OVERRIDE` — risk score 5, every compliance filter off
+  (`liquid_only` included), sent as the Room request's `mandate_override`, exactly
+  as CR035 does. `long_only` stays at its schema default (True): the Room only
+  ever opens buys and Bursa has no short selling, so it blocks nothing here.
 - One run per ticker, recorded in `runs_<batch>.jsonl` (append-only; the latest
   record per ticker wins). Resume skips `completed` and `permanent_failure`
   records; `failed_after_retries` and `script_error` are re-tried on the next run
@@ -84,44 +71,10 @@ BURSA_MANDATE_OVERRIDE = {
     },
 }
 
-PIN_CHOICES = ("vllm_fallback", "deepseek")
 DONE_STATUSES = {"completed", "permanent_failure"}
 TRANSIENT_HTTP = {408, 409, 425, 429, 500, 502, 503, 504}
 MAX_CONCURRENCY = 4
 _io_lock = threading.Lock()
-
-
-class PinRefused(Exception):
-    """The backend refused the desk-model pin (403/422). Stops the whole batch."""
-
-
-def build_mandate(risk_score: int = 5) -> dict:
-    return {**BURSA_MANDATE_OVERRIDE, "risk_score": risk_score}
-
-
-def is_pin_refusal(exc: BaseException, desk_provider: str | None) -> bool:
-    """A 403, or a 422 naming `desk_provider`, on a request that carried a pin.
-    A 422 about anything else (an unknown ticker) stays a per-ticker failure."""
-    if desk_provider is None or not isinstance(exc, httpx.HTTPStatusError):
-        return False
-    code = exc.response.status_code
-    if code == 403:
-        return True
-    return code == 422 and "desk_provider" in exc.response.text
-
-
-def check_resume_consistency(latest: dict[str, dict], desk_provider: str | None, risk_score: int) -> None:
-    """A batch file must hold ONE arm: resuming it under a different pin or risk
-    score would mix models (or risk levels) in one results file."""
-    for ticker, rec in latest.items():
-        have_pin = rec.get("desk_provider")
-        have_risk = rec.get("risk_score")
-        if have_pin != desk_provider or (have_risk is not None and have_risk != risk_score):
-            raise SystemExit(
-                f"{ticker}: the existing record has desk_provider={have_pin!r} "
-                f"risk_score={have_risk!r}, this run has desk_provider={desk_provider!r} "
-                f"risk_score={risk_score!r}; use a new --batch-id per arm"
-            )
 
 
 def load_tickers(path: Path) -> list[str]:
@@ -170,15 +123,13 @@ def classify_error(exc: BaseException) -> tuple[str, str]:
 
 def convene(
     client: httpx.Client, base: str, token: str, user_id: str, ticker: str,
-    mandate_override: dict, desk_provider: str | None = None,
+    mandate_override: dict,
 ) -> tuple[str, bool, bool]:
     """POST /v1/room/stream, return (run_id, cached, banked) from the headers."""
-    body = {"user_id": user_id, "ticker": ticker,
-            "mandate_override": mandate_override, "locale": "en"}
-    if desk_provider is not None:
-        body["desk_provider"] = desk_provider
     with client.stream(
-        "POST", f"{base}/v1/room/stream", json=body,
+        "POST", f"{base}/v1/room/stream",
+        json={"user_id": user_id, "ticker": ticker,
+              "mandate_override": mandate_override, "locale": "en"},
         headers={"Authorization": f"Bearer {token}"},
     ) as resp:
         resp.raise_for_status()
@@ -192,13 +143,10 @@ def run_ticker(
     client: httpx.Client, args, user: dict, ticker: str, mandate: dict,
     sleep=time.sleep,
 ) -> dict:
-    """One ticker, with retries. Returns the record to append; never raises,
-    except `PinRefused` (the backend refused the desk pin: the batch must stop)."""
-    desk_provider = getattr(args, "desk_provider", None)
+    """One ticker, with retries. Returns the record to append; never raises."""
     record: dict = {
         "batch_id": args.batch_id, "ticker": ticker, "user_id": user["user_id"],
-        "risk_score": mandate.get("risk_score"), "desk_provider": desk_provider,
-        "triggered_at": rb._now_iso(),
+        "risk_score": mandate.get("risk_score"), "triggered_at": rb._now_iso(),
         "attempts": [],
     }
     final: dict = {}
@@ -207,8 +155,7 @@ def run_ticker(
         try:
             try:
                 run_id, cached, banked = convene(
-                    client, args.base_url, user["token"], user["user_id"], ticker, mandate,
-                    desk_provider)
+                    client, args.base_url, user["token"], user["user_id"], ticker, mandate)
             except httpx.HTTPStatusError as exc:
                 if exc.response.status_code != 402:
                     raise
@@ -216,25 +163,16 @@ def run_ticker(
                     client, args.base_url, user["user_id"], args.credit_grant, note=CREDIT_NOTE)
                 entry["credit_grant"] = {"delta": args.credit_grant, "balance": balance}
                 run_id, cached, banked = convene(
-                    client, args.base_url, user["token"], user["user_id"], ticker, mandate,
-                    desk_provider)
+                    client, args.base_url, user["token"], user["user_id"], ticker, mandate)
             run = rb.poll_run(
                 client, args.base_url, user["token"], run_id, args.poll_interval, args.run_timeout)
             status = run.get("status")
             entry.update(run_id=run_id, status=status)
-            if status == "completed" and desk_provider is not None and run.get("refunded"):
-                status = "pinned_outage_refunded"
-                run["error_message"] = (
-                    "the pinned provider failed and the Room was refunded as an outage"
-                )
             if status == "completed":
-                verdict = run.get("verdict") or {}
                 final = {
                     "status": "completed", "run_id": run_id, "cached": cached, "banked": banked,
                     "verdict": run.get("verdict"), "model_tier": run.get("model_tier"),
                     "duration_ms": run.get("duration_ms"), "error_message": run.get("error_message"),
-                    "scripted_turns": verdict.get("scripted_turns"),
-                    "scripted_agents": verdict.get("scripted_agents"),
                 }
                 record["attempts"].append(entry)
                 break
@@ -242,11 +180,6 @@ def run_ticker(
             final = {"status": "failed_after_retries", "run_id": run_id,
                      "error_message": f"room ended {status}: {run.get('error_message')}"}
         except Exception as exc:  # noqa: BLE001 — classified, logged, never dropped
-            if is_pin_refusal(exc, desk_provider):
-                raise PinRefused(
-                    f"{ticker}: backend refused desk_provider={desk_provider!r}: "
-                    f"{classify_error(exc)[1]}"
-                ) from exc
             kind, reason = classify_error(exc)
             entry.update(kind=kind, reason=reason)
             if kind == "permanent":
@@ -284,8 +217,6 @@ def worker_user(
 
 
 def print_plan(args, tickers: list[str], todo: list[str], skipped: dict[str, int]) -> None:
-    risk_score = getattr(args, "risk_score", 5)
-    desk_provider = getattr(args, "desk_provider", None)
     print("CR282 Bursa batch — PLAN" + (" (dry run: nothing convened, no network)" if args.dry_run else ""))
     print(f"  batch id        : {args.batch_id}")
     print(f"  tickers         : {len(tickers)} in file, {len(todo)} to run, "
@@ -297,11 +228,7 @@ def print_plan(args, tickers: list[str], todo: list[str], skipped: dict[str, int
     print(f"  attempts/ticker : {args.max_attempts}, backoff {args.retry_backoff}s doubling")
     print(f"  credits         : top-up of {args.credit_grant} on a 402 via the admin credits endpoint; "
           f"~{len(todo) * BASIC_ROOM_CREDITS} needed at {BASIC_ROOM_CREDITS}/Room (CR035 figure)")
-    print(f"  risk score      : {risk_score} (--risk-score)")
-    print("  desk model      : "
-          + (f"PINNED to provider slot '{desk_provider}' (--desk-provider; benchmark users only, "
-             "never failed over)" if desk_provider else "backend default (no pin)"))
-    print(f"  mandate override: {json.dumps(build_mandate(risk_score), sort_keys=True)}")
+    print(f"  mandate override: {json.dumps(BURSA_MANDATE_OVERRIDE, sort_keys=True)}")
     print(f"  results         : {args.out_dir / f'runs_{args.batch_id}.jsonl'}")
     preview = ", ".join(todo[:10]) + (" ..." if len(todo) > 10 else "")
     print(f"  first tickers   : {preview}")
@@ -326,10 +253,6 @@ def main() -> int:
     ap.add_argument("--fresh-user", action="store_true")
     ap.add_argument("--retry-permanent", action="store_true")
     ap.add_argument("--no-snapshot", action="store_true", help="skip the yfinance spot-price snapshot")
-    ap.add_argument("--risk-score", type=int, choices=range(1, 6), default=5, metavar="1-5",
-                    help="mandate risk score (default 5, the CR282 value)")
-    ap.add_argument("--desk-provider", choices=PIN_CHOICES, default=None,
-                    help="pin every desk call of each Room to this provider slot (CR289)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args()
     if not 1 <= args.concurrency <= MAX_CONCURRENCY:
@@ -340,7 +263,6 @@ def main() -> int:
         raise SystemExit(f"no tickers in {args.tickers_file}")
     runs_path = args.out_dir / f"runs_{args.batch_id}.jsonl"
     latest = rb.load_latest_records(runs_path)
-    check_resume_consistency(latest, args.desk_provider, args.risk_score)
     todo, skipped = pending_tickers(tickers, latest, args.retry_permanent)
     if args.limit is not None:
         todo = todo[: args.limit]
@@ -368,27 +290,17 @@ def main() -> int:
     lock = threading.Lock()
     queue = list(enumerate(todo))
     qlock = threading.Lock()
-    mandate = build_mandate(args.risk_score)
-    stop = threading.Event()
-    refusals: list[str] = []
 
     def worker(k: int) -> None:
         nonlocal done
-        while not stop.is_set():
+        while True:
             with qlock:
                 if not queue:
                     return
                 i, ticker = queue.pop(0)
             with lock:
                 print(f"[{i + 1}/{len(todo)}] w{k} {ticker}: starting", flush=True)
-            try:
-                rec = run_ticker(client, args, users[k], ticker, mandate)
-            except PinRefused as exc:
-                with lock:
-                    refusals.append(str(exc))
-                    print(f"\n!!! PIN REFUSED - STOPPING THE BATCH: {exc}", flush=True)
-                stop.set()
-                return
+            rec = run_ticker(client, args, users[k], ticker, BURSA_MANDATE_OVERRIDE)
             with lock:
                 rb.append_jsonl(runs_path, rec)
                 counts[rec["status"]] = counts.get(rec["status"], 0) + 1
@@ -403,10 +315,6 @@ def main() -> int:
     with ThreadPoolExecutor(max_workers=args.concurrency) as pool:
         list(pool.map(worker, range(args.concurrency)))
 
-    if refusals:
-        print(f"\nbatch STOPPED by a refused desk pin after {done} ticker(s): {refusals[0]}\n"
-              "nothing was recorded for the refused ticker; fix the pin and re-run to resume")
-        return 2
     print(f"\ndone: {json.dumps(counts)} -> {runs_path}")
     bad = counts["permanent_failure"] + counts["failed_after_retries"]
     if bad:
