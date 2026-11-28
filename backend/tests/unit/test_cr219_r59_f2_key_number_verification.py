@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import pytest
 
+from app.core.config import settings
 from app.schemas.agents import AgentId
 from app.services.risk_officer import (
     _UNVERIFIABLE_MARK,
@@ -58,6 +59,12 @@ _ROWS = build_option_ladder(
     reference_size_pct=3.0, entry=100.0, stop=94.0, target=113.0,
     cap_pts=30.0, current_drawdown_pct=0.0,
 )
+
+
+@pytest.fixture(autouse=True)
+def _annotate_mode(monkeypatch):
+    """P47: the default is `log`; these tests pin the annotate-mode behaviour explicitly."""
+    monkeypatch.setattr(settings, "room_factcheck_notes", "annotate")
 
 
 @pytest.fixture

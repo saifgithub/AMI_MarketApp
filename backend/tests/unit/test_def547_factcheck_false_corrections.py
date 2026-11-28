@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import pytest
 
+from app.core.config import settings
 from app.services.numeric_quotation import annotate_sheet_mismatches, find_sheet_mismatches
 
 _KL = {
@@ -73,7 +74,8 @@ def test_a_wrong_figure_or_a_dropped_sign_is_still_corrected(text, field):
     assert _fields(text) == [field]
 
 
-def test_the_correction_quotes_the_sign_the_desk_wrote():
+def test_the_correction_quotes_the_sign_the_desk_wrote(monkeypatch):
+    monkeypatch.setattr(settings, "room_factcheck_notes", "annotate")
     note = annotate_sheet_mismatches("FCF at -RM9,000M", _KL)
     assert "“-9,000M”" in note and "-RM15,433M" in note
 

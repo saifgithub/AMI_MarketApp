@@ -87,8 +87,8 @@ def _payload(**kw):
 # ── the setting ───────────────────────────────────────────────────────────
 
 
-def test_default_is_annotate():
-    assert Settings.model_fields["room_factcheck_notes"].default == "annotate"
+def test_default_is_log():
+    assert Settings.model_fields["room_factcheck_notes"].default == "log"
 
 
 def test_unknown_value_refuses_at_startup():

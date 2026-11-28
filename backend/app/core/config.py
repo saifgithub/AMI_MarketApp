@@ -1181,7 +1181,14 @@ class Settings(BaseSettings):
     # idiom): a typo'd mode must fail boot, never fall through to either. Keyed in
     # the Room policy version, so a banked Room carrying old notes is not replayed
     # after the mode changes.
-    room_factcheck_notes: Literal["annotate", "log"] = "annotate"
+    #
+    # Default is `log` (CR288 / P47, Saiful 2026-11-27): ISS003 measured the
+    # user-visible corrections wrong ~99% of the time, so an environment that omits
+    # the line must not silently return to that. `annotate` may become the default
+    # again only after a passing market gate is recorded in
+    # `docs/initial_specs/08_tech/figure_judgement_gates.json` (enforced by
+    # `tests/unit/test_p47_figure_judgement_gate.py`).
+    room_factcheck_notes: Literal["annotate", "log"] = "log"
 
     # CR219 R58 — the RESEARCHERS phase (Bull, then Bear) always speaks in that
     # fixed order today. `05_further_improvements.md` §12: LLM judges anchor on

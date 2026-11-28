@@ -509,8 +509,9 @@ services:
       # rollout says otherwise; do NOT enable in the same window as
       # PM_OPTION_LADDER_ENABLED. See Settings.room_risk_officer_enabled.
       ROOM_RISK_OFFICER_ENABLED: ${ROOM_RISK_OFFICER_ENABLED:-false}
-      # DEF547 — `annotate` (notes in Room text) | `log` (findings logged only).
-      ROOM_FACTCHECK_NOTES: ${ROOM_FACTCHECK_NOTES:-annotate}
+      # DEF547 / P47 — `log` (findings logged only; default) | `annotate` (notes in
+      # Room text; needs a passing gate in docs/initial_specs/08_tech/figure_judgement_gates.json).
+      ROOM_FACTCHECK_NOTES: ${ROOM_FACTCHECK_NOTES:-log}
       # CR219 R58 — seed the RESEARCHERS phase's Bull/Bear order from the run id
       # instead of the fixed Bull-first order. Off pending WP13's replay
       # measurement. See Settings.room_debate_order_seeded.
