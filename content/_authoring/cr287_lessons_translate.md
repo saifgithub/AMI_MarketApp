@@ -33,6 +33,15 @@ One line appended to the end of each EN file (after the Takeaway), a "See also" 
 
 **Guard note:** `locale_staleness_check.py` mechanism 2 compares anchor multisets, and a new `<Lesson id>` token is one anchor, so it may or may not flag these four. The hand-written manifest is the fallback, as in `def423_lessons_retranslate.md`.
 
-## 3. Not done here
+## 3. Translated 2026-11-28 (AT:B1 CR287, branch `cr287-l403-i18n`)
 
-- No glossary entries were added (net interest margin, nonperforming loan ratio, float, combined ratio, FFO). Glossary files carry AR/MS parity tests; filing them is a separate step if wanted.
+Done, and dual-checked: each translation was authored, then an independent ami-llm translation was produced from the EN source and the same translator notes (without seeing the first), compared section by section, and every meaning/figure/term/quiz-answer/keep-verbatim difference was resolved against EN.
+
+1. Lesson 403 now has `.ar.mdx` and `.ms.mdx`; EN `locale_versions` is `["en", "ar", "ms"]`. Structure matches EN (7 sections, same paragraph counts, same figures, quiz answers 2, 0, 3).
+2. The "See also" line is appended to the `.ar.mdx` and `.ms.mdx` of 035, 181, 188 and 314 (8 files). Staleness check does not flag them.
+3. Glossary entries added in EN, AR and MS (and the bundled `mobile/assets/glossary/terms.en.json`): `net_interest_margin`, `nonperforming_loan_ratio`, `insurance_float`, `combined_ratio`, `ffo`. Append-only; the DEF144 baseline fingerprints for `terms.ar.json` and `terms.ms.json` were updated in the same commit.
+4. Comparison result: 11 real differences, all resolved in favour of the authored translation (1 AR lesson, 7 MS lesson, 3 AR glossary); none in the see-also lines or the MS glossary. Mistranslations to watch for in any future machine pass: MS lending rendered as borrowing ("peminjaman"), accounting as "akauntan", revaluation as "penilai semula", balance sheet as "imbangan kunci"; AR FFO expanded as cash flow from operations.
+
+## 4. Not done here
+
+- AR/MS native-speaker review is still the i18n lane's call; this pass is author plus one independent model, not a human reviewer.
