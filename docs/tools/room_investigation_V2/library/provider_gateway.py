@@ -80,6 +80,16 @@ PROVIDERS: dict[str, ProviderSpec] = {
         extra_body=None,
         supports_temperature=True,
     ),
+    # CheapLLM (cheapllm.shop): OpenAI-compatible DeepSeek-V4.1-Flash reseller,
+    # testing only (reference_cheapllm). Bare host, same as deepinfra.
+    "cheapllm": ProviderSpec(
+        name="cheapllm",
+        base_url="https://cheapllm.shop",
+        default_model="deepseek-v4.1-flash-1017",
+        api_key_env="CHEAPLLM_API_KEY",
+        extra_body=None,
+        supports_temperature=True,
+    ),
     "anthropic": ProviderSpec(
         name="anthropic",
         base_url="https://api.anthropic.com",
@@ -95,7 +105,7 @@ def _resolve(name: str) -> tuple[ProviderSpec, str, str | None]:
     spec = PROVIDERS[name]
     if name == "kimi":
         return spec, spec.base_url, env_bootstrap.require_kimi_open_platform_key()
-    if name in {"deepinfra", "anthropic"}:
+    if name in {"deepinfra", "cheapllm", "anthropic"}:
         key = env_bootstrap.require_keys(spec.api_key_env)[spec.api_key_env]
         return spec, spec.base_url, key
     base_url, _ = env_bootstrap.require_vllm()
@@ -261,14 +271,14 @@ def force_provider(
             max_tokens_floor=settings.kimi_max_tokens_floor,
             extra_body=spec.extra_body,
         )
-    elif name == "deepinfra":
+    elif name in {"deepinfra", "cheapllm"}:
         # Not registered by LLMGateway.__init__ at all — injected the same
         # way kimi's extra_body override is. Wrapped with 429-retry: the
         # hosted models intermittently answer HTTP 429 engine_overloaded,
         # and one unclewed 429 at an agent call scripted-fallbacks the room.
-        gateway._providers["deepinfra"] = _RetryTransient(  # noqa: SLF001
+        gateway._providers[name] = _RetryTransient(  # noqa: SLF001
             OpenAICompatibleProvider(
-                name="deepinfra",
+                name=name,
                 base_url=base_url,
                 model_name=resolved_model,
                 api_key=api_key,
