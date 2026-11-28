@@ -126,12 +126,14 @@ def test_a_negative_amount_reads_with_the_sign_before_the_symbol(live_sheet):
     assert "-RM15,433M" in full
 
 
-def test_the_fact_check_footnote_is_in_ringgit_with_sign_first(live_sheet):
+def test_the_fact_check_footnote_is_in_ringgit_with_sign_first(live_sheet, monkeypatch):
+    monkeypatch.setattr(settings, "room_factcheck_notes", "annotate")
     out = annotate_sheet_mismatches("TTM FCF is RM9,999M.", live_sheet)
     assert "-RM15,433M" in out and "$" not in out
 
 
-def test_the_us_footnote_keeps_dollars():
+def test_the_us_footnote_keeps_dollars(monkeypatch):
+    monkeypatch.setattr(settings, "room_factcheck_notes", "annotate")
     out = annotate_sheet_mismatches("TTM FCF is $9,999M.", {"free_cash_flow": 12_000})
     assert "$12,000M" in out and "RM" not in out
 

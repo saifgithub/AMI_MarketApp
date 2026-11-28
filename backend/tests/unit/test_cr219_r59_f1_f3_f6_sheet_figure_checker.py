@@ -42,6 +42,7 @@ from uuid import uuid4
 
 import pytest
 
+from app.core.config import settings
 from app.schemas.room import VerdictAction
 from app.services.coach_engine import hydrate_coach_mandate
 from app.services.numeric_quotation import (
@@ -51,6 +52,12 @@ from app.services.numeric_quotation import (
     find_sheet_mismatches,
 )
 from app.services.room_runner import _RoomContext, _parse_pm_verdict
+
+@pytest.fixture(autouse=True)
+def _annotate_mode(monkeypatch):
+    """P47: the default is `log`; these tests pin the annotate-mode behaviour explicitly."""
+    monkeypatch.setattr(settings, "room_factcheck_notes", "annotate")
+
 
 _SERVICES_DIR = Path(__file__).resolve().parents[2] / "app" / "services"
 
