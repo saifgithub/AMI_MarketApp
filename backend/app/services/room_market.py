@@ -54,6 +54,49 @@ def normalize_money_sign(text: str) -> str:
     return _SIGN_AFTER_SYMBOL_RE.sub(lambda m: f"{m.group(2)}{m.group(1)}", text)
 
 
+# DEF555 — "$1,133B" reads as 1,133 billion (1.133 trillion): a 1000x misstatement
+# when the model meant "$1.133B" and wrote the thousands separator by mistake. A
+# prompt cannot hold the form (CR038). The rewrite is deliberately narrow: a
+# comma-form billion is rewritten ONLY when the same symbol and digits appear as
+# the dotted "X.XXXB" in the same text (the model's own proof of what it meant);
+# with no twin it may be a genuine figure and is left alone. Sign (before or
+# after the symbol) is kept as written and ignored when matching twins.
+_BILLION_RE = re.compile(
+    r"(?<![A-Za-z0-9])"
+    r"(?P<pre>[-\u2212]?(?P<sym>US\$|S\$|RM|MYR|[$£€])[ ]?[-\u2212]?)"
+    r"(?P<int>\d{1,3})(?P<sep>[.,])(?P<frac>\d{3})(?P<unit>B|bn)(?![A-Za-z0-9])"
+)
+
+
+def fix_billion_comma(text: str) -> tuple[str, list[tuple[str, str]]]:
+    """Rewrite `$1,133B` as `$1.133B` when `$1.133B` also appears in `text`.
+
+    Returns `(text, rewrites)` where `rewrites` is a list of `(before, after)`
+    pairs; with no rewrite the same `text` object is returned. Market-agnostic
+    (`$`, `RM`, ...); only the B / bn unit is covered.
+    """
+    if not text or "," not in text:
+        return text, []
+    twins = {
+        (m["sym"], m["int"], m["frac"])
+        for m in _BILLION_RE.finditer(text)
+        if m["sep"] == "."
+    }
+    if not twins:
+        return text, []
+    rewrites: list[tuple[str, str]] = []
+
+    def _sub(m: re.Match[str]) -> str:
+        if m["sep"] != "," or (m["sym"], m["int"], m["frac"]) not in twins:
+            return m[0]
+        fixed = f"{m['pre']}{m['int']}.{m['frac']}{m['unit']}"
+        rewrites.append((m[0], fixed))
+        return fixed
+
+    out = _BILLION_RE.sub(_sub, text)
+    return (out, rewrites) if rewrites else (text, [])
+
+
 def market_of_profile(profile: dict[str, Any] | None) -> Market:
     """US unless the sheet says otherwise. Only a MY sheet carries the key."""
     if profile and profile.get("market") == Market.MY.value:

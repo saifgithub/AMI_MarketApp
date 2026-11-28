@@ -225,6 +225,7 @@ from app.services.verdict_outcomes import bank_verdict_outcome
 from app.services import bursa_pn17, my_news_rss, opendosm_cpi
 from app.services.room_market import (
     NOT_AVAILABLE_FOR_MARKET,
+    fix_billion_comma,
     localize_money,
     market_of_profile,
     my_desk_footer,
@@ -3539,8 +3540,25 @@ def _resolve_pm_structure(
     return candidate, None
 
 
+def _fix_billion_comma(
+    text: str, *, turn: str, ticker: str | None, run_id: UUID | None
+) -> str:
+    """DEF555 — `fix_billion_comma` plus the loud log line, one per rewrite."""
+    fixed, rewrites = fix_billion_comma(text)
+    for before, after in rewrites:
+        logger.warning(
+            "room_billion_comma_rewrite",
+            run_id=str(run_id) if run_id else None,
+            ticker=ticker,
+            turn=turn,
+            before=before,
+            after=after,
+        )
+    return fixed
+
+
 def _guard_pm_text(
-    pm_text: str, verdict: Verdict, *, run_id: UUID
+    pm_text: str, verdict: Verdict, *, run_id: UUID, ticker: str | None = None
 ) -> tuple[str, Verdict]:
     """CR271 — run the output text guard on the CIO's narration and on the
     verdict's `reason` (the two places the same rationale reaches the user).
@@ -3551,8 +3569,15 @@ def _guard_pm_text(
     # DEF554 — the prompt's classroom framing is removed first, so the guard
     # judges (and the user reads) the same text.
     pm_text = scrub_cio_framing(pm_text)
+    # DEF555 — "$1,133B" beside "$1.133B" is a 1000x misstatement; per text.
+    pm_text = _fix_billion_comma(
+        pm_text, turn="cio_text", ticker=ticker, run_id=run_id
+    )
     if verdict.reason:
         scrubbed = scrub_cio_framing(verdict.reason)
+        scrubbed = _fix_billion_comma(
+            scrubbed, turn="cio_reason", ticker=ticker, run_id=run_id
+        )
         if scrubbed != verdict.reason:
             verdict = verdict.model_copy(update={"reason": scrubbed})
     text_result = output_guard.inspect(pm_text, surface="room_verdict", **common)
@@ -3672,8 +3697,13 @@ def _parse_pm_verdict(
     # may be `None` here (the CIO stated none) — `annotate_sheet_mismatches`
     # returns `None` unchanged in that case, same "nothing to check" path
     # as an empty string.
+    if kill_criterion:
+        kill_criterion = _fix_billion_comma(  # DEF555
+            normalize_money_sign(kill_criterion),
+            turn="cio_kill_criterion", ticker=ctx.ticker, run_id=run_id,
+        )
     kill_criterion = annotate_sheet_mismatches(
-        normalize_money_sign(kill_criterion) if kill_criterion else kill_criterion,
+        kill_criterion,
         ctx.profile,
         surface="kill_criterion",
         run_id=run_id,
@@ -6467,7 +6497,9 @@ async def _run_cio_step(
             run=run, mandate=mandate, gateway=gateway,
             agent_timeout_s=agent_timeout_s,
         )
-        pm_text, verdict = _guard_pm_text(pm_text, verdict, run_id=run_id)
+        pm_text, verdict = _guard_pm_text(
+            pm_text, verdict, run_id=run_id, ticker=ctx.ticker
+        )
         async for ev in _restream_for_ui(
             run_id, AgentId.PORTFOLIO_MANAGER, pm_text,
             char_delay_min, char_delay_max,
@@ -6869,7 +6901,9 @@ async def _run_cio_step(
         # actually read. The PM text is buffered (`_stream_pm_response`) and
         # only restreamed below, so withholding it is real. The verdict ACTION
         # and every number are untouched; only the explanation is replaced.
-        pm_text, verdict = _guard_pm_text(pm_text, verdict, run_id=run_id)
+        pm_text, verdict = _guard_pm_text(
+            pm_text, verdict, run_id=run_id, ticker=ctx.ticker
+        )
         async for ev in _restream_for_ui(
             run_id, AgentId.PORTFOLIO_MANAGER, pm_text,
             char_delay_min, char_delay_max,
@@ -11616,6 +11650,9 @@ async def _compute_agent_text(
     # DEF548 — sign before the symbol, whatever the model wrote; before the
     # fact-check so its sign reader sees the normalised form.
     text = normalize_money_sign(text)
+    text = _fix_billion_comma(  # DEF555
+        text, turn=agent_id.value, ticker=ctx.ticker, run_id=run_id
+    )
     text = annotate_sheet_mismatches(
         text, profile, surface="agent_text", run_id=run_id, agent_id=agent_id
     )
@@ -11916,7 +11953,10 @@ async def _run_risk_officer(
             agent_id=turn.agent_id,
             run_id=run_id,
             run=run,
-            text=normalize_money_sign(turn.text),  # DEF548
+            text=_fix_billion_comma(  # DEF555
+                normalize_money_sign(turn.text),  # DEF548
+                turn=turn.agent_id.value, ticker=ctx.ticker, run_id=run_id,
+            ),
             geom_sig=None,
             char_delay_min=char_delay_min,
             char_delay_max=char_delay_max,
