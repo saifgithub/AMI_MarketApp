@@ -40,6 +40,8 @@ def build_parser() -> argparse.ArgumentParser:
                         "'backend-default' = no overrides")
     parser.add_argument("--post-spacing", type=float, default=15.0,
                         help="seconds to hold a concurrency slot open after an arm finishes")
+    parser.add_argument("--start-stagger", type=float, default=0.0,
+                        help="seconds between the starts of the first --max-concurrent arms (0 = all at once)")
     parser.add_argument("--max-concurrent", type=int, default=3,
                         help="max Room convenes in flight at once; 1 = strictly sequential")
     parser.add_argument("--allow-mock-market-data", action="store_true",
@@ -86,6 +88,7 @@ async def main_async(args: argparse.Namespace) -> int:
         gateway=gateway,
         max_concurrent=args.max_concurrent,
         post_spacing_s=args.post_spacing,
+        start_stagger_s=args.start_stagger,
         fresh_user=args.fresh_user,
     )
 

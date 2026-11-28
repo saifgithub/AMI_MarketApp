@@ -211,6 +211,7 @@ async def run_arms(
     gateway,
     max_concurrent: int = 3,
     post_spacing_s: float = 15.0,
+    start_stagger_s: float = 0.0,
     agent_timeout_s: float = float(os.environ.get("ROOM_BENCH_AGENT_TIMEOUT_S", "300")),
     fresh_user: bool = False,
 ) -> RunSummary:
@@ -288,8 +289,10 @@ async def run_arms(
     total = len(to_run)
     finished = 0
 
-    async def _run_one(arm: Arm) -> None:
+    async def _run_one(arm: Arm, first_wave_index: int | None = None) -> None:
         nonlocal finished
+        if first_wave_index and start_stagger_s > 0:
+            await asyncio.sleep(first_wave_index * start_stagger_s)
         async with semaphore:
             user_id = user_ids[arm.key]
             print(f"[{arm.key}] starting… (slot acquired, user={user_id})", flush=True)
@@ -359,7 +362,10 @@ async def run_arms(
             f"running {total} arm(s), up to {max_concurrent} concurrent …",
             flush=True,
         )
-        await asyncio.gather(*(_run_one(a) for a in to_run))
+        await asyncio.gather(*(
+            _run_one(a, i if i < max_concurrent else None)
+            for i, a in enumerate(to_run)
+        ))
 
     completed = sum(1 for r in results if r.status == "completed")
     failed = len(results) - completed
