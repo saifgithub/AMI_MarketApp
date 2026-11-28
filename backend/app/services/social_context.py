@@ -44,6 +44,7 @@ from sqlalchemy.exc import IntegrityError
 from app.core.config import settings
 from app.core.logging import logger
 from app.services.prompt_safety import sanitize_for_prompt
+from app.trading_math.markets import Market, market_for
 # `_relative_age` is the same concept on both feeds — how old is the artifact we
 # just handed the agent — and news_context already owns the renderer this module
 # depends on for its liveness markers. A second copy would be one more number
@@ -369,6 +370,14 @@ class _AdanosSource:
 
     def fetch(self, ticker: str) -> SocialSentiment | None:
         sym = ticker.upper().strip()
+        # DEF556 — Adanos covers US symbols only and answers a `.KL` code with a
+        # 422 that still spends one unit of the monthly budget. Every Bursa Room
+        # was spending two (primary 429, then secondary 422), draining the key
+        # US Rooms rely on for data no Bursa Room could ever get.
+        market = market_for(sym)
+        if market is not Market.US:
+            logger.info("social_context_adanos_skipped_market", ticker=sym, market=market.value)
+            return None
         now = time.time()
         with self._lock:
             hit = self._cache.get(sym)
@@ -386,6 +395,12 @@ class _AdanosSource:
             return None
         if resp.status_code != 200:
             logger.warn("social_context_adanos_bad_status", ticker=sym, status=resp.status_code)
+            if resp.status_code == 422:
+                # DEF556 — a 422 is Adanos rejecting the symbol itself, which
+                # does not change between convenes; cache it like `found=False`.
+                _cache_write(sym, None)
+                with self._lock:
+                    self._cache[sym] = (None, now + _L1_TTL)
             return None
         try:
             body = resp.json()

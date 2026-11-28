@@ -439,3 +439,41 @@ def test_cached_payload_round_trips_every_field(monkeypatch):
     from_cache = cached.fetch("AAPL")
 
     assert from_cache == direct
+
+
+# ── DEF556: Bursa tickers never reach Adanos ─────────────────────────────
+
+
+def test_bursa_ticker_never_calls_adanos(monkeypatch):
+    """Adanos is US-only; a `.KL` code got a 422 that still cost a unit of the
+    monthly budget, twice per Room (primary 429, then secondary 422)."""
+    monkeypatch.setattr(settings, "adanos_api_key", "test-key")
+    monkeypatch.setattr(settings, "adanos_api_key_secondary", "test-key-2")
+    src = _AdanosSource()
+    src._client = _FakeClient(_FakeResponse(422, {"detail": "invalid symbol"}))
+    assert src.fetch("0080.KL") is None
+    assert src._client.calls == 0, "Bursa ticker reached Adanos — DEF556 regression"
+
+
+def test_us_dotted_ticker_still_calls_adanos(monkeypatch):
+    """The market guard keys on the `.KL` suffix, not on any dot (BRK.B)."""
+    monkeypatch.setattr(settings, "adanos_api_key", "test-key")
+    _clear_social_cache()
+    src = _AdanosSource()
+    src._client = _FakeClient(_FakeResponse(200, {"ticker": "BRK.B", "found": False}))
+    src.fetch("BRK.B")
+    assert src._client.calls == 1
+
+
+def test_422_is_cached_so_a_rejected_symbol_costs_one_call(monkeypatch):
+    monkeypatch.setattr(settings, "adanos_api_key", "test-key")
+    _clear_social_cache()
+    src = _AdanosSource()
+    src._client = _FakeClient(_FakeResponse(422, {"detail": "invalid symbol"}))
+    assert src.fetch("ZZZQ") is None
+    assert src._client.calls == 1
+
+    fresh = _AdanosSource()
+    fresh._client = _FakeClient(_FakeResponse(422, {"detail": "invalid symbol"}))
+    assert fresh.fetch("ZZZQ") is None
+    assert fresh._client.calls == 0, "422 not cached — quota leak (DEF556)"
